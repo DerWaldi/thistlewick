@@ -344,16 +344,19 @@ test('the Frost Hall: fire melts the ice wall, charged patches cross the channel
   expect(await standOn(page, [0, 2.9, 83.6])).toBeGreaterThan(2.8);
   expect(await standOn(page, [0, 2.9, 87.6])).toBeGreaterThan(2.8);
   expect(await standOn(page, [0, 3.2, 90])).toBeGreaterThan(3.1);
-  // The Star is frozen in; melt it out.
+  // The sluice lever is frozen in; melt it out and knock it to open the way on.
   expect(await castAt(page, [0, 3.2, 90], [0, 5.1, 93], 0, 2.5)).toBe('cindersnap');
+  expect(await castAt(page, [0, 3.2, 90.5], [0, 4.8, 93], 0, 0.6)).toBe('thwackwort');
+  expect(await page.evaluate(() => window.__tw.signal('c-sluice'))).toBe(true);
+  // (The Sluice Canal beyond has its own test.)
   const r = await page.evaluate(async () => {
     const tw = window.__tw;
-    tw.teleport(0, 4.2, 92.5, 0);
+    tw.teleport(0, 4.2, 138.8, 0);
     tw.advance(1);
     await tw.idle();
     const g = tw.game as unknown as G;
     const done = g.state.lessons.has('rimewhistle');
-    tw.teleport(0, 3.2, 95.2, 0);
+    tw.teleport(0, 3.2, 141.4, 0);
     tw.advance(0.2);
     tw.interact();
     await tw.idle();

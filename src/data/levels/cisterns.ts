@@ -26,8 +26,15 @@ import { cobweb, column, deco, Glow, rubble, signboard, slab, wall, wallTorch } 
  *                                             where two more patrol (freeze, then Thwackwort them)
  *   Frost Hall     x -7..7,  z 79..96, y 3.2  an ice wall across the door (Cindersnap melts
  *                                             it); a channel z 62..69 with two patches that
- *                                             last 1.2 s (5 charged); the Star frozen in a block
- *                                             of ice on the dais
+ *                                             last 1.2 s (5 charged); the sluice lever frozen in
+ *                                             a block of ice on the dais: melt it, thwack the
+ *                                             lever, and the north gate opens
+ *   Sluice Canal   x -8..8,  z 96.5..136, y 3.2  water z 100..128: a short-lived ice patch (charged)
+ *                                             to a stone, three Ember Crabs in the water to freeze
+ *                                             and hop across under their fire, a second stone, a
+ *                                             long charged patch to the far landing. A Hexling
+ *                                             over the canal; a Sootling holds the Star gate
+ *   Star chamber   x -3..3,  z 136..142.5
  */
 export const CISTERNS: LevelDef = {
   id: 'cisterns',
@@ -38,7 +45,9 @@ export const CISTERNS: LevelDef = {
     { id: 'canal', name: 'The Long Canal', min: [-8, -4, 8], max: [8, 9, 34] },
     { id: 'ferry', name: 'The Floe Ferry', min: [-10, 0, 34], max: [14, 12, 59] },
     { id: 'boiler', name: 'The Boiler Hall', min: [-9, 0, 59], max: [9, 12, 79] },
-    { id: 'frost', name: 'The Frost Hall', min: [-7, 0, 79], max: [7, 12, 96] },
+    { id: 'frost', name: 'The Frost Hall', min: [-7, 0, 79], max: [7, 12, 96.5] },
+    { id: 'sluice-canal', name: 'The Sluice Canal', min: [-8.5, -4, 96.5], max: [8.5, 14, 136] },
+    { id: 'star', name: 'The Star Chamber', min: [-3.5, 0, 136], max: [3.5, 12, 142.5] },
   ],
   intro: { script: 'cisternIntro', unlessFlag: 'cisterns-entered' },
   ambience: 'dark',
@@ -47,6 +56,8 @@ export const CISTERNS: LevelDef = {
 };
 
 const STONE = '#5a6a72';
+/** The Star, at the far end of the Sluice Canal. */
+const STAR_Z = 139.3;
 const FLOOR = '#4a5458';
 const UP = 3.2;
 
@@ -189,10 +200,11 @@ function build(b: LevelBuilder): void {
     { type: 'iceSheet', min: [-1.5, 82], max: [1.5, 85.2], y: UP - 0.5, duration: 1.2, chargedDuration: 5 },
     { type: 'iceSheet', min: [-1.5, 86.2], max: [1.5, 89], y: UP - 0.5, duration: 1.2, chargedDuration: 5 },
     { type: 'trigger', flag: 'cistern-hint-charge', script: 'cisternCharge', min: [-7, UP - 1, 79.6], max: [7, UP + 3, 82], delay: 30, perVisit: true },
-    // The Star, frozen into a block of ice on the dais.
-    { type: 'star', id: 'cistern-star', pos: [0, UP + 1.9, 93], script: 'cisternComplete' },
+    // The Star moved on to the Sluice Canal (replaced in place: ids stay put); the block of
+    // ice on the dais now holds the sluice lever.
+    { type: 'star', id: 'cistern-star', pos: [0, UP + 1.9, STAR_Z], script: 'cisternComplete' },
     { type: 'burnable', style: 'ice', pos: [0, UP + 1.9, 93], size: [1.8, 1.8, 1.8] },
-    { type: 'door', pos: [0, UP, 95.95], yaw: Math.PI, width: 2.4, height: 3.4, to: { level: 'coldharbour', spawn: 'fromCisterns' }, label: 'Up to class' },
+    { type: 'door', pos: [0, UP, STAR_Z + 2.95], yaw: Math.PI, width: 2.4, height: 3.4, to: { level: 'coldharbour', spawn: 'fromCisterns' }, label: 'Up to class' },
   );
   b.cylinder([0, UP + 0.5, 93], 0.9, 1, COLORS.stoneLight, undefined, 8);
   for (let i = 0; i < 10; i++) deco(b, new ConeGeometry(0.08, 0.5 + (i % 3) * 0.3, 4), [-6.5 + i * 1.45, UP + 6.6, 84 + (i % 2) * 6], '#d8f2fc', [Math.PI, 0, 0]);
@@ -212,6 +224,7 @@ function build(b: LevelBuilder): void {
   }
 
   boilerHall(b, flames);
+  sluiceCanal(b, flames);
 
   flames.finish(b, '#ffb060');
   b.finish();
@@ -265,3 +278,62 @@ function boilerHall(b: LevelBuilder, flames: Glow): void {
   b.lantern([-4, UP + 6, 64], 8, 16);
   b.lantern([4, UP + 6, 74], 8, 16);
 }
+
+/**
+ * The Sluice Canal (z 96.5..136, y 3.2): ice, frozen crabs and a long charged patch under
+ * fire. The Frost Hall's lever opens the way in. Built last so the earlier rooms' sweets keep
+ * their ids.
+ */
+function sluiceCanal(b: LevelBuilder, flames: Glow): void {
+  const Z0 = 96.5;
+  const Z1 = 136;
+  const W = UP - 0.5;
+  b.floor(-8.5, 8.5, Z0, Z1 + 6.5, { top: UP, color: FLOOR, holes: [[-8, 8, 100, 128]] });
+  b.pool(-8, 8, 100, 128, W, 0.4);
+  wall(b, 'z', -8.5, Z0, Z1, 8, { base: UP, color: STONE });
+  wall(b, 'z', 8.5, Z0, Z1, 8, { base: UP, color: STONE });
+  wall(b, 'x', Z1, -8.5, 8.5, 8, { base: UP, color: STONE, holes: [{ from: -2.1, to: 2.1, top: 3.6 }] });
+  slab(b, -8.5, 8.5, Z0, Z1, UP + 8.5, 0.5, COLORS.stoneDark);
+  // Two stones in the canal, and the crabs' footings under the water.
+  for (const [z0, z1] of [
+    [106, 108],
+    [117, 119],
+  ]) {
+    b.box([0, (UP + 0.4) / 2, (z0 + z1) / 2], [3, UP - 0.4, z1 - z0], { color: COLORS.stoneLight });
+  }
+  const crabs: [number, number][] = [
+    [0, 110.1],
+    [1.8, 112.7],
+    [-0.6, 115.3],
+  ];
+  for (const [x, z] of crabs) b.box([x, (0.4 + W - 0.3) / 2, z], [1.6, W - 0.3 - 0.4, 1.4], { color: COLORS.stoneDark });
+  b.add(
+    { type: 'knockSwitch', id: 'c-sluice', pos: [0, UP + 1.6, 93], yaw: Math.PI, style: 'target', latch: true },
+    { type: 'gate', pos: [0, UP, Z0], yaw: 0, width: 2.4, height: 3.2, when: ['c-sluice'] },
+    { type: 'checkpoint', pos: [-6.5, UP, 98.2], yaw: Math.PI / 2, zone: { min: [-8, UP - 1, 96.8], max: [8, UP + 3, 100] } },
+    { type: 'trigger', flag: 'cistern-hint-sluice', script: 'cisternSluice', min: [-8, UP - 1, 96.8], max: [8, UP + 3, 99.5] },
+    { type: 'iceSheet', min: [-1.5, 100], max: [1.5, 106], y: W, duration: 1.2, chargedDuration: 4.5 },
+    ...crabs.map(([x, z]) => ({ type: 'emberCrab' as const, pos: [x, W - 0.3, z] as V3, patrol: 0, range: 12, interval: 3 })),
+    { type: 'iceSheet', min: [-1.5, 119], max: [1.5, 128], y: W, duration: 1.2, chargedDuration: 4 },
+    { type: 'hexling', pos: [0, UP, 113], height: 4.5, radius: 4, interval: 3.6 },
+    { type: 'sootling', id: 'c-soot', pos: [5.5, UP, 132.5], yaw: Math.PI, wander: 0.8, range: 20, interval: 3.8 },
+    { type: 'checkpoint', pos: [-6.5, UP, 130], yaw: Math.PI / 2, zone: { min: [-8, UP - 1, 128.2], max: [8, UP + 3, 135.6] } },
+    { type: 'gate', pos: [0, UP, Z1], yaw: 0, width: 3, height: 3, when: ['c-soot'] },
+    { type: 'sweet', kind: 'bramble', pos: [0, UP + 0.6, 107] },
+    { type: 'sweet', kind: 'bramble', pos: [0, UP + 0.6, 118] },
+    { type: 'sweet', kind: 'humbug', pos: [-7, UP + 0.6, 134.5] },
+  );
+  for (let i = 0; i < 12; i++) deco(b, new ConeGeometry(0.08, 0.5 + (i % 3) * 0.3, 4), [-7.5 + i * 1.4, UP + 7.6, 102 + (i % 3) * 9], '#d8f2fc', [Math.PI, 0, 0]);
+  for (const z of [98, 131]) {
+    wallTorch(b, flames, [-7.98, UP + 2.6, z], Math.PI / 2);
+    wallTorch(b, flames, [7.98, UP + 2.6, z], -Math.PI / 2);
+  }
+  // The Star chamber.
+  wall(b, 'z', -3.5, Z1, Z1 + 6.5, 6, { base: UP, color: STONE });
+  wall(b, 'z', 3.5, Z1, Z1 + 6.5, 6, { base: UP, color: STONE });
+  wall(b, 'x', Z1 + 6.5, -3.5, 3.5, 6, { base: UP, color: STONE });
+  slab(b, -3.5, 3.5, Z1, Z1 + 6.5, UP + 6.5, 0.5, COLORS.stoneDark);
+  b.cylinder([0, UP + 0.5, STAR_Z], 0.9, 1, COLORS.stoneLight, undefined, 8);
+  for (const x of [-2.98, 2.98]) wallTorch(b, flames, [x, UP + 2.6, Z1 + 1.6], x < 0 ? Math.PI / 2 : -Math.PI / 2);
+}
+

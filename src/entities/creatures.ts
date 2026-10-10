@@ -327,7 +327,8 @@ export class EmberCrab implements Entity, SpellTarget {
     // ice while frozen.
     this.collider = ctx.physics.world.createCollider(RAPIER.ColliderDesc.cuboid(0.6, 0.3, 0.5).setTranslation(this.pos.x, this.pos.y, this.pos.z).setSensor(true));
     this.iceCollider = ctx.physics.world.createCollider(RAPIER.ColliderDesc.cuboid(0.8, 0.5, 0.7).setTranslation(this.pos.x, this.pos.y + 0.15, this.pos.z));
-    ctx.physics.setInfo(this.iceCollider, { surface: 'ice', temporary: true, noGrab: true });
+    // Rough, frosted ice: slippery footing on a block this small would make it a slide, not a step.
+    ctx.physics.setInfo(this.iceCollider, { temporary: true, noGrab: true });
     this.iceCollider.setEnabled(false);
     this.marker = new RuneMarker(ctx.scene, this.spell, 0.55);
     ctx.targets.add(this);

@@ -853,11 +853,21 @@ export const DIALOGUES: Record<string, Script> = {
   },
 
   cisternFrost: async ({ say }) => {
-    await say([{ speaker: 'coldharbour', text: '(echoing) A wall of ice. Rimewhistle will not shift that. What melts ice, child? Something from Professor Ashcombe, I believe.' }]);
+    await say([
+      { speaker: 'coldharbour', text: '(echoing) A wall of ice. Rimewhistle will not shift that. What melts ice, child? Something from Professor Ashcombe, I believe.' },
+      { speaker: 'coldharbour', text: '(echoing) The sluice lever on the dais has frozen solid too. Thaw it and give it a knock; it opens the way on.' },
+    ]);
   },
 
   cisternCharge: async ({ say }) => {
     await say([{ speaker: 'coldharbour', text: '(echoing) Those patches melt almost at once. Charge the freeze: hold the cast, let go when it glows, and they will hold long enough.' }]);
+  },
+
+  cisternSluice: async ({ say }) => {
+    await say([
+      { speaker: 'coldharbour', text: '(her voice echoing off the water) The Sluice Canal. Charge your freezes here: a tap will not hold you. The crabs in the water are your stepping stones, once frozen.' },
+      { speaker: 'coldharbour', text: 'A Sootling has taken the far landing. Send him packing and my last gate opens. And mind the fairy. She does not care for ice either.' },
+    ]);
   },
 
   cisternComplete: async ({ say, state }) => {

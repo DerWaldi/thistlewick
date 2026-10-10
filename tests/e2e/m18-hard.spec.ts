@@ -349,3 +349,58 @@ test('Overgrown Glasshouse, the Hothouse Pool: burn your way across the pillars,
   await page.evaluate(() => window.__tw.advance(0.5));
   expect(await page.evaluate(() => [window.__tw.signal('g-soot1'), window.__tw.signal('g-soot2')])).toEqual([true, true]);
 });
+
+test('Flooded Cisterns, the Sluice Canal: charged ice, frozen crabs as stepping stones, a long charged patch', async ({ page, browserName }) => {
+  await sandbox(page, 'cisterns', ['cisterns-entered', 'cistern-hint-sluice']);
+  await calm(page, ['Hexling', 'Sootling']);
+  const UP = 3.2;
+  // A tap melts under you; a charged freeze carries you to the first stone.
+  expect(await castAt(page, [0, UP, 98.6], [0, UP - 0.5, 101.4], 1.2, 0.2)).toBe('rimewhistle');
+  const s1 = await page.evaluate(async () => {
+    const tw = window.__tw;
+    tw.teleport(0, 3.2, 99.2, 0);
+    tw.setCamera(0, 0.2);
+    tw.input({ x: 0, y: 1 });
+    tw.advance(1.2);
+    tw.input(null);
+    tw.advance(0.5);
+    return tw.state().feet;
+  });
+  expect(s1.y).toBeGreaterThan(UP - 0.1);
+  expect(s1.z).toBeGreaterThan(105.6);
+  // The crabs: freeze each, hop on.
+  let at: [number, number, number] = [0, UP, 107.4];
+  for (const [x, z] of [
+    [0, 110.1],
+    [1.8, 112.7],
+    [-0.6, 115.3],
+  ] as [number, number][]) {
+    expect(await castAt(page, at, [x, UP - 0.4, z], 0, 0.2), `freeze the crab at ${z}`).toBe('rimewhistle');
+    const f = await leap(page, at, [x, z]);
+    expect(f.y, `onto the crab at ${z}`).toBeGreaterThan(UP - 0.1);
+    at = [x, f.y, z];
+  }
+  const s2 = await leap(page, at, [0, 118]);
+  expect(s2.y).toBeGreaterThan(UP - 0.1);
+  // The long patch, charged, to the far landing.
+  expect(await castAt(page, [0, UP, 118.4], [0, UP - 0.5, 123], 1.2, 0.2)).toBe('rimewhistle');
+  const far = await page.evaluate(async () => {
+    const tw = window.__tw;
+    tw.teleport(0, 3.2, 118.6, 0);
+    tw.setCamera(0, 0.2);
+    tw.input({ x: 0, y: 1 });
+    tw.advance(2.6);
+    tw.input(null);
+    tw.advance(0.5);
+    return tw.state().feet;
+  });
+  expect(far.z).toBeGreaterThan(128.2);
+  expect(far.y).toBeGreaterThan(UP - 0.1);
+  await page.evaluate(() => {
+    const tw = window.__tw;
+    tw.teleport(-5, 3.2, 98, 0.25);
+    tw.setCamera(0.25, 0.2);
+    tw.advance(0.3);
+  });
+  await shot(page, 'm18-sluice', browserName);
+});
