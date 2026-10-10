@@ -62,6 +62,13 @@ export class Hud {
     events.on('areaEnter', ({ id, name }) => this.showBanner(name, this.src.secretsIn(id)));
     events.on('secret', ({ found, total }) => this.toast(`Secret found! (${found}/${total} here)`));
     events.on('dialogueOpen', ({ open }) => document.body.classList.toggle('in-dialogue', open));
+    events.on('bossHealth', ({ name, hp, max, active }) => {
+      const bar = $('boss-bar');
+      bar.classList.toggle('hidden', !active);
+      (bar.querySelector('.boss-name') as HTMLElement).textContent = name;
+      (bar.querySelector('.boss-fill') as HTMLElement).style.width = `${(hp / max) * 100}%`;
+    });
+    events.on('levelLoaded', () => $('boss-bar').classList.add('hidden'));
   }
 
   setVisible(v: boolean): void {

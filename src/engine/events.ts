@@ -74,6 +74,8 @@ export interface GameEvents {
   bossRoar: { pos: Vector3 };
   bossHit: { pos: Vector3 };
   bossDown: { pos: Vector3 };
+  /** A boss's health bar: shown while `active`. */
+  bossHealth: { name: string; hp: number; max: number; active: boolean };
   rattleTopple: { pos: Vector3 };
   rattleCollapse: { pos: Vector3 };
   // progress

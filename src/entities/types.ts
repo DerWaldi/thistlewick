@@ -362,6 +362,15 @@ export type EntitySpec = SpecBase &
         persist?: boolean;
       }
     | {
+        type: 'examiner';
+        /** Signal (and `down:<id>` flag) once it falls. */
+        id: string;
+        pos: V3;
+        /** Where it stalks you; it wakes when you're inside and `wakeFlag` is set. */
+        arena: { min: V3; max: V3 };
+        wakeFlag: string;
+      }
+    | {
         type: 'houseSeal';
         /** Turns on signal `house-door-<house>` if the player belongs to this house (common-room doors). */
         house: HouseId;

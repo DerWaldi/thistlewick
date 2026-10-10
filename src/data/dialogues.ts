@@ -1149,6 +1149,14 @@ export const DIALOGUES: Record<string, Script> = {
     await say([{ speaker: 'wendlebury', text: 'That door is for afterwards, dear. The Golden Thistle first.' }]);
   },
 
+  examBossIntro: async ({ say }) => {
+    await say([
+      { speaker: 'wendlebury', text: 'Ah. Before the Thistle, one last examiner. The professors built him together, out of brass and spite. They call him the Brass Examiner.' },
+      { speaker: 'wendlebury', text: 'He has six seals. When he slams the floor, JUMP. Then, while his fists are stuck, a seal lights up on his chest: hit it with the spell it shows. Charged, where you can.' },
+      { speaker: 'wendlebury', text: 'Keep your distance and he throws things. Get too close and he slams. I shall be over here. Behind the pillar. Good luck, dear!' },
+    ]);
+  },
+
   examWendlebury: async ({ say, state }) => {
     if (state.flags.has('year-complete')) {
       await say([{ speaker: 'wendlebury', text: "The hall is yours to wander, dear. The professors are re-setting their rooms. Gorse is, in fact, still ringing his bell." }]);

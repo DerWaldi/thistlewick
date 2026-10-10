@@ -16,6 +16,7 @@ import { ThistleStar, Trigger } from '../entities/lessonObjects';
 import { Rattlecoat } from '../entities/rattlecoat';
 import { QuestItem } from '../entities/quests';
 import { Hexling, Sootling } from '../entities/foes';
+import { Examiner } from '../entities/boss';
 import type { Entity, EntitySpec, EntityType, SpecOf, WorldContext } from '../entities/types';
 
 type Factory<T extends EntityType> = (spec: SpecOf<T>, ctx: WorldContext, id: string) => object | null;
@@ -86,6 +87,13 @@ const FACTORIES: { [T in EntityType]: Factory<T> } = {
   skyLift: (s, c) => new SkyLift(s, c),
   pendulum: (s, c) => new Pendulum(s, c),
   questItem: (s, c) => new QuestItem(s, c),
+  examiner: (s, c) => {
+    if (c.state.flags.has(`down:${s.id}`)) {
+      c.signals.set(s.id, true);
+      return null;
+    }
+    return new Examiner(s, c);
+  },
   hexling: (s, c, id) => {
     if (s.persist && s.id && c.state.flags.has(`down:${s.id}`)) {
       c.signals.set(s.id, true);

@@ -929,3 +929,36 @@ kbd {
 #pause-goal b {
   color: #f0c860;
 }
+
+/* A boss's seals, as a bar across the top. */
+#boss-bar {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(520px, 70vw);
+  text-align: center;
+  color: #f3e4c4;
+  font-family: Georgia, 'Times New Roman', serif;
+  text-shadow: 0 1px 3px #000;
+}
+#boss-bar.hidden {
+  display: none;
+}
+#boss-bar .boss-name {
+  font-size: 18px;
+  margin-bottom: 4px;
+  letter-spacing: 0.04em;
+}
+#boss-bar .boss-track {
+  height: 12px;
+  border-radius: 6px;
+  background: rgba(30, 20, 12, 0.7);
+  border: 1px solid #c99a3e;
+  overflow: hidden;
+}
+#boss-bar .boss-fill {
+  height: 100%;
+  background: linear-gradient(#ffd86a, #c9822e);
+  transition: width 0.4s ease;
+}

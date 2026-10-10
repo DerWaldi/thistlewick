@@ -33,8 +33,11 @@ import type { SpeakerId } from '../characters';
  *   VII Underbough   z 164..190  a chasm (z 170..184): the ferry floats home after 3 s under
  *                                a pendulum; the basket waits up by the seal shelf (9):
  *                                call it from the landing and ride it up
- *   The Thistle Hall z 190..207  the Headmistress and the Golden Thistle; behind the plinth,
- *                                a door down to the Lantern Hall (open once the year is done)
+ *   The Thistle Hall z 190..207  the Brass Examiner (a boss: jump its slams, then break the seal
+ *                                on its chest with the spell its rune shows, six times), the
+ *                                Golden Thistle caged on the plinth until it falls; behind the
+ *                                plinth, a door down to the Lantern Hall (open once the year is done)
+ *   Every room also has a Hexling or a Sootling of its own.
  */
 export const EXAMS: LevelDef = {
   id: 'exams',
@@ -143,6 +146,7 @@ function build(b: LevelBuilder): void {
   coldharbour(b, flames);
   underbough(b, flames);
   thistleHall(b, flames);
+  finale(b);
 
   flames.finish(b, '#ffb060');
   b.finish();
@@ -346,7 +350,7 @@ function thistleHall(b: LevelBuilder, flames: Glow): void {
     banner(b, [i < 2 ? -10.45 : 10.45, 7, 195 + (i % 2) * 6], i < 2 ? Math.PI / 2 : -Math.PI / 2, c, '#e8c25a', 1.6, 5);
   }
   b.add(
-    { type: 'npc', speaker: 'wendlebury', pos: [-3.2, 0, 200.5], yaw: Math.PI / 2, look: LOOKS.wendlebury, talk: 'examWendlebury' },
+    { type: 'npc', speaker: 'wendlebury', pos: [-8.6, 0, 191.8], yaw: Math.PI / 2, look: LOOKS.wendlebury, talk: 'examWendlebury' },
     { type: 'star', id: 'exam-star', pos: [0, 2.6, 202], script: 'examComplete' },
   );
   for (const z of [194, 204]) {
@@ -359,3 +363,28 @@ function thistleHall(b: LevelBuilder, flames: Glow): void {
   b.add({ type: 'door', pos: [0, 0, 206.45], yaw: Math.PI, width: 2.4, height: 3.4, to: { level: 'hub', spawn: 'default' }, lockedUnless: 'year-complete', talk: 'examsHomeDoor', label: 'The Lantern Hall' });
   signboard(b, 'Home', [0, 4.4, 206.44], Math.PI);
 }
+
+/**
+ * Appended last (ids follow build order): the foes that make each room harder, and the
+ * finale: the Brass Examiner, and a cage over the Golden Thistle until it falls.
+ */
+function finale(b: LevelBuilder): void {
+  b.add(
+    { type: 'hexling', pos: [0, 0, 30], height: 4, radius: 3.5, interval: 3.4 },
+    { type: 'hexling', pos: [0, 0, 52], height: 5, radius: 4, interval: 3.6 },
+    { type: 'hexling', pos: [0, 0, 76], height: 9, radius: 3, interval: 3.4 },
+    { type: 'hexling', pos: [2, 0, 98], height: 4, radius: 3, interval: 3.8 },
+    { type: 'sootling', pos: [8, 0, 125.5], yaw: -Math.PI / 2, wander: 0.8, range: 16, interval: 3.8 },
+    { type: 'hexling', pos: [0, 0, 150], height: 4, radius: 4, interval: 3.4 },
+    { type: 'hexling', pos: [0, 0, 177], height: 6, radius: 3.5, interval: 3.6 },
+    // The finale.
+    { type: 'checkpoint', pos: [8.6, 0, 191.8], yaw: -Math.PI / 2, zone: { min: [-10, -1, 190.5], max: [10, 4, 193] } },
+    { type: 'trigger', flag: 'exam-boss-woken', script: 'examBossIntro', min: [-10, -1, 190.5], max: [10, 4, 193.5] },
+    { type: 'examiner', id: 'exam-boss', pos: [0, 0, 198], arena: { min: [-10.5, -1, 190.5], max: [10.5, 12, 206.5] }, wakeFlag: 'exam-boss-woken' },
+    { type: 'gate', pos: [0, 0, 200.6], yaw: 0, width: 2.8, height: 3.6, when: ['exam-boss'] },
+    { type: 'gate', pos: [0, 0, 203.4], yaw: 0, width: 2.8, height: 3.6, when: ['exam-boss'] },
+    { type: 'gate', pos: [-1.4, 0, 202], yaw: Math.PI / 2, width: 2.8, height: 3.6, when: ['exam-boss'] },
+    { type: 'gate', pos: [1.4, 0, 202], yaw: Math.PI / 2, width: 2.8, height: 3.6, when: ['exam-boss'] },
+  );
+}
+

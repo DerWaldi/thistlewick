@@ -383,6 +383,9 @@ test('the Golden Thistle ends the year: points, the House Cup, the ending', asyn
     }
     // Behind on points, so the Headmistress has to step in.
     g.state.housePoints.bramblecote = 900;
+    // The Brass Examiner (tested on its own) already beaten: the cage over the Thistle is open.
+    g.state.flags.add('down:exam-boss');
+    g.state.flags.add('exam-boss-woken');
     tw.loadLevel('exams');
     await tw.idle();
     let ended = false;

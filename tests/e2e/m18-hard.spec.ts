@@ -478,3 +478,61 @@ test('Great Clockworks, the Mainspring: ferry under the pendulum, call the baske
   });
   await shot(page, 'm18-mainspring', browserName);
 });
+
+test('the Brass Examiner: jump its slams, break six seals with the spell each shows, and the Thistle is freed', async ({ page, browserName }) => {
+  test.setTimeout(120_000);
+  await sandbox(page, 'exams', ['exams-entered', 'exam-boss-woken']);
+  await calm(page, ['Hexling', 'Sootling']);
+  // The Thistle's cage is shut while he stands.
+  expect(await page.evaluate(() => window.__tw.signal('exam-boss'))).toBe(false);
+  type B = { constructor: { name: string }; state: string; hp: number; spell: string; pos: { x: number; y: number; z: number } };
+  const fight = await page.evaluate(async () => {
+    const tw = window.__tw;
+    const boss = (tw.game as unknown as { world: { entities: B[] } }).world.entities.find((e) => e.constructor.name === 'Examiner')!;
+    const log: string[] = [];
+    tw.teleport(0, 0, 193.5, 0);
+    tw.advance(0.3);
+    const startStamina = tw.state().stamina;
+    let jumpsCleared = 0;
+    for (let round = 0; round < 12 && boss.hp > 0; round++) {
+      // Wait for the wind-up, standing close; jump just before the slam lands.
+      for (let i = 0; i < 600 && boss.state !== 'windup'; i++) {
+        tw.teleport(boss.pos.x, 0, boss.pos.z - 3, 0);
+        tw.advance(1 / 30);
+      }
+      for (let i = 0; i < 120 && boss.state === 'windup'; i++) {
+        tw.advance(1 / 60);
+        if (boss.state === 'windup' && i === 30) {
+          tw.pressJump();
+          tw.input({ x: 0, y: 0, jump: true });
+        }
+      }
+      tw.input(null);
+      const before = tw.state().stamina;
+      tw.advance(0.4);
+      if (tw.state().stamina === before) jumpsCleared++;
+      // Fists stuck: hit the seal with its spell (charged where it can be).
+      const spell = boss.spell;
+      tw.aimAt(boss.pos.x, boss.pos.y + 2.4, boss.pos.z);
+      tw.advance(0.05);
+      const t = tw.state().target;
+      const charged = ['thwackwort', 'glimmerwick', 'rimewhistle'].includes(spell);
+      tw.cast(charged ? 1.1 : 0);
+      tw.advance(0.4);
+      log.push(`${spell} ${t} hp ${boss.hp}`);
+    }
+    tw.advance(1);
+    return { log, hp: boss.hp, state: boss.state, jumpsCleared, lost: startStamina - tw.state().stamina, cage: tw.signal('exam-boss') };
+  });
+  expect(fight.hp, fight.log.join('\n')).toBe(0);
+  expect(fight.state).toBe('down');
+  expect(fight.cage).toBe(true);
+  expect(fight.jumpsCleared).toBeGreaterThan(2);
+  await page.evaluate(() => {
+    const tw = window.__tw;
+    tw.teleport(0, 0, 192, 0);
+    tw.setCamera(0, 0.15);
+    tw.advance(0.5);
+  });
+  await shot(page, 'm18-examiner-down', browserName);
+});
