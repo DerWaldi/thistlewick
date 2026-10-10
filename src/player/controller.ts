@@ -5,7 +5,7 @@ import type { Input } from '../engine/input';
 import type { ColliderInfo, Physics, Surface } from '../engine/physics';
 import type { Tuning } from '../data/tuning';
 
-export type PlayerMode = 'ground' | 'air' | 'hang' | 'climb' | 'reset';
+export type PlayerMode = 'ground' | 'air' | 'slide' | 'hang' | 'climb' | 'reset';
 
 /** What the controller needs to know about the level it's in. */
 export interface PlayerEnvironment {
@@ -18,6 +18,7 @@ export const HALF_HEIGHT = 0.45;
 export const RADIUS = 0.35;
 /** Capsule centre to feet. */
 export const FOOT_OFFSET = HALF_HEIGHT + RADIUS;
+const RING_RAYS = 8;
 const HANG_OFFSET = 0.78; // capsule centre below the ledge lip while hanging
 const UP = new Vector3(0, 1, 0);
 
@@ -86,8 +87,6 @@ export class PlayerController {
     this.kcc.setUp({ x: 0, y: 1, z: 0 });
     this.kcc.enableAutostep(0.32, 0.15, false);
     this.kcc.enableSnapToGround(0.35);
-    this.kcc.setMaxSlopeClimbAngle((48 * Math.PI) / 180);
-    this.kcc.setMinSlopeSlideAngle((52 * Math.PI) / 180);
     this.kcc.setSlideEnabled(true);
     this.kcc.setApplyImpulsesToDynamicBodies(true);
     this.teleport(spawn);
@@ -122,6 +121,9 @@ export class PlayerController {
     this.skidCooldown -= dt;
     this.stateTime += dt;
     if (this.input.consumeJump()) this.buffer = this.tuning.jump.bufferTime;
+    const maxSlope = (this.tuning.move.maxSlope * Math.PI) / 180;
+    this.kcc.setMaxSlopeClimbAngle(maxSlope);
+    this.kcc.setMinSlopeSlideAngle(maxSlope);
 
     const prevFacing = this.facing;
     switch (this.mode) {
@@ -218,22 +220,49 @@ export class PlayerController {
     this.pos.y += mv.y;
     this.pos.z += mv.z;
 
-    // Bonk heads on ceilings; stop pushing into walls.
+    // Bonk heads on ceilings; stop pushing into walls (but keep full speed up walkable slopes).
     if (this.vel.y > 0 && mv.y < desired.y * 0.5) this.vel.y = 0;
-    const ax = (mv.x - (carry?.x ?? 0)) / dt;
-    const az = (mv.z - (carry?.z ?? 0)) / dt;
-    if (ax * ax + az * az < this.vel.x * this.vel.x + this.vel.z * this.vel.z - 1e-4) {
-      this.vel.x = ax;
-      this.vel.z = az;
+    for (let i = 0; i < this.kcc.numComputedCollisions(); i++) {
+      const c = this.kcc.computedCollision(i);
+      if (!c) continue;
+      const n = c.normal1; // obstacle surface normal, pointing at the character
+      if (n.y >= 0.3 || n.y < -0.3) continue; // only near-vertical walls; slopes are handled by the KCC
+      const len = Math.hypot(n.x, n.z);
+      if (len < 1e-4) continue;
+      const nx = n.x / len;
+      const nz = n.z / len;
+      const into = this.vel.x * nx + this.vel.z * nz;
+      if (into < 0) {
+        this.vel.x -= into * nx;
+        this.vel.z -= into * nz;
+      }
     }
 
     const wasGrounded = this.grounded;
     const fallSpeed = -this.vel.y;
-    this.grounded = this.kcc.computedGrounded() && this.vel.y <= 0.01;
+    const kccGrounded = this.kcc.computedGrounded();
+    this.grounded = kccGrounded && this.vel.y <= 0.01;
     this.probeGround();
 
+    // Too steep to stand on: no grounding, no jumping, and gravity pulls us down the slope.
+    // "Held up but nothing walkable under the feet" covers the foot of a steep slope and
+    // perching on the rim of a steep slab; the centre probe covers resting on the slope.
+    // Balanced on an edge with nothing below ('none') isn't grounded either: you slip off.
+    const wallY = Math.cos((this.tuning.move.maxSlope * Math.PI) / 180);
+    const footing = kccGrounded ? this.footing(wallY) : 'none';
+    if (footing !== 'walkable') this.grounded = false;
+    const n = this.groundNormal;
+    const sliding = (this.onSteep || footing === 'steep') && this.vel.y <= 0.01;
+    if (sliding) {
+      this.coyote = 0;
+      this.vel.y = Math.max(this.vel.y, mv.y / dt);
+      const g = j.gravity * j.fallGravityScale;
+      this.vel.x += n.x * n.y * g * dt;
+      this.vel.z += n.z * n.y * g * dt;
+    }
+
     if (this.grounded !== wasGrounded) this.stateTime = 0;
-    this.mode = this.grounded ? 'ground' : 'air';
+    this.mode = this.grounded ? 'ground' : sliding ? 'slide' : 'air';
 
     if (this.grounded && !wasGrounded) {
       this.jumpedThisArc = false;
@@ -303,19 +332,47 @@ export class PlayerController {
   }
 
   private probeGround(): void {
-    const hit = this.physics.raycast(
-      this.pos,
-      new Vector3(0, -1, 0),
-      FOOT_OFFSET + 0.25,
-      this.collider,
-    );
-    this.groundInfo = hit ? this.physics.getInfo(hit.collider) : undefined;
+    // Long enough to reach a steep slope under the capsule (the centre sits higher above those).
+    const hit = this.physics.raycast(this.pos, new Vector3(0, -1, 0), FOOT_OFFSET + 0.7, this.collider);
+    const near = hit !== null && hit.distance <= FOOT_OFFSET + 0.25;
+    this.groundInfo = near ? this.physics.getInfo(hit.collider) : undefined;
     this.groundSurface = this.groundInfo?.surface ?? 'default';
     if (hit) this.groundNormal.copy(hit.normal);
     else this.groundNormal.set(0, 1, 0);
-    this.centerOverGround = hit !== null;
+    this.centerOverGround = near;
+    const maxSlope = (this.tuning.move.maxSlope * Math.PI) / 180;
+    this.onSteep =
+      hit !== null &&
+      hit.normal.y > 0.05 &&
+      hit.normal.y < Math.cos(maxSlope) &&
+      hit.distance <= HALF_HEIGHT + RADIUS / hit.normal.y + 0.1;
   }
   private centerOverGround = false;
+  private onSteep = false;
+
+  /**
+   * What's right under the feet? Probes the centre and a ring just inside the capsule radius.
+   * 'none' means we're balanced on an edge with nothing below (just let gravity take us).
+   * Records the steepest surface found in groundNormal when there's no walkable one.
+   */
+  private footing(wallY: number): 'walkable' | 'steep' | 'none' {
+    const feetY = this.pos.y - FOOT_OFFSET;
+    const down = new Vector3(0, -1, 0);
+    const origin = new Vector3();
+    let steepest: Vector3 | null = null;
+    for (let i = 0; i <= RING_RAYS; i++) {
+      const a = (i / RING_RAYS) * Math.PI * 2;
+      const r = i === RING_RAYS ? 0 : RADIUS * 0.85;
+      origin.set(this.pos.x + Math.cos(a) * r, feetY + 0.45, this.pos.z + Math.sin(a) * r);
+      const hit = this.physics.raycast(origin, down, 0.65, this.collider);
+      if (!hit || hit.point.y < feetY - 0.15) continue;
+      if (hit.normal.y >= wallY) return 'walkable';
+      if (!steepest || hit.normal.y < steepest.y) steepest = hit.normal;
+    }
+    if (!steepest) return 'none';
+    this.groundNormal.copy(steepest);
+    return 'steep';
+  }
 
   private trackSafeGround(dt: number): void {
     const info = this.groundInfo;

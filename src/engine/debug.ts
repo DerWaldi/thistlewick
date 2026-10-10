@@ -11,6 +11,7 @@ const RANGES: Record<string, Range> = {
   airAccel: [0, 80],
   airDecel: [0, 40],
   turnRate: [2, 40],
+  maxSlope: [20, 70, 1],
   iceAccelScale: [0.01, 1],
   iceDecelScale: [0.005, 1],
   height: [0.5, 4],

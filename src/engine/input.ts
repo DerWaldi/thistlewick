@@ -14,7 +14,6 @@ export class Input {
   private jumpLatch = false;
   private mouseDX = 0;
   private mouseDY = 0;
-  lastMouseMoveTime = 0;
   locked = false;
   virtual: VirtualInput | null = null;
   private onLockChange: ((locked: boolean) => void)[] = [];
@@ -34,7 +33,6 @@ export class Input {
       if (!this.locked) return;
       this.mouseDX += e.movementX;
       this.mouseDY += e.movementY;
-      this.lastMouseMoveTime = performance.now();
     });
     document.addEventListener('pointerlockchange', () => {
       this.locked = document.pointerLockElement === this.canvas;

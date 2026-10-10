@@ -110,31 +110,44 @@ export class LevelBuilder implements PlayerEnvironment {
   }
 
   /** A ramp rising from `bottom` (centre of its low edge) along `yaw` at `angleDeg`. */
-  ramp(bottom: V3, length: number, width: number, angleDeg: number, yaw = 0, color = COLORS.stoneLight): void {
+  ramp(bottom: V3, length: number, width: number, angleDeg: number, yaw = 0, color = COLORS.stoneLight, invisible = false): void {
     const a = (angleDeg * Math.PI) / 180;
     const t = 0.4; // slab thickness
     const fx = Math.sin(yaw);
     const fz = Math.cos(yaw);
     const half = length / 2;
     // Slab centre: halfway up the slope, pushed down by half the thickness along the slope normal.
-    const cx = bottom[0] + fx * Math.cos(a) * half - fx * Math.sin(a) * (-t / 2);
+    const cx = bottom[0] + fx * Math.cos(a) * half + fx * Math.sin(a) * (t / 2);
     const cy = bottom[1] + Math.sin(a) * half - Math.cos(a) * (t / 2);
-    const cz = bottom[2] + fz * Math.cos(a) * half - fz * Math.sin(a) * (-t / 2);
-    this.box([cx, cy, cz], [width, t, length], { color, rot: [-a, yaw, 0] });
+    const cz = bottom[2] + fz * Math.cos(a) * half + fz * Math.sin(a) * (t / 2);
+    this.box([cx, cy, cz], [width, t, length], { color, rot: [-a, yaw, 0], invisible });
   }
 
-  /** Straight staircase starting at `start` (bottom front centre) going along `yaw`. */
+  /**
+   * Straight staircase starting at `start` (bottom front centre) going along `yaw`.
+   * The steps are visual only; collision is one smooth ramp through the middle of each
+   * tread, so the capsule never snags on step edges (feet sink/hover by at most half a step).
+   */
   stairs(start: V3, yaw: number, steps: number, rise: number, run: number, width: number, color = COLORS.stoneLight): void {
     const fx = Math.sin(yaw);
     const fz = Math.cos(yaw);
+    const at = (d: number, y: number): V3 => [start[0] + fx * d, start[1] + y, start[2] + fz * d];
     for (let i = 0; i < steps; i++) {
       const h = rise * (i + 1);
       const d = run * i + run / 2;
-      this.box([start[0] + fx * d, start[1] + h / 2, start[2] + fz * d], [width, h, run], {
+      this.box(at(d, h / 2), [width, h, run], {
         color: i % 2 ? color : shade(color, 0.94),
         rot: [0, yaw, 0],
+        noCollide: true,
       });
     }
+    const height = rise * steps;
+    // The slope runs from half a tread in front of the stairs to the front edge of the top
+    // tread, so whatever the stairs lead onto meets it flush.
+    const flat = run * (steps - 0.5);
+    const angle = (Math.atan2(height, flat) * 180) / Math.PI;
+    this.ramp(at(-run / 2, 0), Math.hypot(flat, height), width, angle, yaw, color, true);
+    this.box(at(run * (steps - 0.5), height / 2), [width, height, run], { rot: [0, yaw, 0], invisible: true });
   }
 
   /** Rectangular pool with a water surface; falling in resets the player. */

@@ -217,3 +217,92 @@ test('ice keeps momentum', async ({ page }) => {
   });
   expect(slide).toBeGreaterThan(3);
 });
+
+test('stairs are walked up at full speed without jumping', async ({ page, browserName }) => {
+  const r = await page.evaluate(() => {
+    const tw = window.__tw;
+    const walk = (x: number, z: number, yaw: number, secs: number) => {
+      tw.teleport(x, 0, z, yaw);
+      tw.advance(0.2);
+      tw.input({ y: 1 });
+      let maxY = 0;
+      let minSpeed = 99;
+      for (let i = 0; i < secs * 60; i++) {
+        tw.advance(1 / 60);
+        const s = tw.state();
+        maxY = Math.max(maxY, s.feet.y);
+        if (i > 20 && s.mode === 'ground') minSpeed = Math.min(minSpeed, Math.hypot(s.vel.x, s.vel.z));
+      }
+      tw.input(null);
+      return { maxY, minSpeed };
+    };
+    return {
+      shallow: walk(-10, 1, 0, 1.6),
+      diagonal: walk(-11.2, 3, 0.4, 1.0),
+      steep: walk(-6, 1.5, 0, 1.2),
+      ontoPillar: walk(32, -14, 0, 1.6),
+    };
+  });
+  expect(r.shallow.maxY).toBeGreaterThan(1.95);
+  expect(r.diagonal.maxY).toBeGreaterThan(1.5);
+  expect(r.steep.maxY).toBeGreaterThan(1.45);
+  expect(r.ontoPillar.maxY).toBeGreaterThan(2.95);
+  for (const k of ['shallow', 'diagonal', 'steep', 'ontoPillar'] as const) expect(r[k].minSpeed).toBeGreaterThan(5.5);
+
+  await page.evaluate(() => {
+    window.__tw.teleport(-10, 0, 4.6, 0);
+    window.__tw.setCamera(-0.9, -0.15);
+    window.__tw.advance(0.6);
+  });
+  await shot(page, 'stairs', browserName);
+});
+
+test('slopes up to 45° are walkable; steeper ones slide you back even when jumping', async ({ page }) => {
+  const r = await page.evaluate(() => {
+    const tw = window.__tw;
+    const walk = (x: number, topY: number) => {
+      tw.teleport(x, 0, 1, 0);
+      tw.advance(0.2);
+      tw.input({ y: 1 });
+      let maxY = 0;
+      let minSpeed = 99;
+      for (let i = 0; i < 120; i++) {
+        tw.advance(1 / 60);
+        const s = tw.state();
+        maxY = Math.max(maxY, s.feet.y);
+        if (i > 20 && s.mode === 'ground' && s.feet.y < topY) minSpeed = Math.min(minSpeed, Math.hypot(s.vel.x, s.vel.z));
+      }
+      tw.input(null);
+      return { maxY, minSpeed };
+    };
+    const deg30 = walk(-22, 2.9);
+    const deg45 = walk(-26, 4.1);
+
+    // Spam jumps at the 56° ramp (x -31.5..-28.5) from many angles, including its side edges.
+    let steepMax = 0;
+    let slid = false;
+    for (const yaw of [-0.9, -0.3, 0, 0.3, 0.9]) {
+      for (const x of [-31.4, -30, -28.6]) {
+        tw.teleport(x - Math.sin(yaw) * 2.5, 0, 4 - Math.cos(yaw) * 2.5, yaw);
+        tw.advance(0.1);
+        for (let i = 0; i < 240; i++) {
+          if (i % 15 === 0) tw.pressJump();
+          tw.input({ y: 1, jump: i % 15 < 9 });
+          tw.advance(1 / 60);
+          const s = tw.state();
+          if (s.feet.x < -28.2 && s.feet.x > -31.8) steepMax = Math.max(steepMax, s.feet.y);
+          if (s.mode === 'slide') slid = true;
+        }
+        tw.input(null);
+      }
+    }
+    return { deg30, deg45, steepMax, slid };
+  });
+  expect(r.deg30.maxY).toBeGreaterThan(2.9);
+  expect(r.deg45.maxY).toBeGreaterThan(3.5);
+  expect(r.deg30.minSpeed).toBeGreaterThan(5.5);
+  expect(r.deg45.minSpeed).toBeGreaterThan(5.5);
+  // One plain jump from the floor reaches ~1.5 m; anything more means the slope helped.
+  expect(r.steepMax).toBeLessThan(1.75);
+  expect(r.slid).toBe(true);
+});

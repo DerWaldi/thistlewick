@@ -12,6 +12,7 @@ export const DEFAULT_TUNING = {
     airAccel: 20,
     airDecel: 4,
     turnRate: 14, // facing turn speed, rad/s
+    maxSlope: 46, // degrees; steeper ground can't be stood on, jumped from or climbed
     iceAccelScale: 0.12,
     iceDecelScale: 0.04,
   },

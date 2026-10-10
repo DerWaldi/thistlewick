@@ -87,7 +87,14 @@ export class StudentAnimator {
     const az = (p.vel.z - this.lastVel.z) / dt;
     this.lastVel.copy(p.vel);
     const fwdAccel = ax * Math.sin(p.facing) + az * Math.cos(p.facing);
-    const targetLean = grounded ? MathUtils.clamp(0.1 * speed01 + fwdAccel * 0.004, -0.15, 0.25) : airborne ? 0.08 : 0;
+    const sliding = p.mode === 'slide';
+    const targetLean = grounded
+      ? MathUtils.clamp(0.1 * speed01 + fwdAccel * 0.004, -0.15, 0.25)
+      : airborne
+        ? 0.08
+        : sliding
+          ? -0.3
+          : 0;
     this.lean = MathUtils.damp(this.lean, targetLean, 10, dt);
     const targetRoll = grounded ? MathUtils.clamp(-p.turnVelocity * 0.025 * speed01, -0.3, 0.3) : 0;
     this.roll = MathUtils.damp(this.roll, targetRoll, 10, dt);
@@ -114,7 +121,7 @@ export class StudentAnimator {
     // Arms: swing while running, flail up in the air, reach up while hanging.
     this.hangBlend = MathUtils.damp(this.hangBlend, hanging ? 1 : 0, 18, dt);
     const swing = s * 0.7 * stride;
-    const airArms = airborne ? MathUtils.clamp(0.6 + p.vel.y * -0.04, 0.2, 1.1) : 0;
+    const airArms = airborne ? MathUtils.clamp(0.6 + p.vel.y * -0.04, 0.2, 1.1) : sliding ? 1.2 : 0;
     const armX = (swing: number) => MathUtils.lerp(swing, -2.9, this.hangBlend);
     r.armL.rotation.x = armX(swing - airArms * 0.3);
     r.armR.rotation.x = armX(-swing - airArms * 0.5);

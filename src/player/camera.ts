@@ -22,6 +22,7 @@ export class OrbitCamera {
   private readonly lookAhead = new Vector3();
   private initialised = false;
   private speedFov = 0;
+  private mouseIdle = 0;
 
   constructor(
     readonly camera: PerspectiveCamera,
@@ -43,6 +44,8 @@ export class OrbitCamera {
     const p = this.player;
 
     const { dx, dy } = this.input.consumeMouse();
+    // Idle time is accumulated in game time so recentering is deterministic under test stepping.
+    this.mouseIdle = dx !== 0 || dy !== 0 ? 0 : this.mouseIdle + dt;
     this.yaw -= dx * c.sensitivity;
     this.pitch = MathUtils.clamp(this.pitch - dy * c.sensitivity, c.minPitch, c.maxPitch);
 
@@ -61,9 +64,9 @@ export class OrbitCamera {
     }
 
     // Auto-recenter behind the movement direction when the mouse is idle.
-    const idle = (performance.now() - this.input.lastMouseMoveTime) / 1000;
+    const idle = this.mouseIdle;
     const speed = p.horizontalSpeed;
-    if (c.autoRecenter && idle > c.recenterDelay && speed > 2 && (p.mode === 'ground' || p.mode === 'air')) {
+    if (c.autoRecenter && idle > c.recenterDelay && speed > 2 && (p.mode === 'ground' || p.mode === 'air' || p.mode === 'slide')) {
       const moveYaw = Math.atan2(p.vel.x, p.vel.z);
       const d = angleDiff(this.yaw, moveYaw);
       // Don't swing round when running towards the camera; only ease in sideways motion.
