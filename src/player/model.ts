@@ -144,8 +144,10 @@ export function buildStudent(houseColor = '#b0362f', houseTrim = '#e8c25a'): Stu
   wand.position.set(0, -0.44, 0.13);
   wand.rotation.x = Math.PI / 2 - 0.25;
   const wandTip = part(new SphereGeometry(0.025, 6, 4), mat('#fff3c4', { emissive: new Color('#ffd27a'), emissiveIntensity: 0.6 }));
-  wandTip.position.set(0, -0.48, 0.31);
-  armR.add(wand, wandTip);
+  // Child of the wand at the thin (+Y) end of its axis, so it sits on the tip at any wand angle.
+  wandTip.position.set(0, 0.18 + 0.012, 0);
+  wand.add(wandTip);
+  armR.add(wand);
 
   return { root, body, torso, head, hat, hatTip, armL, armR, footL, footR, scarfTail, wandTip };
 }
