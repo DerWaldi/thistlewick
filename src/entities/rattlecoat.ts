@@ -22,8 +22,10 @@ type State = 'dormant' | 'approach' | 'windup' | 'swing' | 'recover' | 'stagger'
 const HALF = 0.55;
 const R = 0.45;
 const CENTER_TO_FEET = HALF + R;
-const WALK_SPEED = 1.35;
-const REACH = 2.1;
+const WALK_SPEED = 2.0;
+const REACH = 2.3;
+/** Once engaged, it keeps after you this far outside its arena (knockback shouldn't end the fight). */
+const LEASH = 12;
 /** A tap just clangs off; it takes a charged Thwackwort to knock one over. */
 const CHARGE_TO_TOPPLE = 0.6;
 const MAX_HP = 2;
@@ -230,7 +232,9 @@ export class Rattlecoat implements Entity, SpellTarget {
     const to = new Vector3(player.pos.x - this.pos.x, 0, player.pos.z - this.pos.z);
     const dist = to.length();
     const faceYaw = Math.atan2(to.x, to.z);
-    const engaged = this.playerInArena() && player.mode !== 'reset' && !this.ctx.health.fainting;
+    const available = player.mode !== 'reset' && !this.ctx.health.fainting;
+    const chasing = this.state !== 'dormant' && dist < LEASH;
+    const engaged = available && (this.playerInArena() || chasing);
     let walk = 0;
     let walkYaw = this.facing;
 
@@ -268,7 +272,10 @@ export class Rattlecoat implements Entity, SpellTarget {
         }
         break;
       case 'swing':
-        if (!this.hitThisSwing && dist < REACH + 0.3 && Math.abs(angleDiff(this.facing, faceYaw)) < 0.9) {
+        // It steps into the blow, so backing off slowly isn't enough.
+        walk = WALK_SPEED * 1.6;
+        walkYaw = this.facing;
+        if (!this.hitThisSwing && dist < REACH + 0.4 && Math.abs(angleDiff(this.facing, faceYaw)) < 0.9) {
           this.hitThisSwing = this.ctx.health.damage(1, this.pos.clone());
         }
         if (this.timer <= 0) {

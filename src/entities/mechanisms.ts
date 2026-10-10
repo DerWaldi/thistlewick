@@ -428,10 +428,14 @@ export class Checkpoint implements Entity {
   }
 
   fixedUpdate(): void {
+    if (this.ctx.player.mode === 'reset' || this.ctx.health.fainting) return;
     const p = this.ctx.player.feet;
     const dx = p.x - this.pos.x;
     const dz = p.z - this.pos.z;
-    const near = dx * dx + dz * dz < 2.2 * 2.2 && Math.abs(p.y - this.pos.y) < 1.5;
+    const z = this.spec.zone;
+    const inZone =
+      !!z && p.x > z.min[0] && p.x < z.max[0] && p.y > z.min[1] && p.y < z.max[1] && p.z > z.min[2] && p.z < z.max[2];
+    const near = inZone || (dx * dx + dz * dz < 3 * 3 && Math.abs(p.y - this.pos.y) < 1.5);
     if (!near) return;
     if (!this.isCurrent()) {
       this.ctx.state.setCheckpoint(this.ctx.levelId, this.respawn, this.spec.yaw);

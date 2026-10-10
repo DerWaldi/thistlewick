@@ -187,9 +187,9 @@ function buildHub(b: LevelBuilder): void {
   for (const x of [14, 16.6, 22]) shelf(b, [x, 0, 6.35], 0, 2.4, 3.2);
   shelf(b, [19.3, 0, 6.35], 0, 2.4, 3.2);
   b.add(
-    // The secret door: slides east into the wall when the book-switch opposite is knocked.
+    // The secret door: slides west into the wall when the odd book on the shelf beside it is knocked.
     { type: 'bookshelf', pos: [20, 0, 10.25], yaw: Math.PI, width: 2, height: 2.6, slide: 2.1, when: ['cc-book'] },
-    { type: 'knockSwitch', id: 'cc-book', pos: [19.6, 1.95, 6.55], yaw: 0, style: 'book' },
+    { type: 'knockSwitch', id: 'cc-book', pos: [17.4, 1.95, 9.45], yaw: Math.PI, style: 'book' },
   );
   wall(b, 'x', 13.5, 18.5, 21.5, 3.2, { thick: 1 });
   wall(b, 'z', 18.5, 10.5, 13.5, 3.2, { thick: 1 });
@@ -219,7 +219,7 @@ function buildHub(b: LevelBuilder): void {
       talk: 'classroomDoor',
       label: 'Practical Charms',
     },
-    { type: 'checkpoint', pos: [40.5, 3, 18.5], yaw: 0 },
+    { type: 'checkpoint', pos: [40.5, 3, 18.5], yaw: 0, zone: { min: [34, 2, 18], max: [42, 7, 23] } },
   );
 
   // ================================================================ HOLLYHOCK COURT (x -16..16, z 30..62)
@@ -339,7 +339,7 @@ function buildHub(b: LevelBuilder): void {
     { type: 'sweetLine', kind: 'fizzwort', from: [0, 0.6, 32], to: [0, 0.6, 39.5], count: 5 },
     { type: 'sweetLine', kind: 'fizzwort', from: [-8, 0.6, 40], to: [-8, 0.6, 52], count: 6 },
     { type: 'sweetLine', kind: 'fizzwort', from: [8, 0.6, 48], to: [8, 0.6, 56], count: 5 },
-    { type: 'checkpoint', pos: [3.5, 0, 32.5], yaw: 0 },
+    { type: 'checkpoint', pos: [3.5, 0, 32.5], yaw: 0, zone: { min: [-5, -1, 31], max: [5, 4, 34] } },
   );
   for (const [x, z] of [
     [-12.5, 35.5],

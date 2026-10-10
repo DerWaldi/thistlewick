@@ -60,13 +60,13 @@ test('the three hub secrets: tapestry alcove, sliding bookshelf, behind the cloc
     walk(1.4);
     const afterTapestry = tw.state().secrets.length;
 
-    // 2: the disguised book switch needs Thwackwort; then the shelf slides aside.
-    tw.teleport(20, 0, 8.6, Math.PI);
+    // 2: the disguised book switch (beside the shelf it opens) needs Thwackwort.
+    tw.teleport(19.5, 0, 7.4, 0);
     tw.advance(0.3);
-    tw.aimAt(19.6, 1.95, 6.7);
+    tw.aimAt(17.4, 1.95, 9.3);
     const unknownFirst = tw.state().targetUnknown;
     tw.learn('thwackwort');
-    tw.aimAt(19.6, 1.95, 6.7);
+    tw.aimAt(17.4, 1.95, 9.3);
     tw.cast(0);
     tw.advance(3.5);
     tw.teleport(20, 0, 8.6, 0);

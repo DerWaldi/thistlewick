@@ -41,7 +41,13 @@ export type EntitySpec = SpecBase &
     | { type: 'gate'; pos: V3; yaw: number; width: number; height: number; when: string[] }
     | { type: 'sweet'; kind: SweetKind; pos: V3 }
     | { type: 'sweetLine'; kind: SweetKind; from: V3; to: V3; count: number }
-    | { type: 'checkpoint'; pos: V3; yaw: number }
+    | {
+        type: 'checkpoint';
+        pos: V3;
+        yaw: number;
+        /** Activates as soon as you enter this box (typically the room's entrance), not just near the lectern. */
+        zone?: { min: V3; max: V3 };
+      }
     | { type: 'gnarling'; pos: V3; wander?: number }
     | { type: 'teaser'; spell: SpellId; prop: 'chest' | 'vines' | 'marker'; pos: V3; yaw: number; id?: string }
     | { type: 'card'; card: string; pos: V3 }

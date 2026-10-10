@@ -57,7 +57,7 @@ function build(b: LevelBuilder): void {
   wall(b, 'x', 10, -8.5, 8.5, 7, { color: STONE, holes: [gateHole(0)] });
   b.add(
     { type: 'door', pos: [0, 0, 0.05], yaw: 0, width: 2.4, height: 3.4, to: { level: 'classroom', spawn: 'fromTrial' } },
-    { type: 'checkpoint', pos: [-4.2, 0, 3], yaw: Math.PI / 2 },
+    { type: 'checkpoint', pos: [-4.2, 0, 3], yaw: Math.PI / 2, zone: { min: [-6, -1, 0], max: [6, 4, 10] } },
     { type: 'knockSwitch', id: 'r1', pos: [3.5, 2, 9.45], yaw: Math.PI },
     { type: 'gate', pos: [0, 0, 10], yaw: 0, width: 3, height: 3, when: ['r1'] },
     { type: 'sweetLine', kind: 'fizzwort', from: [0, 0.6, 3.5], to: [0, 0.6, 8.5], count: 4 },
@@ -78,7 +78,7 @@ function build(b: LevelBuilder): void {
   deco(b, new BoxGeometry(2.2, 0.2, 2.2), [5, 2.1, 12], COLORS.stoneDark);
   wall(b, 'x', 26, -8.5, 8.5, 7, { color: STONE, holes: [gateHole(0)] });
   b.add(
-    { type: 'checkpoint', pos: [-6.6, 0, 15.6], yaw: Math.PI / 2 },
+    { type: 'checkpoint', pos: [-7.3, 0, 13.8], yaw: Math.PI / 2, zone: { min: [-8, -1, 10.2], max: [8, 4, 13] } },
     { type: 'pushBlock', pos: [-3, 0, 12], resetOn: 'r2-bell' },
     { type: 'pushBlock', pos: [3, 0, 12], resetOn: 'r2-bell' },
     { type: 'plate', id: 'r2-plate', pos: [7, 0, 14] },
@@ -102,7 +102,7 @@ function build(b: LevelBuilder): void {
   b.box([0, 0.45, 45.8], [8, 0.9, 0.5], { color: COLORS.stoneLight }); // hurdle
   wall(b, 'x', 48, -10.5, 10.5, 7.5, { color: STONE, holes: [gateHole(0)] });
   b.add(
-    { type: 'checkpoint', pos: [-2.9, 0, 27.6], yaw: Math.PI / 2 },
+    { type: 'checkpoint', pos: [-2.9, 0, 27.6], yaw: Math.PI / 2, zone: { min: [-4, -1, 26.2], max: [4, 4, 29.5] } },
     { type: 'knockSwitch', id: 'r3-timed', pos: [4.0, 2, 28.6], yaw: -Math.PI / 2, timed: 9 },
     { type: 'gate', pos: [0, 0, 48], yaw: 0, width: 3, height: 3, when: ['r3-timed'] },
     { type: 'trigger', flag: 'trial-hint-run', script: 'trialRun', min: [-4, -1, 26.5], max: [4, 5, 29.5] },
@@ -134,7 +134,7 @@ function build(b: LevelBuilder): void {
   b.box([-9, 2.2, 57], [2, 4.4, 4], { color: COLORS.stoneLight });
   deco(b, new BoxGeometry(2.2, 0.3, 4.2), [-9, 4.5, 57], COLORS.moss);
   b.add(
-    { type: 'checkpoint', pos: [-7.5, 0, 50], yaw: Math.PI / 2 },
+    { type: 'checkpoint', pos: [-7.5, 0, 50], yaw: Math.PI / 2, zone: { min: [-10, -1, 48.2], max: [10, 4, 51.5] } },
     { type: 'trigger', flag: 'trial-hint-garden', script: 'trialGarden', min: [-10, -1, 48.5], max: [10, 5, 51.5] },
     { type: 'gnarling', pos: [-5, 0, 55.5], wander: 2.5 },
     { type: 'gnarling', pos: [4.5, 0, 56], wander: 2.5 },

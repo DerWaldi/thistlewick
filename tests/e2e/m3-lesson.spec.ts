@@ -342,3 +342,66 @@ test('a beaten Rattlecoat and taken Star stay that way on a return visit', async
   });
   expect(r).toEqual({ rattle: 0, star: 0, gate: true });
 });
+
+test('the world holds still while someone is talking', async ({ page }) => {
+  await prepared(page, 'trial', ['trial-entered']);
+  const r = await page.evaluate(async () => {
+    const tw = window.__tw;
+    const g = tw.game as unknown as { dialogue: { autoAdvance: boolean }; world: { entities: ({ constructor: { name: string } } & { pos: { x: number; z: number } })[] } };
+    g.dialogue.autoAdvance = false;
+    // Walk into the garden: the hint dialogue opens, with Gnarlings nearby.
+    tw.teleport(0, 0, 49.6, 0);
+    tw.advance(0.2);
+    const gn = g.world.entities.find((e) => e.constructor.name === 'Gnarling')!;
+    const before = { x: gn.pos.x, z: gn.pos.z };
+    const open = tw.state().dialogueOpen;
+    tw.advance(3);
+    return { open, moved: Math.hypot(gn.pos.x - before.x, gn.pos.z - before.z), stamina: tw.state().stamina };
+  });
+  expect(r.open).toBe(true);
+  expect(r.moved).toBe(0);
+  expect(r.stamina).toBe(5);
+});
+
+test('checkpoints activate as you walk into a room', async ({ page }) => {
+  await prepared(page, 'trial', ['trial-entered', 'trial-hint-blocks', 'trial-hint-run']);
+  const r = await page.evaluate(() => {
+    const tw = window.__tw;
+    // Just inside the Shoving Room and the Gauntlet, nowhere near the lecterns.
+    tw.teleport(1, 0, 11, 0);
+    tw.advance(0.3);
+    const blocks = tw.state().checkpoint;
+    tw.teleport(2.5, 0, 27, 0);
+    tw.advance(0.3);
+    const run = tw.state().checkpoint;
+    return { blocks, run };
+  });
+  expect(r.blocks![2]).toBeLessThan(16);
+  expect(r.blocks![2]).toBeGreaterThan(10);
+  expect(r.run![2]).toBeGreaterThan(26);
+});
+
+test('the Rattlecoat comes for you and swings', async ({ page }) => {
+  await prepared(page, 'trial', ['trial-entered', 'trial-hint-garden']);
+  const hurt = await page.evaluate(() => {
+    const tw = window.__tw;
+    const g = tw.game as unknown as G;
+    const ents = g.world.entities as unknown as ({ constructor: { name: string } } & { home: { set(x: number, y: number, z: number): void }; pos: { set(x: number, y: number, z: number): void }; prev: { copy(v: unknown): void } })[];
+    for (const x of ents.filter((e) => e.constructor.name === 'Gnarling')) {
+      x.home.set(8, 0.5, 52);
+      x.pos.set(8, 0.5, 52);
+      x.prev.copy(x.pos);
+    }
+    // Step into its yard and back away slowly: it should still catch you.
+    tw.teleport(0, 0, 63.5, Math.PI);
+    tw.input({ y: 0.25 });
+    let hits = 0;
+    for (let i = 0; i < 360 && hits === 0; i++) {
+      tw.advance(1 / 60);
+      hits = 5 - tw.state().stamina;
+    }
+    tw.input(null);
+    return hits;
+  });
+  expect(hurt).toBeGreaterThan(0);
+});

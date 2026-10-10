@@ -229,7 +229,8 @@ export class Game {
       if (this.album.isOpen && this.input.locked) document.exitPointerLock();
     }
 
-    s.fixedUpdate(dt);
+    // Time stands still while someone is talking (no Gnarling bites mid-sentence).
+    if (!this.dialogue.isOpen) s.fixedUpdate(dt);
 
     this.state.playTime += dt;
     this.rivalTimer += dt;
