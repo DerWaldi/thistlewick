@@ -287,6 +287,8 @@ function buildHub(b: LevelBuilder): void {
   wall(b, 'z', 21.5, 17.5, 23.5, 9);
   wall(b, 'z', 42.5, 17.5, 23.5, 9);
   slab(b, 21, 43, 17, 24, 9.4, 0.4, '#5e4a3e', 'planks');
+  // Leg 3 is taller than leg 2: close the gap above leg 2's ceiling where they meet.
+  wall(b, 'x', 17.75, 21.5, 26.5, 4, { base: 5.4, thick: 0.5 });
   b.stairs([28, 0, 20.5], Math.PI / 2, 10, 0.3, 0.6, 5, COLORS.stoneLight);
   b.box([38.25, 1.5, 20.5], [8.5, 3, 5], { color: COLORS.stone }); // landing (top at y=3)
   // Crooked touches: a sagging beam, a couple of uneven flagstones (step-up height).
