@@ -17,8 +17,12 @@ import { banner, barrel, cobweb, crate, deco, Glow, rubble, rug, signboard, wall
  *                      bell's top (29.2) needs charge AND a held jump: the card's up there.
  *   Roof      y 32.5   rune tile R1 throws you to turret T1 (16.5, 10, top 31), R2 to T2
  *                      (23, 4, top 34), R3 to T3 (29.5, 10, top 37); from T3 a big bounce (charge
- *                      or held jump) up onto the spire (top 45): the Thistle Star. Falling off
- *                      the roof returns you to the roof checkpoint.
+ *                      or held jump) up onto the spire (top 45). Falling off the roof returns
+ *                      you to the roof checkpoint.
+ *   Weathercock Run    from the spire, rune tiles to chimneys C1 (43, 10, top 47) and C2 (49.5,
+ *                      4, top 50), moss up to a narrow beam (x 51.5..58.5, z 4, top 53) under
+ *                      two Hexlings, a toadstool at its end to the Weathercock (63, 10, top 56):
+ *                      a Sootling, the Thistle Star and the way down. Falls go back to the spire.
  */
 export const TOWER: LevelDef = {
   id: 'tower',
@@ -29,6 +33,7 @@ export const TOWER: LevelDef = {
     { id: 'stair', name: 'The Toadstool Stair', min: [-10, 4.5, 0], max: [10, 17.25, 20] },
     { id: 'bellfry', name: 'The Bellfry', min: [-10, 17.25, 0], max: [10, 32.25, 20] },
     { id: 'roof', name: 'The Rooftops', min: [-12, 32.25, -6], max: [40, 60, 26] },
+    { id: 'weathercock', name: 'The Weathercock Run', min: [40, 32.25, -6], max: [72, 70, 26] },
   ],
   intro: { script: 'towerIntro', unlessFlag: 'tower-entered' },
   music: 'dungeon',
@@ -189,12 +194,55 @@ function build(b: LevelBuilder): void {
     { type: 'springPad', pos: [23, 34, 4], radius: 1, style: 'rune', duration: 5, fling: { yaw: Math.atan2(6.5, 6), speed: 8.6 } },
     { type: 'springPad', pos: [29.5, 37, 10], radius: 1.2, style: 'moss', duration: 6 },
     { type: 'snapcasket', id: 't-snap3', pos: [28.6, 37, 11.4], yaw: -Math.PI / 2, wander: 1 },
-    { type: 'star', id: 'tower-star', pos: [35, 46.4, 10], script: 'towerComplete' },
-    { type: 'door', pos: [35, 45, 12.3], yaw: Math.PI, width: 2.4, height: 3.4, to: { level: 'hopgood', spawn: 'fromTower' }, label: 'Back to class' },
+    // The Star and the way down moved on to the Weathercock (replaced in place: ids stay put).
+    { type: 'star', id: 'tower-star', pos: [63, 57.4, 10.4], script: 'towerComplete' },
+    { type: 'door', pos: [63, 56, 12.9], yaw: Math.PI, width: 2.4, height: 3.4, to: { level: 'hopgood', spawn: 'fromTower' }, label: 'Back to class' },
     { type: 'sweetLine', kind: 'fizzwort', from: [-4, ROOF + 0.6, 10], to: [4, ROOF + 0.6, 10], count: 4 },
     { type: 'sweet', kind: 'humbug', pos: [23, 35, 4] },
   );
 
+  weathercockRun(b);
+
   flames.finish(b, '#ffb060');
   b.finish();
+}
+
+/**
+ * The Weathercock Run, on from the spire (top 45): a rune throws you to chimney C1, another
+ * to C2, moss up to a narrow beam (top 53) with Hexlings swooping, a toadstool at its end
+ * flings you onto the Weathercock (top 56), where a Sootling guards the Star. Falling puts
+ * you back on the spire. Built last so the earlier rooms' sweets keep their ids.
+ */
+function weathercockRun(b: LevelBuilder): void {
+  const C1: V3 = [43, 47, 10];
+  const C2: V3 = [49.5, 50, 4];
+  const F: V3 = [63, 56, 10];
+  for (const [[x, top, z], r] of [
+    [C1, 1.6],
+    [C2, 1.4],
+    [F, 3],
+  ] as [V3, number][]) {
+    b.cylinder([x, top / 2, z], r, top, COLORS.stoneLight, { noGrab: true }, 14);
+    deco(b, new CylinderGeometry(r + 0.15, r + 0.15, 0.3, 14), [x, top - 0.12, z], COLORS.stoneDark);
+  }
+  // The beam: a narrow plank of stone, propped on one post.
+  b.box([55, 52.85, 4], [7, 0.3, 1.2], { color: COLORS.stoneLight, info: { noGrab: true } });
+  deco(b, new CylinderGeometry(0.35, 0.5, 52.7, 8), [55, 26.35, 4], COLORS.stoneLight);
+  // The Weathercock itself, on a pole over the Star.
+  deco(b, new CylinderGeometry(0.08, 0.08, 5, 6), [64.6, 58.5, 8.4], '#3a3340');
+  deco(b, new ConeGeometry(0.5, 1.4, 4), [64.6, 61.2, 8.4], '#e8c25a', [0, 0, Math.PI / 2]);
+  deco(b, new BoxGeometry(0.05, 0.9, 1.1), [64.2, 61.4, 8.4], '#e8c25a');
+  banner(b, [F[0], F[1] - 2, F[2] - 3.05], Math.PI, '#3f7a4a', '#e8c25a', 1.2, 2.6);
+  b.add(
+    { type: 'checkpoint', pos: [33.4, 45, 11.6], yaw: Math.PI / 2, zone: { min: [32.5, 44, 7.5], max: [37.5, 48, 12.5] } },
+    { type: 'trigger', flag: 'tower-hint-spire', script: 'towerSpire', min: [32.5, 44, 7.5], max: [37.5, 48, 12.5] },
+    { type: 'springPad', pos: [36.6, 45, 10], radius: 0.8, style: 'rune', duration: 6, fling: { yaw: Math.PI / 2, speed: 6 } },
+    { type: 'springPad', pos: [C1[0], C1[1], C1[2]], radius: 1, style: 'rune', duration: 6, fling: { yaw: Math.atan2(6.5, -6), speed: 7.1 } },
+    { type: 'springPad', pos: [C2[0], C2[1], C2[2]], radius: 1, style: 'moss', duration: 6 },
+    { type: 'springPad', pos: [58, 53, 4], radius: 0.55, style: 'mushroom', height: 0.25, duration: 6, fling: { yaw: Math.atan2(5, 6), speed: 7.6 } },
+    { type: 'hexling', pos: [47, 46, 7], height: 4, radius: 3, interval: 3 },
+    { type: 'hexling', pos: [56, 50, 7], height: 4, radius: 3, interval: 3.3 },
+    { type: 'sootling', pos: [64.6, 56, 11], yaw: -Math.PI / 2, wander: 0.6, range: 16, interval: 3.4 },
+    { type: 'sweetLine', kind: 'bramble', from: [52.5, 53.6, 4], to: [56.5, 53.6, 4], count: 3 },
+  );
 }

@@ -209,7 +209,14 @@ test('the Tumbledown Tower can be climbed, bounce by bounce', async ({ page, bro
   expect(t3.feet.y).toBeCloseTo(37, 0);
   const spire = await bounce(page, [28, 37, 10], [29.5, 37.3, 10], Math.PI / 2, 2.4, { hold: 1 });
   expect(spire.feet.y).toBeGreaterThan(44.9);
-  const lessons = await page.evaluate(() => [...(window.__tw.game as unknown as G).state.lessons]);
+  // The Weathercock Run beyond the spire has its own test; the Star waits at its end.
+  const lessons = await page.evaluate(async () => {
+    const tw = window.__tw;
+    tw.teleport(63, 56.2, 9.6, 0);
+    tw.advance(0.6);
+    await tw.idle();
+    return [...(tw.game as unknown as G).state.lessons];
+  });
   expect(lessons).toContain('springwell');
   await shot(page, 'm7-spire', browserName);
 });

@@ -480,6 +480,12 @@ export const DIALOGUES: Record<string, Script> = {
     ]);
   },
 
+  towerSpire: async ({ say }) => {
+    await say([
+      { speaker: 'hopgood', text: "(shouting up from far, far below) The Star's moved! Some joker put it on the Weathercock! Rune tile, chimney, chimney, beam, toadstool. Don't look down. Do look out for fairies." },
+    ]);
+  },
+
   towerComplete: async ({ say, state }) => {
     if (state.lessons.has('springwell')) return;
     state.lessons.add('springwell');

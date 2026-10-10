@@ -204,3 +204,50 @@ test('Latchkin Vaults, the Counting House: three padlocks open at once from the 
   });
   await shot(page, 'm18-counting', browserName);
 });
+
+test('Tumbledown Tower, the Weathercock Run: rune to rune, up to the beam, flung onto the Weathercock', async ({ page, browserName }) => {
+  await sandbox(page, 'tower', ['tower-entered', 'tower-hint-spire', 'tower-hint-roof']);
+  await calm(page, ['Hexling', 'Sootling', 'Snapcasket']);
+  /** Spring a pad, then walk onto it from `from` (facing `yaw`) and let the bounce play out. */
+  const bounce = (pad: [number, number, number], from: [number, number, number], yaw: number, settle = 2.2, steer = 0) =>
+    page.evaluate(
+      async ({ pad, from, yaw, settle, steer }) => {
+        const tw = window.__tw;
+        tw.teleport(from[0], from[1], from[2], yaw);
+        tw.advance(0.2);
+        tw.aimAt(pad[0], pad[1] + 0.1, pad[2]);
+        tw.advance(0.05);
+        const t = tw.state().target;
+        tw.cast(0);
+        tw.advance(0.3);
+        tw.teleport(from[0], from[1], from[2], yaw);
+        tw.setCamera(yaw, 0.2);
+        tw.input({ x: 0, y: 1 });
+        tw.advance(0.35);
+        tw.input(steer ? { x: 0, y: steer } : null);
+        for (let i = 0; i < settle / 0.1; i++) tw.advance(0.1);
+        tw.input(null);
+        tw.advance(0.4);
+        return { t, feet: tw.state().feet };
+      },
+      { pad, from, yaw, settle, steer },
+    );
+  const c1 = await bounce([36.6, 45, 10], [34.6, 45, 10], Math.PI / 2);
+  expect(c1.t).toBe('springwell');
+  expect(c1.feet.y).toBeGreaterThan(46.9);
+  const c2 = await bounce([43, 47, 10], [42.2, 47, 10.8], Math.atan2(0.8, -0.8));
+  expect(c2.feet.y).toBeGreaterThan(49.9);
+  // Moss on C2: straight up, then steer east onto the beam.
+  const beam = await bounce([49.5, 50, 4], [48.7, 50, 4], Math.PI / 2, 1.6, 0.35);
+  expect(beam.feet.y).toBeGreaterThan(52.9);
+  const end = await bounce([58, 53, 4], [56.4, 53, 4], Math.PI / 2, 2);
+  expect(end.feet.y).toBeGreaterThan(55.9);
+  expect(Math.hypot(end.feet.x - 63, end.feet.z - 10)).toBeLessThan(3);
+  await page.evaluate(() => {
+    const tw = window.__tw;
+    tw.teleport(34, 45, 9, Math.PI / 2 + 0.2);
+    tw.setCamera(Math.PI / 2 + 0.2, 0.15);
+    tw.advance(0.3);
+  });
+  await shot(page, 'm18-weathercock', browserName);
+});
