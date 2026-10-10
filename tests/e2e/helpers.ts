@@ -9,6 +9,12 @@ export interface TwState {
   camera: { x: number; y: number; z: number; yaw: number; pitch: number };
   cameraInsideSolid: boolean;
   fps: number;
+  stamina: number;
+  sweets: number;
+  target: string | null;
+  targetUnknown: boolean;
+  charging: boolean;
+  checkpoint: [number, number, number] | null;
 }
 
 /** Shape of `window.__tw` as seen from tests (see src/main.ts). */
@@ -19,6 +25,10 @@ export interface TwApi {
   teleport(x: number, y: number, z: number, facing?: number): void;
   setCamera(yaw: number, pitch?: number): void;
   advance(seconds: number): void;
+  aimAt(x: number, y: number, z: number): void;
+  cast(hold?: number): void;
+  learn(spell: string): void;
+  signal(id: string): boolean;
   game: unknown;
 }
 

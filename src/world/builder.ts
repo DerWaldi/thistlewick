@@ -25,6 +25,7 @@ import {
 } from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type { ColliderInfo, Physics } from '../engine/physics';
+import type { EntitySpec } from '../entities/types';
 import type { PlayerEnvironment } from '../player/controller';
 import { COLORS, worldMaterial } from './materials';
 
@@ -75,6 +76,8 @@ export class LevelBuilder implements PlayerEnvironment {
   private water: WaterVolume[] = [];
   private movers: Mover[] = [];
   readonly animated: Animated[] = [];
+  /** Entities to spawn once the world exists (see World.spawnAll). */
+  readonly entities: EntitySpec[] = [];
   private time = 0;
 
   constructor(
@@ -99,6 +102,54 @@ export class LevelBuilder implements PlayerEnvironment {
     paint(geo, opts.color ?? COLORS.stone, true);
     if (opts.info?.surface === 'ice') this.iceGeos.push(geo);
     else this.staticGeos.push(geo);
+  }
+
+  /** Place an entity (push block, switch, sweet...) in the level. */
+  add(...specs: EntitySpec[]): void {
+    this.entities.push(...specs);
+  }
+
+  /**
+   * A slab floor over [minX,maxX]x[minZ,maxZ] with its top at `top`, leaving rectangular
+   * holes (pits, pools). Cells are merged along X to keep the collider count down.
+   */
+  floor(
+    minX: number,
+    maxX: number,
+    minZ: number,
+    maxZ: number,
+    opts: { top?: number; thickness?: number; color?: string; holes?: [number, number, number, number][] } = {},
+  ): void {
+    const top = opts.top ?? 0;
+    const t = opts.thickness ?? 4;
+    const holes = opts.holes ?? [];
+    const xs = [...new Set([minX, maxX, ...holes.flatMap((h) => [h[0], h[1]])])].filter((v) => v >= minX && v <= maxX).sort((a, b) => a - b);
+    const zs = [...new Set([minZ, maxZ, ...holes.flatMap((h) => [h[2], h[3]])])].filter((v) => v >= minZ && v <= maxZ).sort((a, b) => a - b);
+    const inHole = (x: number, z: number) => holes.some((h) => x > h[0] && x < h[1] && z > h[2] && z < h[3]);
+    for (let j = 0; j < zs.length - 1; j++) {
+      let runStart: number | null = null;
+      for (let i = 0; i <= xs.length - 1; i++) {
+        const solid = i < xs.length - 1 && !inHole((xs[i] + xs[i + 1]) / 2, (zs[j] + zs[j + 1]) / 2);
+        if (solid && runStart === null) runStart = xs[i];
+        if (!solid && runStart !== null) {
+          const x0 = runStart;
+          const x1 = xs[i];
+          this.box([(x0 + x1) / 2, top - t / 2, (zs[j] + zs[j + 1]) / 2], [x1 - x0, t, zs[j + 1] - zs[j]], { color: opts.color ?? COLORS.floor });
+          runStart = null;
+        }
+      }
+    }
+  }
+
+  /** A straight wall from (x0,z0) to (x1,z1) standing on `base`. */
+  wall(x0: number, z0: number, x1: number, z1: number, height: number, opts: { base?: number; thickness?: number; color?: string } = {}): void {
+    const len = Math.hypot(x1 - x0, z1 - z0);
+    const yaw = Math.atan2(x1 - x0, z1 - z0);
+    const base = opts.base ?? 0;
+    this.box([(x0 + x1) / 2, base + height / 2, (z0 + z1) / 2], [opts.thickness ?? 0.6, height, len], {
+      color: opts.color ?? COLORS.stone,
+      rot: [0, yaw, 0],
+    });
   }
 
   cylinder(center: V3, radius: number, height: number, color: string, info?: ColliderInfo, segments = 10): void {

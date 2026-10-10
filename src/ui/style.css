@@ -135,3 +135,188 @@ body {
 .lil-gui.root {
   pointer-events: auto;
 }
+
+/* ---------------------------------------------------------------- HUD */
+
+#hud.hidden {
+  display: none;
+}
+
+.hud-chip {
+  position: absolute;
+  top: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: rgba(43, 29, 20, 0.55);
+  border: 2px solid rgba(201, 151, 58, 0.8);
+  border-radius: 20px;
+  color: var(--parchment);
+  font-size: 20px;
+  font-weight: bold;
+  text-shadow: 0 1px 2px #000;
+}
+
+#hud-stamina {
+  left: 16px;
+}
+
+.pip {
+  width: 18px;
+  height: 18px;
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  background: radial-gradient(circle at 35% 35%, #ffd0a0, #e0563a 55%, #8a2a1c);
+  box-shadow: 0 0 4px rgba(255, 120, 60, 0.6);
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.pip.empty {
+  background: rgba(243, 228, 196, 0.15);
+  box-shadow: inset 0 0 0 2px rgba(243, 228, 196, 0.35);
+}
+
+.pip.lost {
+  animation: pip-lost 0.5s ease;
+}
+
+@keyframes pip-lost {
+  30% {
+    transform: scale(1.6);
+  }
+}
+
+#hud-sweets {
+  right: 16px;
+}
+
+.sweet-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #c9fff3, #4fd6c0 55%, #1d7d6e);
+}
+
+#hud-sweets.pop {
+  animation: sweet-pop 0.25s ease;
+}
+
+@keyframes sweet-pop {
+  40% {
+    transform: scale(1.18);
+  }
+}
+
+#hud-target {
+  position: absolute;
+  left: 50%;
+  top: calc(50% + 34px);
+  transform: translateX(-50%);
+  font-size: 17px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  text-shadow:
+    0 1px 3px #000,
+    0 0 8px rgba(0, 0, 0, 0.6);
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+#hud-target.show {
+  opacity: 1;
+}
+
+#hud-target .unknown {
+  color: #c9c1b4;
+  font-weight: normal;
+  font-style: italic;
+}
+
+#crosshair {
+  transition: transform 0.1s ease, background 0.1s ease;
+}
+
+#crosshair.locked {
+  transform: scale(1.6);
+  background: #ffe9b0;
+}
+
+#charge-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 46px;
+  height: 46px;
+  margin: -23px 0 0 -23px;
+  border-radius: 50%;
+  --p: 0;
+  --c: #ff9a3c;
+  background: conic-gradient(var(--c) calc(var(--p) * 1turn), rgba(20, 12, 8, 0.45) 0);
+  -webkit-mask: radial-gradient(circle, transparent 13px, #000 14px);
+  mask: radial-gradient(circle, transparent 13px, #000 14px);
+  box-shadow: 0 0 0 1px rgba(255, 240, 210, 0.5);
+  opacity: 0;
+  transition: opacity 0.1s ease;
+}
+
+#charge-ring.show {
+  opacity: 1;
+}
+
+#charge-ring.full {
+  filter: drop-shadow(0 0 6px var(--c));
+}
+
+#toasts {
+  position: absolute;
+  left: 50%;
+  top: 70px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  max-width: calc(100vw - 32px);
+}
+
+.toast {
+  padding: 6px 16px;
+  background: var(--parchment);
+  border: 2px solid var(--gold);
+  border-radius: 8px;
+  font-size: 17px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  animation: toast-in 0.25s ease;
+  text-align: center;
+}
+
+.toast.hint {
+  font-style: italic;
+}
+
+.toast.out {
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: all 0.4s ease;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+}
+
+#hurt-flash {
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 0 120px 30px rgba(200, 30, 20, 0.7);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+#hurt-flash.on {
+  opacity: 1;
+  transition: none;
+}

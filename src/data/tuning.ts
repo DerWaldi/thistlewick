@@ -37,9 +37,21 @@ export const DEFAULT_TUNING = {
     regrabCooldown: 0.35,
     shimmySpeed: 1.8,
   },
+  cast: {
+    range: 20, // max distance from the player to a target
+    aimCone: 11, // degrees of forgiveness around the crosshair
+    markerRange: 14, // idle runes show within this distance
+    tapTime: 0.16, // holding longer than this starts charging
+    chargeTime: 0.9,
+    chargeMoveScale: 0.45, // movement speed while charging
+    boltSpeed: 32,
+    cooldown: 0.22,
+    magnetRadius: 1.8, // sweets fly to you inside this radius
+  },
   camera: {
     distance: 5.4,
-    height: 1.35, // pivot height above the feet
+    height: 1.5, // pivot height above the feet
+    shoulder: 0.65, // sideways offset so the player sits left of the crosshair
     minPitch: -0.95,
     maxPitch: 0.55,
     sensitivity: 0.0022,

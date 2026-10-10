@@ -10,14 +10,13 @@ import { COLORS, worldMaterial } from '../../world/materials';
  *   corridor & low tunnel in the south-west, ledge walls south of spawn, movers in the east.
  */
 export function buildGym(b: LevelBuilder): { spawn: Vector3; yaw: number } {
-  // ---------------------------------------------------------------- floor with a pool hole
-  const FT = 3.5; // floor thickness so the pool has walls
-  const floor = (minX: number, maxX: number, minZ: number, maxZ: number) =>
-    b.box([(minX + maxX) / 2, -FT / 2, (minZ + maxZ) / 2], [maxX - minX, FT, maxZ - minZ], { color: COLORS.floor });
-  floor(-45, 14, -40, 55);
-  floor(26, 45, -40, 55);
-  floor(14, 26, -40, 18);
-  floor(14, 26, 34, 55);
+  // ---------------------------------------------------------------- floor with a pool and a pit
+  b.floor(-45, 45, -40, 55, {
+    holes: [
+      [14, 26, 18, 34],
+      [-44, -18, 35.5, 40],
+    ],
+  });
   b.pool(14, 26, 18, 34, -0.5, -3.5);
   // Stepping stones across the pool.
   [
@@ -123,6 +122,8 @@ export function buildGym(b: LevelBuilder): { spawn: Vector3; yaw: number } {
   b.box([38, 2.75, 7.5], [3, 5.5, 3], { color: COLORS.stone });
   b.label('Lift', [38, 7, 3]);
 
+  practiceYard(b);
+
   // ---------------------------------------------------------------- set dressing
   b.prop(crookedTower(new Vector3(-6, 0, 50)));
   b.prop(crookedTower(new Vector3(30, 0, 48), 0.8));
@@ -131,6 +132,84 @@ export function buildGym(b: LevelBuilder): { spawn: Vector3; yaw: number } {
 
   b.finish();
   return { spawn: new Vector3(0, 0, 0), yaw: 0 };
+}
+
+/**
+ * M1 practice yard (x -44..-18, z 22..54): every Thwackwort mechanic in a row.
+ *   A  knock switch opens the first gate
+ *   B  push the block into the flooded pit to make a stepping stone
+ *   C  a timed switch races you to the next gate, or push a block onto a plate for the side gate
+ *   D  a garden of Gnarlings, a Gilded Humbug, and two teasers for spells you don't know yet
+ */
+function practiceYard(b: LevelBuilder): void {
+  const H = 4;
+  const wallColor = COLORS.stoneLight;
+  // Outer walls (entry gap in the south wall, exit gap in the east wall).
+  b.wall(-44, 22, -33, 22, H, { color: wallColor });
+  b.wall(-29, 22, -18, 22, H, { color: wallColor });
+  b.wall(-44, 22, -44, 54, H, { color: wallColor });
+  b.wall(-44, 54, -18, 54, H, { color: wallColor });
+  b.wall(-18, 22, -18, 50, H, { color: wallColor });
+  b.wall(-18, 53, -18, 54, H, { color: wallColor });
+  b.label('Practice Yard: Thwackwort', [-31, 5, 21.5], 1.3);
+  b.lantern([-33.4, 3.2, 21.5]);
+  b.lantern([-28.6, 3.2, 21.5]);
+
+  // A: switch + gate.
+  b.wall(-44, 30, -33.1, 30, H, { color: wallColor });
+  b.wall(-28.9, 30, -18, 30, H, { color: wallColor });
+  b.add(
+    { type: 'checkpoint', pos: [-36.5, 0, 24.5], yaw: Math.PI / 2 },
+    { type: 'sweetLine', kind: 'fizzwort', from: [-31, 0.6, 23.5], to: [-31, 0.6, 28.5], count: 5 },
+    { type: 'knockSwitch', id: 'yard-a', pos: [-36, 1.9, 29.7], yaw: Math.PI },
+    { type: 'gate', pos: [-31, 0, 30], yaw: 0, width: 3, height: 3, when: ['yard-a'] },
+  );
+  b.label('Aim at the rune and click', [-36, 3.4, 29], 0.9);
+
+  // B: push block + flooded pit (z 35.5..40). Tiles line up so the block drops in whole.
+  b.pool(-44, -18, 35.5, 40, -1.2, -2);
+  b.add(
+    { type: 'pushBlock', pos: [-31, 0, 32.5] },
+    { type: 'sweet', kind: 'bramble', pos: [-31, 1.5, 38.8] },
+    { type: 'sweetLine', kind: 'fizzwort', from: [-36, 0.6, 32], to: [-36, 0.6, 34.5], count: 3 },
+  );
+  b.label('Shove the block into the pit (hold to charge)', [-31, 3.6, 34.8], 0.9);
+
+  // C: timed switch for the main gate, or block + plate for the side gate.
+  b.wall(-44, 46, -43.1, 46, H, { color: wallColor });
+  b.wall(-39.9, 46, -33.1, 46, H, { color: wallColor });
+  b.wall(-28.9, 46, -18, 46, H, { color: wallColor });
+  b.add(
+    { type: 'knockSwitch', id: 'yard-timed', pos: [-18.3, 1.9, 42], yaw: -Math.PI / 2, timed: 5 },
+    { type: 'gate', pos: [-31, 0, 46], yaw: 0, width: 3, height: 3, when: ['yard-timed'] },
+    { type: 'pushBlock', pos: [-36.5, 0, 43.5] },
+    { type: 'plate', id: 'yard-plate', pos: [-38.5, 0, 43.5] },
+    { type: 'gate', pos: [-41.5, 0, 46], yaw: 0, width: 2, height: 2.6, when: ['yard-plate'] },
+    { type: 'sweetLine', kind: 'fizzwort', from: [-29, 0.6, 41.5], to: [-21, 0.6, 41.5], count: 5 },
+  );
+  b.label('Timed! Run for the gate', [-19.5, 3.4, 42], 0.9);
+
+  // D: the garden.
+  for (const [x, z, w, d] of [
+    [-38, 50.5, 3, 2],
+    [-24.5, 50, 3, 2.5],
+    [-31, 52.4, 5, 1.2],
+  ]) {
+    b.box([x, 0.15, z], [w, 0.3, d], { color: '#6e8a44' });
+  }
+  b.box([-42.5, 0.4, 52.5], [1.2, 0.8, 1.2], { color: COLORS.stoneDark });
+  b.add(
+    { type: 'checkpoint', pos: [-35.5, 0, 47.6], yaw: Math.PI / 2 },
+    { type: 'gnarling', pos: [-37.5, 0, 49], wander: 2.5 },
+    { type: 'gnarling', pos: [-30, 0, 50], wander: 3 },
+    { type: 'gnarling', pos: [-24, 0, 48.5], wander: 2.5 },
+    { type: 'sweet', kind: 'humbug', pos: [-42.5, 1.4, 52.5] },
+    { type: 'sweetLine', kind: 'fizzwort', from: [-40, 0.6, 48], to: [-22, 0.6, 48], count: 8 },
+    { type: 'teaser', spell: 'latchkin', prop: 'chest', pos: [-20.2, 0, 47.5], yaw: -Math.PI / 2 },
+    { type: 'teaser', spell: 'cindersnap', prop: 'vines', pos: [-31, 0, 53.4], yaw: Math.PI },
+  );
+  b.lantern([-43.4, 3, 49]);
+  b.lantern([-18.6, 3, 51.5]);
 }
 
 /** A leaning castle tower to give the horizon some character. */

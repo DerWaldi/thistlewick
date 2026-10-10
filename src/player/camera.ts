@@ -95,11 +95,15 @@ export class OrbitCamera {
     this.pivot.x = MathUtils.damp(this.pivot.x, targetX, c.followSharpness, dt);
     this.pivot.z = MathUtils.damp(this.pivot.z, targetZ, c.followSharpness, dt);
     this.pivot.y = this.pivotY + c.height;
+    // Over-the-shoulder: shift the look point right so the student doesn't cover the crosshair.
+    const shoulderPivot = this.pivot.clone();
+    shoulderPivot.x += -Math.cos(this.yaw) * c.shoulder;
+    shoulderPivot.z += Math.sin(this.yaw) * c.shoulder;
 
     // The pivot itself must not be inside geometry (e.g. hanging under a low ceiling).
     const safePivot = new Vector3(fx, fy + FOOT_OFFSET + 0.3, fz);
-    const pivotFree = this.physics.sphereSweep(safePivot, this.pivot, CAM_RADIUS, (col) => col !== p.collider);
-    const pivot = new Vector3().lerpVectors(safePivot, this.pivot, Math.max(0, pivotFree - 0.02));
+    const pivotFree = this.physics.sphereSweep(safePivot, shoulderPivot, CAM_RADIUS, (col) => col !== p.collider);
+    const pivot = new Vector3().lerpVectors(safePivot, shoulderPivot, Math.max(0, pivotFree - 0.02));
 
     // Spring arm. Looking up pulls the camera in so it doesn't dig into the floor.
     const cp = Math.cos(this.pitch);

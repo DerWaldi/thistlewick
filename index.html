@@ -10,6 +10,14 @@
     <canvas id="game"></canvas>
     <div id="ui">
       <div id="crosshair"></div>
+      <div id="charge-ring"></div>
+      <div id="hud" class="hidden">
+        <div id="hud-stamina" class="hud-chip"></div>
+        <div id="hud-sweets" class="hud-chip"><span class="sweet-icon"></span><span id="hud-sweets-n">0</span></div>
+        <div id="hud-target"></div>
+        <div id="toasts"></div>
+        <div id="hurt-flash"></div>
+      </div>
       <div id="click-to-play" class="panel">
         <h1>Thistlewick</h1>
         <h2>First Year</h2>
@@ -18,6 +26,7 @@
           <li><b>WASD</b> move</li>
           <li><b>Mouse</b> look</li>
           <li><b>Space</b> jump (hold for higher)</li>
+          <li><b>Click</b> cast at a glowing rune (hold to charge)</li>
           <li><b>S</b> while hanging: let go</li>
           <li><b>Esc</b> release mouse</li>
           <li><b>`</b> tuning panel</li>

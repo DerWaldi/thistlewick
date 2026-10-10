@@ -1,3 +1,4 @@
+import { SWEETS } from '../data/sweets';
 import type { EventBus } from './events';
 
 /**
@@ -25,6 +26,46 @@ export class Sfx {
     events.on('splash', () => this.splash());
     events.on('respawn', () => this.tone(600, 900, 0.25, 'sine', 0.12));
     events.on('skid', () => this.hiss(0.12, 2400, 0.08));
+
+    // casting
+    events.on('chargeStart', () => this.tone(220, 660, 0.9, 'triangle', 0.08));
+    events.on('cast', ({ charge }) => {
+      this.hiss(0.18, 1800 + charge * 1200, 0.18);
+      this.tone(520 + charge * 200, 900 + charge * 400, 0.16, 'sawtooth', 0.05);
+    });
+    events.on('spellHit', ({ charge }) => {
+      this.thud(0.7 + charge * 0.3, 120);
+      this.tone(700, 300, 0.12, 'square', 0.05);
+    });
+    events.on('fizzle', () => this.tone(300, 120, 0.25, 'triangle', 0.1));
+    // world
+    events.on('sweet', ({ kind }) => {
+      const base = SWEETS[kind].pitch;
+      this.tone(base, base * 1.5, 0.09, 'sine', 0.14);
+      setTimeout(() => this.tone(base * 1.5, base * 2, 0.12, 'sine', 0.1), 60);
+    });
+    events.on('checkpoint', () => [523, 659, 784].forEach((f, i) => setTimeout(() => this.tone(f, f, 0.35, 'sine', 0.12), i * 90)));
+    events.on('blockSlide', () => this.hiss(0.45, 380, 0.25));
+    events.on('blockStop', ({ fell }) => this.thud(fell ? 1 : 0.6, fell ? 90 : 130));
+    events.on('gateMove', () => {
+      this.hiss(0.9, 260, 0.18);
+      this.tone(90, 70, 0.9, 'sawtooth', 0.04);
+    });
+    events.on('signal', ({ on }) => this.tone(on ? 880 : 440, on ? 1320 : 330, 0.08, 'square', 0.05));
+    events.on('switchTick', () => this.tone(1500, 1500, 0.04, 'square', 0.05));
+    events.on('hurt', () => {
+      this.tone(320, 140, 0.25, 'sawtooth', 0.12);
+      this.hiss(0.15, 900, 0.15);
+    });
+    events.on('faint', () => this.tone(500, 90, 1.2, 'triangle', 0.15));
+    events.on('gnarlingNotice', () => this.tone(900, 1400, 0.12, 'square', 0.06));
+    events.on('gnarlingStunned', () => {
+      this.tone(1200, 500, 0.3, 'triangle', 0.1);
+    });
+    events.on('gnarlingBanished', () => {
+      this.hiss(0.3, 2600, 0.15);
+      [784, 988, 1175].forEach((f, i) => setTimeout(() => this.tone(f, f, 0.15, 'sine', 0.08), i * 60));
+    });
   }
 
   private ensure(): AudioContext | null {

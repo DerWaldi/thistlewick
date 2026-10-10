@@ -18,7 +18,7 @@ test('spawns grounded and renders the gym', async ({ page, browserName }) => {
 test('running jump has the intended arc', async ({ page }) => {
   const r = await page.evaluate(() => {
     const tw = window.__tw;
-    tw.teleport(-38, 0, 30, Math.PI / 2);
+    tw.teleport(-43, 0, -5, Math.PI / 2);
     tw.input({ y: 1 });
     tw.advance(1);
     const startX = tw.state().feet.x;
@@ -43,7 +43,7 @@ test('running jump has the intended arc', async ({ page }) => {
 test('tapping jump gives a short hop', async ({ page }) => {
   const maxY = await page.evaluate(() => {
     const tw = window.__tw;
-    tw.teleport(-38, 0, 30, 0);
+    tw.teleport(-43, 0, -5, 0);
     tw.advance(0.3);
     tw.pressJump();
     tw.input({ jump: true });

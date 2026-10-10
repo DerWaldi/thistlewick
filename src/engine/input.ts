@@ -7,11 +7,15 @@ export interface VirtualInput {
   x: number; // strafe, -1..1 (right positive)
   y: number; // forward, -1..1
   jump: boolean;
+  cast?: boolean;
 }
 
 export class Input {
   readonly keys = new Set<string>();
   private jumpLatch = false;
+  private castDown = false;
+  private castPressLatch = false;
+  private castReleaseLatch = false;
   private mouseDX = 0;
   private mouseDY = 0;
   locked = false;
@@ -33,6 +37,16 @@ export class Input {
       if (!this.locked) return;
       this.mouseDX += e.movementX;
       this.mouseDY += e.movementY;
+    });
+    window.addEventListener('mousedown', (e) => {
+      if (e.button !== 0 || !this.locked) return;
+      this.castDown = true;
+      this.castPressLatch = true;
+    });
+    window.addEventListener('mouseup', (e) => {
+      if (e.button !== 0 || !this.castDown) return;
+      this.castDown = false;
+      this.castReleaseLatch = true;
     });
     document.addEventListener('pointerlockchange', () => {
       this.locked = document.pointerLockElement === this.canvas;
@@ -69,6 +83,32 @@ export class Input {
     const v = this.jumpLatch;
     this.jumpLatch = false;
     return v;
+  }
+
+  castHeld(): boolean {
+    if (this.virtual?.cast !== undefined) return this.virtual.cast;
+    return this.castDown;
+  }
+
+  /** Returns true once per cast-button press. */
+  consumeCastPress(): boolean {
+    const v = this.castPressLatch;
+    this.castPressLatch = false;
+    return v;
+  }
+
+  /** Returns true once per cast-button release. */
+  consumeCastRelease(): boolean {
+    const v = this.castReleaseLatch;
+    this.castReleaseLatch = false;
+    return v;
+  }
+
+  /** Lets tests press/release the cast button. */
+  setCast(down: boolean): void {
+    if (down && !this.castDown) this.castPressLatch = true;
+    if (!down && this.castDown) this.castReleaseLatch = true;
+    this.castDown = down;
   }
 
   /** Lets tests trigger a jump press. */

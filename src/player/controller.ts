@@ -55,6 +55,12 @@ export class PlayerController {
   stateTime = 0;
   /** Normalised 0..1 progress of the current climb. */
   climbT = 0;
+  /** Multiplies run speed (e.g. while charging a spell). */
+  speedScale = 1;
+  /** When set, the player turns to this yaw instead of the stick direction. */
+  faceOverride: number | null = null;
+  /** Ignore movement and jump input (cutscenes, fainting). */
+  frozen = false;
 
   private groundInfo: ColliderInfo | undefined;
   private coyote = 0;
@@ -107,6 +113,10 @@ export class PlayerController {
     if (facing !== undefined) this.facing = facing;
   }
 
+  get environment(): PlayerEnvironment {
+    return this.env;
+  }
+
   get feet(): Vector3 {
     return tmpA.set(this.pos.x, this.pos.y - FOOT_OFFSET, this.pos.z);
   }
@@ -120,7 +130,7 @@ export class PlayerController {
     this.regrab -= dt;
     this.skidCooldown -= dt;
     this.stateTime += dt;
-    if (this.input.consumeJump()) this.buffer = this.tuning.jump.bufferTime;
+    if (this.input.consumeJump() && !this.frozen) this.buffer = this.tuning.jump.bufferTime;
     const maxSlope = (this.tuning.move.maxSlope * Math.PI) / 180;
     this.kcc.setMaxSlopeClimbAngle(maxSlope);
     this.kcc.setMinSlopeSlideAngle(maxSlope);
@@ -147,6 +157,10 @@ export class PlayerController {
   // ---------------------------------------------------------------- running & jumping
 
   private wishDir(cameraYaw: number, out: Vector3): number {
+    if (this.frozen) {
+      out.set(0, 0, 0);
+      return 0;
+    }
     const axis = this.input.moveAxis();
     const fx = Math.sin(cameraYaw);
     const fz = Math.cos(cameraYaw);
@@ -163,8 +177,8 @@ export class PlayerController {
     const onIce = this.grounded && this.groundSurface === 'ice';
 
     // Horizontal velocity: accelerate towards the wished velocity.
-    const tx = wish.x * m.runSpeed;
-    const tz = wish.z * m.runSpeed;
+    const tx = wish.x * m.runSpeed * this.speedScale;
+    const tz = wish.z * m.runSpeed * this.speedScale;
     let rate: number;
     if (this.grounded) {
       if (wishLen > 0.01) {
@@ -184,7 +198,9 @@ export class PlayerController {
     moveTowards2D(this.vel, tx, tz, rate * dt);
 
     // Facing follows the stick, not the velocity, so turning reads instantly.
-    if (wishLen > 0.1) {
+    if (this.faceOverride !== null) {
+      this.facing = rotateTowards(this.facing, this.faceOverride, m.turnRate * dt);
+    } else if (wishLen > 0.1) {
       const target = Math.atan2(wish.x, wish.z);
       this.facing = rotateTowards(this.facing, target, m.turnRate * dt);
     }
@@ -210,8 +226,9 @@ export class PlayerController {
     if (carry) {
       desired.x += carry.x;
       desired.z += carry.z;
-      // Rising platforms move after us, so match them exactly; otherwise press down a touch.
-      desired.y = carry.y > 0 ? carry.y : carry.y - 0.002;
+      // Match the platform exactly (snap-to-ground keeps us in contact). Pressing down
+      // into it makes Rapier occasionally stop at the surface and drop the horizontal part.
+      desired.y = carry.y;
     }
 
     this.kcc.computeColliderMovement(this.collider, desired, RAPIER.QueryFilterFlags.EXCLUDE_SENSORS);
@@ -320,6 +337,17 @@ export class PlayerController {
     this.jumpedThisArc = false;
     this.stateTime = 0;
     if (this.hang) this.hang = null;
+  }
+
+  /** Get knocked back (hurt): a short hop away from `from`. Breaks ledge holds. */
+  knockback(from: Vector3, strength = 6): void {
+    const away = new Vector3(this.pos.x - from.x, 0, this.pos.z - from.z);
+    if (away.lengthSq() < 1e-4) away.set(-Math.sin(this.facing), 0, -Math.cos(this.facing));
+    away.normalize().multiplyScalar(strength);
+    this.vel.x = 0;
+    this.vel.z = 0;
+    this.launch(0.6, away);
+    this.regrab = 0.4;
   }
 
   private bounce(scale: number): void {

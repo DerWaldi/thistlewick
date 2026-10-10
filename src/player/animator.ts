@@ -42,6 +42,10 @@ export class StudentAnimator {
   private readonly lastVel = new Vector3();
   private readonly renderPos = new Vector3();
   private time = 0;
+  private castFlick = new Spring(0, 260, 16);
+  /** 0..1 while the player charges a spell (set by the game each frame). */
+  charge = 0;
+  private aim = 0;
 
   constructor(
     private rig: StudentRig,
@@ -59,6 +63,11 @@ export class StudentAnimator {
       this.hatX.kick(5 * k);
     });
     events.on('ledgeGrab', () => this.hatX.kick(-4));
+    events.on('cast', ({ charge }) => {
+      this.castFlick.kick(-14 - charge * 8);
+      this.hatX.kick(-3);
+    });
+    events.on('fizzle', () => this.castFlick.kick(-10));
     events.on('respawn', () => {
       this.renderFacing = player.facing;
     });
@@ -125,6 +134,12 @@ export class StudentAnimator {
     const armX = (swing: number) => MathUtils.lerp(swing, -2.9, this.hangBlend);
     r.armL.rotation.x = armX(swing - airArms * 0.3);
     r.armR.rotation.x = armX(-swing - airArms * 0.5);
+    // Casting: the wand arm points forward while charging and flicks on release.
+    this.aim = MathUtils.damp(this.aim, this.charge > 0 ? 1 : 0, 14, dt);
+    const flick = this.castFlick.update(dt);
+    r.armR.rotation.x = MathUtils.lerp(r.armR.rotation.x, -1.45 - this.charge * 0.25, this.aim) + flick * 0.12;
+    const tipScale = 1 + this.charge * 2.5 + Math.max(0, -flick) * 0.15;
+    r.wandTip.scale.setScalar(tipScale);
     r.armL.rotation.z = MathUtils.lerp(0.18 + airArms * 0.8, 0.25, this.hangBlend);
     r.armR.rotation.z = MathUtils.lerp(-0.18 - airArms * 0.8, -0.25, this.hangBlend);
 

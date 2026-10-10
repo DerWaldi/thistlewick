@@ -49,8 +49,39 @@ function exposeTestApi(game: Game): void {
         camera: { x: cam.x, y: cam.y, z: cam.z, yaw: game.camera.yaw, pitch: game.camera.pitch },
         cameraInsideSolid: game.physics.pointInsideSolid(cam),
         fps: game.currentFps,
+        stamina: game.state.stamina,
+        sweets: game.state.sweets,
+        target: game.caster.current ? game.caster.current.spell : null,
+        targetUnknown: game.caster.currentUnknown,
+        charging: game.caster.charging,
+        checkpoint: game.state.checkpoint ? game.state.checkpoint.pos.toArray() : null,
       };
     },
+    /** Point the crosshair at a world position (the camera looks through its pivot). */
+    aimAt: (x: number, y: number, z: number) => {
+      const p = game.player;
+      const c = game.tuning.camera;
+      const pivot = new Vector3(p.pos.x - Math.cos(game.camera.yaw) * c.shoulder, p.feet.y + c.height, p.pos.z + Math.sin(game.camera.yaw) * c.shoulder);
+      const d = new Vector3(x, y, z).sub(pivot);
+      game.camera.yaw = Math.atan2(d.x, d.z);
+      game.camera.pitch = Math.max(game.tuning.camera.minPitch, Math.min(game.tuning.camera.maxPitch, Math.asin(d.y / d.length())));
+      game.loop.advance(1 / 60);
+      // Second pass: the camera has moved, so re-aim through the actual camera position.
+      const cam = game.renderer.camera.position;
+      const d2 = new Vector3(x, y, z).sub(cam);
+      game.camera.yaw = Math.atan2(d2.x, d2.z);
+      game.camera.pitch = Math.max(game.tuning.camera.minPitch, Math.min(game.tuning.camera.maxPitch, Math.asin(d2.y / d2.length())));
+      game.loop.advance(1 / 60);
+    },
+    /** Press the cast button, hold it for `hold` seconds of game time, release. */
+    cast: (hold = 0) => {
+      game.input.setCast(true);
+      game.loop.advance(Math.max(1 / 60, hold));
+      game.input.setCast(false);
+      game.loop.advance(1 / 60);
+    },
+    learn: (spell: string) => game.state.learn(spell as never),
+    signal: (id: string) => game.world.ctx.signals.get(id),
     /** Hold a virtual stick (camera-relative) and jump button; pass null to release. */
     input: (v: { x?: number; y?: number; jump?: boolean } | null) => {
       game.input.virtual = v ? { x: v.x ?? 0, y: v.y ?? 0, jump: v.jump ?? false } : null;
