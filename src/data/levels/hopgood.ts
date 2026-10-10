@@ -75,7 +75,8 @@ function build(b: LevelBuilder): void {
   ];
   platforms.forEach(([x0, x1, top], i) => {
     b.box([(x0 + x1) / 2, top / 2, 14], [x1 - x0, top, 4], { color: i === 2 ? '#a07a5a' : '#8a6a4a', pattern: 'planks', info: { noGrab: true } });
-    deco(b, new BoxGeometry(x1 - x0 + 0.1, 0.12, 4.1), [(x0 + x1) / 2, top - 0.06, 14], COLORS.woodDark);
+    // A lip along the front edge (not a full cap: a cap flush with the top z-fights).
+    deco(b, new BoxGeometry(x1 - x0 + 0.1, 0.16, 0.14), [(x0 + x1) / 2, top - 0.05, 11.95], COLORS.woodDark);
     // Painted height marks.
     for (let y = 1; y < top; y += 1) deco(b, new BoxGeometry(0.4, 0.05, 0.02), [(x0 + x1) / 2, y, 11.99], '#f3ead8');
   });

@@ -79,7 +79,8 @@ function build(b: LevelBuilder): void {
 
   // ================================================================ base (y 0)
   b.box([-7.5, 2.5, 12], [5, 5, 16], { color: COLORS.stoneLight }); // L1
-  deco(b, new BoxGeometry(5.1, 0.15, 16.1), [-7.5, 4.93, 12], COLORS.stoneDark);
+  // Caps sit a few centimetres proud of the surfaces they trim: flush faces z-fight.
+  deco(b, new BoxGeometry(5.1, 0.15, 16.1), [-7.5, 4.96, 12], COLORS.stoneDark);
   b.add(
     { type: 'door', pos: [0, 0, 0.05], yaw: 0, width: 2.4, height: 3.4, to: { level: 'hopgood', spawn: 'fromTower' } },
     { type: 'checkpoint', pos: [-7, 0, 2.5], yaw: Math.PI / 2, zone: { min: [-10, -1, 0], max: [10, 4, 6] } },
@@ -172,10 +173,10 @@ function build(b: LevelBuilder): void {
     [23, 4, 34, 2.2],
     [29.5, 10, 37, 3],
   ]) {
-    deco(b, new CylinderGeometry(r + 0.15, r + 0.15, 0.3, 14), [x, top - 0.15, z], COLORS.stoneDark);
+    deco(b, new CylinderGeometry(r + 0.15, r + 0.15, 0.3, 14), [x, top - 0.12, z], COLORS.stoneDark);
     banner(b, [x, top - 1.8, z - r - 0.05], Math.PI, '#3f7a4a', '#e8c25a', 1, 2.2);
   }
-  deco(b, new BoxGeometry(5.3, 0.4, 5.3), [35, 44.8, 10], COLORS.stoneDark);
+  deco(b, new BoxGeometry(5.3, 0.4, 5.3), [35, 44.83, 10], COLORS.stoneDark);
   deco(b, new CylinderGeometry(0.06, 0.06, 4, 5), [36.8, 47, 8.2], '#3a3340');
   deco(b, new BoxGeometry(0.05, 0.9, 1.4), [36.8, 48.5, 8.9], '#e8c25a');
   deco(b, new ConeGeometry(1.2, 2.5, 4), [-6, ROOF + 1.25, 6], COLORS.roof, [0, Math.PI / 4, 0]);
