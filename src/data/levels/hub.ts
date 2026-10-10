@@ -435,7 +435,23 @@ function buildHub(b: LevelBuilder): void {
   deco(b, new BoxGeometry(4.8, 0.3, 1.3), [0, R + 0.15, 61.45], COLORS.stone);
   deco(b, new BoxGeometry(4.7, 0.25, 1.9), [0, 8.1, 61.75], COLORS.stone);
   deco(b, new BoxGeometry(4.7, 0.25, 1.9), [0, 13.9, 61.75], COLORS.stone);
-  deco(b, new ConeGeometry(3.2, 3.5, 4), [0, 15.75, 61.8], COLORS.roof, [0, Math.PI / 4, 0]);
+  deco(b, new BoxGeometry(4.6, 0.6, 1.8), [0, 14.3, 61.8], COLORS.stoneLight);
+  // The Clock Tower itself rises behind the north wall, as big outside as it is inside
+  // (16 m square, its roof peaking at about 40 m), with the clock high on its south face.
+  const TS = '#b8a48a';
+  b.box([0, 15, 72], [16, 30, 16], { color: TS, noCollide: true });
+  for (const x of [-8.3, 8.3]) b.box([x, 16, 64.3], [1.4, 32, 1.4], { color: COLORS.stoneLight, noCollide: true });
+  for (const y of [14, 23.8, 29.6]) deco(b, new BoxGeometry(16.8, 0.5, 0.6), [0, y, 63.9], COLORS.stoneLight);
+  // The belfry: dark arched openings under the roof.
+  for (const x of [-4.5, 0, 4.5]) {
+    deco(b, new BoxGeometry(2.4, 3.6, 0.1), [x, 26.8, 63.94], '#2a2026');
+    deco(b, new CylinderGeometry(1.2, 1.2, 0.1, 12, 1, false, 0, Math.PI), [x, 28.6, 63.94], '#2a2026', [Math.PI / 2, 0, Math.PI / 2]);
+  }
+  for (const x of [-5, 5]) windowPane(b, glow, 'x', 63.98, x, 18, 1.2, 2.6, -1);
+  deco(b, new ConeGeometry(12.4, 10, 4), [0, 35.2, 72], COLORS.roof, [0, Math.PI / 4, 0]);
+  deco(b, new BoxGeometry(17.2, 0.6, 17.2), [0, 30.2, 72], COLORS.stoneLight);
+  deco(b, new CylinderGeometry(0.08, 0.08, 3, 5), [0, 41.5, 72], '#3a3340');
+  deco(b, new ConeGeometry(0.35, 0.8, 6), [0, 43.3, 72], '#c99a3e');
   const clock = new Group();
   const face = new Mesh(new CylinderGeometry(1.4, 1.4, 0.15, 24), new MeshStandardMaterial({ color: '#f3e4c4', roughness: 0.6 }));
   face.rotation.x = Math.PI / 2;
@@ -454,7 +470,8 @@ function buildHub(b: LevelBuilder): void {
   cap.rotation.x = Math.PI / 2;
   cap.position.z = -0.14;
   clock.add(face, dial, rim, hand1, hand2, cap);
-  clock.position.set(0, 11.5, 60.95);
+  clock.position.set(0, 20, 63.48);
+  clock.scale.setScalar(2.1);
   b.prop(clock);
   crate(b, [-6, R, 60.3], 1.2);
   b.add(

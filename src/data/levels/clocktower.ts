@@ -27,8 +27,8 @@ export const CLOCKTOWER: LevelDef = {
 const STONE = '#9a8a7a';
 
 /**
- * A flight of stone steps on a sloping stringer: each step block reaches only half a metre
- * below its tread, so the underside follows the slope instead of hanging as a solid wedge.
+ * A flight of stone steps: each step block reaches only half a metre below its tread, so
+ * the underside steps up with the slope instead of hanging as a solid wedge.
  * Collision is one smooth invisible ramp, like `b.stairs`.
  */
 function flight(b: LevelBuilder, start: V3, yaw: number, steps: number, rise: number, run: number, width: number): void {
@@ -45,10 +45,6 @@ function flight(b: LevelBuilder, start: V3, yaw: number, steps: number, rise: nu
     });
   }
   const height = rise * steps;
-  const length = run * steps;
-  const angle = Math.atan2(height, length);
-  // The stringer's underside: a plank along the slope, just under the step blocks.
-  deco(b, new BoxGeometry(width, 0.15, Math.hypot(length, height)), at(length / 2, height / 2 - depth - rise - 0.08), '#8a7a6a', [-angle, yaw, 0]);
   const flat = run * (steps - 0.5);
   b.ramp(at(-run / 2, 0), Math.hypot(flat, height), width, (Math.atan2(height, flat) * 180) / Math.PI, yaw, COLORS.stoneLight, true);
   b.box(at(run * (steps - 0.5), height - 0.3), [width, 0.6, run], { rot: [0, yaw, 0], invisible: true });
@@ -158,14 +154,16 @@ function build(b: LevelBuilder): void {
       deco(b, new BoxGeometry(axis === 'x' ? 0.2 : 0.3, 0.3, axis === 'x' ? 0.3 : 0.2), pos, '#8a6a2a', axis === 'x' ? [a, 0, 0] : [0, 0, a]);
     }
   }
-  // The back of the great dial, glowing with daylight, behind the SW/S landings.
-  deco(b, new CircleGeometry(2.8, 32), [0, 11.6, 0.02], '#f3e4c4');
-  glow.add(new TorusGeometry(2.9, 0.08, 4, 32), [0, 11.6, 0.05]);
+  // The back of the great dial, glowing with daylight, high on the south wall (where it is
+  // outside too), above the lap where no flight runs along that wall.
+  const DIAL = 20;
+  deco(b, new CircleGeometry(2.8, 32), [0, DIAL, 0.02], '#f3e4c4');
+  glow.add(new TorusGeometry(2.9, 0.08, 4, 32), [0, DIAL, 0.05]);
   for (let i = 0; i < 12; i++) {
     const a = (i / 12) * Math.PI * 2;
-    deco(b, new BoxGeometry(0.12, 0.4, 0.04), [Math.sin(a) * 2.4, 11.6 + Math.cos(a) * 2.4, 0.05], '#2b1d14', [0, 0, -a]);
+    deco(b, new BoxGeometry(0.12, 0.4, 0.04), [Math.sin(a) * 2.4, DIAL + Math.cos(a) * 2.4, 0.05], '#2b1d14', [0, 0, -a]);
   }
-  deco(b, new CylinderGeometry(0.25, 0.25, 0.6, 10), [0, 11.6, 0.3], '#3a3340', [Math.PI / 2, 0, 0]);
+  deco(b, new CylinderGeometry(0.25, 0.25, 0.6, 10), [0, DIAL, 0.3], '#3a3340', [Math.PI / 2, 0, 0]);
 
   // ---------------------------------------------------------------- windows, lamps, the way up
   for (const y of [5, 13, 21, 28]) {
