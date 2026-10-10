@@ -529,7 +529,8 @@ function labelPlate(text: string, _w: number, h: number): Mesh {
   const tex = new CanvasTexture(c);
   tex.colorSpace = SRGBColorSpace;
   const m = new Mesh(new PlaneGeometry(1.6, 0.3), new MeshBasicMaterial({ map: tex }));
-  m.position.set(0, h + 0.25, 0.08);
+  // Just in front of the frame (0.21 deep), so it never sinks into a thick lintel or gable.
+  m.position.set(0, h + 0.25, 0.23);
   return m;
 }
 

@@ -1,4 +1,4 @@
-import { BoxGeometry, ConeGeometry, CylinderGeometry, IcosahedronGeometry, SphereGeometry, TorusGeometry } from 'three';
+import { BoxGeometry, ConeGeometry, CylinderGeometry, ExtrudeGeometry, IcosahedronGeometry, Shape, SphereGeometry, TorusGeometry } from 'three';
 import type { LevelBuilder, V3 } from '../../world/builder';
 import type { LevelDef } from '../../world/level';
 import { COLORS } from '../../world/materials';
@@ -149,21 +149,44 @@ function build(b: LevelBuilder): void {
   );
 
   // ---------------------------------------------------------------- Coldharbour's boathouse
+  // Plank walls (3.8 m) under a pitched roof running east-west, solid gables at both ends,
+  // and a wide double door in the east gable.
   const BOARDS = '#6a5a4a';
-  b.box([-35, LAWN + 1.75, -36], [10, 3.5, 0.3], { color: BOARDS, pattern: 'planks' });
-  b.box([-40, LAWN + 1.75, -41], [0.3, 3.5, 10], { color: BOARDS, pattern: 'planks' });
-  b.box([-30, LAWN + 1.75, -37.6], [0.3, 3.5, 3.2], { color: BOARDS, pattern: 'planks' });
-  b.box([-30, LAWN + 1.75, -44.4], [0.3, 3.5, 3.2], { color: BOARDS, pattern: 'planks' });
-  b.box([-30, LAWN + 3.2, -41], [0.3, 0.6, 3.6], { color: BOARDS, pattern: 'planks' });
-  b.box([-35, LAWN + 1.75, -46], [10, 3.5, 0.3], { color: BOARDS, pattern: 'planks' });
+  const WALL = 3.8;
+  const RIDGE = 2.8;
+  const wallBox = (c: V3, size: V3) => b.box(c, size, { color: BOARDS, pattern: 'planks' });
+  wallBox([-35, LAWN + WALL / 2, -36], [10, WALL, 0.3]);
+  wallBox([-35, LAWN + WALL / 2, -46], [10, WALL, 0.3]);
+  wallBox([-40, LAWN + WALL / 2, -41], [0.3, WALL, 10.3]);
+  wallBox([-30, LAWN + WALL / 2, -37.6], [0.3, WALL, 3.5]);
+  wallBox([-30, LAWN + WALL / 2, -44.4], [0.3, WALL, 3.5]);
+  wallBox([-30, LAWN + 3.2 + (WALL - 3.2) / 2, -41], [0.3, WALL - 3.2, 3.4]);
+  const gable = new Shape();
+  gable.moveTo(-5.15, 0);
+  gable.lineTo(5.15, 0);
+  gable.lineTo(0, RIDGE);
+  gable.closePath();
+  for (const x of [-30.15, -40.15]) deco(b, new ExtrudeGeometry(gable, { depth: 0.3, bevelEnabled: false }), [x, LAWN + WALL, -41], BOARDS, [0, Math.PI / 2, 0]);
+  // The roof: two slopes meeting at the ridge, overhanging the walls a little.
+  const half = 5.6;
+  const slope = Math.atan2(RIDGE, 5.15);
+  const run = Math.hypot(half, half * Math.tan(slope));
   for (const side of [-1, 1]) {
-    deco(b, new BoxGeometry(11, 0.25, 6.2), [-35, LAWN + 4.6, -41 + side * 2.6], '#4a5a6a', [side * 0.5, 0, 0]);
+    deco(b, new BoxGeometry(11, 0.22, run), [-35, LAWN + WALL + RIDGE - (half / 2) * Math.tan(slope) + 0.12, -41 + side * (half / 2)], '#4a5a6a', [side * slope, 0, 0]);
   }
-  deco(b, new BoxGeometry(11, 0.3, 0.3), [-35, LAWN + 6, -41], COLORS.woodDark);
-  b.add({ type: 'door', pos: [-30.1, LAWN, -41], yaw: Math.PI / 2, width: 2.2, height: 3, to: { level: 'coldharbour', spawn: 'default' }, label: 'Frosts & Waters' });
-  // A rowing boat, pulled up on the shore.
-  deco(b, new BoxGeometry(1.2, 0.5, 3.4), [-26.5, LAWN + 0.25, -44], COLORS.wood);
-  deco(b, new BoxGeometry(1, 0.1, 3.2), [-26.5, LAWN + 0.45, -44], COLORS.woodDark);
+  deco(b, new BoxGeometry(11.2, 0.3, 0.3), [-35, LAWN + WALL + RIDGE + 0.15, -41], COLORS.woodDark);
+  b.add({ type: 'door', pos: [-29.8, LAWN, -41], yaw: Math.PI / 2, width: 3.4, height: 3.2, to: { level: 'coldharbour', spawn: 'default' }, label: 'Frosts & Waters' });
+  // A rowing boat, moored in the water beside the boathouse: a hollow hull, a seat, oars.
+  const BOAT: V3 = [-26.8, WATER, -46.5];
+  const hull = (dx: number, dy: number, dz: number, size: V3, color = COLORS.wood) => deco(b, new BoxGeometry(...size), [BOAT[0] + dx, BOAT[1] + dy, BOAT[2] + dz], color);
+  hull(0, -0.1, 0, [1.1, 0.12, 3]);
+  for (const sx of [-1, 1]) hull(sx * 0.6, 0.12, 0, [0.1, 0.5, 3.2], COLORS.woodDark);
+  hull(0, 0.12, 1.6, [1.3, 0.5, 0.1], COLORS.woodDark);
+  hull(0, 0.12, -1.6, [1.3, 0.5, 0.1], COLORS.woodDark);
+  hull(0, 0.2, 0.3, [1.1, 0.06, 0.35]);
+  for (const sx of [-1, 1]) deco(b, new BoxGeometry(0.06, 0.06, 2.4), [BOAT[0] + sx * 0.35, BOAT[1] + 0.3, BOAT[2] - 0.3], '#c8a870', [0.1, sx * 0.2, 0]);
+  b.cylinder([-28.4, LAWN - 0.5, -45], 0.12, 2, COLORS.woodDark, undefined, 6);
+  deco(b, new CylinderGeometry(0.02, 0.02, 1.6, 4), [-27.6, WATER + 0.55, -45.5], '#c8b898', [0.9, 0, 0.9]);
   crate(b, [-28, LAWN, -37], 0.8);
 
   // ================================================================ the lake
