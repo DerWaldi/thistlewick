@@ -47,6 +47,7 @@ function build(b: LevelBuilder): void {
       to: { level: 'trial', spawn: 'default' },
       lockedUnless: 'practice-done',
       closedAfter: 'thwackwort',
+      style: 'iron',
       talk: 'lockedTrialDoor',
       label: 'The Trial',
     },

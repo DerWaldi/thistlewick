@@ -72,6 +72,7 @@ function build(b: LevelBuilder): void {
       to: { level: 'vault', spawn: 'default' },
       lockedUnless: 'practice-latchkin',
       closedAfter: 'latchkin',
+      style: 'iron',
       talk: 'lockedVaultDoor',
       label: 'The Vaults',
     },
@@ -164,7 +165,8 @@ function build(b: LevelBuilder): void {
     lightShaft(b, [-6.95, 5.3, z], [0.85, -0.65, 0.2], 8, 1.3, 0.18);
   }
   dustMotes(b, [-6.5, 0.5, 1], [6.5, 6.5, 13.5], 70);
-  portrait(b, CARD_BY_ID.get('lumley-lockjaw')!.portrait, [6.95, 3.8, 9.5], -Math.PI / 2, 1.2, 1.5, 0.04);
+  // Above the shelves, well clear of the Vaults door's frame.
+  portrait(b, CARD_BY_ID.get('lumley-lockjaw')!.portrait, [6.95, 4.85, 5.5], -Math.PI / 2, 1.2, 1.5, 0.04);
   for (const [corner, d1, d2] of [
     [[-7, H - 0.5, 0], [1, 0], [0, 1]],
     [[7, H - 0.5, 14], [-1, 0], [0, -1]],

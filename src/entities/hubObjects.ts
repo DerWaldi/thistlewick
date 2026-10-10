@@ -417,15 +417,44 @@ export class Door implements Interactable {
     const g = new Group();
     g.position.copy(this.pos);
     g.rotation.y = yaw;
-    const mat = worldMaterial();
+    const isIron = spec.style === 'iron';
+    const mat = isIron ? worldMaterial({ metalness: 0.55, roughness: 0.5 }) : worldMaterial();
     const leaf = (x: number) => {
-      const m = new Mesh(paint(new BoxGeometry(w / 2 - 0.02, h, 0.12).toNonIndexed(), COLORS.wood, true, 'planks'), mat);
+      const m = new Mesh(paint(new BoxGeometry(w / 2 - 0.02, h, 0.12).toNonIndexed(), isIron ? '#4a4d57' : COLORS.wood, true, isIron ? 'plain' : 'planks'), mat);
       m.position.set(x, h / 2, 0);
       m.castShadow = true;
       return m;
     };
     const iron = new MeshStandardMaterial({ color: '#2a2230', metalness: 0.5, roughness: 0.6, flatShading: true });
     g.add(leaf(-w / 4), leaf(w / 4));
+    if (isIron) {
+      // Riveted plates: a raised border on each leaf and rows of rivets.
+      const plate = new MeshStandardMaterial({ color: '#5a5e68', metalness: 0.6, roughness: 0.45, flatShading: true });
+      const rivet = new MeshStandardMaterial({ color: '#7a7e88', metalness: 0.7, roughness: 0.35, flatShading: true });
+      const studs = new Group();
+      for (const side of [-1, 1]) {
+        const cx = (side * w) / 4;
+        for (const [bw, bh, bx, by] of [
+          [w / 2 - 0.14, 0.08, cx, h - 0.12],
+          [w / 2 - 0.14, 0.08, cx, 0.12],
+          [0.08, h - 0.2, cx - side * (w / 4 - 0.1), h / 2],
+          [0.08, h - 0.2, cx + side * (w / 4 - 0.1), h / 2],
+        ] as const) {
+          const m = new Mesh(new BoxGeometry(bw, bh, 0.04), plate);
+          m.position.set(bx, by, 0.075);
+          studs.add(m);
+        }
+        for (let i = 0; i < 7; i++) {
+          for (const dx of [-0.32, 0.32]) {
+            const r = new Mesh(new SphereGeometry(0.035, 5, 4), rivet);
+            r.position.set(cx + dx * (w / 2.4), 0.35 + i * ((h - 0.7) / 6), 0.08);
+            studs.add(r);
+          }
+        }
+      }
+      mergeChildren(studs);
+      g.add(studs);
+    }
     // A dark panel behind the leaves, so the gap between them never shows the hole in the wall.
     const backing = new Mesh(paint(new BoxGeometry(w, h, 0.02).toNonIndexed(), '#1b120c', true), mat);
     backing.position.set(0, h / 2, -0.075);

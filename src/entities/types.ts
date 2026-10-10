@@ -89,6 +89,8 @@ export type EntitySpec = SpecBase &
         /** Dialogue script to run instead of the `locked` toast. */
         talk?: string;
         label?: string;
+        /** Wooden (default) or riveted iron (the doors down to the trials). */
+        style?: 'wood' | 'iron';
       }
     | { type: 'hourglasses'; pos: V3; yaw: number }
     | { type: 'springPad'; pos: V3; radius: number }
