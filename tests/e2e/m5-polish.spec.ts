@@ -53,7 +53,7 @@ test('dressed rooms render and furniture is solid', async ({ page, browserName }
     const tw = window.__tw;
     await tw.idle();
     // Drop onto the long table: its top holds you up.
-    tw.teleport(8.6, 2, 8.5, 0);
+    tw.teleport(8.6, 2, 14.8, 0);
     tw.advance(1);
     const onTable = tw.state().feet.y;
     tw.teleport(-2, 0, 3, 0.6);

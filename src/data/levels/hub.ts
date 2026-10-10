@@ -176,10 +176,12 @@ function buildHub(b: LevelBuilder): void {
 
   // Hall furnishings: a long table with benches, rugs, plants by the doors, urns at the
   // stair foot, armour under the gallery, a reading desk upstairs and cobwebs up high.
-  table(b, candle, [8.6, 0, 8.5], Math.PI / 2, 7.5, 1.4, 4);
-  bench(b, [7.3, 0, 8.5], Math.PI / 2, 6.5);
-  bench(b, [9.9, 0, 8.5], Math.PI / 2, 6.5);
-  rug(b, [-7.6, 0, 11], 5, 3.6, '#2f5a6a', '#c99a3e');
+  // North of the corridor arch (z 6..10), so the way east stays clear.
+  table(b, candle, [8.6, 0, 14.8], Math.PI / 2, 6, 1.4, 4);
+  bench(b, [7.3, 0, 14.8], Math.PI / 2, 5.2);
+  bench(b, [9.9, 0, 14.8], Math.PI / 2, 5.2);
+  // Centred on the hourglass row (z 10.6..15.4), clear of the Sorting Lantern.
+  rug(b, [-7.3, 0, 13], 3.2, 5.8, '#2f5a6a', '#c99a3e');
   rug(b, [0, 0, 25.5], 6, 3.6, '#5d4470', '#c99a3e');
   for (const x of [-3.3, 3.3]) pottedPlant(b, [x, 0, 1.1], 1.2, x > 0 ? 2 : 3);
   for (const [x, z] of [
