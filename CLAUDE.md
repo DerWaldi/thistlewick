@@ -61,7 +61,12 @@ src/entities/          level objects: pushBlock (resetOn), mechanisms (knockSwit
                        fire (burnable: vines/briar/cobweb/hay/rope, burns away on Cindersnap, briars hurt,
                        `persist` in the castle, `fireproofUntil` signals; brazier: lit by Cindersnap, `group`
                        + `order` must be lit in turn, a wrong one or a timeout puts the group out and sets
-                       `<group>:fail`; dropper: a crate on a rope that falls to `floorY` on its signals),
+                       `<group>:fail`; dropper: a crate on a rope that falls to `floorY` on its signals;
+                       burnable 'ice' is a block Cindersnap melts),
+                       ice (iceSheet: a water patch Rimewhistle freezes for `duration` s, or
+                       `chargedDuration` when charged; slippery, temporary, see-through, and not a
+                       target while frozen; waterfall: freezes into a climbable pillar at its foot;
+                       floe: an ice raft Thwackwort slides until it bumps something, rideable, `resetOn`),
                        teasers (targets for spells not yet learned), hubObjects (cards, secrets, tapestry,
                        bookshelf, npc, sorting lantern, doors, hourglasses, spring pad), lessonObjects
                        (trigger, Thistle Star), sweets (instanced SweetField); types.ts holds the
@@ -108,8 +113,9 @@ Each render frame then runs the camera, animator, level and entity visuals, cast
 - A `door` entity with `to: { level, spawn }` switches levels; the game fades out and in.
 - Everything level-specific is created by `LevelSession` and torn down by its `dispose()`. Event listeners go on the session's scoped bus, so they're removed too.
 - Every level file starts with a map comment. Keep it current.
-- Levels: `hub`, then `classroom` (Gorse's lesson) and `trial` (the Thwackwort Trial); then the hub's Long Gallery leads to `quince` (Locks & Latches) and `vault` (the Latchkin Vaults), a padlocked door in Hollyhock Court's west cloister to `hopgood` (Leaps & Bounds) and `tower` (the Tumbledown Tower), and a spiral stair from the Lantern Hall (by the front doors) down to the Undercroft corridor, whose end door leads to `lamplough` (Illumination) and `catacombs` (the Lamplit Catacombs), and the Kitchen Yard (a new yard west of the castle, through the corner behind the court's west cloister) to `ashcombe` (Hearth & Flame) and `glasshouse` (the Overgrown Glasshouse). Plus the `gym` sandbox.
-- Burning the vines over the court's east arch opens the Kitchen Orchard; the alley east of the hall is gated off as the Well Yard (for Rimewhistle).
+- Levels: `hub`, then `classroom` (Gorse's lesson) and `trial` (the Thwackwort Trial); then the hub's Long Gallery leads to `quince` (Locks & Latches) and `vault` (the Latchkin Vaults), a padlocked door in Hollyhock Court's west cloister to `hopgood` (Leaps & Bounds) and `tower` (the Tumbledown Tower), and a spiral stair from the Lantern Hall (by the front doors) down to the Undercroft corridor, whose end door leads to `lamplough` (Illumination) and `catacombs` (the Lamplit Catacombs), and the Kitchen Yard (a new yard west of the castle, through the corner behind the court's west cloister) to `ashcombe` (Hearth & Flame) and `glasshouse` (the Overgrown Glasshouse). After Cindersnap the Lantern Hall's great doors open onto `grounds` (the Castle Grounds: terrace, lawn, lake with an island folly), where the boathouse leads to `coldharbour` (Frosts & Waters) and `cisterns` (the Flooded Cisterns). Plus the `gym` sandbox.
+- Burning the vines over the court's east arch opens the Kitchen Orchard; Cindersnap thaws the frozen lock on the Well Yard gate (the alley east of the hall, kept for later quests). Rimewhistle freezes the court fountain, the lake path to the folly and the terrace spout up to the west tower balcony.
+- Castle levels (`hub`, `grounds`) get every spell in sandbox runs.
 - Gnarlings won't come within 3.6 m of a lit brazier (`ctx.heat`, a `HeatField`), so standing by one keeps you safe.
 - `signboard` text takes `\n` for a second line and widens the board for long lines.
 - Spread classroom entrances round the castle (the user asked for this): each new teacher gets a new corner, not another door off the same corridor. Later teachers' doors use `afterLesson: '<previous spell>'`.
@@ -207,6 +213,7 @@ Levels place objects with `b.add({ type: ..., ... })`. Objects talk to each othe
 | M3 Lesson | done | Gorse's lesson, the Thwackwort Trial dungeon (~5 min), Thistle Star, a post-lesson hub secret |
 | M4 Slice complete | done | Shop and upgrades, all 10 cards, 4 secrets, title/pause/options, music, visual pass, perf |
 | Polish 1 | done | Sectioned music, wall caps against climbing out, P screenshots, painted portraits and gilt frames, detailed characters, set dressing in every room |
+| M9 Rimewhistle | done | The great doors open onto the Castle Grounds (a new outdoor level: terrace, lawn, lake, boathouse, island folly, balcony climb, hills); Coldharbour's boathouse (freeze the pool, climb frozen falls, charged ice for the dock); the Flooded Cisterns (ice patches over a canal, frozen-falls cliff, a floe-sliding ferry with a freeze-round step, a secret behind a waterfall, fire melts the ice wall and the frozen Star); the Well Yard thaws open; 3 new cards (27 total) |
 | M8 Cindersnap | done | The Kitchen Yard (a new walled yard west of the castle, closing an edge you could fall off), Ashcombe's kitchen (cobweb, rope-and-crate, braziers in order), the Overgrown Glasshouse (briar maze with Gnarlings scared by fire, rope bridge and dropped crates, a timed four-brazier sequence round a planter, the Bramble Heart dried by braziers), the Kitchen Orchard behind the court's east arch, the Well Yard gated for later; 3 new cards (24 total); NPC prompts name the speaker |
 | M7 Glimmerwick | done | Hopgood's door moved to the court; a spiral stair from the Lantern Hall down to the Undercroft (dark area ambience, a nook with a card); Lamplough's dark study; the Lamplit Catacombs (glimmer bridge with charged-only stones, false walls, four lamps at once); glimmer steps in the hall, a false wall in the Long Gallery; 4 new cards (21 total); Lost & Found; `?resetTrial`; sandbox spells |
 | M6 Springwell | done | Hopgood's gym (padlocked off the Long Gallery), the Tumbledown Tower (toadstool stair, Bellfry with a timed gate and charged bounces, rooftop turret run to the spire), spring pads with fling, latching plates, the court balcony, 3 new cards (17 total) |

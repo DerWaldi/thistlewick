@@ -184,7 +184,7 @@ export type EntitySpec = SpecBase &
         type: 'burnable';
         /** Signal turned on once it has burnt away. */
         id?: string;
-        style: 'vines' | 'briar' | 'cobweb' | 'hay' | 'rope';
+        style: 'vines' | 'briar' | 'cobweb' | 'hay' | 'rope' | 'ice';
         /** Centre of the box it fills. */
         pos: V3;
         size: V3;
@@ -214,6 +214,46 @@ export type EntitySpec = SpecBase &
         size: V3;
         floorY: number;
         when: string[];
+      }
+    | {
+        type: 'iceSheet';
+        /** Signal on while frozen. */
+        id?: string;
+        /** The patch of water (x, z corners) that freezes. */
+        min: [number, number];
+        max: [number, number];
+        /** Water surface height. */
+        y: number;
+        /** Seconds it stays frozen (default 6; 0 = for the visit). */
+        duration?: number;
+        /** Seconds a charged freeze lasts (default twice `duration`). */
+        chargedDuration?: number;
+        frozen?: boolean;
+      }
+    | {
+        type: 'waterfall';
+        id?: string;
+        /** Foot of the falling water, on the cliff face; `yaw` faces away from the cliff. */
+        pos: V3;
+        yaw: number;
+        width: number;
+        height: number;
+        /** Height of the ice pillar that forms at its foot when frozen. */
+        pillar: number;
+        /** How far the pillar stands out from the face (default 1). */
+        depth?: number;
+        /** Seconds it stays frozen (default 0 = for the visit; twice that charged). */
+        duration?: number;
+        frozen?: boolean;
+      }
+    | {
+        type: 'floe';
+        /** Centre at the water surface. */
+        pos: V3;
+        /** Width (x) and depth (z). */
+        size: [number, number];
+        /** Floats home when this signal turns on (a reset bell). */
+        resetOn?: string;
       }
   );
 

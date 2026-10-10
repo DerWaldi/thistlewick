@@ -64,11 +64,20 @@ export const LESSONS: LessonDef[] = [
     flagPrefixes: ['glasshouse-hint-', 'looted:glasshouse/'],
     collectedPrefixes: ['glasshouse/'],
   },
+  {
+    spell: 'rimewhistle',
+    classroom: 'coldharbour',
+    trial: 'cisterns',
+    star: 'cistern-star',
+    flags: ['cisterns-entered'],
+    flagPrefixes: ['cistern-hint-', 'looted:cisterns/'],
+    collectedPrefixes: ['cisterns/'],
+  },
 ];
 
 /** Spells you'd know by the time you reach this level (for sandbox runs). The hub gets them all. */
 export function spellsBy(level: string): SpellId[] {
-  if (level === 'hub') return LESSONS.map((l) => l.spell);
+  if (level === 'hub' || level === 'grounds') return LESSONS.map((l) => l.spell);
   const i = LESSONS.findIndex((l) => l.classroom === level || l.trial === level);
   return i < 0 ? [] : LESSONS.slice(0, i + 1).map((l) => l.spell);
 }

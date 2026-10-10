@@ -1,6 +1,7 @@
 import { Vector3 } from 'three';
 import { Brazier, Burnable, Dropper } from '../entities/fire';
 import { Gnarling } from '../entities/gnarling';
+import { Floe, IceSheet, Waterfall } from '../entities/ice';
 import { GlimmerBlock, IllusionWall, WickLamp } from '../entities/glimmer';
 import { Chest, Drawbridge, Padlock, VaultDoor } from '../entities/locks';
 import { Snapcasket } from '../entities/snapcasket';
@@ -75,6 +76,9 @@ const FACTORIES: { [T in EntityType]: Factory<T> } = {
   },
   brazier: (s, c) => new Brazier(s, c),
   dropper: (s, c) => new Dropper(s, c),
+  iceSheet: (s, c) => new IceSheet(s, c),
+  waterfall: (s, c) => new Waterfall(s, c),
+  floe: (s, c) => new Floe(s, c),
   sweet: (s, c, id) => {
     if (!c.state.collected.has(id)) c.sweets.add(s.kind, new Vector3(...s.pos), id);
     return null;

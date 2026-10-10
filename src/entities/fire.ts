@@ -31,6 +31,7 @@ import type { Entity, SpecOf, WorldContext } from './types';
 const UP = new Vector3(0, 1, 0);
 const FLAME = new Color('#ff8a3c');
 const DRY = new Color('#e8b878');
+const STEAM = new Color('#f4fbff');
 const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V', 'VI'];
 
 function numeralSprite(text: string): Sprite {
@@ -152,6 +153,13 @@ export class Burnable implements Entity, SpellTarget {
         }
       }
       if (briar) for (let i = 0; i < 5; i++) this.part(new IcosahedronGeometry(0.22 + rnd() * 0.15, 0), '#4a3022', (rnd() - 0.5) * w * 0.9, (rnd() - 0.5) * h * 0.8, 0, rnd(), rnd());
+    } else if (style === 'ice') {
+      // A block of ice: Cindersnap melts it.
+      this.char.transparent = true;
+      this.char.opacity = 0.82;
+      this.char.roughness = 0.2;
+      this.part(new BoxGeometry(w, h, d), '#cfeefa', 0, 0, 0);
+      for (let i = 0; i < 6; i++) this.part(new IcosahedronGeometry(0.18 + rnd() * 0.2, 0), '#e8f8ff', (rnd() - 0.5) * w, (rnd() - 0.5) * h, (rnd() > 0.5 ? 1 : -1) * d * 0.45, rnd(), rnd());
     } else if (style === 'hay') {
       this.part(new BoxGeometry(w, h, d), '#d9b85a', 0, 0, 0);
       for (const y of [-h * 0.25, h * 0.25]) this.part(new BoxGeometry(w + 0.02, 0.05, d + 0.02), '#8a5a36', 0, y, 0);
@@ -180,8 +188,9 @@ export class Burnable implements Entity, SpellTarget {
   onSpell(_hit: SpellHit): void {
     if (!this.enabled()) return;
     this.burning = 0;
-    this.fire.group.visible = true;
-    this.ctx.events.emit('burn', { pos: this.center.clone() });
+    const ice = this.spec.style === 'ice';
+    this.fire.group.visible = !ice;
+    this.ctx.events.emit(ice ? 'melt' : 'burn', { pos: this.center.clone() });
   }
 
   fixedUpdate(dt: number): void {
@@ -198,7 +207,8 @@ export class Burnable implements Entity, SpellTarget {
     this.burning += dt;
     if (Math.random() < dt * 12) {
       const s = this.center.clone().add(new Vector3((Math.random() - 0.5) * this.half.x * 2, (Math.random() - 0.3) * this.half.y * 2, (Math.random() - 0.5) * this.half.z * 2));
-      this.ctx.fx.burst(s, 2, Math.random() < 0.5 ? FLAME : new Color('#5a4a40'), 1.6, 0.12, 0.8);
+      const steam = this.spec.style === 'ice';
+      this.ctx.fx.burst(s, 2, steam ? STEAM : Math.random() < 0.5 ? FLAME : new Color('#5a4a40'), 1.6, 0.12, steam ? 2 : 0.8);
     }
     if (this.burning > 0.6 && this.collider.isEnabled()) this.collider.setEnabled(false);
     if (this.burning > 1.4) {
@@ -222,8 +232,10 @@ export class Burnable implements Entity, SpellTarget {
       return;
     }
     const t = this.burning;
-    this.char.emissive.copy(FLAME).multiplyScalar(Math.min(1, t * 2) * 0.8);
-    this.char.color.setScalar(MathUtils.lerp(1, 0.25, Math.min(1, t)));
+    if (this.spec.style !== 'ice') {
+      this.char.emissive.copy(FLAME).multiplyScalar(Math.min(1, t * 2) * 0.8);
+      this.char.color.setScalar(MathUtils.lerp(1, 0.25, Math.min(1, t)));
+    }
     const s = Math.max(0.05, 1 - Math.max(0, t - 0.5) * 1.1);
     this.body.scale.set(1, s, 1);
     this.body.position.y = -this.half.y * (1 - s);

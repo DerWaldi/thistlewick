@@ -104,6 +104,21 @@ export class Sfx {
       this.hiss(0.6, 400, 0.18);
       this.tone(420, 140, 0.5, 'triangle', 0.08);
     });
+    // Rimewhistle: a glassy rising shimmer as water freezes; creaks, then a slushy sigh as it thaws.
+    events.on('freeze', ({ charged }) => {
+      this.hiss(0.4, 5000, 0.08);
+      [1568, 2093, 2637, charged ? 3136 : 2349].forEach((f, i) => setTimeout(() => this.tone(f, f * 1.02, 0.4, 'sine', 0.05), i * 45));
+    });
+    events.on('iceCreak', () => this.tone(220 + Math.random() * 80, 160, 0.18, 'sawtooth', 0.05));
+    events.on('thaw', () => {
+      this.hiss(0.6, 900, 0.14);
+      this.tone(600, 200, 0.5, 'sine', 0.06);
+    });
+    events.on('melt', () => {
+      this.hiss(0.9, 2400, 0.2);
+      this.tone(500, 150, 0.6, 'triangle', 0.05);
+    });
+    events.on('floeSlide', () => this.hiss(0.7, 1200, 0.16));
     events.on('gnarlingScared', () => this.tone(1600, 2200, 0.1, 'square', 0.05));
     events.on('snapNotice', () => this.tone(300, 520, 0.12, 'square', 0.06));
     events.on('snapBite', () => {

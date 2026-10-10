@@ -261,6 +261,36 @@ export const CARDS: CardDef[] = [
     hint: 'In the forgotten orchard behind the vines of Hollyhock Court.',
     portrait: { bg: FOUNDER_BG, kind: 'person', skin: '#f0c9a0', robe: '#4f7a34', hair: '#6a4a2a', hat: 'cap', hatColor: '#3a5a2a', beard: true, prop: 'thistle', hairStyle: 'short', collar: 'plain', expression: 'smile', eyes: '#4a6a3a' },
   },
+  {
+    id: 'elspeth-coldharbour',
+    number: 25,
+    name: 'Elspeth Coldharbour',
+    title: 'Swims Before Breakfast. In January.',
+    set: 'Oddballs',
+    text: 'Breaks the ice on the lake every morning, swims to the island and back, and complains that the water is "a touch tepid". Keeps her tea in the snow so it stays cold.',
+    hint: 'A reward for a Frosts & Waters trial well done.',
+    portrait: { bg: ODDBALL_BG, kind: 'person', skin: '#f3dcc8', robe: '#2f4f6a', hair: '#f0f0f0', hat: 'tall', hatColor: '#1e3040', glasses: true, prop: 'wand', hairStyle: 'long', collar: 'ruff', expression: 'stern', jewel: '#9fe6ff', eyes: '#6a9ab8' },
+  },
+  {
+    id: 'rime-toad',
+    number: 26,
+    name: 'The Rime Toad',
+    title: 'Sits Very Still, Very Cold',
+    set: 'Creatures',
+    text: 'Lives behind waterfalls and croaks once a winter. Wherever it sits, frost spreads in a neat little circle. Excellent for keeping sandwiches fresh.',
+    hint: 'Behind falling water in the Flooded Cisterns.',
+    portrait: { bg: ['#2f4f6a', '#0e1a24'], kind: 'toad' },
+  },
+  {
+    id: 'isolde-fairweather',
+    number: 27,
+    name: 'Isolde Fairweather',
+    title: 'Rowed to School, Every Day, for Sixty Years',
+    set: 'Founders',
+    text: 'Lived on the island in the lake and refused to move into the castle "on principle". Nobody ever found out which principle. The lake is named after her, which she thought was a bit much.',
+    hint: 'In the folly on the island in Fairweather Lake.',
+    portrait: { bg: FOUNDER_BG, kind: 'person', skin: '#f0c9a0', robe: '#3a6a8a', hair: '#8a5a3a', hat: 'bonnet', hatColor: '#e8e2d0', prop: 'book', hairStyle: 'bun', collar: 'ruff', expression: 'kind', jewel: '#4f9fc4', eyes: '#4a6a8a' },
+  },
 ];
 
 export const CARD_BY_ID = new Map(CARDS.map((c) => [c.id, c]));

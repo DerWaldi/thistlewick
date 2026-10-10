@@ -1,4 +1,4 @@
-import { BoxGeometry, CanvasTexture, CircleGeometry, ConeGeometry, CylinderGeometry, Group, IcosahedronGeometry, Mesh, MeshStandardMaterial, PointLight, SphereGeometry, SRGBColorSpace, TorusGeometry } from 'three';
+import { BoxGeometry, CanvasTexture, CircleGeometry, ConeGeometry, CylinderGeometry, Group, Mesh, MeshStandardMaterial, PointLight, SphereGeometry, SRGBColorSpace, TorusGeometry } from 'three';
 import type { LevelBuilder, V3 } from '../../world/builder';
 import type { LevelDef } from '../../world/level';
 import { COLORS } from '../../world/materials';
@@ -70,6 +70,7 @@ export const HUB: LevelDef = {
     fromHopgood: { pos: [-14.4, 0, 40], yaw: Math.PI / 2 },
     fromUndercroft: { pos: [31.9, -8.5, 2.5], yaw: -Math.PI / 2 },
     fromAshcombe: { pos: [-30.6, 0, 25], yaw: Math.PI / 2 },
+    fromGrounds: { pos: [0, 0, 2], yaw: 0 },
   },
   areas: [
     { id: 'hall', name: 'The Lantern Hall', min: [-12, -2, 0], max: [12, 14, 30] },
@@ -143,7 +144,8 @@ function buildHub(b: LevelBuilder): void {
     { type: 'hourglasses', pos: [-10, 0, 13], yaw: Math.PI / 2 },
     { type: 'sortingLantern', pos: [-6.5, 0, 9], yaw: Math.PI / 2 },
     { type: 'npc', speaker: 'wendlebury', pos: [3, 0, 7], yaw: -Math.PI / 2 - 0.4, look: { robe: '#5d4470', scarf: '#c99a3e', trim: '#f3e4c4', hat: '#3b2c55', hair: '#e8e8e8', hairStyle: 'bun', glasses: true, scale: 1.25 }, talk: 'wendlebury' },
-    { type: 'door', pos: [0, 0, 0.05], yaw: 0, width: 4, height: 5.5, talk: 'frontDoors' },
+    // The great doors: barred until Cindersnap is passed, then out to the Castle Grounds.
+    { type: 'door', pos: [0, 0, 0.05], yaw: 0, width: 4, height: 5.5, to: { level: 'grounds', spawn: 'default' }, afterLesson: 'cindersnap', talk: 'frontDoors', label: 'The Grounds' },
   );
 
   // House banners on the east wall, windows on both long walls.
@@ -398,7 +400,8 @@ function buildHub(b: LevelBuilder): void {
   deco(b, new CylinderGeometry(0.8, 0.5, 0.3, 10), [0, 1.5, 46], COLORS.stoneLight);
   b.add(
     { type: 'sweet', kind: 'humbug', pos: [0, 2.1, 46] },
-    { type: 'teaser', spell: 'rimewhistle', prop: 'marker', pos: [0, 0.4, 42.2], yaw: 0 },
+    // Freeze the pool (Rimewhistle) to walk out to the fountain.
+    { type: 'iceSheet', min: [-1.6, 41], max: [1.6, 45.4], y: -0.35, duration: 0 },
   );
 
   // Vine-choked arch in the east wall (Cindersnap), a mossy pad on the west roof under an
@@ -743,6 +746,12 @@ function buildHub(b: LevelBuilder): void {
   kitchenYard(b, glow);
   wellYard(b);
   orchard(b);
+  // Appended after everything above, so earlier sweets keep their ids.
+  b.add(
+    { type: 'sweetLine', kind: 'fizzwort', from: [14.5, 0.6, 27], to: [14.5, 0.6, 14], count: 5 },
+    { type: 'sweet', kind: 'humbug', pos: [19, 1.1, 27.5] },
+    { type: 'sweetLine', kind: 'fizzwort', from: [22, 0.6, 27], to: [32, 0.6, 27], count: 4 },
+  );
 
   glow.finish(b, '#ffc68a');
   candle.finish(b, '#ffe2a0');
@@ -842,17 +851,16 @@ function kitchenYard(b: LevelBuilder, glow: Glow): void {
 }
 
 /**
- * The Well Yard (the alley east of the hall, x 13..34, z 11..30): Frosts & Waters, for
- * later. Gated off for now, with the frost already creeping out under the bars.
+ * The Well Yard (the alley east of the hall, x 13..34, z 11..30): an old frozen yard. Its
+ * gate's lock is iced over until Cindersnap thaws it.
  */
 function wellYard(b: LevelBuilder): void {
   b.add(
-    { type: 'gate', pos: [14.5, 0, 30], yaw: 0, width: 3.2, height: 3.4, when: ['well-yard-thaw'] },
-    { type: 'teaser', spell: 'rimewhistle', prop: 'marker', pos: [14.5, 1.4, 30.35], yaw: 0 },
+    { type: 'gate', pos: [14.5, 0, 30], yaw: 0, width: 3.2, height: 3.4, when: ['hub-well-ice'] },
+    // The lock is frozen into a lump of ice: Cindersnap thaws it, for good.
+    { type: 'burnable', id: 'hub-well-ice', style: 'ice', persist: true, pos: [14.5, 1.2, 30.45], size: [0.9, 0.8, 0.5] },
   );
-  signboard(b, 'Well Yard\nClosed until the thaw', [14.5, 3.9, 30.3], 0);
-  // A frozen padlock on the bars.
-  deco(b, new IcosahedronGeometry(0.28, 0), [14.5, 1.2, 30.25], '#cfeefa');
+  signboard(b, 'Well Yard\nFrozen shut', [14.5, 3.9, 30.3], 0);
   // The well, frosted over, with icicles on its little roof.
   b.cylinder([15, 0.45, 25], 1, 0.9, COLORS.stoneLight, undefined, 10);
   deco(b, new CylinderGeometry(0.92, 0.92, 0.04, 10), [15, 0.86, 25], '#e8f6fc');

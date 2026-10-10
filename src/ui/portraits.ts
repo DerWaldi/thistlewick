@@ -63,6 +63,9 @@ export function paintPortrait(g: CanvasRenderingContext2D, s: PortraitSpec, w: n
     case 'newt':
       newt(g, cx, w, h);
       break;
+    case 'toad':
+      toad(g, cx, w, h);
+      break;
   }
   if (s.kind !== 'lantern') varnish(g, w, h, rnd);
 }
@@ -1069,4 +1072,35 @@ function newt(g: CanvasRenderingContext2D, cx: number, w: number, h: number): vo
   g.beginPath();
   g.arc(cx + w * 0.2, h * 0.62, 5 * u, 0.2, Math.PI - 0.2);
   g.stroke();
+}
+
+function toad(g: CanvasRenderingContext2D, cx: number, w: number, h: number): void {
+  const u = w / 160;
+  // Snowflakes, an ice floe, and a fat pale-blue toad wearing a little frost crown.
+  for (let i = 0; i < 16; i++) blob(g, cx + Math.sin(i * 2.7) * w * 0.42, h * (0.08 + ((i * 29) % 50) / 100), 2 * u, 2 * u, '#f4fbff');
+  g.fillStyle = '#cfeefa';
+  g.beginPath();
+  g.ellipse(cx, h * 0.84, w * 0.42, h * 0.07, 0, 0, Math.PI * 2);
+  g.fill();
+  orb(g, cx, h * 0.68, w * 0.27, h * 0.15, '#8ab8cc');
+  orb(g, cx, h * 0.74, w * 0.18, h * 0.08, '#d8eef4');
+  for (const side of [-1, 1]) {
+    orb(g, cx + side * w * 0.13, h * 0.53, w * 0.07, h * 0.055, '#8ab8cc');
+    eye(g, cx + side * w * 0.13, h * 0.53, 6 * u, '#1e2a30', '#f4fbff');
+    blob(g, cx + side * w * 0.24, h * 0.8, 9 * u, 4 * u, '#7aa8bc');
+  }
+  g.strokeStyle = '#2a4050';
+  g.lineWidth = 2 * u;
+  g.beginPath();
+  g.arc(cx, h * 0.62, w * 0.1, 0.25, Math.PI - 0.25);
+  g.stroke();
+  g.fillStyle = '#e8f8ff';
+  for (let i = 0; i < 5; i++) {
+    const x = cx + (i - 2) * 7 * u;
+    g.beginPath();
+    g.moveTo(x - 4 * u, h * 0.47);
+    g.lineTo(x, h * (i % 2 ? 0.4 : 0.37));
+    g.lineTo(x + 4 * u, h * 0.47);
+    g.fill();
+  }
 }

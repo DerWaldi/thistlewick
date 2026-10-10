@@ -1,6 +1,6 @@
 import type { PortraitSpec } from './portraits';
 
-export type SpeakerId = 'wendlebury' | 'lantern' | 'tansy' | 'moss' | 'gorse' | 'quince' | 'hopgood' | 'lamplough' | 'ashcombe' | 'sign';
+export type SpeakerId = 'wendlebury' | 'lantern' | 'tansy' | 'moss' | 'gorse' | 'quince' | 'hopgood' | 'lamplough' | 'ashcombe' | 'coldharbour' | 'sign';
 
 export interface SpeakerDef {
   id: SpeakerId;
@@ -64,6 +64,12 @@ export const SPEAKERS: Record<SpeakerId, SpeakerDef> = {
     name: 'Professor Ashcombe',
     voice: 400,
     portrait: { bg: ['#f2b07a', '#7a2a1a'], kind: 'person', skin: '#e2a982', robe: '#8a2a1a', hair: '#b8b0a8', hat: 'pointy', hatColor: '#3a1a12', prop: 'cauldron', hairStyle: 'bun', collar: 'scarf', expression: 'stern', jewel: '#ff8a3c', eyes: '#6a4a2a' },
+  },
+  coldharbour: {
+    id: 'coldharbour',
+    name: 'Madam Coldharbour',
+    voice: 560,
+    portrait: { bg: ['#d8eef8', '#2f4f6a'], kind: 'person', skin: '#f3dcc8', robe: '#2f4f6a', hair: '#f0f0f0', hat: 'tall', hatColor: '#1e3040', glasses: true, prop: 'wand', hairStyle: 'long', collar: 'ruff', expression: 'stern', jewel: '#9fe6ff', eyes: '#6a9ab8' },
   },
   sign: {
     id: 'sign',

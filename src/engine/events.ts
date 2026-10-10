@@ -44,6 +44,11 @@ export interface GameEvents {
   burn: { pos: Vector3 };
   brazierFail: { pos: Vector3 };
   gnarlingScared: { pos: Vector3 };
+  freeze: { pos: Vector3; charged: boolean };
+  thaw: { pos: Vector3 };
+  melt: { pos: Vector3 };
+  iceCreak: { pos: Vector3 };
+  floeSlide: { pos: Vector3 };
   snapNotice: { pos: Vector3 };
   snapBite: { pos: Vector3 };
   snapLocked: { pos: Vector3 };

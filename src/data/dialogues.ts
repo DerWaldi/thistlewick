@@ -62,10 +62,18 @@ export const DIALOGUES: Record<string, Script> = {
   },
 
   wendlebury: async ({ say, state }) => {
+    if (state.lessons.has('rimewhistle')) {
+      await say([
+        { speaker: 'wendlebury', text: "Six Stars. Madam Coldharbour says you crossed the Cisterns without getting your socks wet. She has never managed that. She doesn't wear socks." },
+        { speaker: 'wendlebury', text: 'There is a little folly on the island in the lake. Old Isolde Fairweather used to row out to it. You, I suspect, will walk.' },
+      ]);
+      return;
+    }
     if (state.lessons.has('cindersnap')) {
       await say([
         { speaker: 'wendlebury', text: "Five Stars! Professor Ashcombe says you didn't singe a single eyebrow. Hers, I mean. Yours are your own business." },
-        { speaker: 'wendlebury', text: 'Those vines over the east arch in Hollyhock Court have been there since before my time. I always wondered what they were hiding.' },
+        { speaker: 'wendlebury', text: "I've had the great doors unbarred. You may go out into the grounds now, dear: Madam Coldharbour teaches Frosts & Waters in the boathouse by the lake." },
+        { speaker: 'wendlebury', text: 'Those vines over the east arch in Hollyhock Court have been there since before my time. And the Well Yard gate has been frozen shut all year. I always wondered.' },
       ]);
       return;
     }
@@ -110,8 +118,11 @@ export const DIALOGUES: Record<string, Script> = {
     ]);
   },
 
-  frontDoors: async ({ say }) => {
-    await say([{ speaker: 'sign', text: 'The great doors are barred from outside. A note is pinned to them: "FIRST-YEARS STAY IN. — W."' }]);
+  frontDoors: async ({ say, state }) => {
+    const text = state.lessons.has('glimmerwick')
+      ? 'The great doors are still barred. A new note is pinned to them: "FIRST-YEARS STAY IN. Five Stars and you may go and see Madam Coldharbour at the lake. — W."'
+      : 'The great doors are barred from outside. A note is pinned to them: "FIRST-YEARS STAY IN. — W."';
+    await say([{ speaker: 'sign', text }]);
   },
 
   classroomDoor: async ({ say }) => {
@@ -561,7 +572,10 @@ export const DIALOGUES: Record<string, Script> = {
         { speaker: 'ashcombe', text: 'Here. My card. The eyebrows were drawn back on afterwards, whatever Moss Crumbleton tells you.' },
       ]);
       state.collectCard('wilhelmina-ashcombe');
-      await say([{ speaker: 'ashcombe', text: 'There are vines over an arch in Hollyhock Court, on the east side. Nobody has been through there in years. Now somebody can.' }]);
+      await say([
+        { speaker: 'ashcombe', text: 'There are vines over an arch in Hollyhock Court, on the east side. Nobody has been through there in years. Now somebody can.' },
+        { speaker: 'ashcombe', text: "And the great doors are open for you now. Madam Coldharbour is down at the boathouse by the lake. Take a scarf. Take two." },
+      ]);
       return;
     }
     await say([{ speaker: 'ashcombe', text: 'A good cook knows what to burn and what not to. So does a good witch. Same thing, really, with more soup.' }]);
@@ -652,6 +666,112 @@ export const DIALOGUES: Record<string, Script> = {
     await say([{ speaker: 'ashcombe', text: "(distant) There's the Star! Bring it back to the kitchen. And close the door, you're letting the heat out." }]);
   },
 
+  // ---------------------------------------------------------------- the sixth lesson
+
+  coldharbourLesson: async (ctx) => {
+    await teachRimewhistle(ctx);
+  },
+
+  coldharbour: async (ctx) => {
+    const { say, state } = ctx;
+    if (!state.knows('rimewhistle')) {
+      await teachRimewhistle(ctx);
+      return;
+    }
+    if (!state.flags.has('practice-rimewhistle') && !state.lessons.has('rimewhistle')) {
+      await say([
+        { speaker: 'coldharbour', text: 'Three plates. Freeze the pool to reach the islet. Freeze the waterfall and climb it. And the dock: HOLD the cast, or the ice will not last the crossing.' },
+      ]);
+      return;
+    }
+    if (!state.lessons.has('rimewhistle')) {
+      await say([{ speaker: 'coldharbour', text: 'The Cisterns, through the iron door. Ice melts, floes slide, and the water is colder than it looks. Mind your footing.' }]);
+      return;
+    }
+    if (!state.flags.has('coldharbour-reward')) {
+      state.flags.add('coldharbour-reward');
+      await say([
+        { speaker: 'coldharbour', text: 'The Star. And dry, too. Hm. You may have a future in this, child.' },
+        { speaker: 'coldharbour', text: 'My card. Taken the morning I broke the ice with my elbow. Note the expression. That is joy.' },
+      ]);
+      state.collectCard('elspeth-coldharbour');
+      await say([{ speaker: 'coldharbour', text: 'The fountain in Hollyhock Court freezes nicely, if you ask it. And the island in the lake has a folly no one has visited in forty years.' }]);
+      return;
+    }
+    await say([{ speaker: 'coldharbour', text: 'Cold is patient. Cold waits. Then cold wins. Remember that, and wear a vest.' }]);
+  },
+
+  coldharbourChargeHint: async ({ say }) => {
+    await say([
+      { speaker: 'coldharbour', text: 'The dock ice melts before you are across? Then make it thicker: HOLD the cast until it glows, and let go. A charged freeze lasts much longer.' },
+    ]);
+  },
+
+  coldharbourClimbHint: async ({ say }) => {
+    await say([
+      { speaker: 'coldharbour', text: "Freeze the waterfall. A pillar of ice forms at its foot: jump up and grab its top, then climb on to the ledge." },
+    ]);
+  },
+
+  rimePracticeDone: async ({ say, state }) => {
+    state.flags.add('practice-rimewhistle');
+    await say([
+      { speaker: 'coldharbour', text: 'Adequate. More than adequate. Do not let it go to your head; heads are where the cold gets in.' },
+      { speaker: 'coldharbour', text: 'The Flooded Cisterns, through the iron door. Ice that will not wait for you, floes that go where they are pushed, and a Star frozen solid. Bring it back.' },
+    ]);
+  },
+
+  lockedCisternDoor: async ({ say, state }) => {
+    if (state.lessons.has('rimewhistle')) {
+      await say([{ speaker: 'coldharbour', text: 'The Cisterns have flooded again. They do that. Leave them be.' }]);
+      return;
+    }
+    await say([{ speaker: 'coldharbour', text: 'Three plates first. Then the Cisterns.' }]);
+  },
+
+  classNotOverColdharbour: async ({ say, state }) => {
+    const text = state.flags.has('practice-rimewhistle')
+      ? 'The iron door, child. The Cisterns. The lake will still be there afterwards.'
+      : 'You have not finished. Three plates.';
+    await say([{ speaker: 'coldharbour', text }]);
+  },
+
+  cisternIntro: async ({ say }) => {
+    await say([{ speaker: 'coldharbour', text: '(echoing) The Flooded Cisterns. Freeze what you must, and keep moving: ice does not last.' }]);
+  },
+
+  cisternCanal: async ({ say }) => {
+    await say([
+      { speaker: 'coldharbour', text: "(echoing) The Long Canal. Freeze a patch, hop on, freeze the next. They melt in five seconds, ten if you charge them. Ice is slippery: land, then steer gently." },
+    ]);
+  },
+
+  cisternFalls: async ({ say }) => {
+    await say([{ speaker: 'coldharbour', text: '(echoing) Up the cliff? Freeze the waterfall, and climb the ice.' }]);
+  },
+
+  cisternFerry: async ({ say }) => {
+    await say([
+      { speaker: 'coldharbour', text: "(echoing) The Floe Ferry. Thwackwort a floe and it slides until it bumps into something. Push from behind: stand on the side you want it to leave. The far floe? You'll need ice to get round to it. If they jam, ring the bell." },
+    ]);
+  },
+
+  cisternFrost: async ({ say }) => {
+    await say([{ speaker: 'coldharbour', text: '(echoing) A wall of ice. Rimewhistle will not shift that. What melts ice, child? Something from Professor Ashcombe, I believe.' }]);
+  },
+
+  cisternCharge: async ({ say }) => {
+    await say([{ speaker: 'coldharbour', text: '(echoing) Those patches melt almost at once. Charge the freeze: hold the cast, let go when it glows, and they will hold long enough.' }]);
+  },
+
+  cisternComplete: async ({ say, state }) => {
+    if (state.lessons.has('rimewhistle')) return;
+    state.lessons.add('rimewhistle');
+    state.award(POINTS.star, 'the Thistle Star');
+    state.award(POINTS.lesson, 'passing Frosts & Waters');
+    await say([{ speaker: 'coldharbour', text: '(echoing) The Star. Good. Come back up before your toes fall off.' }]);
+  },
+
   tansy: async ({ say, state, openShop }) => {
     if (state.lessons.has('thwackwort')) {
       const first = !state.flags.has('shop-visited');
@@ -730,6 +850,19 @@ async function teachCindersnap({ say, state, events }: ScriptContext): Promise<v
     events.emit('toast', { text: 'You learned Cindersnap!', kind: 'info' });
   }
   await say([{ speaker: 'ashcombe', text: 'Three tasks. The pantry is full of cobwebs. That shelf is too high to jump: use the crate. And my braziers, in ORDER: one notch, two, three.' }]);
+}
+
+async function teachRimewhistle({ say, state, events }: ScriptContext): Promise<void> {
+  await say([
+    { speaker: 'coldharbour', text: 'Close the door. You are letting the warm in. Elspeth Coldharbour, Frosts & Waters. Sit. The bench is cold. Good for the posture.' },
+    { speaker: 'coldharbour', text: 'RIMEWHISTLE. Cast it at water and the water freezes: a slab you can walk on. Ice is slippery, and ice melts. Hold the cast to freeze it thicker, and it lasts twice as long.' },
+    { speaker: 'coldharbour', text: 'Freeze a waterfall and it becomes a pillar of ice you can climb. Ice floes slide when you Thwackwort them. And fire, should you need it, melts ice at once.' },
+  ]);
+  if (!state.knows('rimewhistle')) {
+    state.learn('rimewhistle');
+    events.emit('toast', { text: 'You learned Rimewhistle!', kind: 'info' });
+  }
+  await say([{ speaker: 'coldharbour', text: 'Three plates. The islet in the pool. The ledge above the waterfall. And the jetty across the dock: the long way, so hold the cast. Begin.' }]);
 }
 
 async function teachSpringwell({ say, state, events }: ScriptContext): Promise<void> {

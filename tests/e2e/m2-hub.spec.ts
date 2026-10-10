@@ -209,7 +209,7 @@ test('doors and shopkeepers talk; the album lists found cards', async ({ page, b
   });
   expect(r.shopFocus).toMatch(/Talk to/);
   expect(r.doorFocus).toBe('Read');
-  await expect(page.locator('#album-count')).toHaveText('1 of 24 found');
+  await expect(page.locator('#album-count')).toHaveText('1 of 27 found');
   await expect(page.locator('.album-card:not(.missing)')).toHaveCount(1);
   await shot(page, 'm2-album', browserName);
 });
