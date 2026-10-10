@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Thistlewick: First Year</title>
+    <link rel="stylesheet" href="/src/ui/style.css" />
+  </head>
+  <body>
+    <canvas id="game"></canvas>
+    <div id="ui">
+      <div id="crosshair"></div>
+      <div id="click-to-play" class="panel">
+        <h1>Thistlewick</h1>
+        <h2>First Year</h2>
+        <p class="hint">Click to play</p>
+        <ul class="controls">
+          <li><b>WASD</b> move</li>
+          <li><b>Mouse</b> look</li>
+          <li><b>Space</b> jump (hold for higher)</li>
+          <li><b>S</b> while hanging: let go</li>
+          <li><b>Esc</b> release mouse</li>
+          <li><b>`</b> tuning panel</li>
+        </ul>
+      </div>
+      <div id="fade"></div>
+      <div id="stats"></div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
