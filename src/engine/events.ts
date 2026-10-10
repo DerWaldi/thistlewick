@@ -38,6 +38,9 @@ export interface GameEvents {
   vaultOpen: { pos: Vector3 };
   springOn: { pos: Vector3; charged: boolean };
   springOff: { pos: Vector3 };
+  lampLit: { pos: Vector3; charged: boolean };
+  lampOut: { pos: Vector3 };
+  wallFade: { pos: Vector3 };
   snapNotice: { pos: Vector3 };
   snapBite: { pos: Vector3 };
   snapLocked: { pos: Vector3 };

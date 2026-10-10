@@ -207,6 +207,7 @@ export class Game {
     this.session = new LevelSession(this, def, sp);
     this.state.level = id;
     if (!this.titleMode) this.music.setMood(def.music ?? 'hub');
+    this.renderer.setAmbience(def.ambience ?? 'day');
     this.input.clearPressed();
     this.events.emit('levelLoaded', { id });
     if (def.intro && !this.state.flags.has(def.intro.unlessFlag) && !this.sandbox) {

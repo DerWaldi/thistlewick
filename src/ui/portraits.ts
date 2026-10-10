@@ -54,6 +54,9 @@ export function paintPortrait(g: CanvasRenderingContext2D, s: PortraitSpec, w: n
     case 'mushroom':
       mushroom(g, cx, w, h);
       break;
+    case 'wisp':
+      wisp(g, cx, w, h);
+      break;
   }
   if (s.kind !== 'lantern') varnish(g, w, h, rnd);
 }
@@ -952,4 +955,43 @@ function mushroom(g: CanvasRenderingContext2D, cx: number, w: number, h: number)
   g.beginPath();
   g.arc(cx, h * 0.64, 6 * u, 0.2, Math.PI - 0.2);
   g.stroke();
+}
+
+function wisp(g: CanvasRenderingContext2D, cx: number, w: number, h: number): void {
+  const u = w / 160;
+  // A soft halo in the dark.
+  const halo = g.createRadialGradient(cx, h * 0.5, 4, cx, h * 0.5, w * 0.5);
+  halo.addColorStop(0, 'rgba(200,235,255,0.7)');
+  halo.addColorStop(1, 'rgba(120,170,230,0)');
+  g.fillStyle = halo;
+  g.fillRect(0, 0, w, h);
+  // A teardrop of light with a wavering tail.
+  const body = g.createRadialGradient(cx - w * 0.05, h * 0.46, 2, cx, h * 0.5, w * 0.2);
+  body.addColorStop(0, '#ffffff');
+  body.addColorStop(0.6, '#cfeeff');
+  body.addColorStop(1, 'rgba(150,200,255,0.2)');
+  g.fillStyle = body;
+  g.beginPath();
+  g.moveTo(cx, h * 0.3);
+  g.bezierCurveTo(cx + w * 0.22, h * 0.36, cx + w * 0.2, h * 0.6, cx, h * 0.62);
+  g.bezierCurveTo(cx - w * 0.06, h * 0.72, cx + w * 0.08, h * 0.8, cx - w * 0.04, h * 0.88);
+  g.bezierCurveTo(cx - w * 0.14, h * 0.76, cx - w * 0.22, h * 0.6, cx - w * 0.18, h * 0.48);
+  g.bezierCurveTo(cx - w * 0.16, h * 0.38, cx - w * 0.08, h * 0.31, cx, h * 0.3);
+  g.fill();
+  // Wide, nervous eyes and a worried little mouth.
+  for (const side of [-1, 1]) eye(g, cx + side * 9 * u, h * 0.47, 5 * u, '#2a4a7a', '#ffffff');
+  g.strokeStyle = '#4a6a9a';
+  g.lineWidth = 1.5 * u;
+  g.beginPath();
+  g.arc(cx, h * 0.58, 4 * u, Math.PI + 0.4, -0.4);
+  g.stroke();
+  // Sparkles.
+  for (const [x, y] of [
+    [-0.32, 0.3],
+    [0.3, 0.26],
+    [0.34, 0.66],
+    [-0.28, 0.72],
+  ]) {
+    blob(g, cx + w * x, h * y, 2 * u, 2 * u, '#ffffff');
+  }
 }

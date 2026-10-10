@@ -49,6 +49,7 @@ export class Renderer {
   readonly scene = new Scene();
   readonly camera: PerspectiveCamera;
   readonly sun: DirectionalLight;
+  private readonly hemi: HemisphereLight;
   private readonly sunOffset = new Vector3(-21, 33, -15);
   private sky: Mesh;
   private hills: Mesh;
@@ -69,7 +70,8 @@ export class Renderer {
     this.camera = new PerspectiveCamera(60, 1, 0.1, 400);
 
     this.scene.fog = new Fog(new Color(PALETTE.fog), 45, 150);
-    this.scene.add(new HemisphereLight(PALETTE.hemiSky, PALETTE.hemiGround, 1.3));
+    this.hemi = new HemisphereLight(PALETTE.hemiSky, PALETTE.hemiGround, 1.3);
+    this.scene.add(this.hemi);
 
     this.sun = new DirectionalLight(PALETTE.sun, 2.4);
     this.sun.castShadow = true;
@@ -92,6 +94,24 @@ export class Renderer {
 
     this.resize();
     window.addEventListener('resize', () => this.resize());
+  }
+
+  /**
+   * Daylight for the castle, or the dark for places underground: a dim cold fill and
+   * close black fog, so lamps and torches do the lighting.
+   */
+  setAmbience(kind: 'day' | 'dark'): void {
+    const dark = kind === 'dark';
+    this.hemi.color.set(dark ? '#6a7aa8' : PALETTE.hemiSky);
+    this.hemi.groundColor.set(dark ? '#1a1420' : PALETTE.hemiGround);
+    this.hemi.intensity = dark ? 0.85 : 1.3;
+    this.sun.intensity = dark ? 0 : 2.4;
+    const fog = this.scene.fog as Fog;
+    fog.color.set(dark ? '#0c0a12' : PALETTE.fog);
+    fog.near = dark ? 6 : 45;
+    fog.far = dark ? 34 : 150;
+    this.sky.visible = !dark;
+    this.hills.visible = !dark;
   }
 
   private skyTime = 0;

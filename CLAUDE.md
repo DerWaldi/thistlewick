@@ -56,6 +56,8 @@ src/entities/          level objects: pushBlock (resetOn), mechanisms (knockSwit
                        vaultDoor), snapcasket (Latchkin locks it, then Thwackwort; its `spell` changes),
                        springs (springPad: moss/mushroom/mattress/rune; springy for `duration` s after
                        Springwell, a charged cast launches higher, `fling` throws you sideways),
+                       glimmer (wickLamp: Glimmerwick lights it for `duration` s, charged = 1.5x reach;
+                       glimmerBlock: solid only inside a lit glow; illusionWall: fades in the glow),
                        teasers (targets for spells not yet learned), hubObjects (cards, secrets, tapestry,
                        bookshelf, npc, sorting lantern, doors, hourglasses, spring pad), lessonObjects
                        (trigger, Thistle Star), sweets (instanced SweetField); types.ts holds the
@@ -102,7 +104,9 @@ Each render frame then runs the camera, animator, level and entity visuals, cast
 - A `door` entity with `to: { level, spawn }` switches levels; the game fades out and in.
 - Everything level-specific is created by `LevelSession` and torn down by its `dispose()`. Event listeners go on the session's scoped bus, so they're removed too.
 - Every level file starts with a map comment. Keep it current.
-- Levels: `hub`, then `classroom` (Gorse's lesson) and `trial` (the Thwackwort Trial); then the hub's Long Gallery leads to `quince` (Locks & Latches) and `vault` (the Latchkin Vaults), and through a padlocked door to `hopgood` (Leaps & Bounds) and `tower` (the Tumbledown Tower). Plus the `gym` sandbox.
+- Levels: `hub`, then `classroom` (Gorse's lesson) and `trial` (the Thwackwort Trial); then the hub's Long Gallery leads to `quince` (Locks & Latches) and `vault` (the Latchkin Vaults), a padlocked door in Hollyhock Court's west cloister to `hopgood` (Leaps & Bounds) and `tower` (the Tumbledown Tower), and a door by the Lantern Hall's front doors down to `lamplough` (Illumination, the Undercroft) and `catacombs` (the Lamplit Catacombs). Plus the `gym` sandbox.
+- Spread classroom entrances round the castle (the user asked for this): each new teacher gets a new corner, not another door off the same corridor. Later teachers' doors use `afterLesson: '<previous spell>'`.
+- `ambience: 'dark'` (underground levels) drops to a dim cold fill and close black fog; lamps with `light: true` and torches do the lighting. Keep real point lights to ~8 (checkpoints and the Star have one each).
 
 ### Lessons (the core loop)
 Each lesson is content, not engine work:
@@ -189,6 +193,7 @@ Levels place objects with `b.add({ type: ..., ... })`. Objects talk to each othe
 | M3 Lesson | done | Gorse's lesson, the Thwackwort Trial dungeon (~5 min), Thistle Star, a post-lesson hub secret |
 | M4 Slice complete | done | Shop and upgrades, all 10 cards, 4 secrets, title/pause/options, music, visual pass, perf |
 | Polish 1 | done | Sectioned music, wall caps against climbing out, P screenshots, painted portraits and gilt frames, detailed characters, set dressing in every room |
+| M7 Glimmerwick | done | Hopgood's door moved to the court; the Undercroft door in the Lantern Hall; Lamplough's dark study; the Lamplit Catacombs (glimmer bridge with charged-only stones, false walls, four lamps at once); glimmer steps in the hall, a false wall in the Long Gallery; 3 new cards (20 total) |
 | M6 Springwell | done | Hopgood's gym (padlocked off the Long Gallery), the Tumbledown Tower (toadstool stair, Bellfry with a timed gate and charged bounces, rooftop turret run to the spire), spring pads with fling, latching plates, the court balcony, 3 new cards (17 total) |
 | M5 Latchkin | done | Long Gallery wing (portcullis, portraits, padlocked store-room), Madam Quince's class, the Latchkin Vaults (line-of-sight locks, Snapcaskets, relocking shutters, drawbridge, orbiting vault locks), castle payoffs, 4 new cards (14 total) |
 

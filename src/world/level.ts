@@ -26,6 +26,8 @@ export interface LevelDef {
   grants?: SpellId[];
   /** Sandbox levels never touch the save. */
   sandbox?: boolean;
+  /** 'dark' for places underground: lamps and torches do the lighting (default 'day'). */
+  ambience?: 'day' | 'dark';
   /** Background music (default 'hub'). */
   music?: Mood;
   /** Dialogue script id to run on entering, if the flag isn't set yet. */

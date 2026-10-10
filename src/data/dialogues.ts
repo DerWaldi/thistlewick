@@ -61,10 +61,18 @@ export const DIALOGUES: Record<string, Script> = {
   },
 
   wendlebury: async ({ say, state }) => {
+    if (state.lessons.has('glimmerwick')) {
+      await say([
+        { speaker: 'wendlebury', text: "Four Stars! And Mr. Lamplough came UPSTAIRS to tell me. He blinked a great deal, but he came." },
+        { speaker: 'wendlebury', text: 'Light shows what wants to stay hidden, dear. I would look again at any wall you think you know.' },
+      ]);
+      return;
+    }
     if (state.lessons.has('springwell')) {
       await say([
         { speaker: 'wendlebury', text: "Three Thistle Stars, and you came down the Tumbledown Tower the front way. Mr. Hopgood is beside himself. Literally, he's bouncing." },
         { speaker: 'wendlebury', text: 'There is a balcony over Hollyhock Court that nobody has stood on in years. I wonder what is up there.' },
+        { speaker: 'wendlebury', text: 'Mr. Lamplough will see you now, down in the Undercroft. The little door by the front doors. Take a lamp. Well, you ARE the lamp, soon.' },
       ]);
       return;
     }
@@ -339,7 +347,10 @@ export const DIALOGUES: Record<string, Script> = {
       await say([{ speaker: 'hopgood', text: 'Springwell works on the castle moss, too. There is a mossy bit on the cloister roof under a balcony. Just saying.' }]);
       return;
     }
-    await say([{ speaker: 'hopgood', text: 'Up is the best direction. Down is just up, waiting.' }]);
+    await say([
+      { speaker: 'hopgood', text: 'Up is the best direction. Down is just up, waiting.' },
+      { speaker: 'hopgood', text: "Speaking of down: Mr. Lamplough's in the Undercroft, under the Lantern Hall. Little door by the front doors. Bring your eyes." },
+    ]);
   },
 
   hopgoodChargeHint: async ({ say }) => {
@@ -403,6 +414,105 @@ export const DIALOGUES: Record<string, Script> = {
     await say([{ speaker: 'hopgood', text: '(far below) WOOHOO! The Thistle Star! Come back down and see me. The door, not the quick way.' }]);
   },
 
+  // ---------------------------------------------------------------- the fourth lesson
+
+  undercroftDoor: async ({ say, state }) => {
+    const text = state.lessons.has('springwell')
+      ? '"ILLUMINATION — Mr. F. Lamplough. Mind the stairs. There are a great many and none of them are lit."'
+      : '"ILLUMINATION — Mr. F. Lamplough. Third-term pupils and above." It is locked, and very dark beyond the keyhole.';
+    await say([{ speaker: 'sign', text }]);
+  },
+
+  lamploughLesson: async (ctx) => {
+    await teachGlimmerwick(ctx);
+  },
+
+  lamplough: async (ctx) => {
+    const { say, state } = ctx;
+    if (!state.knows('glimmerwick')) {
+      await teachGlimmerwick(ctx);
+      return;
+    }
+    if (!state.flags.has('practice-glimmerwick')) {
+      await say([{ speaker: 'lamplough', text: 'Three plates. The first is up some steps that only light can see. The second is over the trench. The third is far away; HOLD the cast to light further.' }]);
+      return;
+    }
+    if (!state.lessons.has('glimmerwick')) {
+      await say([{ speaker: 'lamplough', text: 'The Catacombs are through the iron door. Lamps go out, my dear. Plan ahead, and never stand on glimmerstone when the light is flickering.' }]);
+      return;
+    }
+    if (!state.flags.has('lamplough-reward')) {
+      state.flags.add('lamplough-reward');
+      await say([
+        { speaker: 'lamplough', text: "You lit Lamplough's Lantern. All four at once. I have not seen it burn like that since... well. Since I lit it. Which was a while ago." },
+        { speaker: 'lamplough', text: 'Have this. A picture of me, from when I was still going outside. Look how squinty I am.' },
+      ]);
+      state.collectCard('fennick-lamplough');
+      await say([{ speaker: 'lamplough', text: 'There are glimmer steps in the Lantern Hall, you know. Up by the gallery. And the Long Gallery has a wall that is not entirely honest.' }]);
+      return;
+    }
+    await say([{ speaker: 'lamplough', text: 'Darkness is just light that has not arrived yet. Be patient with it. Then hit it with a lamp.' }]);
+  },
+
+  lamploughChargeHint: async ({ say }) => {
+    await say([{ speaker: 'lamplough', text: "Can't see the last step? HOLD the cast on the lamp until it glows bright, then let go. A charged lamp lights half as far again." }]);
+  },
+
+  glimmerPracticeDone: async ({ say, state }) => {
+    state.flags.add('practice-glimmerwick');
+    await say([
+      { speaker: 'lamplough', text: 'Splendid. You see? Most things are there all along. They are simply waiting for someone to look properly.' },
+      { speaker: 'lamplough', text: 'The Lamplit Catacombs, through the iron door. Glimmer bridges, walls that lie, and at the end, my Lantern: four lamps, all lit at once. Bring me the Thistle Star.' },
+    ]);
+  },
+
+  lockedCatacombDoor: async ({ say, state }) => {
+    if (state.lessons.has('glimmerwick')) {
+      await say([{ speaker: 'lamplough', text: 'The Catacombs are sleeping again. Let them. They snore.' }]);
+      return;
+    }
+    await say([{ speaker: 'lamplough', text: 'The plates first, if you please. All three.' }]);
+  },
+
+  classNotOverLamplough: async ({ say, state }) => {
+    const text = state.flags.has('practice-glimmerwick')
+      ? "Not yet, not yet. The Catacombs. The iron door. I'll keep a lamp lit for you."
+      : 'Not yet. Three plates first. Light the way.';
+    await say([{ speaker: 'lamplough', text }]);
+  },
+
+  catacombIntro: async ({ say }) => {
+    await say([
+      { speaker: 'lamplough', text: "(echoing, from far off) The Lamplit Catacombs. Light a lamp and look. Glimmerstone only bears your weight while the light is on it." },
+    ]);
+  },
+
+  catacombBridge: async ({ say }) => {
+    await say([
+      { speaker: 'lamplough', text: "(echoing) The bridge is there, you just can't see it. Light the lamp, cross to the island, light the next. Quickly: they don't burn long." },
+    ]);
+  },
+
+  catacombWalls: async ({ say }) => {
+    await say([
+      { speaker: 'lamplough', text: "(echoing) The Hall of False Walls. Some of these walls are lying. The lamp overhead tells the truth, but only as far as it reaches. A charged cast reaches further." },
+    ]);
+  },
+
+  catacombLantern: async ({ say }) => {
+    await say([
+      { speaker: 'lamplough', text: "(echoing) My Lantern! Four lamps round the room. The gate opens only while ALL FOUR are lit. They don't last long. Run, my dear." },
+    ]);
+  },
+
+  catacombComplete: async ({ say, state }) => {
+    if (state.lessons.has('glimmerwick')) return;
+    state.lessons.add('glimmerwick');
+    state.award(POINTS.star, 'the Thistle Star');
+    state.award(POINTS.lesson, 'passing Illumination');
+    await say([{ speaker: 'lamplough', text: '(echoing) Oh, well done! Well done! Come back up and see me. Mind the dark on the way.' }]);
+  },
+
   tansy: async ({ say, state, openShop }) => {
     if (state.lessons.has('thwackwort')) {
       const first = !state.flags.has('shop-visited');
@@ -449,6 +559,19 @@ export const DIALOGUES: Record<string, Script> = {
     await say([{ speaker: 'sign', text: `HOUSE POINTS — ${lines}` }]);
   },
 };
+
+async function teachGlimmerwick({ say, state, events }: ScriptContext): Promise<void> {
+  await say([
+    { speaker: 'lamplough', text: 'Ah. A visitor. Come in, come in, mind the dark. Fennick Lamplough, Illumination. I am told it is daytime upstairs. I will take their word for it.' },
+    { speaker: 'lamplough', text: 'GLIMMERWICK. Cast it at a wick lamp and it lights. And light, my dear, shows things that are there but would rather not be seen.' },
+    { speaker: 'lamplough', text: 'Glimmerstone steps appear in its glow, and false walls fade. HOLD the cast to light a wider circle. And mind: lamps go out, and glimmerstone goes with them.' },
+  ]);
+  if (!state.knows('glimmerwick')) {
+    state.learn('glimmerwick');
+    events.emit('toast', { text: 'You learned Glimmerwick!', kind: 'info' });
+  }
+  await say([{ speaker: 'lamplough', text: 'Three plates. Up the hidden steps, over the trench, and the far one: hold the cast to reach it. Off you go.' }]);
+}
 
 async function teachSpringwell({ say, state, events }: ScriptContext): Promise<void> {
   await say([

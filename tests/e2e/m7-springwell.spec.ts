@@ -77,22 +77,22 @@ const bounce = (page: Page, from: [number, number, number], at: [number, number,
     { from, at, yaw, push, opts },
   );
 
-test("Latchkin opens Hopgood's door in the Long Gallery, and it stays open", async ({ page }) => {
-  await prepared(page, 'hub', { spawn: 'fromQuince', flags: ['on:hub-portcullis'] });
+test("Latchkin opens Hopgood's door in Hollyhock Court, and it stays open", async ({ page }) => {
+  await prepared(page, 'hub', { spawn: 'fromHopgood' });
   const r = await page.evaluate(async () => {
     const tw = window.__tw;
-    tw.teleport(40.4, 3, 46, Math.PI / 2);
+    tw.teleport(-14.6, 0, 40, -Math.PI / 2);
     tw.advance(0.3);
     tw.interact();
     await tw.idle();
     tw.advance(1.5);
     const before = tw.state().level;
-    tw.aimAt(41.82, 4.5, 46.45);
+    tw.aimAt(-15.82, 1.5, 40.45);
     tw.advance(0.05);
     const target = tw.state().target;
     tw.cast(0);
     tw.advance(2);
-    tw.teleport(40.4, 3, 46, Math.PI / 2);
+    tw.teleport(-14.6, 0, 40, -Math.PI / 2);
     tw.advance(0.3);
     tw.interact();
     await tw.idle();

@@ -191,6 +191,36 @@ export const CARDS: CardDef[] = [
     hint: 'Atop the great bell of the Tumbledown Tower.',
     portrait: { bg: ['#d8f0c0', '#4f7a3a'], kind: 'mushroom' },
   },
+  {
+    id: 'ambrose-wick',
+    number: 18,
+    name: 'Ambrose Wick',
+    title: 'Inventor of the Candle That Remembers',
+    set: 'Founders',
+    text: 'Made a candle that relights itself wherever it was last lit. Several are still wandering the castle looking for the right room.',
+    hint: 'High in the Lantern Hall, on steps only light can find.',
+    portrait: { bg: FOUNDER_BG, kind: 'person', skin: '#f0c9a0', robe: '#5a3a1e', hair: '#3a2617', hat: 'tall', hatColor: '#2b1d14', collar: 'ruff', expression: 'kind', jewel: '#ffd27a', prop: 'book', hairStyle: 'short' },
+  },
+  {
+    id: 'fennick-lamplough',
+    number: 19,
+    name: 'Fennick Lamplough',
+    title: 'Has Not Seen the Sun Since 1961',
+    set: 'Oddballs',
+    text: 'Moved into the Undercroft to read in peace and simply never came back up. Says daylight is just a very large, very rude lamp.',
+    hint: 'A reward for an Illumination trial well done.',
+    portrait: { bg: ODDBALL_BG, kind: 'person', skin: '#e8c8a8', robe: '#2a3a5a', hair: '#e8e2d0', hat: 'tall', hatColor: '#1e2638', glasses: true, beard: true, prop: 'wand', hairStyle: 'long', collar: 'plain', expression: 'kind', jewel: '#bfe8ff', eyes: '#5a7aa8' },
+  },
+  {
+    id: 'gloomwisp',
+    number: 20,
+    name: 'The Gloomwisp',
+    title: 'Afraid of the Dark, Lives in It',
+    set: 'Creatures',
+    text: 'A little puff of light that hides in the darkest corners because it is scared of the dark, which is everywhere else.',
+    hint: 'Behind a wall that is not there, in the Lamplit Catacombs.',
+    portrait: { bg: ['#2a3a5a', '#0e1220'], kind: 'wisp' },
+  },
 ];
 
 export const CARD_BY_ID = new Map(CARDS.map((c) => [c.id, c]));

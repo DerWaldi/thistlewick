@@ -2,7 +2,9 @@ import type { LevelDef } from '../../world/level';
 import { CLASSROOM } from './classroom';
 import { GYM } from './gym';
 import { HOPGOOD } from './hopgood';
+import { CATACOMBS } from './catacombs';
 import { HUB } from './hub';
+import { LAMPLOUGH } from './lamplough';
 import { QUINCE } from './quince';
 import { TOWER } from './tower';
 import { TRIAL } from './trial';
@@ -18,4 +20,6 @@ export const LEVELS: Record<string, LevelDef> = {
   vault: VAULT,
   hopgood: HOPGOOD,
   tower: TOWER,
+  lamplough: LAMPLOUGH,
+  catacombs: CATACOMBS,
 };

@@ -1,5 +1,6 @@
 import { Group, Mesh, Vector3, type Material } from 'three';
 import { SweetField } from './entities/sweets';
+import { GlimmerField } from './world/glimmer';
 import type { Interactable } from './entities/types';
 import type { EventBus } from './engine/events';
 import { Physics } from './engine/physics';
@@ -83,6 +84,7 @@ export class LevelSession {
       targets,
       fx: this.puffs,
       sweets,
+      glimmer: new GlimmerField(),
       dialogue: game.dialogue,
       interactables: this.interactables,
       talk: (id) => game.runScript(id),

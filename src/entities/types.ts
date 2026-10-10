@@ -15,6 +15,7 @@ import type { Dialogue, DialogueLine } from '../ui/dialogue';
 import type { V3 } from '../world/builder';
 import type { Signals } from '../world/signals';
 import type { SweetField } from './sweets';
+import type { GlimmerField } from '../world/glimmer';
 
 /** Fields any entity spec may carry. */
 interface SpecBase {
@@ -86,6 +87,8 @@ export type EntitySpec = SpecBase &
         lockedDuring?: SpellId;
         /** Shut for good once this spell's lesson is complete: each trial is run once. */
         closedAfter?: SpellId;
+        /** Locked until this spell's lesson is complete (a later teacher's door). */
+        afterLesson?: SpellId;
         /** Dialogue script to run instead of the `locked` toast. */
         talk?: string;
         label?: string;
@@ -155,6 +158,27 @@ export type EntitySpec = SpecBase &
     | { type: 'drawbridge'; pos: V3; yaw: number; length: number; width: number; when: string[] }
     | { type: 'vaultDoor'; pos: V3; yaw: number; radius: number; when: string[] }
     | { type: 'snapcasket'; id: string; pos: V3; yaw?: number; wander?: number }
+    | {
+        type: 'wickLamp';
+        /** Signal turned on while it's lit. */
+        id?: string;
+        /** Base of the post / the wall mount / the hanging point. */
+        pos: V3;
+        yaw?: number;
+        style?: 'post' | 'wall' | 'hanging';
+        /** Lit radius (a full charge lights 1.5x as wide). */
+        radius: number;
+        /** Seconds it stays lit (default 8; 0 = for the rest of the visit). */
+        duration?: number;
+        /** Burning when you arrive. */
+        lit?: boolean;
+        /** Casts real light too (counts towards the level's ~8 point lights). */
+        light?: boolean;
+        /** How far that light reaches (default 1.8x the radius). */
+        lightRange?: number;
+      }
+    | { type: 'glimmerBlock'; pos: V3; size: V3; grabbable?: boolean }
+    | { type: 'illusionWall'; pos: V3; size: V3; color?: string }
   );
 
 export type EntityType = EntitySpec['type'];
@@ -185,6 +209,8 @@ export interface WorldContext {
   targets: TargetRegistry;
   fx: Puffs;
   sweets: SweetField;
+  /** Where Glimmerwick's lamps are lit (hidden platforms, false walls). */
+  glimmer: GlimmerField;
   dialogue: Dialogue;
   /** Interactables register here; the session shows the nearest one's prompt. */
   interactables: Set<Interactable>;

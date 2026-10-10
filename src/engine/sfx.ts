@@ -87,6 +87,13 @@ export class Sfx {
       setTimeout(() => this.tone(440, charged ? 1320 : 990, 0.25, 'triangle', 0.06), 90);
     });
     events.on('springOff', () => this.tone(500, 160, 0.4, 'sine', 0.08));
+    // Glimmerwick: a soft whoomph and a shimmer; a little sigh as a lamp goes out.
+    events.on('lampLit', ({ charged }) => {
+      this.hiss(0.35, 1400, 0.08);
+      [659, 988, charged ? 1568 : 1319].forEach((f, i) => setTimeout(() => this.tone(f, f * 1.01, 0.5, 'sine', 0.06), i * 60));
+    });
+    events.on('lampOut', () => this.tone(700, 260, 0.45, 'triangle', 0.05));
+    events.on('wallFade', () => [1046, 1319, 1568].forEach((f, i) => setTimeout(() => this.tone(f, f * 0.98, 0.35, 'sine', 0.04), i * 50)));
     events.on('snapNotice', () => this.tone(300, 520, 0.12, 'square', 0.06));
     events.on('snapBite', () => {
       this.thud(0.5, 160);

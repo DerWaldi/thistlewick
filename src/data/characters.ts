@@ -1,6 +1,6 @@
 import type { PortraitSpec } from './portraits';
 
-export type SpeakerId = 'wendlebury' | 'lantern' | 'tansy' | 'moss' | 'gorse' | 'quince' | 'hopgood' | 'sign';
+export type SpeakerId = 'wendlebury' | 'lantern' | 'tansy' | 'moss' | 'gorse' | 'quince' | 'hopgood' | 'lamplough' | 'sign';
 
 export interface SpeakerDef {
   id: SpeakerId;
@@ -52,6 +52,12 @@ export const SPEAKERS: Record<SpeakerId, SpeakerDef> = {
     name: 'Mr. Hopgood',
     voice: 480,
     portrait: { bg: ['#d8f0c0', '#3f7a4a'], kind: 'person', skin: '#f0c9a0', robe: '#3f7a4a', hair: '#d9822e', hat: 'cap', hatColor: '#b0362f', prop: 'wand', hairStyle: 'wild', collar: 'scarf', jewel: '#e8c25a', expression: 'smile', eyes: '#4a7a3a' },
+  },
+  lamplough: {
+    id: 'lamplough',
+    name: 'Mr. Lamplough',
+    voice: 340,
+    portrait: { bg: ['#2a3a5a', '#0e1220'], kind: 'person', skin: '#e8c8a8', robe: '#2a3a5a', hair: '#e8e2d0', hat: 'tall', hatColor: '#1e2638', glasses: true, beard: true, prop: 'wand', hairStyle: 'long', collar: 'plain', expression: 'kind', jewel: '#bfe8ff', eyes: '#5a7aa8' },
   },
   sign: {
     id: 'sign',

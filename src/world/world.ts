@@ -1,5 +1,6 @@
 import { Vector3 } from 'three';
 import { Gnarling } from '../entities/gnarling';
+import { GlimmerBlock, IllusionWall, WickLamp } from '../entities/glimmer';
 import { Chest, Drawbridge, Padlock, VaultDoor } from '../entities/locks';
 import { Snapcasket } from '../entities/snapcasket';
 import { Bookshelf, CardPickup, Door, Hourglasses, Npc, SecretVolume, SortingLantern, Tapestry } from '../entities/hubObjects';
@@ -61,6 +62,9 @@ const FACTORIES: { [T in EntityType]: Factory<T> } = {
     }
     return new Snapcasket(s, c);
   },
+  wickLamp: (s, c) => new WickLamp(s, c),
+  glimmerBlock: (s, c) => new GlimmerBlock(s, c),
+  illusionWall: (s, c) => new IllusionWall(s, c),
   sweet: (s, c, id) => {
     if (!c.state.collected.has(id)) c.sweets.add(s.kind, new Vector3(...s.pos), id);
     return null;

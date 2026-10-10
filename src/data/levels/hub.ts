@@ -65,7 +65,8 @@ export const HUB: LevelDef = {
     title: { pos: [0, 0, 3.5], yaw: 0 },
     fromClassroom: { pos: [38.5, 3, 20], yaw: -Math.PI / 2 },
     fromQuince: { pos: [38.5, 3, 50.3], yaw: Math.PI },
-    fromHopgood: { pos: [40.6, 3, 46], yaw: -Math.PI / 2 },
+    fromHopgood: { pos: [-14.4, 0, 40], yaw: Math.PI / 2 },
+    fromUndercroft: { pos: [10.6, 0, 2.5], yaw: -Math.PI / 2 },
   },
   areas: [
     { id: 'hall', name: 'The Lantern Hall', min: [-12, -2, 0], max: [12, 14, 30] },
@@ -100,7 +101,12 @@ function buildHub(b: LevelBuilder): void {
       { from: 22.5, to: 24.5, top: 3 }, // behind the tapestry
     ],
   });
-  wall(b, 'z', 12.5, 0, 30, HH, { holes: [{ from: 6, to: 10, top: 4.5 }] }); // to the corridor
+  wall(b, 'z', 12.5, 0, 30, HH, {
+    holes: [
+      { from: 6, to: 10, top: 4.5 }, // to the corridor
+      { from: 1.3, to: 3.7, top: 3.4 }, // down to the Undercroft
+    ],
+  });
   wall(b, 'x', 30.5, -12.5, 12.5, HH, {
     holes: [
       { from: -2, to: 2, top: 4.5 }, // to the court
@@ -330,7 +336,7 @@ function buildHub(b: LevelBuilder): void {
   const W = 8;
   // Side walls are too tall to climb from the cloister roof; the north wall's top is a
   // walkway (with a parapet) that leads behind the clock tower.
-  wall(b, 'z', -16.5, 30, 64, 10.5, { cap: 8 });
+  wall(b, 'z', -16.5, 30, 64, 10.5, { cap: 8, holes: [{ from: 38.8, to: 41.2, top: 3.4 }] }); // Leaps & Bounds
   wall(b, 'z', 16.5, 30, 64, 10.5, { holes: [{ from: 44.5, to: 47.5, top: 3.5 }], cap: 8 });
   wall(b, 'x', 63, -16, 16, W, { thick: 2 });
   b.box([0, W + 0.55, 63.85], [32, 1.1, 0.3], { color: COLORS.stoneLight });
@@ -475,7 +481,8 @@ function buildHub(b: LevelBuilder): void {
   mushrooms(b, -9.4, 38.6, 5, 2, 0.06);
   mushrooms(b, 9.2, 54.2, 4, 7, 0.06);
   mushrooms(b, -7.2, 49, 3, 9, 0.06);
-  ivy(b, 'z', -16, 34, 44, 0.2, 7, 1, 1);
+  ivy(b, 'z', -16, 34, 38.4, 0.2, 7, 1, 1);
+  ivy(b, 'z', -16, 41.6, 44, 0.2, 7, 1, 7);
   ivy(b, 'z', -16, 54, 61, 0.2, 5, 1, 2);
   ivy(b, 'z', 16, 34, 43, 0.2, 6, -1, 3);
   ivy(b, 'z', 16, 49, 61, 0.2, 7.5, -1, 4);
@@ -501,12 +508,11 @@ function buildHub(b: LevelBuilder): void {
   // ================================================================ LONG GALLERY (x 35..42, z 24..52, y=3)
   // Added after everything else: entity ids come from build order, so new specs go last.
   const G = 3;
-  wall(b, 'z', 34.5, 23.5, 52.5, 10.4, { color: COLORS.stoneLight });
+  wall(b, 'z', 34.5, 23.5, 52.5, 10.4, { color: COLORS.stoneLight, holes: [{ from: 49.5, to: 51.5, bottom: G, top: G + 3 }] }); // a false wall fills this
   wall(b, 'z', 42.5, 23.5, 52.5, 10.4, {
     color: COLORS.stoneLight,
     holes: [
       { from: 33.4, to: 37.6, bottom: G, top: G + 3.6 }, // the store-room
-      { from: 44.8, to: 47.2, bottom: G, top: G + 3.4 }, // Leaps & Bounds
     ],
   });
   wall(b, 'x', 52.5, 34.5, 42.5, 10.4, { color: COLORS.stoneLight, holes: [{ from: 37.3, to: 39.7, bottom: G, top: G + 3.4 }] });
@@ -533,7 +539,9 @@ function buildHub(b: LevelBuilder): void {
   [27, 31, 40, 44, 48].forEach((z, i) => portrait(b, gallerySitters[3 + i], [41.95, G + 2.6, z], -Math.PI / 2, i % 2 ? 1.1 : 1.3, i % 2 ? 1.4 : 1.7, (i % 2 ? 1 : -1) * 0.05));
   armour(b, [41.3, G, 29], -Math.PI / 2, '#2f5a6a');
   armour(b, [41.3, G, 42], -Math.PI / 2, '#8a2a3a');
-  for (const x of [35.7, 41.3]) pottedPlant(b, [x, G, 51.3], 1.3, x);
+  pottedPlant(b, [41.3, G, 51.3], 1.3, 41.3);
+  pottedPlant(b, [35.7, G, 47.2], 1.3, 35.7);
+  armour(b, [41.3, G, 46], -Math.PI / 2, '#3f7a4a');
   urn(b, [35.7, G, 24.8], true, 3);
   dustMotes(b, [35.5, G + 0.5, 24.5], [41.5, G + 6.5, 51.5], 80);
   cobweb(b, [35, 10.2, 52], [1, 0], [0, -1], 1.2);
@@ -578,8 +586,9 @@ function buildHub(b: LevelBuilder): void {
   b.add(
     {
       type: 'door',
-      pos: [42, G, 46],
-      yaw: -Math.PI / 2,
+      // In Hollyhock Court's west cloister.
+      pos: [-16, 0, 40],
+      yaw: Math.PI / 2,
       width: 2.4,
       height: 3.4,
       to: { level: 'hopgood', spawn: 'default' },
@@ -587,11 +596,47 @@ function buildHub(b: LevelBuilder): void {
       talk: 'hopgoodDoor',
       label: 'Leaps & Bounds',
     },
-    { type: 'padlock', id: 'hub-hopgood-lock', pos: [41.92, G + 1.5, 46.45], yaw: -Math.PI / 2, persist: true },
+    { type: 'padlock', id: 'hub-hopgood-lock', pos: [-15.92, 1.5, 40.45], yaw: Math.PI / 2, persist: true },
     // The court balcony, reached by bouncing off the springy moss on the cloister roof.
     { type: 'card', card: 'griselda-gusset', pos: [-14.9, 10.4, 52.8] },
     { type: 'secret', id: 'hub-balcony', area: 'court', min: [-16, 9, 50], max: [-13.5, 12.5, 54] },
     { type: 'sweetLine', kind: 'bramble', from: [-15, 9.8, 50.6], to: [-15, 9.8, 51.6], count: 2 },
+  );
+
+  // ================================================================ after Glimmerwick (appended: ids follow build order)
+  // Glimmer steps from the gallery up to a ledge high on the hall's east wall; the top
+  // step only shows in a charged lamp's glow.
+  b.box([11.5, 9.95, 18.5], [1, 0.5, 1.8], { color: COLORS.stoneLight, info: { noGrab: true } });
+  deco(b, new BoxGeometry(1.1, 0.12, 1.9), [11.5, 9.7, 18.5], COLORS.stoneDark);
+  // The false wall's alcove behind the Long Gallery's west wall.
+  b.box([33.25, G + 1.5, 49.3], [1.5, 3, 0.2], { color: COLORS.stoneLight });
+  b.box([33.25, G + 1.5, 51.7], [1.5, 3, 0.2], { color: COLORS.stoneLight });
+  b.box([32.4, G + 1.5, 50.5], [0.2, 3, 2.6], { color: COLORS.stoneLight });
+  b.box([33.25, G + 3.15, 50.5], [1.9, 0.3, 2.8], { color: COLORS.stoneDark });
+  b.box([33.25, G - 0.5, 50.5], [1.5, 1, 2.4], { color: '#8a6a4a', pattern: 'planks' });
+  b.add(
+    {
+      type: 'door',
+      pos: [12, 0, 2.5],
+      yaw: -Math.PI / 2,
+      width: 2.4,
+      height: 3.4,
+      to: { level: 'lamplough', spawn: 'default' },
+      afterLesson: 'springwell',
+      talk: 'undercroftDoor',
+      label: 'Illumination',
+    },
+    { type: 'wickLamp', pos: [10.8, 5, 27.5], radius: 5, duration: 8 },
+    { type: 'glimmerBlock', pos: [10.6, 6.15, 24.6], size: [1.5, 0.3, 1.5] },
+    { type: 'glimmerBlock', pos: [10.6, 7.45, 22.4], size: [1.5, 0.3, 1.5] },
+    { type: 'glimmerBlock', pos: [10.6, 8.75, 20.2], size: [1.5, 0.3, 1.5] },
+    { type: 'card', card: 'ambrose-wick', pos: [11.4, 11, 18.5] },
+    { type: 'secret', id: 'hub-wick-ledge', area: 'hall', min: [10.8, 9.8, 17.4], max: [12, 12.5, 19.6] },
+    { type: 'wickLamp', pos: [37, G, 48.6], radius: 4, duration: 8 },
+    { type: 'illusionWall', pos: [34.5, G + 1.5, 50.5], size: [1, 3, 2], color: COLORS.stoneLight },
+    { type: 'secret', id: 'hub-gallery-niche', area: 'gallery', min: [32.5, G - 1, 49.5], max: [34, G + 3, 51.5] },
+    { type: 'sweet', kind: 'humbug', pos: [33.2, G + 0.6, 50.5] },
+    { type: 'sweetLine', kind: 'bramble', from: [33.2, G + 0.6, 49.8], to: [33.2, G + 0.6, 51.2], count: 2 },
   );
 
   glow.finish(b, '#ffc68a');
