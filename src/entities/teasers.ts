@@ -57,8 +57,8 @@ export class Teaser implements Entity, SpellTarget {
     this.lid = new Group();
     this.lid.position.set(0, 0.6, -0.42);
     const lidMesh = new Mesh(paint(new CylinderGeometry(0.42, 0.42, 1.2, 8, 1, false, 0, Math.PI).toNonIndexed(), '#8a5a36', true), mat);
+    // Half-cylinder (theta 0..π covers +X) laid on its side: axis along X, dome up.
     lidMesh.rotation.z = Math.PI / 2;
-    lidMesh.rotation.y = Math.PI / 2;
     lidMesh.position.z = 0.42;
     this.lid.add(lidMesh);
     const lock = new Mesh(

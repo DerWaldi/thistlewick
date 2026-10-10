@@ -107,6 +107,37 @@ export class Physics {
     return hit ? hit.time_of_impact : 1;
   }
 
+  /**
+   * Sweeps an upright capsule from `from` by `delta`; returns the free fraction (0..1)
+   * and the hit normal (pointing out of the obstacle), if any.
+   */
+  capsuleSweep(
+    from: Vector3,
+    delta: Vector3,
+    halfHeight: number,
+    radius: number,
+    exclude?: RAPIER.Collider,
+  ): { fraction: number; normal: Vector3 | null } {
+    if (delta.lengthSq() < 1e-10) return { fraction: 1, normal: null };
+    const hit = this.world.castShape(
+      from,
+      { x: 0, y: 0, z: 0, w: 1 },
+      delta,
+      new RAPIER.Capsule(halfHeight, radius),
+      0,
+      1,
+      false,
+      RAPIER.QueryFilterFlags.EXCLUDE_SENSORS,
+      undefined,
+      exclude,
+    );
+    if (!hit) return { fraction: 1, normal: null };
+    // normal2 is in the hit collider's local frame; rotate to world.
+    const r = hit.collider.rotation();
+    const n = new Vector3(hit.normal2.x, hit.normal2.y, hit.normal2.z).applyQuaternion(new Quaternion(r.x, r.y, r.z, r.w));
+    return { fraction: hit.time_of_impact, normal: n };
+  }
+
   /** True if a capsule at `center` overlaps any solid collider (excluding `exclude`). */
   capsuleBlocked(center: Vector3, halfHeight: number, radius: number, exclude?: RAPIER.Collider): boolean {
     const hit = this.world.intersectionWithShape(

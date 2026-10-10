@@ -81,7 +81,9 @@ export class StudentAnimator {
     this.time += dt;
 
     this.renderPos.lerpVectors(p.prevPos, p.pos, alpha);
-    r.root.position.set(this.renderPos.x, this.renderPos.y - FOOT_OFFSET, this.renderPos.z);
+    // Ease the body up after a step-up instead of popping.
+    p.stepSmoothing *= Math.exp(-18 * dt);
+    r.root.position.set(this.renderPos.x, this.renderPos.y - FOOT_OFFSET + p.stepSmoothing, this.renderPos.z);
     this.renderFacing += angleWrap(p.facing - this.renderFacing) * (1 - Math.exp(-30 * dt));
     r.root.rotation.y = this.renderFacing;
 

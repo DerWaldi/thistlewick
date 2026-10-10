@@ -19,6 +19,7 @@ export const RADIUS = 0.35;
 /** Capsule centre to feet. */
 export const FOOT_OFFSET = HALF_HEIGHT + RADIUS;
 const RING_RAYS = 8;
+const STEP_HEIGHT = 0.36; // ledges up to this high are walked up without jumping
 const HANG_OFFSET = 0.78; // capsule centre below the ledge lip while hanging
 const UP = new Vector3(0, 1, 0);
 
@@ -61,6 +62,8 @@ export class PlayerController {
   faceOverride: number | null = null;
   /** Ignore movement and jump input (cutscenes, fainting). */
   frozen = false;
+  /** Vertical offset the visuals still have to catch up after a step-up (decays in the animator). */
+  stepSmoothing = 0;
 
   private groundInfo: ColliderInfo | undefined;
   private coyote = 0;
@@ -255,6 +258,14 @@ export class PlayerController {
       }
     }
 
+    // Low ledges (kerbs, flower beds, single steps): Rapier's autostep stalls on the
+    // capsule's round bottom, so do a classic up-over-down step ourselves.
+    const wantH = Math.hypot(desired.x, desired.z);
+    const gotH = Math.hypot(mv.x, mv.z);
+    if (this.grounded && wantH > 1e-4 && gotH < wantH * 0.6) {
+      this.tryStepUp(new Vector3(desired.x - mv.x, 0, desired.z - mv.z), new Vector3(desired.x, 0, desired.z));
+    }
+
     const wasGrounded = this.grounded;
     const fallSpeed = -this.vel.y;
     const kccGrounded = this.kcc.computedGrounded();
@@ -305,6 +316,38 @@ export class PlayerController {
     this.trackSafeGround(dt);
     if (!this.grounded) this.tryGrabLedge(cameraYaw);
     this.checkHazards();
+  }
+
+  private tryStepUp(remaining: Vector3, full: Vector3): boolean {
+    const r = RADIUS - 0.03;
+    const p0 = this.pos.clone();
+    // Push a little further than this frame's leftover so we actually clear the edge.
+    const fwd = full.clone().normalize().multiplyScalar(Math.max(remaining.length(), 0.12));
+    const up = this.physics.capsuleSweep(p0, new Vector3(0, STEP_HEIGHT, 0), HALF_HEIGHT, r, this.collider);
+    const rise = STEP_HEIGHT * up.fraction - 0.01;
+    if (rise < 0.05) return false;
+    const p1 = p0.clone().add(new Vector3(0, rise, 0));
+    const over = this.physics.capsuleSweep(p1, fwd, HALF_HEIGHT, r, this.collider);
+    if (over.fraction < 0.5) return false;
+    const p2 = p1.clone().addScaledVector(fwd, over.fraction);
+    const down = this.physics.capsuleSweep(p2, new Vector3(0, -(rise + 0.05), 0), HALF_HEIGHT, r, this.collider);
+    if (down.fraction >= 1) return false;
+    const p3 = p2.clone().add(new Vector3(0, -(rise + 0.05) * down.fraction + 0.005, 0));
+    const climbed = p3.y - p0.y;
+    if (climbed < 0.03) return false;
+    // We may land on the edge itself; what matters is walkable ground under the feet there.
+    const wallY = Math.cos((this.tuning.move.maxSlope * Math.PI) / 180);
+    const saved = this.pos.clone();
+    const savedNormal = this.groundNormal.clone();
+    this.pos.copy(p3);
+    const ok = this.footing(wallY) === 'walkable';
+    this.groundNormal.copy(savedNormal);
+    if (!ok) {
+      this.pos.copy(saved);
+      return false;
+    }
+    this.stepSmoothing -= climbed;
+    return true;
   }
 
   private jump(height: number): void {

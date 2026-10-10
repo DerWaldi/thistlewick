@@ -197,11 +197,13 @@ test('gnarlings attack, get stunned by Thwackwort and banished by a second hit',
     tw.aimAt(near.pos.x, near.pos.y, near.pos.z);
     tw.cast(0);
     tw.advance(0.5);
-    return { attacked, stunned, after: near.state };
+    const marker = (near as unknown as { marker: { sprite: { parent: unknown } } }).marker.sprite.parent;
+    return { attacked, stunned, after: near.state, markerGone: marker === null };
   });
   expect(r.attacked).toBe(true);
   expect(r.stunned).toBe('stunned');
   expect(r.after).toBe('gone');
+  expect(r.markerGone).toBe(true);
   await page.evaluate(() => {
     const tw = window.__tw;
     tw.teleport(-34, 0, 47.5, Math.PI / 2);
@@ -249,7 +251,7 @@ test('sweets are collected, with a magnet pull', async ({ page }) => {
   expect(r).toBe(5);
 });
 
-test('targets for spells you have not learned say so instead of casting', async ({ page }) => {
+test('targets for spells you have not learned say so instead of casting', async ({ page, browserName }) => {
   const r = await page.evaluate(() => {
     const tw = window.__tw;
     const toasts: string[] = [];
@@ -265,4 +267,11 @@ test('targets for spells you have not learned say so instead of casting', async 
   expect(r.target).toBe('latchkin');
   expect(r.unknown).toBe(true);
   expect(r.toasts.some((t) => t.includes('Latchkin'))).toBe(true);
+  await page.evaluate(() => {
+    const tw = window.__tw;
+    tw.teleport(-23, 0, 46, Math.PI / 2);
+    tw.advance(0.3);
+    tw.aimAt(-20.2, 0.6, 47.5);
+  });
+  await shot(page, 'm1-chest', browserName);
 });

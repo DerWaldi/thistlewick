@@ -38,6 +38,8 @@ export class TargetRegistry {
   }
   remove(t: SpellTarget): void {
     this.all.delete(t);
+    // The caster only animates registered markers, so take this one out of the scene now.
     t.marker.state = 'hidden';
+    t.marker.sprite.removeFromParent();
   }
 }

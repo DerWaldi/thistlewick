@@ -306,3 +306,31 @@ test('slopes up to 45° are walkable; steeper ones slide you back even when jump
   expect(r.steepMax).toBeLessThan(1.75);
   expect(r.slid).toBe(true);
 });
+
+test('low ledges (≤ 0.36 m) are stepped up without jumping; higher ones block', async ({ page }) => {
+  const r = await page.evaluate(() => {
+    const tw = window.__tw;
+    const walk = (x: number, z: number, yaw: number, secs: number) => {
+      tw.teleport(x, 0, z, yaw);
+      tw.advance(0.2);
+      tw.input({ y: 1 });
+      let maxY = 0;
+      for (let i = 0; i < secs * 60; i++) {
+        tw.advance(1 / 60);
+        maxY = Math.max(maxY, tw.state().feet.y);
+      }
+      tw.input(null);
+      return maxY;
+    };
+    return {
+      // 0.3 m flower beds in the Practice Yard garden, head-on and at an angle.
+      bed: walk(-31, 50.5, 0, 0.6),
+      bedAngled: walk(-33, 50, 0.6, 0.6),
+      // 0.8 m pedestal.
+      pedestal: walk(-42.5, 50, 0, 0.6),
+    };
+  });
+  expect(r.bed).toBeGreaterThan(0.28);
+  expect(r.bedAngled).toBeGreaterThan(0.28);
+  expect(r.pedestal).toBeLessThan(0.1);
+});
