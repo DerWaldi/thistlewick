@@ -404,3 +404,77 @@ test('Flooded Cisterns, the Sluice Canal: charged ice, frozen crabs as stepping 
   });
   await shot(page, 'm18-sluice', browserName);
 });
+
+test('Great Clockworks, the Mainspring: ferry under the pendulum, call the basket, crate to the top', async ({ page, browserName }) => {
+  await sandbox(page, 'clockworks', ['clockworks-entered', 'clockworks-hint-mainspring']);
+  await calm(page, ['Hexling', 'Sootling']);
+  /** Cast at a lift's feather-stone (wherever it is) from where you stand. */
+  const lift = (from: [number, number, number], pick: (l: { spec: { style?: string; id?: string } }) => boolean, wait: number) =>
+    page.evaluate(
+      async ({ from, pickSrc, wait }) => {
+        const tw = window.__tw;
+        type L = { constructor: { name: string }; spec: { style?: string; id?: string; from: number[] }; aimPoint(o: unknown): { x: number; y: number; z: number } };
+        const g = tw.game as unknown as { world: { entities: L[] }; session: { player: { pos: { clone(): unknown } } } };
+        const choose = new Function('l', `return (${pickSrc})(l)`) as (l: L) => boolean;
+        tw.teleport(...from, 0);
+        tw.advance(0.25);
+        const l = g.world.entities.find((e) => e.constructor.name === 'SkyLift' && choose(e))!;
+        const p = l.aimPoint(g.session.player.pos.clone());
+        tw.aimAt(p.x, p.y, p.z);
+        tw.advance(0.05);
+        const t = tw.state().target;
+        tw.cast(0);
+        tw.advance(wait);
+        return { t, feet: tw.state().feet };
+      },
+      { from, pickSrc: pick.toString(), wait },
+    );
+  // The ferry: launch so the pendulum is at the end of its swing as you pass under it.
+  await page.evaluate(() => {
+    const tw = window.__tw;
+    type Pd = { constructor: { name: string }; spec: { pos: number[]; period: number }; time: number };
+    const p = (tw.game as unknown as { world: { entities: Pd[] } }).world.entities.find((e) => e.constructor.name === 'Pendulum' && e.spec.pos[2] === 85)!;
+    tw.teleport(-3, 16.3, 81.4, 0);
+    for (let i = 0; i < 600 && Math.abs(Math.sin(((p.time + 1.65) / p.spec.period) * Math.PI * 2)) < 0.97; i++) tw.advance(1 / 60);
+  });
+  const ferry = await lift([-3, 16.3, 81.4], (l) => l.spec.style === 'platform' && (l.spec as { from: number[] }).from[2] > 80, 3);
+  expect(ferry.t).toBe('thistledown');
+  const c1 = await page.evaluate(() => {
+    const tw = window.__tw;
+    tw.setCamera(0, 0.2);
+    tw.input({ x: 0, y: 1 });
+    tw.advance(0.5);
+    tw.input(null);
+    tw.advance(0.5);
+    return tw.state().feet;
+  });
+  expect(c1.y).toBeGreaterThan(15.9);
+  expect(c1.z).toBeGreaterThan(89.4);
+  // Call the basket down from the far corner of the column, then ride it up.
+  expect((await lift([-4.2, 16, 89.8], (l) => l.spec.id === 'cwH', 5)).t).toBe('thistledown');
+  const up = await lift([-0.4, 16.4, 91], (l) => l.spec.id === 'cwH', 4.5);
+  expect(up.t).toBe('thistledown');
+  expect(up.feet.y).toBeGreaterThan(21.9);
+  // Off onto column 2, onto the crate, up to the top gallery.
+  const crate = await lift([5.5, 22.6, 100.1], (l) => l.spec.style === 'crate' && (l.spec as { from: number[] }).from[2] > 99, 5);
+  expect(crate.t).toBe('thistledown');
+  expect(crate.feet.y).toBeGreaterThan(27.8);
+  const top = await page.evaluate(() => {
+    const tw = window.__tw;
+    tw.setCamera(0, 0.2);
+    tw.input({ x: -0.3, y: 1 });
+    tw.advance(0.6);
+    tw.input(null);
+    tw.advance(0.5);
+    return tw.state().feet;
+  });
+  expect(top.y).toBeGreaterThan(27.9);
+  expect(top.z).toBeGreaterThan(101.6);
+  await page.evaluate(() => {
+    const tw = window.__tw;
+    tw.teleport(-5, 16, 78.4, 0.3);
+    tw.setCamera(0.3, 0.3);
+    tw.advance(0.3);
+  });
+  await shot(page, 'm18-mainspring', browserName);
+});

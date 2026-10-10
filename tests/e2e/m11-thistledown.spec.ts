@@ -397,12 +397,17 @@ test('the Bell Chamber: crate to the gallery, call the basket, ride past the cla
   expect(up).toBe(true);
   const r = await page.evaluate(async () => {
     const tw = window.__tw;
+    // The crown's plate opens the gallery door to the Mainspring (which has its own test).
     tw.teleport(3, 19, 65.6, Math.PI);
     tw.advance(1);
     await tw.idle();
+    const crown = tw.signal('cw-crown');
+    tw.teleport(0, 28, 108.4, 0);
+    tw.advance(1);
+    await tw.idle();
     const g = tw.game as unknown as G;
-    const done = g.state.lessons.has('thistledown');
-    tw.teleport(-3, 16, 75.2, 0);
+    const done = crown && g.state.lessons.has('thistledown');
+    tw.teleport(0, 28, 111.4, 0);
     tw.advance(0.2);
     tw.interact();
     await tw.idle();

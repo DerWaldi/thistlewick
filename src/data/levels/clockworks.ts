@@ -23,7 +23,14 @@ import { cobweb, deco, Glow, signboard, slab, wall, wallTorch } from '../../worl
  *                                                 alcove in the west wall (card)
  *   Bell Chamber        x -6..6, z 60..76, y 12    crate E floats you to the gallery (y 16);
  *                                                 call basket F down from the bell crown (19),
- *                                                 ride it up past the clapper to the Star
+ *                                                 ride it up past the clapper to the plate on the
+ *                                                 crown: it opens the gallery door north
+ *   The Mainspring      x -8..8, z 76.5..106       a ferry (home after 3 s) under a pendulum to
+ *                                                 column 1 (top 16), basket H to call down from
+ *                                                 column 2 (22) and ride up, a crate up to the top
+ *                                                 gallery (28) where a Sootling holds the Star
+ *                                                 gate; two Hexlings. Falls drop out of the clock
+ *   Star chamber        x -3..3, z 106..112.5, y 28
  */
 export const CLOCKWORKS: LevelDef = {
   id: 'clockworks',
@@ -33,7 +40,9 @@ export const CLOCKWORKS: LevelDef = {
     { id: 'gallery', name: 'The Escapement Gallery', min: [-6, -10, 0], max: [6, 14, 26] },
     { id: 'shaft', name: 'The Weights Shaft', min: [-6, -2, 26], max: [6, 25, 40] },
     { id: 'wheel', name: 'The Great Wheel', min: [-9, -2, 40], max: [6, 25, 60] },
-    { id: 'bell', name: 'The Bell Chamber', min: [-6, 10, 60], max: [6, 30, 76] },
+    { id: 'bell', name: 'The Bell Chamber', min: [-6, 10, 60], max: [6, 30, 76.5] },
+    { id: 'mainspring', name: 'The Mainspring', min: [-8.5, -10, 76.5], max: [8.5, 34, 106] },
+    { id: 'star', name: 'The Star Chamber', min: [-3.5, 27, 106], max: [3.5, 34, 112.5] },
   ],
   intro: { script: 'clockworksIntro', unlessFlag: 'clockworks-entered' },
   music: 'dungeon',
@@ -42,6 +51,9 @@ export const CLOCKWORKS: LevelDef = {
 
 const BRASS = '#c99a3e';
 const IRON = '#3a3340';
+/** The top gallery of the Mainspring, and the Star chamber beyond it. */
+const TOP = 28;
+const STAR_Z = 109.3;
 const STONE = '#6a5a52';
 const FLOOR = '#4a4038';
 
@@ -190,8 +202,10 @@ function build(b: LevelBuilder): void {
     // At the basket (x 3) the bob passes at y 18.35: clear of a rider waiting at the bottom (~16.9)
     // and at the top (~19.8) by a safe margin, but square in the middle of the ride.
     { type: 'pendulum', pos: [1, 29.15, 68.8], length: 11, swing: 0.38, period: 4, phase: 0.5, bob: 0.8 },
-    { type: 'star', id: 'clockworks-star', pos: [3, 20.6, 65.5], script: 'clockworksComplete' },
-    { type: 'door', pos: [-3, 16, 75.95], yaw: Math.PI, width: 2.4, height: 3.4, to: { level: 'underbough', spawn: 'fromClockworks' }, label: 'Up to class' },
+    // The Star and the way up moved on to the Mainspring (replaced in place: ids stay put);
+    // the plate on the bell's crown opens the gallery door to it.
+    { type: 'star', id: 'clockworks-star', pos: [0, TOP + 1.9, STAR_Z], script: 'clockworksComplete' },
+    { type: 'door', pos: [0, TOP, STAR_Z + 2.95], yaw: Math.PI, width: 2.4, height: 3.4, to: { level: 'underbough', spawn: 'fromClockworks' }, label: 'Up to class' },
     { type: 'sweetLine', kind: 'fizzwort', from: [-4, 16.6, 73], to: [4, 16.6, 73], count: 4 },
   );
   for (const z of [62, 72]) {
@@ -210,6 +224,76 @@ function build(b: LevelBuilder): void {
   deco(b, new ConeGeometry(0.3, 0.6, 5), [-5.5, 12.3, 61], IRON);
   deco(b, new SphereGeometry(0.4, 8, 6), [5.5, 12.4, 61], '#5a5a66');
 
+  mainspring(b, flames);
+
   flames.finish(b, '#ffb060');
   b.finish();
+}
+
+/**
+ * The Mainspring (z 76.5..106), through the Bell Chamber's gallery door: a ferry under a
+ * pendulum to a column, a basket to call down from a higher one, a crate up to the top
+ * gallery (28) with a Sootling, Hexlings all the way. Then the Star chamber. Falls drop you
+ * out of the clock and back to the last lectern. Built last so the earlier rooms' sweets keep
+ * their ids.
+ */
+function mainspring(b: LevelBuilder, flames: Glow): void {
+  const Z0 = 76.5;
+  const Z1 = 106;
+  wall(b, 'z', -8.5, Z0, Z1, 33, { color: STONE });
+  wall(b, 'z', 8.5, Z0, Z1, 33, { color: STONE });
+  wall(b, 'x', Z1, -8.5, 8.5, 33, { color: STONE, holes: [{ from: -2.1, to: 2.1, bottom: TOP, top: TOP + 3.6 }] });
+  slab(b, -8.5, 8.5, Z0, Z1, 33.5, 0.5, COLORS.stoneDark);
+  b.box([0, -9, 91], [16, 0.5, 29], { color: '#1e1816', noCollide: true });
+  // The landing by the gallery door, two columns, and the top gallery.
+  b.box([-3, 15.8, 78.25], [6, 0.4, 3.5], { color: '#7a6a5a', info: { noGrab: true } });
+  b.box([-3, 8, 91], [3, 16, 3], { color: STONE, info: { noGrab: true } });
+  b.box([5.5, 11, 98], [3, 22, 3], { color: STONE, info: { noGrab: true } });
+  b.box([0, TOP - 0.2, 103.75], [17, 0.4, 4.5], { color: '#7a6a5a', info: { noGrab: true } });
+  for (const [x, z] of [
+    [-3, 91],
+    [5.5, 98],
+  ]) {
+    deco(b, new CylinderGeometry(1.7, 1.7, 0.3, 14), [x, (x < 0 ? 16 : 22) - 0.1, z], BRASS);
+  }
+  gear(b, [-8.3, 20, 88], 4, 'x', 18);
+  gear(b, [8.3, 14, 94], 3, 'x', 14);
+  gear(b, [-8.3, 26, 100], 2.5, 'x', 12);
+  deco(b, new TorusGeometry(5, 0.35, 6, 24), [0, 18, 92], BRASS, [0, Math.PI / 2, 0]);
+  b.add(
+    { type: 'plate', id: 'cw-crown', pos: [3, 19, 65.5], latch: true },
+    { type: 'gate', pos: [-3, 16, 76.5], yaw: 0, width: 2.2, height: 3.2, when: ['cw-crown'] },
+    { type: 'checkpoint', pos: [-5.4, 16, 78.4], yaw: Math.PI / 2, zone: { min: [-6, 15, 76.6], max: [0, 19, 80] } },
+    { type: 'trigger', flag: 'clockworks-hint-mainspring', script: 'clockworksMainspring', min: [-6, 15, 76.6], max: [0, 19, 79.5] },
+    // The ferry out to the first column: home again after 3 s, under a pendulum.
+    { type: 'skyLift', style: 'platform', from: [-3, 16, 81.4], to: [-3, 16, 88.3], size: [2.4, 2.4], returnAfter: 3, speed: 2.6 },
+    { type: 'pendulum', pos: [-3, 26.5, 85], length: 9.6, swing: 0.4, period: 2.8, phase: 0.3, yaw: 0, bob: 0.8 },
+    { type: 'checkpoint', pos: [-3.8, 16, 91.8], yaw: 0, zone: { min: [-4.5, 15, 89.5], max: [-1.5, 19, 92.5] } },
+    // The basket waits up by the second column: call it down, ride it up.
+    { type: 'skyLift', style: 'basket', id: 'cwH', from: [-0.4, 16, 91], to: [3, 22, 98], size: [2, 2], startAt: 'to', speed: 2.4 },
+    { type: 'checkpoint', pos: [6.4, 22, 98.8], yaw: -Math.PI / 2, zone: { min: [4, 21, 96.5], max: [7, 25, 99.5] } },
+    // A crate from the second column up to the top gallery.
+    { type: 'skyLift', style: 'crate', from: [5.5, 22, 100.1], to: [5.5, TOP, 100.9], size: [1.2, 1.2], post: [0.45, -0.45], speed: 1.8 },
+    { type: 'hexling', pos: [1, 14, 87], height: 5, radius: 3.5, interval: 3.4 },
+    { type: 'hexling', pos: [2, 20, 99], height: 5, radius: 3, interval: 3.8 },
+    { type: 'sootling', id: 'cw-soot', pos: [-5.5, TOP, 104], yaw: Math.PI / 2, wander: 0.8, range: 18, interval: 3.8 },
+    { type: 'checkpoint', pos: [-6.8, TOP, 103], yaw: Math.PI / 2, zone: { min: [-8, TOP - 1, 101.6], max: [8, TOP + 3, 105.8] } },
+    { type: 'gate', pos: [0, TOP, Z1], yaw: 0, width: 3, height: 3, when: ['cw-soot'] },
+    { type: 'sweet', kind: 'bramble', pos: [-3, 16.6, 91] },
+    { type: 'sweet', kind: 'bramble', pos: [5.5, 22.6, 98] },
+    { type: 'sweet', kind: 'humbug', pos: [7, TOP + 0.6, 104.5] },
+  );
+  for (const z of [79, 103]) {
+    wallTorch(b, flames, [-7.98, z < 90 ? 18.6 : TOP + 2.6, z], Math.PI / 2);
+    wallTorch(b, flames, [7.98, z < 90 ? 18.6 : TOP + 2.6, z], -Math.PI / 2);
+  }
+  b.lantern([0, 30, 92], 7, 20);
+  // The Star chamber, up at the top.
+  b.floor(-3.5, 3.5, Z1, Z1 + 6.5, { top: TOP, color: FLOOR, thickness: 1 });
+  wall(b, 'z', -3.5, Z1, Z1 + 6.5, 6, { base: TOP, color: STONE });
+  wall(b, 'z', 3.5, Z1, Z1 + 6.5, 6, { base: TOP, color: STONE });
+  wall(b, 'x', Z1 + 6.5, -3.5, 3.5, 6, { base: TOP, color: STONE });
+  slab(b, -3.5, 3.5, Z1, Z1 + 6.5, TOP + 6.5, 0.5, COLORS.stoneDark);
+  b.cylinder([0, TOP + 0.5, STAR_Z], 0.7, 1, BRASS, undefined, 10);
+  for (const x of [-2.98, 2.98]) wallTorch(b, flames, [x, TOP + 2.6, Z1 + 1.6], x < 0 ? Math.PI / 2 : -Math.PI / 2);
 }

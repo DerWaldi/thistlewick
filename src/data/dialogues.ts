@@ -985,7 +985,14 @@ export const DIALOGUES: Record<string, Script> = {
 
   clockworksBell: async ({ say }) => {
     await say([
-      { speaker: 'underbough', text: '(faintly) The Bell Chamber! The crate takes you up to the gallery. Then call the basket down from the bell and ride it up. Mind the clapper.' },
+      { speaker: 'underbough', text: '(faintly) The Bell Chamber! The crate takes you up to the gallery. Then call the basket down from the bell and ride it up to the plate on the crown. Mind the clapper.' },
+    ]);
+  },
+
+  clockworksMainspring: async ({ say }) => {
+    await say([
+      { speaker: 'underbough', text: '(faintly, from very high up) The Mainspring! The ferry floats home after three seconds, and the pendulum does not care. The basket waits on the second column: call it, ride it.' },
+      { speaker: 'underbough', text: '(faintly) Then the crate up to the top gallery. Something sooty has moved in up there. Two somethings with wings, as well. I did tell you it was a lot of stairs.' },
     ]);
   },
 
