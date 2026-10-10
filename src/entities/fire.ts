@@ -54,7 +54,7 @@ function numeralSprite(text: string): Sprite {
   const tex = new CanvasTexture(c);
   tex.colorSpace = SRGBColorSpace;
   const sprite = new Sprite(new SpriteMaterial({ map: tex, fog: true }));
-  sprite.scale.set(0.53, 0.4, 1);
+  sprite.scale.set(0.8, 0.6, 1);
   return sprite;
 }
 
@@ -303,10 +303,10 @@ export class Brazier implements Entity, SpellTarget, HeatSource {
     }
     mergeChildren(group);
     ctx.scene.add(group);
-    // Its place in the order, as a gilt numeral that faces you from anywhere.
+    // Its place in the order, as a gilt numeral floating over the flames that faces you from anywhere.
     if (spec.order) {
       const plaque = numeralSprite(ROMAN[spec.order] ?? String(spec.order));
-      plaque.position.set(x, y + 0.42, z);
+      plaque.position.set(x, y + 2.45, z);
       ctx.scene.add(plaque);
     }
     this.top = new Vector3(x, y + 1.2, z);
@@ -323,7 +323,8 @@ export class Brazier implements Entity, SpellTarget, HeatSource {
     }
     this.collider = ctx.physics.addStaticCylinder(new Vector3(x, y + 0.65, z), 0.6, 0.55);
     this.marker = new RuneMarker(ctx.scene, 'cindersnap', 0.55);
-    this.marker.sprite.position.copy(this.top).add(new Vector3(0, 0.8, 0));
+    // Above the order numeral, if there is one.
+    this.marker.sprite.position.copy(this.top).add(new Vector3(0, spec.order ? 2.05 : 0.8, 0));
     ctx.targets.add(this);
     if (spec.group) {
       const list = Brazier.groups.get(ctx) ?? [];
