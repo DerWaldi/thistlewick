@@ -380,6 +380,8 @@ function errands(b: LevelBuilder): void {
     { type: 'questItem', quest: 'book', pos: [-8.8, 9.25, 39.45] },
     { type: 'sweetLine', kind: 'fizzwort', from: [-32, 9.8, 39.45], to: [-26.5, 9.8, 39.45], count: 3 },
     { type: 'sweetLine', kind: 'fizzwort', from: [-22.5, 9.8, 39.45], to: [-17.5, 9.8, 39.45], count: 3 },
+    // Otto's watch, on top of the observatory out on the Leads.
+    { type: 'questItem', quest: 'watch', pos: [21.3, 14.3, 76.9] },
   );
 }
 

@@ -473,3 +473,59 @@ test("Mabel's hedgehog: the Old Woods, from the thicket to the Old Oak, and home
   await talk(page, [45, -3, -25]);
   expect(await page.evaluate(() => (window.__tw.game as unknown as G).state.cards.has('mother-hazelrigg'))).toBe(true);
 });
+
+test('pupils wander the castle and chat; Wren and Otto have errands of their own', async ({ page, browserName }) => {
+  await start(page, 'thistledown', 'hub');
+  // Fitz paces the east cloister.
+  const walk1 = await page.evaluate(() => {
+    const tw = window.__tw;
+    type W = { constructor: { name: string }; spec: { speaker: string }; pos: { x: number; z: number } };
+    const ws = (tw.game as unknown as { world: { entities: W[] } }).world.entities.filter((e) => e.constructor.name === 'Wanderer');
+    const fitz = ws.find((w) => w.spec.speaker === 'fitz')!;
+    const a = { ...fitz.pos };
+    tw.teleport(0, 0, 3, 0);
+    for (let i = 0; i < 40; i++) tw.advance(0.25);
+    return { n: ws.length, moved: Math.hypot(fitz.pos.x - a.x, fitz.pos.z - a.z) };
+  });
+  expect(walk1.n).toBe(3);
+  expect(walk1.moved).toBeGreaterThan(2);
+  await page.evaluate(() => {
+    const tw = window.__tw;
+    tw.teleport(0, 0, 34.6, Math.PI / 2);
+    tw.setCamera(Math.PI / 2 + 0.3, 0.15);
+    tw.advance(0.5);
+  });
+  await shot(page, 'm15-wanderers', browserName);
+  // Wren's scarf, on the court's west balcony.
+  await talk(page, [-13.4, 0, 42.6]);
+  const items = await page.evaluate(async () => {
+    const tw = window.__tw;
+    const g = tw.game as unknown as { session: { physics: { raycast(o: unknown, d: unknown, l: number): { point: { y: number } } | null } }; state: G['state'] };
+    const { Vector3 } = await import(/* @vite-ignore */ '/node_modules/.vite/deps/three.js');
+    const ground = g.session.physics.raycast(new Vector3(-14, 10.5, 52), new Vector3(0, -1, 0), 3);
+    tw.teleport(-14, ground ? ground.point.y + 0.05 : 9.5, 51.2, 0);
+    tw.advance(0.6);
+    return { ground: ground?.point.y ?? null, flags: [...g.state.flags].filter((f) => f.startsWith('quest:scarf')) };
+  });
+  expect(items.ground).toBeGreaterThan(8.8);
+  expect(items.flags).toContain('quest:scarf:found');
+  // Otto's watch, on the observatory top.
+  await page.evaluate(async () => {
+    const tw = window.__tw;
+    tw.loadLevel('upper');
+    await tw.idle();
+    tw.advance(0.3);
+  });
+  await talk(page, [31.5, 0, 23]);
+  const watch = await page.evaluate(async () => {
+    const tw = window.__tw;
+    const g = tw.game as unknown as { session: { physics: { raycast(o: unknown, d: unknown, l: number): { point: { y: number } } | null } }; state: G['state'] };
+    const { Vector3 } = await import(/* @vite-ignore */ '/node_modules/.vite/deps/three.js');
+    const ground = g.session.physics.raycast(new Vector3(21.3, 15.5, 76.9), new Vector3(0, -1, 0), 4);
+    tw.teleport(21.3, ground ? ground.point.y + 0.05 : 14, 76.2, 0);
+    tw.advance(0.6);
+    return { ground: ground?.point.y ?? null, flags: [...g.state.flags].filter((f) => f.startsWith('quest:watch')) };
+  });
+  expect(watch.ground).toBeGreaterThan(13);
+  expect(watch.flags).toContain('quest:watch:found');
+});

@@ -176,6 +176,17 @@ function buildItem(kind: QuestItemKind): BufferGeometry {
       add(new CylinderGeometry(0.02, 0.02, 0.5, 5), '#e8c25a', [0, 0.35, 0]);
       add(new TorusGeometry(0.08, 0.015, 4, 8), '#c8c0b0', [0, 0.05, 0], [Math.PI / 2, 0, 0]);
       break;
+    case 'scarf':
+      for (let i = 0; i < 7; i++) add(new BoxGeometry(0.16, 0.05, 0.2), i % 2 ? '#d9922e' : '#5a3a1e', [0, 0.05, -0.6 + i * 0.2], [0, 0, Math.sin(i) * 0.2]);
+      add(new BoxGeometry(0.16, 0.05, 0.3), '#d9922e', [0.12, 0.08, 0.75], [0, 0.6, 0]);
+      break;
+    case 'watch':
+      add(new CylinderGeometry(0.2, 0.2, 0.06, 14).rotateX(Math.PI / 2), '#e8c25a', [0, 0.25, 0]);
+      add(new CylinderGeometry(0.17, 0.17, 0.02, 14).rotateX(Math.PI / 2), '#f3eee0', [0, 0.25, 0.035]);
+      add(new BoxGeometry(0.015, 0.12, 0.01), '#1e1612', [0, 0.29, 0.05]);
+      add(new BoxGeometry(0.08, 0.015, 0.01), '#1e1612', [0.03, 0.25, 0.05]);
+      add(new TorusGeometry(0.04, 0.012, 4, 8), '#e8c25a', [0, 0.48, 0]);
+      break;
     case 'hedgehog':
       add(new SphereGeometry(0.26, 8, 6, 0, Math.PI * 2, 0, Math.PI / 2).scale(1, 0.8, 1.25), '#6a4a2e', [0, 0.05, 0]);
       add(new SphereGeometry(0.12, 6, 5).scale(1, 0.8, 1.2), '#d8b890', [0, 0.1, 0.27]);

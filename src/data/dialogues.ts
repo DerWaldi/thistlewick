@@ -5,6 +5,7 @@ import { HOUSE_ORDER, HOUSES, POINTS, SORTING_QUESTIONS, type HouseId } from './
 import { SPEAKERS } from './characters';
 import { QUESTS, questStage, type QuestDef } from './quests';
 import { LOST_AND_FOUND } from './shop';
+import { STUDENTS } from './students';
 import { SWEETS } from './sweets';
 
 export interface ScriptContext {
@@ -1397,3 +1398,14 @@ function questScript(q: QuestDef): Script {
 }
 
 for (const q of QUESTS) DIALOGUES[`quest-${q.id}`] = questScript(q);
+
+/** Pupils about the castle take turns through what they have to say. */
+const chatTurn = new Map<string, number>();
+for (const st of STUDENTS) {
+  DIALOGUES[`chat-${st.speaker}`] = async ({ say, state }) => {
+    const lines = st.lines(state);
+    const i = (chatTurn.get(st.speaker) ?? 0) % lines.length;
+    chatTurn.set(st.speaker, i + 1);
+    await say([{ speaker: st.speaker, text: lines[i] }]);
+  };
+}

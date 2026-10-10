@@ -14,7 +14,7 @@ import type { SweetKind } from './sweets';
  * Progress is in flags: `quest:<id>` (accepted), `quest:<id>:found`, `quest:<id>:done`.
  * The item itself is a `questItem` entity placed by the level that hides it.
  */
-export type QuestItemKind = 'kite' | 'book' | 'toad' | 'hat' | 'float' | 'hedgehog';
+export type QuestItemKind = 'kite' | 'book' | 'toad' | 'hat' | 'float' | 'hedgehog' | 'scarf' | 'watch';
 
 export interface QuestDef {
   id: string;
@@ -166,6 +166,42 @@ export const QUESTS: QuestDef[] = [
     ],
     afterwards: 'Thimble has a little lead now. She hates it. She also hates hats, rain and Tuesdays. She loves you, though.',
     reward: { card: 'mother-hazelrigg', sweets: [['humbug', 2]] },
+  },
+  {
+    id: 'scarf',
+    giver: 'wren',
+    look: { ...scarf('yarrowdown'), hair: '#c8642e', hairStyle: 'long', hatStyle: 'none', skin: '#e8b48e' },
+    at: { level: 'hub', spot: 'courtCloisterWest' },
+    after: 'springwell',
+    title: "Wren's Scarf",
+    item: { kind: 'scarf', name: "Wren's scarf" },
+    goal: "Wren's scarf blew up onto the little balcony high on the court's west wall. The moss on the cloister roof is springy, if you spring it.",
+    offer: [
+      "Excuse me, you haven't got a ladder? A very tall one? No. Nobody does.",
+      'My scarf blew off and landed on that balcony, up on the west wall of the court. My nan knitted it. It has my name on it. Twice, in case I forget.',
+    ],
+    waiting: "Up on the balcony, west wall of the court. There's moss on the cloister roof underneath it. Mr. Hopgood says moss is just a spring that hasn't been told yet.",
+    thanks: ['My scarf! And not even a pigeon on it. Thank you!', "Here. They're the last of my sweets from home. Worth it."],
+    afterwards: "I've tied it in a double knot. Nan would be proud. Or worried. Both, probably.",
+    reward: { sweets: [['humbug', 1], ['bramble', 3]] },
+  },
+  {
+    id: 'watch',
+    giver: 'otto',
+    look: { ...scarf('bramblecote'), hair: '#5a3a22', hairStyle: 'tufts', hatStyle: 'none', glasses: true },
+    at: { level: 'upper', spot: 'wingCorridor' },
+    after: 'thistledown',
+    title: "Otto's Pocket Watch",
+    item: { kind: 'watch', name: "Otto's pocket watch" },
+    goal: 'Otto left his pocket watch on top of the old observatory, out on the Leads. The crate by the drum floats up, if you ask it nicely.',
+    offer: [
+      "Do you have the time? No, really, I need to know. I've lost my watch. It was my grandfather's, and he was never on time either.",
+      'I was up on the observatory on the Leads, stargazing. Strictly against the rules. I put it down to look through the telescope and then I had to leave quickly.',
+    ],
+    waiting: "On top of the observatory on the Leads. There's a crate by its drum that floats, once you've done Airs & Graces. I hadn't, so I climbed. Badly.",
+    thanks: ['My watch! Still ticking. Still four minutes slow. Thank you!', 'Have these. And a tip: the Leads are prettier at night. Not that I would know.'],
+    afterwards: "It's twenty past something. Probably.",
+    reward: { sweets: [['humbug', 2], ['bramble', 2]] },
   },
 ];
 

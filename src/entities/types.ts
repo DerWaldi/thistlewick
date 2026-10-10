@@ -362,6 +362,15 @@ export type EntitySpec = SpecBase &
         persist?: boolean;
       }
     | {
+        type: 'wanderer';
+        speaker: SpeakerId;
+        look?: NpcLook;
+        /** A loop of waypoints (feet positions) they walk round, dawdling at each. */
+        path: V3[];
+        speed?: number;
+        talk: string;
+      }
+    | {
         type: 'examiner';
         /** Signal (and `down:<id>` flag) once it falls. */
         id: string;

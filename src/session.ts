@@ -19,6 +19,7 @@ import type { AreaDef, LevelDef, SpawnPoint } from './world/level';
 import { Signals } from './world/signals';
 import { World } from './world/world';
 import { questGivers } from './data/quests';
+import { wanderers } from './data/students';
 
 /**
  * Everything that belongs to one loaded level: its physics world, geometry,
@@ -98,7 +99,7 @@ export class LevelSession {
     });
     // Students with errands stand at their level's NPC spots. They go after the level's own
     // specs, so the ids of placed pickups stay stable.
-    this.world.spawnAll([...this.builder.entities, ...questGivers(def, game.state)]);
+    this.world.spawnAll([...this.builder.entities, ...questGivers(def, game.state), ...wanderers(def)]);
 
     this.caster = new Caster(
       this.root,

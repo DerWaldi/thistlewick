@@ -1,6 +1,6 @@
 import type { PortraitSpec } from './portraits';
 
-export type SpeakerId = 'wendlebury' | 'lantern' | 'tansy' | 'moss' | 'gorse' | 'quince' | 'hopgood' | 'lamplough' | 'ashcombe' | 'coldharbour' | 'underbough' | 'sign' | 'pip' | 'oswin' | 'tilda' | 'hattie' | 'ned' | 'mabel';
+export type SpeakerId = 'wendlebury' | 'lantern' | 'tansy' | 'moss' | 'gorse' | 'quince' | 'hopgood' | 'lamplough' | 'ashcombe' | 'coldharbour' | 'underbough' | 'sign' | 'pip' | 'oswin' | 'tilda' | 'hattie' | 'ned' | 'mabel' | 'wren' | 'otto' | 'rowan' | 'bess' | 'fitz' | 'nell' | 'tam';
 
 export interface SpeakerDef {
   id: SpeakerId;
@@ -113,6 +113,49 @@ export const SPEAKERS: Record<SpeakerId, SpeakerDef> = {
     name: 'Mabel Inchcombe',
     voice: 880,
     portrait: { bg: ['#d8ecd0', '#3f7a4a'], kind: 'person', skin: '#f3d2b4', robe: '#2c2a3a', hair: '#d8b880', hat: 'none', glasses: true, prop: 'none', hairStyle: 'bun', collar: 'scarf', jewel: '#3f7a4a', expression: 'kind', eyes: '#6a4a2a' },
+  },
+  wren: {
+    id: 'wren',
+    name: 'Wren Ashdown',
+    voice: 780,
+    portrait: { bg: ['#f5e0c0', '#d9922e'], kind: 'person', skin: '#e8b48e', robe: '#2c2a3a', hair: '#c8642e', hat: 'none', prop: 'none', hairStyle: 'long', collar: 'scarf', jewel: '#d9922e', expression: 'kind' },
+  },
+  otto: {
+    id: 'otto',
+    name: 'Otto Brindle',
+    voice: 520,
+    portrait: { bg: ['#f2d0c8', '#b0362f'], kind: 'person', skin: '#f0c9a0', robe: '#2c2a3a', hair: '#5a3a22', hat: 'none', glasses: true, prop: 'pocket', hairStyle: 'short', collar: 'scarf', jewel: '#b0362f', expression: 'stern' },
+  },
+  // Fellow pupils who just wander about and chat (src/data/students.ts).
+  rowan: {
+    id: 'rowan',
+    name: 'Rowan Thatch',
+    voice: 600,
+    portrait: { bg: ['#f2d0c8', '#b0362f'], kind: 'person', skin: '#d9a07a', robe: '#2c2a3a', hair: '#2a1e18', hat: 'none', prop: 'none', hairStyle: 'wild', collar: 'scarf', jewel: '#b0362f', expression: 'smirk' },
+  },
+  bess: {
+    id: 'bess',
+    name: 'Bess Hollin',
+    voice: 840,
+    portrait: { bg: ['#f5e0c0', '#d9922e'], kind: 'person', skin: '#f3d2b4', robe: '#2c2a3a', hair: '#e8c060', hat: 'none', prop: 'none', hairStyle: 'bun', collar: 'scarf', jewel: '#d9922e', expression: 'smile' },
+  },
+  fitz: {
+    id: 'fitz',
+    name: 'Fitz Mallory',
+    voice: 640,
+    portrait: { bg: ['#d8e6f5', '#4f7fb8'], kind: 'person', skin: '#8a5a3e', robe: '#2c2a3a', hair: '#1e1612', hat: 'none', glasses: true, prop: 'book', hairStyle: 'short', collar: 'scarf', jewel: '#4f7fb8', expression: 'kind' },
+  },
+  nell: {
+    id: 'nell',
+    name: 'Nell Gooding',
+    voice: 900,
+    portrait: { bg: ['#d8ecd0', '#3f7a4a'], kind: 'person', skin: '#e8b48e', robe: '#2c2a3a', hair: '#8a3a22', hat: 'none', prop: 'none', hairStyle: 'long', collar: 'scarf', jewel: '#3f7a4a', expression: 'smile', eyes: '#3a6a3a' },
+  },
+  tam: {
+    id: 'tam',
+    name: 'Tam Merriweather',
+    voice: 560,
+    portrait: { bg: ['#d8e6f5', '#4f7fb8'], kind: 'person', skin: '#f0c9a0', robe: '#2c2a3a', hair: '#d8b880', hat: 'cap', hatColor: '#4f7fb8', prop: 'none', hairStyle: 'short', collar: 'scarf', jewel: '#4f7fb8', expression: 'smile' },
   },
   sign: {
     id: 'sign',

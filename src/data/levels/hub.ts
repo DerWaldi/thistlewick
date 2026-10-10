@@ -1179,5 +1179,7 @@ function errands(b: LevelBuilder): void {
     { type: 'secret', id: 'hub-cellar', area: 'cellar', min: [19.5, BOT - 1, 15], max: [34.5, BOT + 3, 20.5] },
     { type: 'sweetLine', kind: 'bramble', from: [25, BOT + 0.6, 17.5], to: [29, BOT + 0.6, 17.5], count: 3 },
   );
+  // ---- Wren's scarf: on the court's west balcony (moss on the cloister roof bounces you up).
+  b.add({ type: 'questItem', quest: 'scarf', pos: [-14, 9.75, 52] });
 }
 
