@@ -91,7 +91,7 @@ export class Examiner implements Entity, SpellTarget {
     this.ring.rotation.x = -Math.PI / 2;
     ctx.scene.add(this.ring);
     this.collider = ctx.physics.world.createCollider(RAPIER.ColliderDesc.capsule(1.3, 1.1).setTranslation(this.pos.x, this.pos.y + 2.4, this.pos.z));
-    ctx.physics.setInfo(this.collider, { noGrab: true });
+    ctx.physics.setInfo(this.collider, { noGrab: true, cameraIgnore: true });
     this.marker = new RuneMarker(ctx.scene, SEALS[0], 1.1);
     ctx.targets.add(this);
     ctx.events.emit('bossHealth', { name: 'The Brass Examiner', hp: this.hp, max: SEALS.length, active: false });
@@ -282,6 +282,18 @@ export class Examiner implements Entity, SpellTarget {
         }
         this.pos.x = MathUtils.clamp(this.pos.x, arena.min[0] + 1.5, arena.max[0] - 1.5);
         this.pos.z = MathUtils.clamp(this.pos.z, arena.min[2] + 1.5, arena.max[2] - 1.5);
+        // Round the caged plinth, not through it.
+        if (this.spec.avoid) {
+          const [ax, , az] = this.spec.avoid;
+          const dx = this.pos.x - ax;
+          const dz = this.pos.z - az;
+          const d = Math.hypot(dx, dz);
+          if (d < 3.4) {
+            const k = 3.4 / Math.max(d, 0.01);
+            this.pos.x = ax + dx * k;
+            this.pos.z = az + dz * k;
+          }
+        }
         this.volleyIn -= dt;
         if (flat < SLAM_RANGE && this.ctx.player.mode !== 'reset') {
           this.state = 'windup';

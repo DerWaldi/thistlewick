@@ -48,11 +48,14 @@ function part(geo: BufferGeometry, color: string, mat: MeshStandardMaterial): Me
   return new Mesh(paint(g, color, true), mat);
 }
 
-/** Pays out sweets the first time a placed foe is beaten (never again). */
+/** Pays out sweets the first time a placed foe is beaten (never again), on solid ground. */
 function loot(ctx: WorldContext, id: string, at: Vector3): void {
   const flag = `looted:${id}`;
   if (ctx.state.flags.has(flag)) return;
   ctx.state.flags.add(flag);
+  // Banished over a chasm? The sweets land where you can reach them.
+  const ground = ctx.physics.raycast(at, new Vector3(0, -1, 0), 8);
+  at = ground ? ground.point.clone().add(new Vector3(0, 0.6, 0)) : ctx.player.pos.clone();
   ctx.sweets.burst('fizzwort', at, 3);
   ctx.sweets.burst('bramble', at, 1);
 }
@@ -244,7 +247,7 @@ export class Hexling implements Entity, SpellTarget {
       }
       case 'down': {
         // Falls to the ground (or whatever's under her), lies dazed, then flutters back up.
-        const ground = this.ctx.physics.raycast(this.pos, new Vector3(0, -1, 0), 30, this.collider);
+        const ground = this.ctx.physics.raycast(this.pos, new Vector3(0, -1, 0), 80, this.collider);
         const floor = ground ? ground.point.y + 0.35 : this.pos.y;
         this.vy -= 18 * dt;
         this.pos.y = Math.max(floor, this.pos.y + this.vy * dt);

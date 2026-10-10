@@ -1,3 +1,4 @@
+import { keyName, liveKeys } from '../state/options';
 import { HOUSES } from '../data/houses';
 import { SPELLS } from '../data/spells';
 import { SWEETS } from '../data/sweets';
@@ -173,7 +174,10 @@ export class Hud {
 
     const prompt = this.src.prompt() ?? '';
     if (prompt !== sh.prompt) {
-      if (prompt) (this.promptEl.querySelector('span') as HTMLElement).textContent = prompt;
+      if (prompt) {
+        (this.promptEl.querySelector('span') as HTMLElement).textContent = prompt;
+        (this.promptEl.querySelector('kbd') as HTMLElement).textContent = keyName(liveKeys.interact);
+      }
       this.promptEl.classList.toggle('show', !!prompt);
       sh.prompt = prompt;
     }

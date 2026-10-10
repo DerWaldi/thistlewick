@@ -402,6 +402,8 @@ function hothouse(b: LevelBuilder, flames: Glow): void {
   const Z0 = 100.5;
   const Z1 = 138;
   const W = -0.6;
+  // The Bramble Heart is narrower than the Hothouse: brick up the gaps either side of its door wall.
+  for (const x of [-8, 8]) b.box([x, H / 2, Z0], [3, H, 1], { color: BRICK });
   b.floor(-9.5, 9.5, Z0, Z1 + 6.5, { color: '#7a6a52', holes: [[-9, 9, 104, 129.5]] });
   b.pool(-9, 9, 104, 129.5, W, -3);
   glassWall(b, 'z', -9.5, Z0, Z1);

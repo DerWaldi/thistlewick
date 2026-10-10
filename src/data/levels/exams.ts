@@ -301,7 +301,7 @@ function coldharbour(b: LevelBuilder, flames: Glow): void {
   ];
   for (const [x, z] of stones) b.box([x, (-3 + W - 0.3) / 2, z], [1.6, W - 0.3 + 3, 1.4], { color: COLORS.stoneDark });
   b.add(
-    ...stones.map(([x, z], i) => ({ type: 'emberCrab' as const, id: `ex-crab${i + 1}`, pos: [x, W - 0.3, z] as V3, patrol: 0, range: 9, interval: 3.2 })),
+    ...stones.map(([x, z], i) => ({ type: 'emberCrab' as const, id: `ex-crab${i + 1}`, pos: [x, W - 0.3, z] as V3, patrol: 0, range: 9, interval: 3.2, reform: 6 })),
     // From the bank: knock the floe north until the post stops it beside the island. Step
     // across from the island; a charged freeze then reaches the far bank.
     { type: 'floe', pos: [1.2, W, 146.4], size: [2.4, 2.4], resetOn: 'ex-floe-reset' },
@@ -380,7 +380,7 @@ function finale(b: LevelBuilder): void {
     // The finale.
     { type: 'checkpoint', pos: [8.6, 0, 191.8], yaw: -Math.PI / 2, zone: { min: [-10, -1, 190.5], max: [10, 4, 193] } },
     { type: 'trigger', flag: 'exam-boss-woken', script: 'examBossIntro', min: [-10, -1, 190.5], max: [10, 4, 193.5] },
-    { type: 'examiner', id: 'exam-boss', pos: [0, 0, 198], arena: { min: [-10.5, -1, 190.5], max: [10.5, 12, 206.5] }, wakeFlag: 'exam-boss-woken' },
+    { type: 'examiner', id: 'exam-boss', pos: [0, 0, 198], arena: { min: [-10.5, -1, 190.5], max: [10.5, 12, 206.5] }, wakeFlag: 'exam-boss-woken', avoid: [0, 0, 202] },
     { type: 'gate', pos: [0, 0, 200.6], yaw: 0, width: 2.8, height: 3.6, when: ['exam-boss'] },
     { type: 'gate', pos: [0, 0, 203.4], yaw: 0, width: 2.8, height: 3.6, when: ['exam-boss'] },
     { type: 'gate', pos: [-1.4, 0, 202], yaw: Math.PI / 2, width: 2.8, height: 3.6, when: ['exam-boss'] },

@@ -69,3 +69,34 @@ test('a gamepad: the left stick walks, A jumps, the right stick turns the camera
   expect(r.vy).toBeGreaterThan(1);
   expect(r.turned).toBeGreaterThan(0.3);
 });
+
+test('rebinding: a taken key swaps with its old owner, reserved keys are refused, leaving cancels', async ({ page }) => {
+  await boot(page, '?test&level=gym');
+  await page.evaluate(async () => {
+    const tw = window.__tw;
+    const g = tw.game as unknown as Game;
+    const { Menu } = (await import(/* @vite-ignore */ '/src/ui/menu.ts' as string)) as { Menu: new (o: unknown) => { show(s: string): void; onOptions: () => void; captureKey: (fn: unknown) => void; cancelCapture: () => void } };
+    const menu = new Menu(g.options);
+    menu.onOptions = () => g.applyOptions();
+    menu.captureKey = (fn) => (g.input.captureKey = fn);
+    menu.cancelCapture = () => (g.input.captureKey = null);
+    menu.show('options');
+    (window as unknown as { __menu: typeof menu }).__menu = menu;
+  });
+  const keys = () => page.evaluate(() => ({ ...(window.__tw.game as unknown as Game).options.keys }));
+  // Forward → D: Right takes W.
+  await page.locator('#opt-keys .key-btn').nth(0).click();
+  await page.keyboard.press('KeyD');
+  expect(await keys()).toMatchObject({ forward: 'KeyD', right: 'KeyW' });
+  // P is the screenshot key: refused.
+  await page.locator('#opt-keys .key-btn').nth(4).click();
+  await page.keyboard.press('KeyP');
+  expect((await keys()).jump).toBe('Space');
+  // Click a key, then leave the screen: the next key press is just a key press again.
+  await page.locator('#opt-keys .key-btn').nth(5).click();
+  const pending = await page.evaluate(() => {
+    (window as unknown as { __menu: { show(s: string): void } }).__menu.show('pause');
+    return (window.__tw.game as unknown as Game).input.captureKey;
+  });
+  expect(pending).toBeNull();
+});

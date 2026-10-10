@@ -5,7 +5,7 @@ import { currentObjective } from '../data/objectives';
 import { QUESTS, questStage } from '../data/quests';
 import { HOUSES, type HouseId } from '../data/houses';
 import type { GameState } from '../state/gameState';
-import type { Options } from '../state/options';
+import { keyName, RESERVED_KEYS, type Options } from '../state/options';
 
 export type Screen = 'title' | 'pause' | 'options' | 'credits' | 'map';
 export type MenuAction = 'continue' | 'new' | 'options' | 'credits' | 'resume' | 'album' | 'quit' | 'back' | 'map';
@@ -44,6 +44,7 @@ export class Menu {
   }
 
   show(screen: Screen, ctx?: { canContinue?: boolean; state?: GameState }): void {
+    this.cancelCapture();
     this.screen = screen;
     this.root.classList.add('show');
     this.root.classList.toggle('dim', screen !== 'title');
@@ -68,6 +69,7 @@ export class Menu {
   }
 
   hide(): void {
+    this.cancelCapture();
     $('year-end').classList.add('hidden');
     this.screen = null;
     this.root.classList.remove('show');
@@ -165,21 +167,31 @@ export class Menu {
       btn.textContent = keyName(this.options.keys[action]);
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
-        btn.textContent = 'Press a key…';
+        this.cancelCapture();
+        this.renderKeys();
+        const fresh = grid.querySelectorAll<HTMLButtonElement>('.key-btn')[names.findIndex(([n]) => n === action)];
+        fresh.textContent = 'Press a key…';
         this.captureKey((code) => {
-          if (code !== 'Escape') {
-            this.options.keys[action] = code;
-            this.onOptions(this.options);
+          if (RESERVED_KEYS.has(code)) {
+            this.renderKeys();
+            return;
           }
-          btn.textContent = keyName(this.options.keys[action]);
+          // Already used by another action? They swap.
+          const keys = this.options.keys;
+          const other = (Object.keys(keys) as (keyof typeof keys)[]).find((k) => k !== action && keys[k] === code);
+          if (other) keys[other] = keys[action];
+          keys[action] = code;
+          this.onOptions(this.options);
+          this.renderKeys();
         });
       });
       grid.append(l, btn);
     }
   }
 
-  /** Set by main.ts: route the next key press to `fn` (rebinding). */
+  /** Set by main.ts: route the next key press to `fn` (rebinding), or stop waiting for one. */
   captureKey: (fn: (code: string) => void) => void = () => {};
+  cancelCapture: () => void = () => {};
 
   private bindOptions(): void {
     const o = this.options;
@@ -222,7 +234,3 @@ export class Menu {
   }
 }
 
-/** 'KeyW' → 'W', 'Space' → 'Space', 'ArrowUp' → 'Up', 'Digit1' → '1'. */
-function keyName(code: string): string {
-  return code.replace(/^Key/, '').replace(/^Digit/, '').replace(/^Arrow/, '');
-}

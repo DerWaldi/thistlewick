@@ -1,3 +1,4 @@
+import { liveKeys } from '../state/options';
 import { SPEAKERS, type SpeakerId } from '../data/characters';
 import type { EventBus } from '../engine/events';
 import { portraitURL } from './portraits';
@@ -47,9 +48,9 @@ export class Dialogue {
       (e) => {
         if (!this.open) return;
         const k = e.code;
-        if (['Space', 'Enter', 'KeyE', 'NumpadEnter'].includes(k)) this.press();
-        else if (this.choices && (k === 'KeyW' || k === 'ArrowUp')) this.move(-1);
-        else if (this.choices && (k === 'KeyS' || k === 'ArrowDown')) this.move(1);
+        if (['Space', 'Enter', 'KeyE', 'NumpadEnter', liveKeys.interact, liveKeys.jump].includes(k)) this.press();
+        else if (this.choices && (k === liveKeys.forward || k === 'ArrowUp')) this.move(-1);
+        else if (this.choices && (k === liveKeys.back || k === 'ArrowDown')) this.move(1);
         else if (this.choices && /^Digit[1-9]$/.test(k)) {
           const i = Number(k.slice(5)) - 1;
           if (i < this.choices.length) {

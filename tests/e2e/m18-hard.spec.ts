@@ -361,7 +361,8 @@ test('Flooded Cisterns, the Sluice Canal: charged ice, frozen crabs as stepping 
     tw.teleport(0, 3.2, 99.2, 0);
     tw.setCamera(0, 0.2);
     tw.input({ x: 0, y: 1 });
-    tw.advance(1.2);
+    // Walk until you're on the stone (a crab's fireball may knock you about on the way).
+    for (let i = 0; i < 150 && !(tw.state().feet.z > 106.3 && tw.state().feet.y > 3.1); i++) tw.advance(1 / 60);
     tw.input(null);
     tw.advance(0.5);
     return tw.state().feet;

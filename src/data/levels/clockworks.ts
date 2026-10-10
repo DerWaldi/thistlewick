@@ -242,6 +242,8 @@ function mainspring(b: LevelBuilder, flames: Glow): void {
   const Z1 = 106;
   wall(b, 'z', -8.5, Z0, Z1, 33, { color: STONE });
   wall(b, 'z', 8.5, Z0, Z1, 33, { color: STONE });
+  // The Bell Chamber is narrower: close the slots either side of its north wall.
+  for (const x of [-7.5, 7.5]) b.box([x, 16.5, Z0], [2, 33, 1], { color: STONE });
   wall(b, 'x', Z1, -8.5, 8.5, 33, { color: STONE, holes: [{ from: -2.1, to: 2.1, bottom: TOP, top: TOP + 3.6 }] });
   slab(b, -8.5, 8.5, Z0, Z1, 33.5, 0.5, COLORS.stoneDark);
   b.box([0, -9, 91], [16, 0.5, 29], { color: '#1e1816', noCollide: true });
@@ -273,7 +275,7 @@ function mainspring(b: LevelBuilder, flames: Glow): void {
     { type: 'skyLift', style: 'basket', id: 'cwH', from: [-0.4, 16, 91], to: [3, 22, 98], size: [2, 2], startAt: 'to', speed: 2.4 },
     { type: 'checkpoint', pos: [6.4, 22, 98.8], yaw: -Math.PI / 2, zone: { min: [4, 21, 96.5], max: [7, 25, 99.5] } },
     // A crate from the second column up to the top gallery.
-    { type: 'skyLift', style: 'crate', from: [5.5, 22, 100.1], to: [5.5, TOP, 100.9], size: [1.2, 1.2], post: [0.45, -0.45], speed: 1.8 },
+    { type: 'skyLift', style: 'crate', from: [5.5, 22, 100.1], to: [5.5, TOP, 100.9], size: [1.2, 1.2], post: [0.45, -0.45], speed: 1.8, returnAfter: 4 },
     { type: 'hexling', pos: [1, 14, 87], height: 5, radius: 3.5, interval: 3.4 },
     { type: 'hexling', pos: [2, 20, 99], height: 5, radius: 3, interval: 3.8 },
     { type: 'sootling', id: 'cw-soot', pos: [-5.5, TOP, 104], yaw: Math.PI / 2, wander: 0.8, range: 18, interval: 3.8 },

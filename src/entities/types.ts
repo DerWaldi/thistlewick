@@ -331,6 +331,8 @@ export type EntitySpec = SpecBase &
         interval?: number;
         speed?: number;
         persist?: boolean;
+        /** Shattered, it re-forms after this many seconds (crabs you need as stepping stones). */
+        reform?: number;
       }
     | {
         type: 'hexling';
@@ -378,6 +380,8 @@ export type EntitySpec = SpecBase &
         /** Where it stalks you; it wakes when you're inside and `wakeFlag` is set. */
         arena: { min: V3; max: V3 };
         wakeFlag: string;
+        /** A point it keeps its distance from (the caged plinth). */
+        avoid?: V3;
       }
     | {
         type: 'houseSeal';

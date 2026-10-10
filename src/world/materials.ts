@@ -130,9 +130,6 @@ const FRAG_BODY = /* glsl */ `
     diffuseColor.rgb *= mix(vec3(1.0), hue * tint * shade, fade);
     diffuseColor.rgb *= 1.0 - line * 0.34 * fade;
     diffuseColor.rgb *= mix(1.0, 0.9 + 0.16 * weather, fade);
-  } else {
-    // Plain surfaces only get a faint wash of weathering.
-    diffuseColor.rgb *= mix(1.0, 0.95 + 0.08 * weather, fade);
   }
   // Soft contact shadow where walls meet ground-level floors (a cheap stand-in for AO).
   if (abs(vWNormal.y) < 0.5) {

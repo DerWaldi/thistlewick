@@ -26,8 +26,17 @@ export interface Objective {
 }
 
 // ---- the castle's ways about (hub)
+/** In the Crooked Corridor's three legs or the Long Gallery (not the Well Yard or the Orchard beside them). */
+const inEastWing = (p: P) =>
+  p.y > -1 &&
+  ((p.x > 12.6 && p.x < 27.5 && p.z > 4 && p.z < 11.6) ||
+    (p.x > 21 && p.x < 27.5 && p.z >= 11.6 && p.z < 17) ||
+    (p.x > 21 && p.z >= 17 && p.z < 24.6) ||
+    (p.x > 34 && p.z >= 24.6 && p.z < 54 && p.y > 2));
 const intoCorridor: Waypoint = { pos: [13.6, 0, 8], passed: (p) => p.x > 13 };
-const intoCourt: Waypoint = { pos: [0, 0, 31.5], passed: (p) => p.z > 30.5 || p.x < -12.6 || p.x > 12.6 };
+/** From the corridor or gallery, back to the hall through the arch first. */
+const outOfEastWing: Waypoint = { pos: [11.4, 0, 8], passed: (p) => !inEastWing(p) };
+const intoCourt: Waypoint = { pos: [0, 0, 31.5], passed: (p) => p.z > 30.5 || p.x < -12.6 };
 const upToGallery: Waypoint = { pos: [0, 0, 12.6], passed: (p) => p.y > 3.5 };
 
 /** Where each level's way back towards the Lantern Hall is. */
@@ -131,7 +140,7 @@ const ROUTES: LessonRoute[] = [
       text: s.flags.has('unlocked:hub-hopgood-lock')
         ? "In Hollyhock Court's west cloister."
         : "In Hollyhock Court's west cloister. Somebody has padlocked the door: you know a spell for that.",
-      route: { hub: [intoCourt, { pos: [-15.6, 0, 40] }] },
+      route: { hub: [outOfEastWing, intoCourt, { pos: [-15.6, 0, 40] }] },
     }),
   },
   {
@@ -149,7 +158,7 @@ const ROUTES: LessonRoute[] = [
     practice: 'Light the three practice lamps and cross on what they show.',
     way: () => ({
       text: 'Down the spiral stair behind the little door by the Lantern Hall\'s front doors, to the end of the Undercroft.',
-      route: { hub: [{ pos: [13.2, 0, 2.5], passed: (p) => p.y < -1 || p.x > 13.6 }, { pos: [33.1, -8.5, 2.5] }] },
+      route: { hub: [outOfEastWing, { pos: [13.2, 0, 2.5], passed: (p) => p.y < -1 }, { pos: [33.1, -8.5, 2.5] }] },
     }),
   },
   {
@@ -167,7 +176,7 @@ const ROUTES: LessonRoute[] = [
     practice: 'Burn the cobweb, drop the crate and light the braziers in order.',
     way: () => ({
       text: "The kitchens: through the corner behind Hollyhock Court's west cloister, into the Kitchen Yard.",
-      route: { hub: [intoCourt, { pos: [-15.5, 0, 28.4], passed: (p) => p.x < -18.6 }, { pos: [-32, 0, 25] }] },
+      route: { hub: [outOfEastWing, intoCourt, { pos: [-15.5, 0, 28.4], passed: (p) => p.x < -18.6 }, { pos: [-32, 0, 25] }] },
     }),
   },
   {
@@ -185,7 +194,7 @@ const ROUTES: LessonRoute[] = [
     practice: 'Freeze the pool, climb the frozen falls and reach the dock with a charged freeze.',
     way: () => ({
       text: "Out through the Lantern Hall's great doors, down across the lawn to the boathouse on the lake's west shore.",
-      route: { hub: [{ pos: [0, 0, 0.6] }], grounds: [{ pos: [-29.8, -3, -41] }] },
+      route: { hub: [outOfEastWing, { pos: [0, 0, 0.6] }], grounds: [{ pos: [-29.8, -3, -41] }] },
     }),
   },
   {
@@ -203,7 +212,7 @@ const ROUTES: LessonRoute[] = [
     practice: 'Float the crate, ride the platform over the light-well and call the basket down from the chimney.',
     way: () => ({
       text: "The Clock Tower door in the middle of Hollyhock Court's north wall, then all the way up.",
-      route: { hub: [intoCourt, { pos: [0, 0, 61.95] }], clocktower: [{ pos: [-8, 7 * RISE, 2] }] },
+      route: { hub: [outOfEastWing, intoCourt, { pos: [0, 0, 61.95] }], clocktower: [{ pos: [-8, 7 * RISE, 2] }] },
     }),
   },
 ];
@@ -252,7 +261,7 @@ export function currentObjective(s: GameState): Objective {
       title: 'The Final Examinations',
       detail: 'Up the grand stair to the Lantern Hall gallery, through the door to the First Floor, and along the Long Hall: the iron door beside the stair to the roof.',
       route: {
-        hub: [upToGallery, { pos: [11.95, 5, 25.5] }],
+        hub: [outOfEastWing, upToGallery, { pos: [11.95, 5, 25.5] }],
         upper: [{ pos: [4.55, 0, 49] }],
         exams: [{ pos: [0, 2.6, 202] }],
       },

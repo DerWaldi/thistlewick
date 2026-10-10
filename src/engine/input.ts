@@ -35,7 +35,7 @@ export class Input {
   // Gamepad state, polled once a frame.
   private pad = { x: 0, y: 0, jump: false, cast: false, interact: false, album: false, start: false, up: false, down: false };
   /** Fired on gamepad presses the menus and dialogue care about. */
-  onPad: (button: 'start' | 'a' | 'up' | 'down') => void = () => {};
+  onPad: (button: 'start' | 'a' | 'b' | 'up' | 'down') => void = () => {};
   /** Set while waiting for a key to rebind: the next key press goes here instead. */
   captureKey: ((code: string) => void) | null = null;
 
@@ -57,10 +57,9 @@ export class Input {
       if (e.repeat) return;
       this.keys.add(e.code);
       this.pressed.add(e.code);
-      if (e.code === this.bindings.jump) {
-        this.jumpLatch = true;
-        e.preventDefault();
-      }
+      if (e.code === this.bindings.jump) this.jumpLatch = true;
+      // Space never scrolls the page or clicks a focused button, whatever it's bound to.
+      if (e.code === this.bindings.jump || e.code === 'Space') e.preventDefault();
     });
     window.addEventListener('keyup', (e) => this.keys.delete(e.code));
     window.addEventListener('blur', () => this.keys.clear());
@@ -125,6 +124,11 @@ export class Input {
     const gp = Array.from(pads ?? []).find((p) => p && p.connected);
     if (!gp) {
       this.pad.x = this.pad.y = 0;
+      // Unplugged mid-cast: let go of the button.
+      if (this.pad.cast) {
+        this.pad.cast = false;
+        this.setCast(false);
+      }
       return;
     }
     const dz = (v: number) => (Math.abs(v) < 0.18 ? 0 : (v - Math.sign(v) * 0.18) / 0.82);
@@ -149,7 +153,10 @@ export class Input {
       this.pad.cast = cast;
       this.setCast(cast);
     }
-    if (edge('interact', down(3) || down(1))) this.pressed.add('Pad:interact');
+    if (edge('interact', down(3) || down(1))) {
+      this.pressed.add('Pad:interact');
+      if (down(1)) this.onPad('b');
+    }
     if (edge('album', down(8))) this.pressed.add('Pad:album');
     if (edge('start', down(9))) this.onPad('start');
     if (edge('up', down(12))) this.onPad('up');

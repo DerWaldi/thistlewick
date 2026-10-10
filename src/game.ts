@@ -8,7 +8,7 @@ import { Loop } from './engine/loop';
 import { Renderer } from './engine/render';
 import { Music } from './engine/music';
 import { Sfx } from './engine/sfx';
-import { loadOptions, saveOptions, type Options } from './state/options';
+import { loadOptions, saveOptions, type Options, liveKeys } from './state/options';
 import { LevelSession } from './session';
 import { GameState } from './state/gameState';
 import { apply, clearSave, loadSave, writeSave } from './state/save';
@@ -75,7 +75,9 @@ export class Game {
     this.dialogue = new Dialogue(this.events, (pitch) => this.sfx.blip(pitch));
     this.input.onPad = (b) => {
       if (b === 'start') this.onPadStart();
-      else this.dialogue.padButton(b);
+      else if (b === 'b' && this.shop.isOpen) this.shop.close();
+      else if (b === 'b' && this.album.isOpen) this.album.toggle();
+      else if (b !== 'b') this.dialogue.padButton(b);
     };
     this.album = new Album(() => this.state);
     this.shop = new Shop(() => this.state);
@@ -236,7 +238,8 @@ export class Game {
 
   applyOptions(): void {
     const o = this.options;
-    this.input.bindings = o.keys;
+    Object.assign(liveKeys, o.keys);
+    this.input.bindings = liveKeys;
     this.input.sensitivityScale = o.sensitivity;
     this.input.invertY = o.invertY;
     this.sfx.setVolume(o.sfx);

@@ -371,12 +371,21 @@ export class EmberCrab implements Entity, SpellTarget {
     this.ctx.events.emit('gnarlingStunned', { pos: this.pos.clone() });
   }
 
+  private reformIn = 0;
+
   private shatter(): void {
     this.state = 'gone';
     this.root.visible = false;
     this.ctx.targets.remove(this);
-    this.ctx.physics.world.removeCollider(this.collider, false);
-    this.ctx.physics.world.removeCollider(this.iceCollider, false);
+    if (this.spec.reform) {
+      // A stepping stone you need: it crawls back out of the water a few seconds later.
+      this.collider.setEnabled(false);
+      this.iceCollider.setEnabled(false);
+      this.reformIn = this.spec.reform;
+    } else {
+      this.ctx.physics.world.removeCollider(this.collider, false);
+      this.ctx.physics.world.removeCollider(this.iceCollider, false);
+    }
     this.ctx.events.emit('crabShatter', { pos: this.pos.clone() });
     this.ctx.fx.burst(this.pos.clone(), 26, FROST, 4, 0.16, 2);
     if (this.spec.id) {
@@ -412,6 +421,19 @@ export class EmberCrab implements Entity, SpellTarget {
     this.timer -= dt;
     this.prev.copy(this.pos);
     this.updateBalls(dt);
+    if (this.state === 'gone' && this.reformIn > 0) {
+      this.reformIn -= dt;
+      if (this.reformIn <= 0) {
+        this.state = 'walk';
+        this.pos.copy(this.home);
+        this.prev.copy(this.home);
+        this.root.visible = true;
+        this.ice.visible = false;
+        this.collider.setEnabled(true);
+        this.ctx.targets.add(this);
+        this.ctx.fx.burst(this.pos.clone(), 14, FLAME, 2, 0.12, 0.6);
+      }
+    }
     const p = this.ctx.player.pos;
     const range = this.spec.range ?? 13;
     const dist = p.distanceTo(this.pos);

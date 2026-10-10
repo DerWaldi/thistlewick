@@ -406,8 +406,8 @@ function countingHouse(b: LevelBuilder, flames: Glow): void {
     { type: 'gate', pos: [0, 0, Z1], yaw: 0, width: 3, height: 3, when: ['v-c1', 'v-c2', 'v-c3'] },
     { type: 'sootling', pos: [-7.4, 3.2, 150.5], yaw: Math.PI / 2, wander: 0.8, range: 20, interval: 3.6 },
     { type: 'hexling', pos: [2, 0, 136], height: 5.5, radius: 4, interval: 3.4 },
-    { type: 'snapcasket', id: 'v-cs1', pos: [5, 0, 128], wander: 3 },
-    { type: 'snapcasket', id: 'v-cs2', pos: [5, 0, 150], wander: 3 },
+    { type: 'snapcasket', id: 'v-snap-c1', pos: [5, 0, 128], wander: 3 },
+    { type: 'snapcasket', id: 'v-snap-c2', pos: [5, 0, 150], wander: 3 },
     { type: 'sweetLine', kind: 'fizzwort', from: [-7.25, 3.8, 133], to: [-7.25, 3.8, 147], count: 5 },
     { type: 'sweet', kind: 'humbug', pos: [-7.8, 3.8, 151.5] },
   );

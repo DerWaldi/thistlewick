@@ -1,3 +1,4 @@
+import { liveKeys } from '../state/options';
 import { CARD_BY_ID } from '../data/cards';
 import { shopStock, type ShopItem } from '../data/shop';
 import type { GameState } from '../state/gameState';
@@ -33,7 +34,7 @@ export class Shop {
       'keydown',
       (e) => {
         if (!this.isOpen) return;
-        if (e.code === 'Escape' || e.code === 'KeyE') {
+        if (e.code === 'Escape' || e.code === 'KeyE' || e.code === liveKeys.interact) {
           e.preventDefault();
           e.stopImmediatePropagation();
           this.close();

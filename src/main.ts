@@ -21,6 +21,7 @@ async function boot(): Promise<void> {
 
   const menu = new Menu(game.options);
   menu.captureKey = (fn) => (game.input.captureKey = fn);
+  menu.cancelCapture = () => (game.input.captureKey = null);
   menu.onOptions = () => game.applyOptions();
   let playing = false;
 
@@ -37,6 +38,8 @@ async function boot(): Promise<void> {
     menu.show('pause', { state: game.state });
   };
   const resume = () => {
+    // Whatever was pressed in the menus (a gamepad A, say) mustn't carry into play.
+    game.input.clearPressed();
     menu.hide();
     game.paused = false;
     lock();
@@ -114,7 +117,7 @@ async function boot(): Promise<void> {
   });
   // A gamepad's Start pauses and resumes.
   game.onPadStart = () => {
-    if (!playing || testMode) return;
+    if (!playing || testMode || game.shop.isOpen || game.album.isOpen) return;
     if (menu.screen === 'pause') resume();
     else if (!menu.isOpen) {
       pause();

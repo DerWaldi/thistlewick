@@ -11,6 +11,17 @@ export interface KeyBindings {
 
 export const DEFAULT_KEYS: KeyBindings = { forward: 'KeyW', back: 'KeyS', left: 'KeyA', right: 'KeyD', jump: 'Space', interact: 'KeyE', album: 'KeyC' };
 
+/** The bindings in force (kept in step by Game.applyOptions), for the dialogue, shop and prompts. */
+export const liveKeys: KeyBindings = { ...DEFAULT_KEYS };
+
+/** Keys that can't be rebound: they already do something fixed. */
+export const RESERVED_KEYS = new Set(['Escape', 'KeyP', 'Backquote', 'Enter', 'NumpadEnter', 'Tab', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ...Array.from({ length: 9 }, (_, i) => `Digit${i + 1}`)]);
+
+/** 'KeyW' → 'W', 'Space' → 'Space', 'ArrowUp' → 'Up', 'Digit1' → '1'. */
+export function keyName(code: string): string {
+  return code.replace(/^Key/, '').replace(/^Digit/, '').replace(/^Arrow/, '');
+}
+
 /** Player-facing settings (the Options menu). Stored separately from the save. */
 export interface Options {
   /** Multiplies the tuned mouse sensitivity. */

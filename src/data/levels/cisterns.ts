@@ -255,7 +255,7 @@ function boilerHall(b: LevelBuilder, flames: Glow): void {
   b.add(
     { type: 'checkpoint', pos: [-6.5, UP, 60.2], yaw: Math.PI / 2, zone: { min: [-8.5, UP - 1, 59.5], max: [8.5, UP + 3, 61] } },
     { type: 'trigger', flag: 'cistern-hint-crabs', script: 'cisternCrabs', min: [-8.5, UP - 1, 59.5], max: [8.5, UP + 3, 61] },
-    ...stones.map(([x, z]) => ({ type: 'emberCrab' as const, pos: [x, W - 0.8, z] as V3, patrol: 0, range: 9, interval: 4 })),
+    ...stones.map(([x, z]) => ({ type: 'emberCrab' as const, pos: [x, W - 0.8, z] as V3, patrol: 0, range: 9, interval: 4, reform: 6 })),
     { type: 'checkpoint', pos: [6.5, UP, 78.3], yaw: -Math.PI / 2, zone: { min: [-8.5, UP - 1, 77.5], max: [8.5, UP + 3, 79] } },
     { type: 'emberCrab', pos: [-5, UP, 78.2], patrol: 2.5, interval: 3 },
     { type: 'emberCrab', pos: [5, UP, 78.2], patrol: 2.5, interval: 3 },
@@ -313,7 +313,7 @@ function sluiceCanal(b: LevelBuilder, flames: Glow): void {
     { type: 'checkpoint', pos: [-6.5, UP, 98.2], yaw: Math.PI / 2, zone: { min: [-8, UP - 1, 96.8], max: [8, UP + 3, 100] } },
     { type: 'trigger', flag: 'cistern-hint-sluice', script: 'cisternSluice', min: [-8, UP - 1, 96.8], max: [8, UP + 3, 99.5] },
     { type: 'iceSheet', min: [-1.5, 100], max: [1.5, 106], y: W, duration: 1.2, chargedDuration: 4.5 },
-    ...crabs.map(([x, z]) => ({ type: 'emberCrab' as const, pos: [x, W - 0.3, z] as V3, patrol: 0, range: 12, interval: 3 })),
+    ...crabs.map(([x, z]) => ({ type: 'emberCrab' as const, pos: [x, W - 0.3, z] as V3, patrol: 0, range: 12, interval: 3, reform: 6 })),
     { type: 'iceSheet', min: [-1.5, 119], max: [1.5, 128], y: W, duration: 1.2, chargedDuration: 4 },
     { type: 'hexling', pos: [0, UP, 113], height: 4.5, radius: 4, interval: 3.6 },
     { type: 'sootling', id: 'c-soot', pos: [5.5, UP, 132.5], yaw: Math.PI, wander: 0.8, range: 20, interval: 3.8 },
