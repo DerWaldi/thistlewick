@@ -20,6 +20,7 @@ async function boot(): Promise<void> {
   if (testMode) game.dialogue.autoAdvance = true;
 
   const menu = new Menu(game.options);
+  menu.captureKey = (fn) => (game.input.captureKey = fn);
   menu.onOptions = () => game.applyOptions();
   let playing = false;
 
@@ -111,6 +112,15 @@ async function boot(): Promise<void> {
     document.exitPointerLock();
     menu.showEnding(game.state);
   });
+  // A gamepad's Start pauses and resumes.
+  game.onPadStart = () => {
+    if (!playing || testMode) return;
+    if (menu.screen === 'pause') resume();
+    else if (!menu.isOpen) {
+      pause();
+      if (game.input.locked) document.exitPointerLock();
+    }
+  };
   game.album.onClose = () => {
     if (!playing || testMode) return;
     pause();

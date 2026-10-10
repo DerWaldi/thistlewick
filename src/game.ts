@@ -73,6 +73,10 @@ export class Game {
     this.music = new Music(() => this.sfx.context);
     this.events.on('dialogueOpen', ({ open }) => this.music.setDuck(open));
     this.dialogue = new Dialogue(this.events, (pitch) => this.sfx.blip(pitch));
+    this.input.onPad = (b) => {
+      if (b === 'start') this.onPadStart();
+      else this.dialogue.padButton(b);
+    };
     this.album = new Album(() => this.state);
     this.shop = new Shop(() => this.state);
     this.hud = new Hud(
@@ -227,8 +231,12 @@ export class Game {
     return { title: this.objective.title, bearing: Math.atan2(Math.sin(bearing), Math.cos(bearing)), dist: Math.hypot(dx, dz), dy: t[1] - p.y };
   }
 
+  /** The gamepad's Start button (main.ts pauses and resumes with it). */
+  onPadStart: () => void = () => {};
+
   applyOptions(): void {
     const o = this.options;
+    this.input.bindings = o.keys;
     this.input.sensitivityScale = o.sensitivity;
     this.input.invertY = o.invertY;
     this.sfx.setVolume(o.sfx);
@@ -353,11 +361,11 @@ export class Game {
     if (!s) return;
 
     if (!this.dialogue.isOpen && !this.album.isOpen) {
-      if (this.input.consumeKey('KeyE')) s.interact();
+      if (this.input.consumeAction('interact')) s.interact();
     } else {
-      this.input.consumeKey('KeyE');
+      this.input.consumeAction('interact');
     }
-    if (this.input.consumeKey('KeyC') && !this.dialogue.isOpen) {
+    if (this.input.consumeAction('album') && !this.dialogue.isOpen) {
       this.album.toggle();
       if (this.album.isOpen && this.input.locked) document.exitPointerLock();
     }
@@ -395,6 +403,7 @@ export class Game {
   }
 
   private frameUpdate(dt: number, alpha: number): void {
+    this.input.pollGamepad(dt);
     const s = this.session;
     if (!s) return;
     if (this.titleMode) {

@@ -210,6 +210,13 @@ export class Dialogue {
     });
   }
 
+  /** From a gamepad: A advances (or picks), the d-pad moves between choices. */
+  padButton(b: 'a' | 'up' | 'down'): void {
+    if (!this.open) return;
+    if (b === 'a') this.press();
+    else if (this.choices) this.move(b === 'up' ? -1 : 1);
+  }
+
   private move(d: number): void {
     if (this.typing || !this.choices) return;
     this.choice = (this.choice + d + this.choices.length) % this.choices.length;

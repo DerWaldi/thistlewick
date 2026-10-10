@@ -987,3 +987,34 @@ kbd {
 .map-area.done {
   opacity: 0.5;
 }
+
+.opt-head {
+  margin: 14px 0 6px;
+  font-size: 16px;
+}
+.opt-head small {
+  font-size: 12px;
+  opacity: 0.7;
+  font-weight: normal;
+}
+.key-btn {
+  min-width: 110px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid #c99a3e;
+  background: #f8ecd0;
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+.key-btn:hover {
+  background: #fff4dc;
+}
+#opt-keys {
+  grid-template-columns: auto auto auto auto;
+  column-gap: 14px;
+}
+.menu-screen[data-screen='options'] {
+  max-height: 94vh;
+  overflow-y: auto;
+}

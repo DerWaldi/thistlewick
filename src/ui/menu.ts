@@ -144,6 +144,43 @@ export class Menu {
     }
   }
 
+  /** Rebindable keys: click a button, press the new key (Esc keeps the old one). */
+  private renderKeys(): void {
+    const grid = $('opt-keys');
+    grid.replaceChildren();
+    const names: [keyof Options['keys'], string][] = [
+      ['forward', 'Forward'],
+      ['back', 'Back'],
+      ['left', 'Left'],
+      ['right', 'Right'],
+      ['jump', 'Jump'],
+      ['interact', 'Talk / open'],
+      ['album', 'Card album'],
+    ];
+    for (const [action, label] of names) {
+      const l = document.createElement('label');
+      l.textContent = label;
+      const btn = document.createElement('button');
+      btn.className = 'key-btn';
+      btn.textContent = keyName(this.options.keys[action]);
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        btn.textContent = 'Press a key…';
+        this.captureKey((code) => {
+          if (code !== 'Escape') {
+            this.options.keys[action] = code;
+            this.onOptions(this.options);
+          }
+          btn.textContent = keyName(this.options.keys[action]);
+        });
+      });
+      grid.append(l, btn);
+    }
+  }
+
+  /** Set by main.ts: route the next key press to `fn` (rebinding). */
+  captureKey: (fn: (code: string) => void) => void = () => {};
+
   private bindOptions(): void {
     const o = this.options;
     const range = (id: string, key: 'sensitivity' | 'music' | 'sfx') =>
@@ -180,6 +217,12 @@ export class Menu {
     ($('opt-invert') as HTMLInputElement).checked = o.invertY;
     ($('opt-fps') as HTMLInputElement).checked = o.showFps;
     ($('opt-guide') as HTMLInputElement).checked = o.guide;
+    this.renderKeys();
     ($('opt-quality') as HTMLSelectElement).value = o.quality;
   }
+}
+
+/** 'KeyW' → 'W', 'Space' → 'Space', 'ArrowUp' → 'Up', 'Digit1' → '1'. */
+function keyName(code: string): string {
+  return code.replace(/^Key/, '').replace(/^Digit/, '').replace(/^Arrow/, '');
 }

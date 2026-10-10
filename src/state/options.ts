@@ -1,3 +1,16 @@
+/** Rebindable keys (KeyboardEvent.code values). Arrow keys always move too. */
+export interface KeyBindings {
+  forward: string;
+  back: string;
+  left: string;
+  right: string;
+  jump: string;
+  interact: string;
+  album: string;
+}
+
+export const DEFAULT_KEYS: KeyBindings = { forward: 'KeyW', back: 'KeyS', left: 'KeyA', right: 'KeyD', jump: 'Space', interact: 'KeyE', album: 'KeyC' };
+
 /** Player-facing settings (the Options menu). Stored separately from the save. */
 export interface Options {
   /** Multiplies the tuned mouse sensitivity. */
@@ -9,6 +22,7 @@ export interface Options {
   showFps: boolean;
   /** The next-goal line and compass in the HUD. */
   guide: boolean;
+  keys: KeyBindings;
 }
 
 const KEY = 'thistlewick.options';
@@ -21,12 +35,16 @@ export const DEFAULT_OPTIONS: Options = {
   quality: 'high',
   showFps: false,
   guide: true,
+  keys: { ...DEFAULT_KEYS },
 };
 
 export function loadOptions(): Options {
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) return { ...DEFAULT_OPTIONS, ...(JSON.parse(raw) as Partial<Options>) };
+    if (raw) {
+      const o = JSON.parse(raw) as Partial<Options>;
+      return { ...DEFAULT_OPTIONS, ...o, keys: { ...DEFAULT_KEYS, ...(o.keys ?? {}) } };
+    }
   } catch {
     // ignore
   }
