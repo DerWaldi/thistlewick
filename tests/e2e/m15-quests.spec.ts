@@ -501,7 +501,8 @@ test('pupils wander the castle and chat; Wren and Otto have errands of their own
   const items = await page.evaluate(async () => {
     const tw = window.__tw;
     const g = tw.game as unknown as { session: { physics: { raycast(o: unknown, d: unknown, l: number): { point: { y: number } } | null } }; state: G['state'] };
-    const { Vector3 } = await import(/* @vite-ignore */ '/node_modules/.vite/deps/three.js');
+    const threePath = '/node_modules/.vite/deps/three.js';
+    const { Vector3 } = (await import(/* @vite-ignore */ threePath)) as typeof import('three');
     const ground = g.session.physics.raycast(new Vector3(-14, 10.5, 52), new Vector3(0, -1, 0), 3);
     tw.teleport(-14, ground ? ground.point.y + 0.05 : 9.5, 51.2, 0);
     tw.advance(0.6);
@@ -520,7 +521,8 @@ test('pupils wander the castle and chat; Wren and Otto have errands of their own
   const watch = await page.evaluate(async () => {
     const tw = window.__tw;
     const g = tw.game as unknown as { session: { physics: { raycast(o: unknown, d: unknown, l: number): { point: { y: number } } | null } }; state: G['state'] };
-    const { Vector3 } = await import(/* @vite-ignore */ '/node_modules/.vite/deps/three.js');
+    const threePath = '/node_modules/.vite/deps/three.js';
+    const { Vector3 } = (await import(/* @vite-ignore */ threePath)) as typeof import('three');
     const ground = g.session.physics.raycast(new Vector3(21.3, 15.5, 76.9), new Vector3(0, -1, 0), 4);
     tw.teleport(21.3, ground ? ground.point.y + 0.05 : 14, 76.2, 0);
     tw.advance(0.6);
