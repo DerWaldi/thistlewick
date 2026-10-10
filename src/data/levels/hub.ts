@@ -1,4 +1,4 @@
-import { BoxGeometry, ConeGeometry, CylinderGeometry, Group, Mesh, MeshStandardMaterial, PointLight, TorusGeometry } from 'three';
+import { BoxGeometry, CanvasTexture, CircleGeometry, ConeGeometry, CylinderGeometry, Group, Mesh, MeshStandardMaterial, PointLight, SRGBColorSpace, TorusGeometry } from 'three';
 import type { LevelBuilder, V3 } from '../../world/builder';
 import type { LevelDef } from '../../world/level';
 import { COLORS } from '../../world/materials';
@@ -394,18 +394,31 @@ function buildHub(b: LevelBuilder): void {
 
   // The clock tower on the north wall; behind it, a ledge with a card (secret 3).
   b.box([0, 11, 61.8], [4.4, 6, 1.6], { color: COLORS.stoneLight });
+  // The front overhangs the wall into the court, so carry it down to the cloister roof
+  // with a plinth and a moulded band, rather than leaving it floating.
+  b.box([0, R + 1.5, 61.5], [4.4, 3, 1], { color: COLORS.stoneLight });
+  deco(b, new BoxGeometry(4.8, 0.3, 1.3), [0, R + 0.15, 61.45], COLORS.stone);
+  deco(b, new BoxGeometry(4.7, 0.25, 1.9), [0, 8.1, 61.75], COLORS.stone);
+  deco(b, new BoxGeometry(4.7, 0.25, 1.9), [0, 13.9, 61.75], COLORS.stone);
   deco(b, new ConeGeometry(3.2, 3.5, 4), [0, 15.75, 61.8], COLORS.roof, [0, Math.PI / 4, 0]);
   const clock = new Group();
   const face = new Mesh(new CylinderGeometry(1.4, 1.4, 0.15, 24), new MeshStandardMaterial({ color: '#f3e4c4', roughness: 0.6 }));
   face.rotation.x = Math.PI / 2;
+  const dial = new Mesh(new CircleGeometry(1.36, 32), new MeshStandardMaterial({ map: clockDial(), roughness: 0.6 }));
+  // The clock faces the court (-Z), so everything on its face sits at negative z.
+  dial.position.z = -0.08;
+  dial.rotation.y = Math.PI;
   const rim = new Mesh(new TorusGeometry(1.42, 0.1, 6, 24), new MeshStandardMaterial({ color: '#c99a3e', metalness: 0.6, roughness: 0.4 }));
   const hand1 = new Mesh(new BoxGeometry(0.08, 1, 0.05), new MeshStandardMaterial({ color: '#2b1d14' }));
-  hand1.position.set(0.25, 0.35, 0.1);
+  hand1.position.set(0.25, 0.35, -0.11);
   hand1.rotation.z = -0.6;
   const hand2 = new Mesh(new BoxGeometry(0.08, 0.7, 0.05), new MeshStandardMaterial({ color: '#2b1d14' }));
-  hand2.position.set(-0.2, 0.15, 0.1);
+  hand2.position.set(-0.2, 0.15, -0.12);
   hand2.rotation.z = 1.1;
-  clock.add(face, rim, hand1, hand2);
+  const cap = new Mesh(new CylinderGeometry(0.1, 0.1, 0.08, 10), new MeshStandardMaterial({ color: '#c99a3e', metalness: 0.6, roughness: 0.4 }));
+  cap.rotation.x = Math.PI / 2;
+  cap.position.z = -0.14;
+  clock.add(face, dial, rim, hand1, hand2, cap);
   clock.position.set(0, 11.5, 60.95);
   b.prop(clock);
   crate(b, [-6, R, 60.3], 1.2);
@@ -479,4 +492,54 @@ function buildHub(b: LevelBuilder): void {
   glow.finish(b, '#ffc68a');
   candle.finish(b, '#ffe2a0');
   b.finish();
+}
+
+/** A painted clock dial: Roman numerals, minute ticks and a gilt ring. */
+function clockDial(): CanvasTexture {
+  const c = document.createElement('canvas');
+  c.width = c.height = 512;
+  const g = c.getContext('2d')!;
+  const grad = g.createRadialGradient(256, 230, 40, 256, 256, 256);
+  grad.addColorStop(0, '#fbf3df');
+  grad.addColorStop(1, '#e2cfa6');
+  g.fillStyle = grad;
+  g.fillRect(0, 0, 512, 512);
+  g.strokeStyle = '#c99a3e';
+  g.lineWidth = 10;
+  g.beginPath();
+  g.arc(256, 256, 236, 0, Math.PI * 2);
+  g.stroke();
+  g.strokeStyle = '#2b1d14';
+  for (let i = 0; i < 60; i++) {
+    const a = (i / 60) * Math.PI * 2;
+    const r0 = i % 5 ? 214 : 200;
+    g.lineWidth = i % 5 ? 3 : 7;
+    g.beginPath();
+    g.moveTo(256 + Math.sin(a) * r0, 256 - Math.cos(a) * r0);
+    g.lineTo(256 + Math.sin(a) * 226, 256 - Math.cos(a) * 226);
+    g.stroke();
+  }
+  const numerals = ['XII', 'I', 'II', 'III', 'IIII', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI'];
+  g.fillStyle = '#2b1d14';
+  g.font = 'bold 44px Palatino, Georgia, serif';
+  g.textAlign = 'center';
+  g.textBaseline = 'middle';
+  numerals.forEach((n, i) => {
+    const a = (i / 12) * Math.PI * 2;
+    g.save();
+    g.translate(256 + Math.sin(a) * 160, 256 - Math.cos(a) * 160);
+    g.rotate(a);
+    g.fillText(n, 0, 0);
+    g.restore();
+  });
+  // A little thistle under the centre, the school's mark.
+  g.fillStyle = '#7a4fa0';
+  g.beginPath();
+  g.arc(256, 330, 14, 0, Math.PI * 2);
+  g.fill();
+  g.fillStyle = '#4f7a34';
+  g.fillRect(253, 342, 6, 26);
+  const tex = new CanvasTexture(c);
+  tex.colorSpace = SRGBColorSpace;
+  return tex;
 }

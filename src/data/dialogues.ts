@@ -134,7 +134,11 @@ export const DIALOGUES: Record<string, Script> = {
     await say([{ speaker: 'gorse', text }]);
   },
 
-  lockedTrialDoor: async ({ say }) => {
+  lockedTrialDoor: async ({ say, state }) => {
+    if (state.lessons.has('thwackwort')) {
+      await say([{ speaker: 'gorse', text: "The Trial's done, and the Star is yours! No sense rattling that poor armour twice. It's still sulking." }]);
+      return;
+    }
     await say([{ speaker: 'gorse', text: 'Ah-ah! Practice targets first. All three. I am counting.' }]);
   },
 

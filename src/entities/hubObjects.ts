@@ -469,6 +469,7 @@ export class Door implements Interactable {
     return this.spec.to && !this.isLocked ? 'Open' : this.spec.talk ? 'Read' : 'Try the door';
   }
   private get isLocked(): boolean {
+    if (this.spec.closedAfter && this.ctx.state.lessons.has(this.spec.closedAfter)) return true;
     const during = this.spec.lockedDuring;
     if (during && this.ctx.state.knows(during) && !this.ctx.state.lessons.has(during)) return true;
     if (this.spec.lockedUnless) return !this.ctx.state.flags.has(this.spec.lockedUnless);

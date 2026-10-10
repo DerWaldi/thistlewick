@@ -103,6 +103,7 @@ Each lesson is content, not engine work:
 5. The teacher's script hands out a reward once the lesson is in `state.lessons`.
 6. Hub content gated with `requires: '<spell>'` appears afterwards.
 Progress lives in flags (`practice-done`, `down:<rattlecoat id>`, `trial-hint-*`...), so revisits are consistent.
+Doors enforce the flow: the classroom exit has `lockedDuring: '<spell>'` (no leaving mid-lesson) and the trial door `closedAfter: '<spell>'` (each trial runs once; `?level=trial` sandboxes still work for debugging). Nothing in a level may be farmable: placed sweets are remembered, and respawning Gnarlings only drop sweets the first time (`looted:<id>` flags).
 
 ### Progress & saving
 - `GameState` is the single source of progress. Its helpers (`collectCard`, `findSecret`, `award`, `learn`...) emit events, and the HUD, sound and autosave react to those.
@@ -116,12 +117,13 @@ Progress lives in flags (`practice-done`, `down:<rattlecoat id>`, `trial-hint-*`
 - The world halts while the dialogue, shop, album or pause menu is open (`game.isHalted`).
 
 ### Menus, options, music
+- While the world is halted the player `hold()`s (no velocity, idle pose) and frames render at alpha 1, so nothing jitters between frozen steps.
 - `main.ts` drives the menus. The title is shown over a drifting hub backdrop (`game.showBackdrop()`, `titleMode`). Losing pointer lock mid-game opens the pause menu.
 - Options: sensitivity, invert Y, music and effects volume, graphics (Fancy/Fast) and FPS display. They're stored under `thistlewick.options`, and `game.applyOptions()` applies them.
 - Fancy graphics adds bloom and grading, a pixel ratio up to 1.5 and a 4096 shadow map. If frames stay under about 42 fps for 4 s, the game drops to Fast once and shows a toast.
 - Music: `engine/music.ts` sequences two original pieces live: the Thistlewick Waltz (hub, title) and the Tumbling Vaults (trial). `LevelDef.music` picks the mood. Moods cross-fade, and the music ducks during dialogue. A file at `public/music/<mood>.mp3` replaces the synthesised version, and should be logged in ASSETS.md.
 - A `Song` is a list of `Section`s: bars of melody/bass/chords plus an `Arrangement` (lead instrument and octave shift, harp chords or arpeggio, bass style, counter-melody, chimes, ornaments, dynamics). The same bars come back re-orchestrated, so the loop takes about 1.5 minutes before it repeats. Bars get small random dynamics and grace notes.
-- P saves a screenshot (`game.screenshot()`), stamped with level, area, position, facing and mode, for bug reports.
+- P saves a screenshot (with the dialogue box redrawn onto it) (`game.screenshot()`), stamped with level, area, position, facing and mode, for bug reports.
 
 ### Atmosphere props (`world/props.ts`)
 - `lightShaft(from, dir, length, width)`: window light beams.

@@ -65,6 +65,7 @@ export class Gnarling implements Entity, SpellTarget {
   constructor(
     private spec: SpecOf<'gnarling'>,
     private ctx: WorldContext,
+    private readonly id: string,
   ) {
     const [x, y, z] = spec.pos;
     this.pos = new Vector3(x, y + CENTER_TO_FEET + 0.05, z);
@@ -187,8 +188,13 @@ export class Gnarling implements Entity, SpellTarget {
     this.ctx.physics.world.removeCollider(this.collider, false);
     const at = this.pos.clone();
     this.ctx.fx.burst(at, 24, new Color('#c9e88a'), 3.5, 0.18, 2);
-    this.ctx.sweets.burst('fizzwort', at, 3);
-    if (Math.random() < 0.35) this.ctx.sweets.burst('bramble', at, 1);
+    // Gnarlings come back on every visit, but each only pays out once, so they can't be farmed.
+    const looted = `looted:${this.id}`;
+    if (!this.ctx.state.flags.has(looted)) {
+      this.ctx.state.flags.add(looted);
+      this.ctx.sweets.burst('fizzwort', at, 3);
+      if (Math.random() < 0.35) this.ctx.sweets.burst('bramble', at, 1);
+    }
     this.ctx.events.emit('gnarlingBanished', { pos: at });
   }
 

@@ -74,6 +74,8 @@ export type EntitySpec = SpecBase &
         lockedUnless?: string;
         /** Locked while this spell is learned but its lesson (the trial) isn't finished: no wandering off mid-lesson. */
         lockedDuring?: SpellId;
+        /** Shut for good once this spell's lesson is complete: each trial is run once. */
+        closedAfter?: SpellId;
         /** Dialogue script to run instead of the `locked` toast. */
         talk?: string;
         label?: string;

@@ -98,3 +98,34 @@ test('the classroom keeps you in until the Trial is done', async ({ page }) => {
   expect(r.midLesson).toBe('classroom');
   expect(r.afterTrial).toBe('hub');
 });
+
+test('the Trial door shuts for good once the Star is won', async ({ page }) => {
+  await boot(page, '?test&new');
+  const r = await page.evaluate(async () => {
+    const tw = window.__tw;
+    await tw.idle();
+    const g = tw.game as unknown as { state: { flags: Set<string>; lessons: Set<string> } };
+    for (const f of ['sorted', 'lesson-started', 'practice-done']) g.state.flags.add(f);
+    tw.learn('thwackwort');
+    tw.loadLevel('classroom', 'fromTrial');
+    tw.advance(0.5);
+    await tw.idle();
+    const tryTrial = async () => {
+      tw.teleport(6.3, 0, 11.2, Math.PI / 2);
+      tw.advance(0.2);
+      tw.interact();
+      await tw.idle();
+      tw.advance(1.5);
+      return tw.state().level;
+    };
+    const before = await tryTrial();
+    g.state.lessons.add('thwackwort');
+    tw.loadLevel('classroom', 'fromTrial');
+    tw.advance(0.5);
+    await tw.idle();
+    const after = await tryTrial();
+    return { before, after };
+  });
+  expect(r.before).toBe('trial');
+  expect(r.after).toBe('classroom');
+});
