@@ -303,3 +303,49 @@ test('Lamplit Catacombs, the Moth Ossuary: three short lamps, a charged last sto
   });
   await shot(page, 'm18-ossuary', browserName);
 });
+
+test('Overgrown Glasshouse, the Hothouse Pool: burn your way across the pillars, then the two Sootlings', async ({ page, browserName }) => {
+  await sandbox(page, 'glasshouse', ['glasshouse-entered', 'glasshouse-hint-hothouse']);
+  await calm(page, ['Hexling', 'Sootling', 'Gnarling']);
+  const pillars: [number, number][] = [
+    [0, 106.2],
+    [-2.4, 108.8],
+    [0, 111.4],
+    [2.6, 114],
+    [0.4, 116.8],
+    [-2.2, 119.4],
+    [0, 122],
+    [2.4, 124.6],
+    [0.4, 127.2],
+  ];
+  // The briar and the Snapweed on the next pillar burn from the one before.
+  const burnNext: Record<number, [number, number, number]> = { 1: [-2.4, 1.3, 108.8], 3: [2.6, 0.9, 114], 5: [-2.2, 1.3, 119.4], 6: [0, 0.9, 122] };
+  let at: [number, number, number] = [0, 0, 103.3];
+  for (const [i, [x, z]] of pillars.entries()) {
+    if (burnNext[i]) expect(await castAt(page, at, burnNext[i], 0, 2.2), `burn what's on pillar ${i + 1}`).toBe('cindersnap');
+    const f = await leap(page, at, [x, z]);
+    expect(f.y, `onto pillar ${i + 1}`).toBeGreaterThan(-0.2);
+    at = [x, 0, z];
+  }
+  const bank = await leap(page, at, [0.4, 130.6]);
+  expect(bank.z).toBeGreaterThan(129.6);
+  await page.evaluate(() => {
+    const tw = window.__tw;
+    tw.teleport(-5, 0, 102, 0.3);
+    tw.setCamera(0.3, 0.2);
+    tw.advance(0.3);
+  });
+  await shot(page, 'm18-hothouse', browserName);
+  // Both Sootlings banished: the gate opens.
+  await page.evaluate(() => {
+    for (const e of (window.__tw.game as unknown as G).world.entities) {
+      if (e.constructor.name === 'Sootling' && e.pos && e.home) {
+        e.pos.y = 1.6;
+        e.home.y = 1.6;
+      }
+    }
+  });
+  for (const x of [-6, 6]) for (let i = 0; i < 2; i++) expect(await castAt(page, [x * 0.5, 0, 131], [x, 2.3, 134], 0, 0.4)).toBe('thwackwort');
+  await page.evaluate(() => window.__tw.advance(0.5));
+  expect(await page.evaluate(() => [window.__tw.signal('g-soot1'), window.__tw.signal('g-soot2')])).toEqual([true, true]);
+});

@@ -2,7 +2,7 @@ import { BoxGeometry, ConeGeometry, CylinderGeometry, IcosahedronGeometry, Spher
 import type { LevelBuilder, V3 } from '../../world/builder';
 import type { LevelDef } from '../../world/level';
 import { COLORS } from '../../world/materials';
-import { barrel, bush, cobweb, crate, deco, Glow, grass, ivy, mushrooms, pottedPlant, signboard, slab, wall, type Hole } from '../../world/props';
+import { barrel, bush, cobweb, crate, deco, Glow, grass, ivy, mushrooms, pottedPlant, signboard, slab, wall, wallTorch, type Hole } from '../../world/props';
 
 /**
  * The Overgrown Glasshouse, Cindersnap's trial, through Ashcombe's iron door. Daylight
@@ -30,8 +30,14 @@ import { barrel, bush, cobweb, crate, deco, Glow, grass, ivy, mushrooms, pottedP
  *                                        Snapweed at every corner (it bites anything in reach,
  *                                        Gnarlings too; burn it from further off); two Gnarlings
  *                                        in the last lane
- *   Bramble Heart  x -6..6,  z 88.5..100.5 the Star inside a ring of briars too green to burn
- *                                        until both braziers by the door are lit
+ *   Bramble Heart  x -6..6,  z 88.5..100.5 an old brazier on the pedestal inside a ring of
+ *                                        briars too green to burn until both braziers by the
+ *                                        door are lit; lighting it opens the north gate
+ *   Hothouse Pool  x -9..9,  z 100.5..138  pillars across a pool (z 104..129.5): briars on two
+ *                                        to burn from the one before, Snapweeds on two more; a
+ *                                        Hexling over the water; two Sootlings on planters on
+ *                                        the far bank hold the Star gate until both are banished
+ *   Star chamber   x -3..3,  z 138..144.5
  */
 export const GLASSHOUSE: LevelDef = {
   id: 'glasshouse',
@@ -44,6 +50,8 @@ export const GLASSHOUSE: LevelDef = {
     { id: 'palm', name: 'The Palm House', min: [-9.5, -2, 48.5], max: [9.5, 9, 68.5] },
     { id: 'beds', name: 'The Snapweed Beds', min: [-9.5, -2, 68.5], max: [9.5, 9, 88.5] },
     { id: 'heart', name: 'The Bramble Heart', min: [-6.5, -2, 88.5], max: [6.5, 9, 100.5] },
+    { id: 'hothouse', name: 'The Hothouse Pool', min: [-9.5, -4, 100.5], max: [9.5, 10, 138] },
+    { id: 'star', name: 'The Star Chamber', min: [-3.5, -2, 138], max: [3.5, 9, 144.5] },
   ],
   intro: { script: 'glasshouseIntro', unlessFlag: 'glasshouse-entered' },
   music: 'dungeon',
@@ -61,6 +69,9 @@ const H = 6.5;
  * A glasshouse wall: a brick plinth, frosted panes above it and iron glazing bars.
  * Holes are door openings (from the floor up to `top`) or windows (`bottom` > 0).
  */
+
+/** The Star chamber, after the Hothouse Pool. */
+const STAR_Z = 141.3;
 function glassWall(b: LevelBuilder, axis: 'x' | 'z', at: number, from: number, to: number, holes: Hole[] = []): void {
   // Doors cut through the plinth too; windows (bottom above it) don't.
   const doors = holes.filter((h) => (h.bottom ?? 0) < 1.2).map((h) => ({ from: h.from, to: h.to, top: 1.2 }));
@@ -315,8 +326,9 @@ function build(b: LevelBuilder): void {
     { type: 'brazier', id: 's1', pos: [-5, 0, 91.5], light: true },
     { type: 'brazier', id: 's2', pos: [5, 0, 91.5], light: true },
     ...ring.map((r) => ({ type: 'burnable' as const, style: 'briar' as const, ...r, fireproofUntil: ['s1', 's2'] })),
-    { type: 'star', id: 'glasshouse-star', pos: [0, 1.9, 95], script: 'glasshouseComplete' },
-    { type: 'door', pos: [0, 0, 99.95], yaw: Math.PI, width: 2.4, height: 3.4, to: { level: 'ashcombe', spawn: 'fromGlasshouse' }, label: 'Back to class' },
+    // The Star and the way back moved on to the Hothouse (replaced in place: ids stay put).
+    { type: 'star', id: 'glasshouse-star', pos: [0, 1.9, STAR_Z], script: 'glasshouseComplete' },
+    { type: 'door', pos: [0, 0, STAR_Z + 3], yaw: Math.PI, width: 2.4, height: 3.4, to: { level: 'ashcombe', spawn: 'fromGlasshouse' }, label: 'Back to class' },
   );
   for (let i = 0; i < 8; i++) {
     const a = (i / 8) * Math.PI * 2;
@@ -330,6 +342,7 @@ function build(b: LevelBuilder): void {
   }
 
   snapweedBeds(b);
+  hothouse(b, flames);
 
   flames.finish(b, '#ffb060');
   b.finish();
@@ -379,3 +392,72 @@ function snapweedBeds(b: LevelBuilder): void {
     mushrooms(b, x, z, 4, sd);
   }
 }
+
+/**
+ * The Hothouse Pool (z 100.5..138): pillars over water with briars and Snapweeds to burn on
+ * the way, a Hexling, and two Sootlings who hold the Star gate. The Bramble Heart's pedestal
+ * brazier opens the way in. Built last so the earlier rooms' sweets keep their ids.
+ */
+function hothouse(b: LevelBuilder, flames: Glow): void {
+  const Z0 = 100.5;
+  const Z1 = 138;
+  const W = -0.6;
+  b.floor(-9.5, 9.5, Z0, Z1 + 6.5, { color: '#7a6a52', holes: [[-9, 9, 104, 129.5]] });
+  b.pool(-9, 9, 104, 129.5, W, -3);
+  glassWall(b, 'z', -9.5, Z0, Z1);
+  glassWall(b, 'z', 9.5, Z0, Z1);
+  glassWall(b, 'x', Z1, -9.5, 9.5, [{ from: -1.5, to: 1.5, top: 3.4 }]);
+  for (let z = Z0 + 2; z < Z1; z += 3) deco(b, new BoxGeometry(19, 0.25, 0.25), [0, H, z], IRON);
+  const pillars: [number, number][] = [
+    [0, 106.2],
+    [-2.4, 108.8],
+    [0, 111.4],
+    [2.6, 114],
+    [0.4, 116.8],
+    [-2.2, 119.4],
+    [0, 122],
+    [2.4, 124.6],
+    [0.4, 127.2],
+  ];
+  for (const [x, z] of pillars) {
+    b.box([x, -1.5, z], [1.6, 3, 1.6], { color: COLORS.stoneLight, info: { noGrab: true } });
+    deco(b, new BoxGeometry(1.75, 0.1, 1.75), [x, -0.04, z], '#4f7a34');
+  }
+  // Raised planters on the far bank for the Sootlings.
+  for (const x of [-6, 6]) {
+    b.box([x, 0.8, 134], [3, 1.6, 3], { color: BRICK });
+    deco(b, new BoxGeometry(2.8, 0.1, 2.8), [x, 1.62, 134], '#5a4030');
+  }
+  b.add(
+    { type: 'gate', pos: [0, 0, Z0], yaw: 0, width: 2.4, height: 3.2, when: ['g-heart'] },
+    { type: 'brazier', id: 'g-heart', pos: [0, 1, 95], light: true },
+    { type: 'checkpoint', pos: [-7, 0, 102.2], yaw: Math.PI / 2, zone: { min: [-9, -1, 100.8], max: [9, 4, 104] } },
+    { type: 'trigger', flag: 'glasshouse-hint-hothouse', script: 'glasshouseHothouse', min: [-9, -1, 100.8], max: [9, 4, 103.5] },
+    { type: 'burnable', style: 'briar', pos: [-2.4, 1.3, 108.8], size: [1.5, 2.6, 1.5] },
+    { type: 'snapweed', pos: [2.6, 0, 114], radius: 1.7 },
+    { type: 'burnable', style: 'briar', pos: [-2.2, 1.3, 119.4], size: [1.5, 2.6, 1.5] },
+    { type: 'snapweed', pos: [0, 0, 122], radius: 1.7 },
+    { type: 'hexling', pos: [0, 0, 116], height: 4.5, radius: 4, interval: 3.4 },
+    { type: 'sootling', id: 'g-soot1', pos: [-6, 1.6, 134], yaw: Math.PI, wander: 0.5, range: 22, interval: 3.8 },
+    { type: 'sootling', id: 'g-soot2', pos: [6, 1.6, 134], yaw: Math.PI, wander: 0.5, range: 22, interval: 4.2 },
+    { type: 'checkpoint', pos: [0, 0, 131], yaw: 0, zone: { min: [-9, -1, 129.6], max: [9, 4, 132] } },
+    { type: 'gate', pos: [0, 0, Z1], yaw: 0, width: 3, height: 3, when: ['g-soot1', 'g-soot2'] },
+    { type: 'sweet', kind: 'bramble', pos: [0, 0.7, 111.4] },
+    { type: 'sweet', kind: 'bramble', pos: [0.4, 0.7, 116.8] },
+    { type: 'sweet', kind: 'humbug', pos: [8, 0.6, 136.5] },
+  );
+  for (const [x, z, h] of [
+    [-7.5, 106, 4],
+    [7.5, 121, 5],
+  ]) {
+    palm(b, x, W, z, h);
+  }
+  // The Star chamber: brick, with a little roof of glass.
+  wall(b, 'z', -3.5, Z1, Z1 + 6.5, H, { color: BRICK, cap: 3 });
+  wall(b, 'z', 3.5, Z1, Z1 + 6.5, H, { color: BRICK, cap: 3 });
+  wall(b, 'x', Z1 + 6.5, -3.5, 3.5, H, { color: BRICK, cap: 3 });
+  b.cylinder([0, 0.5, STAR_Z], 0.7, 1, COLORS.stoneLight, undefined, 8);
+  deco(b, new CylinderGeometry(0.85, 0.85, 0.12, 8), [0, 1.06, STAR_Z], '#c99a3e');
+  for (const x of [-2.98, 2.98]) wallTorch(b, flames, [x, 2.6, Z1 + 1.6], x < 0 ? Math.PI / 2 : -Math.PI / 2);
+}
+

@@ -389,15 +389,18 @@ test('the Bramble Heart: briars too green to burn until both braziers dry them; 
   expect(await tryRing()).toBeNull();
   await burn(page, [2, 0, 90], [5, 1.3, 91.5], 1.5);
   expect(await tryRing()).toBe('cindersnap');
+  // The old brazier on the pedestal opens the way on to the Hothouse (which has its own test).
+  expect(await burn(page, [0, 0, 91.2], [0, 1.6, 95], 1)).toBe('cindersnap');
+  expect(await page.evaluate(() => window.__tw.signal('g-heart'))).toBe(true);
   const r = await page.evaluate(async () => {
     const tw = window.__tw;
-    tw.teleport(0, 0, 94.4, 0);
+    tw.teleport(0, 0, 140.6, 0);
     tw.advance(1);
     await tw.idle();
     tw.advance(0.5);
     const g = tw.game as unknown as G;
     const done = g.state.lessons.has('cindersnap');
-    tw.teleport(0, 0, 99.3, 0);
+    tw.teleport(0, 0, 143.4, 0);
     tw.advance(0.2);
     tw.interact();
     await tw.idle();

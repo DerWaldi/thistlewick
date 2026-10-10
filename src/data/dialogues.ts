@@ -734,6 +734,14 @@ export const DIALOGUES: Record<string, Script> = {
   glasshouseHeart: async ({ say }) => {
     await say([
       { speaker: 'ashcombe', text: "(distant) The Bramble Heart. Those briars are green and wet through; they won't catch. Light both braziers and let the heat dry them out first." },
+      { speaker: 'ashcombe', text: '(distant) Then light the old brazier in the middle. It opens the way to my Hothouse.' },
+    ]);
+  },
+
+  glasshouseHothouse: async ({ say }) => {
+    await say([
+      { speaker: 'ashcombe', text: "(distant) My Hothouse! Pillars across the pool. Burn what grows on them from the one before: briars hurt, and Snapweeds bite you straight into the water." },
+      { speaker: 'ashcombe', text: '(distant) Two Sootlings have moved into my planters. Turf them out, both of them, and my gate will open. Their own bombs work wonders.' },
     ]);
   },
 
