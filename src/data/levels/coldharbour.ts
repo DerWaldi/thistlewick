@@ -93,7 +93,6 @@ function build(b: LevelBuilder): void {
   b.box([8.25, 1.8, 9.5], [3.5, 3.6, 7], { color: COLORS.stone, info: { noGrab: true } });
   deco(b, new BoxGeometry(3.6, 0.1, 7.1), [8.25, 3.62, 9.5], COLORS.stoneLight);
   deco(b, new CylinderGeometry(0.22, 0.28, 0.8, 6), [6.6, 3.4, 9.5], COLORS.stoneDark, [0, 0, Math.PI / 2]);
-  deco(b, new ConeGeometry(0.3, 0.5, 5), [6.95, 3.65, 9.5], COLORS.stoneDark, [0, 0, -Math.PI / 2]);
   b.add(
     { type: 'waterfall', pos: [6.5, WATER, 9.5], yaw: -Math.PI / 2, width: 1.8, height: 3.6 - WATER, pillar: 2.7, depth: 1.2 },
     { type: 'plate', id: 'cp2', pos: [8.4, 3.6, 9.5], latch: true },

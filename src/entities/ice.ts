@@ -215,10 +215,12 @@ export class Waterfall implements Entity, SpellTarget {
     this.sheet.position.copy(this.base).addScaledVector(fwd, 0.12).add(new Vector3(0, H / 2, 0));
     this.sheet.quaternion.copy(q);
     ctx.scene.add(this.sheet);
-    // Frozen: an icy coat up the face and a pillar at the foot.
-    const mat = iceMaterial();
-    const coat = new Mesh(new BoxGeometry(W, H, 0.3), mat);
-    coat.position.set(0, H / 2, 0.15);
+    // Frozen: an icy coat up the face and a pillar at the foot. Opaque (see-through ice sorts
+    // badly against the cliff), set a hair off the face and just under the lip so nothing
+    // shares a surface with the rock.
+    const mat = new MeshStandardMaterial({ color: '#d2f2ff', roughness: 0.2, metalness: 0.05, flatShading: true, emissive: new Color('#5aaed0'), emissiveIntensity: 0.55 });
+    const coat = new Mesh(new BoxGeometry(W - 0.04, H - 0.06, 0.25), mat);
+    coat.position.set(0, (H - 0.06) / 2, 0.15);
     const pillar = new Mesh(new BoxGeometry(W, P, D).toNonIndexed(), mat);
     pillar.position.set(0, P / 2, D / 2);
     this.frozenGroup.add(coat, pillar);
@@ -309,7 +311,8 @@ export class Waterfall implements Entity, SpellTarget {
     }
     const warn = Number.isFinite(this.frozenFor) && this.frozenFor < THAW_WARN;
     const mat = (this.frozenGroup.children[0] as Mesh).material as MeshStandardMaterial;
-    mat.opacity = warn ? 0.55 + Math.abs(Math.sin(this.time * 14)) * 0.25 : 0.86;
+    // Creaking: it flickers darker before it lets go.
+    mat.color.set(warn && Math.sin(this.time * 14) > 0 ? '#8fc4d8' : '#d2f2ff');
   }
 }
 
