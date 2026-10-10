@@ -25,6 +25,34 @@ export const CLOCKTOWER: LevelDef = {
 };
 
 const STONE = '#9a8a7a';
+
+/**
+ * A flight of stone steps on a sloping stringer: each step block reaches only half a metre
+ * below its tread, so the underside follows the slope instead of hanging as a solid wedge.
+ * Collision is one smooth invisible ramp, like `b.stairs`.
+ */
+function flight(b: LevelBuilder, start: V3, yaw: number, steps: number, rise: number, run: number, width: number): void {
+  const fx = Math.sin(yaw);
+  const fz = Math.cos(yaw);
+  const at = (d: number, y: number): V3 => [start[0] + fx * d, start[1] + y, start[2] + fz * d];
+  const depth = 0.55;
+  for (let i = 0; i < steps; i++) {
+    const top = rise * (i + 1);
+    b.box(at(run * i + run / 2, top - (rise + depth) / 2), [width, rise + depth, run], {
+      color: i % 2 ? COLORS.stoneLight : '#c4ae90',
+      rot: [0, yaw, 0],
+      noCollide: true,
+    });
+  }
+  const height = rise * steps;
+  const length = run * steps;
+  const angle = Math.atan2(height, length);
+  // The stringer's underside: a plank along the slope, just under the step blocks.
+  deco(b, new BoxGeometry(width, 0.15, Math.hypot(length, height)), at(length / 2, height / 2 - depth - rise - 0.08), '#8a7a6a', [-angle, yaw, 0]);
+  const flat = run * (steps - 0.5);
+  b.ramp(at(-run / 2, 0), Math.hypot(flat, height), width, (Math.atan2(height, flat) * 180) / Math.PI, yaw, COLORS.stoneLight, true);
+  b.box(at(run * (steps - 0.5), height - 0.3), [width, 0.6, run], { rot: [0, yaw, 0], invisible: true });
+}
 const RISE = 3.6;
 
 function build(b: LevelBuilder): void {
@@ -38,16 +66,17 @@ function build(b: LevelBuilder): void {
   slab(b, -8.5, 8.5, -0.5, 16.5, H + 0.5, 0.5, COLORS.woodDark, 'planks');
 
   // ---------------------------------------------------------------- the climb
+  // Flights hug the outer wall (3.5 m wide); their inner edges run 0.5 m outside the shaft.
   const flights: { start: V3; yaw: number }[] = [
-    { start: [6, 0, 4], yaw: 0 },
-    { start: [4, RISE, 14], yaw: -Math.PI / 2 },
-    { start: [-6, 2 * RISE, 12], yaw: Math.PI },
-    { start: [-4, 3 * RISE, 2], yaw: Math.PI / 2 },
-    { start: [6, 4 * RISE, 4], yaw: 0 },
-    { start: [4, 5 * RISE, 14], yaw: -Math.PI / 2 },
-    { start: [-6, 6 * RISE, 12], yaw: Math.PI },
+    { start: [6.25, 0, 4], yaw: 0 },
+    { start: [4, RISE, 14.25], yaw: -Math.PI / 2 },
+    { start: [-6.25, 2 * RISE, 12], yaw: Math.PI },
+    { start: [-4, 3 * RISE, 1.75], yaw: Math.PI / 2 },
+    { start: [6.25, 4 * RISE, 4], yaw: 0 },
+    { start: [4, 5 * RISE, 14.25], yaw: -Math.PI / 2 },
+    { start: [-6.25, 6 * RISE, 12], yaw: Math.PI },
   ];
-  for (const f of flights) b.stairs(f.start, f.yaw, 12, RISE / 12, 8 / 12, 3, COLORS.stoneLight);
+  for (const f of flights) flight(b, f.start, f.yaw, 12, RISE / 12, 8 / 12, 3.5);
   const landings: [number, number, number, number, number][] = [
     [4, 8, 12, 16, RISE],
     [-8, -4, 12, 16, 2 * RISE],
@@ -57,7 +86,17 @@ function build(b: LevelBuilder): void {
     [-8, -4, 12, 16, 6 * RISE],
     [-8, -4, 0, 4, 7 * RISE],
   ];
-  for (const [x0, x1, z0, z1, y] of landings) slab(b, x0, x1, z0, z1, y, 0.4, '#7a6a5a', 'planks');
+  for (const [x0, x1, z0, z1, y] of landings) {
+    slab(b, x0, x1, z0, z1, y, 0.5, '#7a6a5a', 'planks');
+    // Stone corbels along both walls the landing rests on.
+    const wx = x0 < 0 ? x0 : x1;
+    const wz = z0 < 8 ? z0 : z1;
+    for (let k = 0; k < 3; k++) {
+      const u = 0.6 + k * 1.4;
+      deco(b, new BoxGeometry(0.45, 0.6, 0.45), [wx - Math.sign(wx) * 0.22, y - 0.8, z0 + u + (wz === z0 ? 0.6 : 0)], STONE);
+      deco(b, new BoxGeometry(0.45, 0.6, 0.45), [x0 + u + (wx === x0 ? 0.6 : 0), y - 0.8, wz - Math.sign(wz - 8) * 0.22], STONE);
+    }
+  }
   // Nobody falls down the shaft: an invisible screen round it from just above head height.
   for (const [c, s] of [
     [[4, 18, 8], [0.1, 28, 8]],
@@ -67,16 +106,17 @@ function build(b: LevelBuilder): void {
   ] as [V3, V3][]) {
     b.box(c, s, { invisible: true, info: { noGrab: true, cameraIgnore: true } });
   }
-  // Rails along the shaft edges of every landing and flight (visual).
+  // Handrails along every flight's inner edge (visual).
   for (let lap = 0; lap < 2; lap++) {
     const y0 = lap * 4 * RISE;
     for (const [from, to] of [
-      [[4, y0 + 1, 4], [4, y0 + RISE + 1, 12]],
-      [[4, y0 + RISE + 1, 12], [-4, y0 + 2 * RISE + 1, 12]],
-      [[-4, y0 + 2 * RISE + 1, 12], [-4, y0 + 3 * RISE + 1, 4]],
-      [[-4, y0 + 3 * RISE + 1, 4], [4, y0 + 4 * RISE + 1, 4]],
+      [[4.55, y0 + 1, 4], [4.55, y0 + RISE + 1, 12]],
+      [[4, y0 + RISE + 1, 12.45], [-4, y0 + 2 * RISE + 1, 12.45]],
+      [[-4.55, y0 + 2 * RISE + 1, 12], [-4.55, y0 + 3 * RISE + 1, 4]],
+      [[-4, y0 + 3 * RISE + 1, 3.55], [4, y0 + 4 * RISE + 1, 3.55]],
     ] as [V3, V3][]) {
-      if (lap === 1 && from[0] === -4 && from[2] === 4) continue;
+      // The second lap ends at the top landing: no fourth flight.
+      if (lap === 1 && from[2] === 3.55) continue;
       const dx = to[0] - from[0];
       const dy = to[1] - from[1];
       const dz = to[2] - from[2];
