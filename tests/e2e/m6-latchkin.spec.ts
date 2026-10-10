@@ -317,7 +317,8 @@ test('the Great Vault: four riding padlocks open the door, and the Star ends the
     tw.advance(1.2);
     tw.input(null);
     const through = tw.state().feet.z > 93;
-    tw.teleport(0, 0, 116, 0);
+    // (The Strongroom and the Counting House have their own tests.)
+    tw.teleport(0, 0, 156, 0);
     tw.input({ y: 1 });
     tw.advance(1.2);
     tw.input(null);
@@ -328,7 +329,7 @@ test('the Great Vault: four riding padlocks open the door, and the Star ends the
   expect(r.allOpen).toBe(true);
   expect(r.hits.length).toBeLessThanOrEqual(6);
   expect(r.through).toBe(true);
-  expect(r.z).toBeGreaterThan(116.5);
+  expect(r.z).toBeGreaterThan(156.5);
   expect(r.lessons).toContain('latchkin');
   await shot(page, 'm6-star-chamber', browserName);
 });

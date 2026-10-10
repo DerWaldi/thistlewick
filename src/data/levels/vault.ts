@@ -40,7 +40,15 @@ import {
  *   Strongroom     x -4..4,   z 93..115 behind the vault door: three pendulums swing across the
  *                                       corridor, and two gates whose padlocks relock after 6 s;
  *                                       unlock, then time your dash between the swings.
- *                                       Star chamber beyond (z 115..121)
+ *   Passage        x -3..3,   z 115..121.5 (the old Star chamber), treasure
+ *   Counting House x -9..9,   z 121.5..155  the Star gate wants three padlocks open at once
+ *                                       (they relock after 5.5 s): one on the north face of the
+ *                                       counting table, one high on the east wall behind a
+ *                                       grille, one riding a wheel over the gate. A west
+ *                                       walkway (top 3.2, stair at its south end) is the best
+ *                                       view. A Sootling on the walkway, a Hexling overhead,
+ *                                       two Snapcaskets on the floor
+ *   Star Chamber   x -3..3,   z 155..161.5
  */
 export const VAULT: LevelDef = {
   id: 'vault',
@@ -54,6 +62,8 @@ export const VAULT: LevelDef = {
     { id: 'great', name: 'The Great Vault', min: [-9.5, -3, 74.5], max: [9.5, 12, 93] },
     { id: 'strongroom', name: 'The Strongroom', min: [-4.5, -3, 93], max: [4.5, 12, 115] },
     { id: 'great', name: 'The Great Vault', min: [-3.5, -3, 115], max: [3.5, 12, 121.5] },
+    { id: 'counting', name: 'The Counting House', min: [-9.5, -3, 121.5], max: [9.5, 14, 155] },
+    { id: 'star', name: 'The Star Chamber', min: [-3.5, -3, 155], max: [3.5, 8, 161.5] },
   ],
   intro: { script: 'vaultIntro', unlessFlag: 'vault-entered' },
   music: 'dungeon',
@@ -61,6 +71,8 @@ export const VAULT: LevelDef = {
 };
 
 const STONE = '#8a8090';
+/** The Star Chamber, after the Counting House. */
+const STAR_Z = 158.5;
 const FLOOR = '#6e6670';
 const GOLD = '#e8c25a';
 const gateHole = (x: number) => ({ from: x - 2.1, to: x + 2.1, top: 3.6 });
@@ -300,24 +312,23 @@ function build(b: LevelBuilder): void {
   webs(b, -9, 9, 75, 92, 9.9, 1.6);
   b.lantern([0, 8.5, 82], 10, 18);
 
-  // Star chamber.
+  // The old Star chamber: now a treasure passage on to the Counting House.
   wall(b, 'z', -3.5, 115, 121.5, 6, { color: STONE });
   wall(b, 'z', 3.5, 115, 121.5, 6, { color: STONE });
-  wall(b, 'x', 121.5, -3.5, 3.5, 6, { color: STONE });
   slab(b, -3.5, 3.5, 115, 121.5, 6.5, 0.5, COLORS.stoneDark);
-  b.cylinder([0, 0.5, 118], 0.7, 1, COLORS.stoneLight, undefined, 8);
-  deco(b, new CylinderGeometry(0.85, 0.85, 0.12, 8), [0, 1.06, 118], '#c99a3e');
   treasure(b, -2.3, 119.8, 12, 13);
   treasure(b, 2.3, 119.6, 12, 17);
   bookStack(b, [2.4, 0, 116.2], 5, 21);
+  // The Star and the way up moved on to the new chamber (replaced in place: ids stay put).
   b.add(
-    { type: 'star', id: 'vault-star', pos: [0, 1.9, 118], script: 'vaultComplete' },
-    { type: 'door', pos: [0, 0, 120.95], yaw: Math.PI, width: 2.4, height: 3.4, to: { level: 'quince', spawn: 'fromVault' }, label: 'Up to class' },
+    { type: 'star', id: 'vault-star', pos: [0, 1.9, STAR_Z], script: 'vaultComplete' },
+    { type: 'door', pos: [0, 0, STAR_Z + 2.95], yaw: Math.PI, width: 2.4, height: 3.4, to: { level: 'quince', spawn: 'fromVault' }, label: 'Up to class' },
   );
   wallTorch(b, flames, [-2.98, 2.6, 117], Math.PI / 2);
   wallTorch(b, flames, [2.98, 2.6, 117], -Math.PI / 2);
 
   strongroom(b, flames);
+  countingHouse(b, flames);
 
   flames.finish(b, '#ffb060');
   b.finish();
@@ -358,3 +369,65 @@ function strongroom(b: LevelBuilder, flames: Glow): void {
   treasure(b, -3.2, 113.6, 10, 31);
   b.lantern([0, 8.5, 103], 8, 14);
 }
+
+/**
+ * The Counting House (z 121.5..155): three padlocks that must be open together, under fire.
+ * Then the Star Chamber. Built last so the earlier rooms' sweets keep their ids.
+ */
+function countingHouse(b: LevelBuilder, flames: Glow): void {
+  const Z0 = 121.5;
+  const Z1 = 155;
+  b.floor(-9.5, 9.5, Z0, Z1 + 6.5, { color: FLOOR });
+  wall(b, 'x', Z0, -9.5, 9.5, 11, { color: STONE, holes: [{ from: -1.6, to: 1.6, top: 3.6 }] });
+  wall(b, 'z', -9.5, Z0, Z1, 11, { color: STONE });
+  wall(b, 'z', 9.5, Z0, Z1, 11, { color: STONE, holes: [{ from: 130.6, to: 133.4, bottom: 4.6, top: 7.4 }] });
+  wall(b, 'x', Z1, -9.5, 9.5, 11, { color: STONE, holes: [gateHole(0)] });
+  slab(b, -9.5, 9.5, Z0, Z1, 11.5, 0.5, COLORS.stoneDark);
+  // The west walkway (3.2) and its stair.
+  b.box([-7.25, 1.6, 140], [3.5, 3.2, 24], { color: COLORS.stoneLight, info: { noGrab: true } });
+  b.stairs([-7.25, 0, 124], 0, 8, 0.4, 0.5, 3.5, COLORS.stoneLight);
+  for (let z = 132; z < 152; z += 2) deco(b, new BoxGeometry(0.08, 1, 0.08), [-5.55, 3.7, z], COLORS.woodDark);
+  deco(b, new BoxGeometry(0.06, 0.08, 20), [-5.55, 4.2, 141.5], COLORS.woodDark);
+  // The counting table: a broad desk of a pillar, padlock on its north face.
+  b.box([0, 1.2, 141], [4, 2.4, 10], { color: '#6a4a32', pattern: 'planks', info: { noGrab: true } });
+  treasure(b, -1, 139, 10, 41);
+  treasure(b, 1, 143, 10, 43);
+  // The east alcove (high), behind a grille: P2 sits at its back.
+  b.box([10.6, 4.4, 132], [1.6, 0.4, 2.8], { color: STONE });
+  b.box([11.2, 6, 132], [0.4, 3.4, 2.8], { color: STONE });
+  for (let z = 130.9; z < 133.2; z += 0.35) deco(b, new BoxGeometry(0.06, 2.8, 0.06), [9.55, 6, z], '#2a2230');
+  b.box([9.55, 6, 132], [0.1, 2.8, 2.8], { invisible: true, info: { seeThrough: true, noGrab: true, cameraIgnore: true } });
+  b.add(
+    { type: 'checkpoint', pos: [3.5, 0, 123], yaw: -Math.PI / 2, zone: { min: [-9, -1, Z0], max: [9, 4, 125] } },
+    { type: 'trigger', flag: 'vault-hint-counting', script: 'vaultCounting', min: [-9, -1, Z0], max: [9, 4, 124.5] },
+    { type: 'padlock', id: 'v-c1', pos: [0, 1.6, 146.06], yaw: 0, relock: 5.5 },
+    { type: 'padlock', id: 'v-c2', pos: [10.9, 6, 132], yaw: -Math.PI / 2, relock: 5.5 },
+    { type: 'padlock', id: 'v-c3', pos: [0, 0, 0], yaw: Math.PI, relock: 5.5, orbit: { center: [0, 6.2, Z1 - 0.55], radius: 1.7, speed: 0.9, phase: 0 } },
+    { type: 'gate', pos: [0, 0, Z1], yaw: 0, width: 3, height: 3, when: ['v-c1', 'v-c2', 'v-c3'] },
+    { type: 'sootling', pos: [-7.4, 3.2, 150.5], yaw: Math.PI / 2, wander: 0.8, range: 20, interval: 3.6 },
+    { type: 'hexling', pos: [2, 0, 136], height: 5.5, radius: 4, interval: 3.4 },
+    { type: 'snapcasket', id: 'v-cs1', pos: [5, 0, 128], wander: 3 },
+    { type: 'snapcasket', id: 'v-cs2', pos: [5, 0, 150], wander: 3 },
+    { type: 'sweetLine', kind: 'fizzwort', from: [-7.25, 3.8, 133], to: [-7.25, 3.8, 147], count: 5 },
+    { type: 'sweet', kind: 'humbug', pos: [-7.8, 3.8, 151.5] },
+  );
+  for (const z of [124, 140, 153]) {
+    wallTorch(b, flames, [-8.98, 3, z], Math.PI / 2);
+    wallTorch(b, flames, [8.98, 3, z], -Math.PI / 2);
+  }
+  deco(b, new TorusGeometry(1.7, 0.08, 6, 24), [0, 6.2, Z1 - 0.52], GOLD);
+  webs(b, -9, 9, Z0 + 0.5, Z1 - 0.5, 10.9, 1.4);
+  b.lantern([0, 9.5, 138], 9, 18);
+  // The Star Chamber.
+  wall(b, 'z', -3.5, Z1, Z1 + 6.5, 6, { color: STONE });
+  wall(b, 'z', 3.5, Z1, Z1 + 6.5, 6, { color: STONE });
+  wall(b, 'x', Z1 + 6.5, -3.5, 3.5, 6, { color: STONE });
+  slab(b, -3.5, 3.5, Z1, Z1 + 6.5, 6.5, 0.5, COLORS.stoneDark);
+  b.cylinder([0, 0.5, STAR_Z], 0.7, 1, COLORS.stoneLight, undefined, 8);
+  deco(b, new CylinderGeometry(0.85, 0.85, 0.12, 8), [0, 1.06, STAR_Z], '#c99a3e');
+  treasure(b, -2.3, STAR_Z + 1.6, 12, 51);
+  treasure(b, 2.3, STAR_Z + 1.4, 12, 57);
+  wallTorch(b, flames, [-2.98, 2.6, Z1 + 1.5], Math.PI / 2);
+  wallTorch(b, flames, [2.98, 2.6, Z1 + 1.5], -Math.PI / 2);
+}
+

@@ -147,3 +147,60 @@ test("Thwackwort Trial, the Sootling's Leap: pillar to pillar, the riding slab, 
   await page.evaluate(() => window.__tw.advance(0.5));
   expect(await page.evaluate(() => window.__tw.signal('t-soot'))).toBe(true);
 });
+
+test('Latchkin Vaults, the Counting House: three padlocks open at once from the walkway, under fire', async ({ page, browserName }) => {
+  await sandbox(page, 'vault', ['vault-entered', 'vault-hint-counting']);
+  await calm(page, ['Hexling', 'Sootling', 'Snapcasket']);
+  // Up the stair onto the walkway.
+  const up = await page.evaluate(async () => {
+    const tw = window.__tw;
+    tw.teleport(-7.25, 0, 123, 0);
+    tw.setCamera(0, 0.2);
+    tw.input({ x: 0, y: 1 });
+    tw.advance(1.6);
+    tw.input(null);
+    tw.advance(0.3);
+    return tw.state().feet;
+  });
+  expect(up.y).toBeGreaterThan(3.1);
+  // From the walkway's north end: the alcove lock across the room, then down for the other two.
+  const r = await page.evaluate(async () => {
+    const tw = window.__tw;
+    const shoot = (from: [number, number, number], at: [number, number, number]) => {
+      tw.teleport(...from, 0);
+      tw.advance(0.15);
+      tw.aimAt(...at);
+      tw.advance(0.05);
+      const t = tw.state().target;
+      tw.cast(0);
+      tw.advance(0.35);
+      return t;
+    };
+    type Lock = { constructor: { name: string }; spec?: { id?: string }; pos?: { x: number; y: number; z: number } };
+    const orbit = (tw.game as unknown as { world: { entities: Lock[] } }).world.entities.find((e) => e.spec?.id === 'v-c3')!;
+    const t2 = shoot([-6.5, 3.2, 138], [10.9, 6, 132]);
+    const t1 = shoot([1.5, 0, 149], [0, 1.6, 146.06]);
+    const o = orbit.pos!;
+    const t3 = shoot([0, 0, 149.5], [o.x, o.y, o.z]);
+    tw.advance(0.4);
+    const open = ['v-c1', 'v-c2', 'v-c3'].map((id) => tw.signal(id));
+    tw.teleport(0, 0, 153, 0);
+    tw.input({ x: 0, y: 1 });
+    tw.advance(1);
+    tw.input(null);
+    return { t: [t1, t2, t3], open, z: tw.state().feet.z };
+  });
+  expect(r.t).toEqual(['latchkin', 'latchkin', 'latchkin']);
+  expect(r.open).toEqual([true, true, true]);
+  expect(r.z).toBeGreaterThan(155.5);
+  // They snap shut again after 5.5 s.
+  await page.evaluate(() => window.__tw.advance(6));
+  expect(await page.evaluate(() => window.__tw.signal('v-c1'))).toBe(false);
+  await page.evaluate(() => {
+    const tw = window.__tw;
+    tw.teleport(4, 0, 125, -0.3);
+    tw.setCamera(-0.3, 0.3);
+    tw.advance(0.3);
+  });
+  await shot(page, 'm18-counting', browserName);
+});

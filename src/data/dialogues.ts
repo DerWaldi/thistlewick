@@ -363,6 +363,13 @@ export const DIALOGUES: Record<string, Script> = {
     ]);
   },
 
+  vaultCounting: async ({ say }) => {
+    await say([
+      { speaker: 'quince', text: '(from a speaking-tube) The Counting House. Three locks on my last gate, and they will not wait for you: five and a half seconds, then they snap shut again.' },
+      { speaker: 'quince', text: 'One on the table, one up behind the grille, one going round and round. Find where you can see them, then be quick. And mind the help. They are not helpful.' },
+    ]);
+  },
+
   vaultGreat: async ({ say }) => {
     await say([
       { speaker: 'quince', text: "(echoing) The Great Vault. Four locks ride round the wheel. Catch each one as it comes past. And mind the furniture." },
