@@ -433,7 +433,13 @@ export class Dropper implements Entity {
     this.pos = new Vector3(...spec.pos);
     this.prev = this.pos.clone();
     const mat = worldMaterial();
-    const box = new Mesh(paint(flat(new BoxGeometry(w, h, d)), COLORS.wood, true, 'planks'), mat);
+    // Plain wood with modelled seams: a world-space plank pattern would slide as it falls.
+    const box = new Mesh(paint(flat(new BoxGeometry(w, h, d)), COLORS.wood, true), mat);
+    for (let y = -h / 2 + 0.3; y < h / 2 - 0.05; y += 0.3) {
+      const seam = new Mesh(paint(flat(new BoxGeometry(w + 0.02, 0.025, d + 0.02)), COLORS.woodDark, true), mat);
+      seam.position.y = y;
+      this.group.add(seam);
+    }
     box.castShadow = true;
     const bands = new Mesh(paint(flat(new BoxGeometry(w + 0.04, 0.1, d + 0.04)), COLORS.woodDark, true), mat);
     bands.position.y = h / 2 - 0.15;

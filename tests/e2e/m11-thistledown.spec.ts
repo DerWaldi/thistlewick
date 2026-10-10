@@ -376,29 +376,23 @@ test('the Bell Chamber: crate to the gallery, call the basket, ride past the cla
   expect(e.feet.y).toBeGreaterThan(15.9);
   expect((await walk(page, [-4.5, 16.05, 69.3], 0, 0.6)).z).toBeGreaterThan(70);
   expect(await castAt(page, [-5, 16, 72.5], [3.75, 20.3, 69.45], 3)).toBe('thistledown');
-  // Ride up between swings of the clapper.
+  // Ride up just as the clapper swings away to the far side, the way a player times it.
   const up = await page.evaluate(async () => {
     const tw = window.__tw;
-    for (let attempt = 0; attempt < 12; attempt++) {
-      tw.teleport(3, 16.3, 68.8, Math.PI);
-      tw.advance(0.4);
-      await tw.idle();
-      const before = tw.state().stamina;
-      tw.aimAt(3.75, 17.3, 69.45);
-      tw.advance(0.05);
-      tw.cast(0);
-      tw.advance(2.4);
-      await tw.idle();
-      const f = tw.state().feet;
-      if (f.y > 18.9 && tw.state().stamina === before) return true;
-      // Not this time: wait for it to come back down.
-      tw.aimAt(3.75, 20.3, 69.45);
-      tw.advance(0.05);
-      tw.cast(0);
-      tw.advance(2.5 + attempt * 0.23);
-      await tw.idle();
-    }
-    return false;
+    type P = { constructor: { name: string }; spec: { pos: number[]; period: number }; time: number };
+    const g = tw.game as unknown as { world: { entities: P[] } };
+    const clapper = g.world.entities.find((e) => e.constructor.name === 'Pendulum' && e.spec.pos[2] === 68.8)!;
+    tw.teleport(3, 16.3, 68.8, Math.PI);
+    tw.advance(0.4);
+    await tw.idle();
+    const before = tw.state().stamina;
+    for (let i = 0; i < 600 && Math.sin((clapper.time / clapper.spec.period) * Math.PI * 2) > -0.97; i++) tw.advance(1 / 60);
+    tw.aimAt(3.75, 17.3, 69.45);
+    tw.advance(0.05);
+    tw.cast(0);
+    tw.advance(2.4);
+    await tw.idle();
+    return tw.state().feet.y > 18.9 && tw.state().stamina === before;
   });
   expect(up).toBe(true);
   const r = await page.evaluate(async () => {

@@ -281,13 +281,14 @@ export class Chest implements Entity, SpellTarget {
       this.group.add(bands);
       for (const side of [-1, 1]) part(new BoxGeometry(0.08 * s, 0.62 * s, 0.88 * s), '#3a3340', side * 0.42 * s, 0.31 * s, 0);
       this.lid.position.set(0, 0.6 * s, -0.42 * s);
-      const lidMesh = new Mesh(paint(new CylinderGeometry(0.42 * s, 0.42 * s, 1.2 * s, 8, 1, false, 0, Math.PI).toNonIndexed(), '#8a5a36', true, 'planks'), mat);
+      // (No world-space plank pattern on parts that move: it would slide as they swing.)
+      const lidMesh = new Mesh(paint(new CylinderGeometry(0.42 * s, 0.42 * s, 1.2 * s, 8, 1, false, 0, Math.PI).toNonIndexed(), '#8a5a36', true), mat);
       lidMesh.rotation.z = Math.PI / 2;
       lidMesh.position.z = 0.42 * s;
       lidMesh.castShadow = true;
       // The half-cylinder is open underneath; this board closes it so an opened lid
       // (seen from the front, i.e. from below) doesn't vanish.
-      const lidBoard = new Mesh(paint(new BoxGeometry(1.18 * s, 0.04, 0.82 * s).toNonIndexed(), '#5e3b22', true, 'planks'), mat);
+      const lidBoard = new Mesh(paint(new BoxGeometry(1.18 * s, 0.04, 0.82 * s).toNonIndexed(), '#5e3b22', true), mat);
       lidBoard.position.set(0, 0.02, 0.42 * s);
       this.lid.add(lidMesh, lidBoard);
       this.group.add(this.lid);
@@ -397,7 +398,7 @@ export class Drawbridge implements Entity {
     const planks = new Group();
     const n = Math.round(L / 0.5);
     for (let i = 0; i < n; i++) {
-      const p = new Mesh(paint(new BoxGeometry(W, 0.2, L / n - 0.03).toNonIndexed(), i % 2 ? COLORS.wood : '#7a4e2e', true, 'planks'), mat);
+      const p = new Mesh(paint(new BoxGeometry(W, 0.2, L / n - 0.03).toNonIndexed(), i % 2 ? COLORS.wood : '#7a4e2e', true), mat);
       p.position.set(0, -0.1, (i + 0.5) * (L / n));
       p.castShadow = true;
       planks.add(p);

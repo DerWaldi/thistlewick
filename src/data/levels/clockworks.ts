@@ -102,7 +102,7 @@ function build(b: LevelBuilder): void {
   // L1, the ledge at 6 (north half); L2, the gallery at 12 (south).
   b.box([0, 3, 37], [13, 6, 6], { color: STONE, info: { noGrab: true } });
   b.box([0, 11.8, 28.8], [13, 0.4, 5.6], { color: '#7a6a5a', info: { noGrab: true } });
-  wall(b, 'x', 40.5, -6.5, 6.5, 24, { color: STONE, holes: [{ from: -6, to: -2.6, bottom: 12, top: 15.4 }] });
+  wall(b, 'x', 40.5, -6.5, 6.5, 24, { color: STONE, holes: [{ from: -6, to: -2.6, bottom: 11.6, top: 15.4 }] });
   b.add(
     { type: 'trigger', flag: 'clockworks-hint-shaft', script: 'clockworksShaft', min: [-6, -1, 26], max: [6, 4, 30] },
     { type: 'skyLift', style: 'platform', from: [0, 0, 32.8], to: [0, 6, 32.8], size: [2.4, 2.4], speed: 2.4 },
@@ -110,12 +110,13 @@ function build(b: LevelBuilder): void {
     { type: 'checkpoint', pos: [-4.5, 6, 38.5], yaw: Math.PI / 2, zone: { min: [-6, 5, 34], max: [6, 9, 40] } },
     { type: 'trigger', flag: 'clockworks-hint-call', script: 'clockworksCall', min: [-6, 5, 34], max: [6, 9, 40], delay: 20, unlessSignals: ['cwB'] },
     { type: 'skyLift', style: 'platform', from: [-4, 12, 32.8], to: [-4, 12, 38.8], size: [2.4, 2.4], returnAfter: 3, speed: 3 },
-    { type: 'pendulum', pos: [-4, 22, 36], length: 9, swing: 0.5, period: 3.2, phase: 0.2, bob: 0.8 },
+    // Pivot off-centre so its swing (x -5.2..2.6) crosses the ferry at x -4 but misses the west wall.
+    { type: 'pendulum', pos: [-1.3, 22, 36], length: 9, swing: 0.45, period: 3.2, phase: 0.2, bob: 0.8 },
     { type: 'checkpoint', pos: [4.5, 12, 28], yaw: -Math.PI / 2, zone: { min: [-6, 11, 26], max: [6, 15, 31.6] } },
     { type: 'sweetLine', kind: 'fizzwort', from: [-5, 6.6, 37], to: [3, 6.6, 37], count: 4 },
     { type: 'sweet', kind: 'bramble', pos: [5.5, 12.6, 27] },
   );
-  deco(b, new BoxGeometry(13, 0.3, 0.3), [0, 21.9, 36], IRON);
+  deco(b, new BoxGeometry(13, 0.3, 0.3), [0, 22.2, 36], IRON);
   // The exit landing beyond the north wall (y 12).
   b.box([-4.3, 11.8, 41.5], [3.4, 0.4, 3], { color: '#7a6a5a' });
   // The clock's weights, hanging the full height.
@@ -131,7 +132,7 @@ function build(b: LevelBuilder): void {
 
   // ================================================================ the great wheel (z 40..60)
   b.floor(-9, 6.5, 40.5, 60, { color: FLOOR });
-  wall(b, 'z', -6.5, 40, 60, 24, { color: STONE, holes: [{ from: 48.8, to: 51.2, bottom: 3.6, top: 6.4 }] });
+  wall(b, 'z', -6.5, 40, 60, 24, { color: STONE, holes: [{ from: 48.8, to: 51.2, bottom: 3.4, top: 6.4 }] });
   wall(b, 'z', 6.5, 40, 60, 24, { color: STONE });
   slab(b, -6.5, 6.5, 40, 60, 24.5, 0.5, COLORS.stoneDark);
   // The south ledge (from the shaft) and the north ledge (to the bell chamber), both at 12.
@@ -169,7 +170,7 @@ function build(b: LevelBuilder): void {
 
   // ================================================================ bell chamber (z 60..76, y 12)
   b.floor(-6.5, 6.5, 60, 76.5, { top: 12, color: FLOOR, thickness: 1 });
-  wall(b, 'x', 60, -6.5, 6.5, 24, { color: STONE, holes: [{ from: -6, to: 6, bottom: 12, top: 15.4 }] });
+  wall(b, 'x', 60, -6.5, 6.5, 24, { color: STONE, holes: [{ from: -6, to: 6, bottom: 11.6, top: 15.4 }] }); // the wall's top tucks under the floors
   wall(b, 'z', -6.5, 60, 76.5, 30, { color: STONE });
   wall(b, 'z', 6.5, 60, 76.5, 30, { color: STONE });
   wall(b, 'x', 76.5, -6.5, 6.5, 30, { color: STONE, holes: [{ from: -4.2, to: -1.8, bottom: 16, top: 19.4 }] });
@@ -186,7 +187,9 @@ function build(b: LevelBuilder): void {
     { type: 'skyLift', style: 'crate', from: [-4.5, 13.2, 69.3], to: [-4.5, 16, 69.3], size: [1.2, 1.2], post: [0.45, -0.45], speed: 1.6 },
     { type: 'skyLift', style: 'basket', id: 'cwF', from: [3, 16, 68.8], to: [3, 19, 68.8], size: [2, 1.8], startAt: 'to', speed: 3 },
     // The clapper only reaches the middle of the ride: wait in the basket, go just after it passes.
-    { type: 'pendulum', pos: [3, 29.4, 68.8], length: 11, swing: 0.45, period: 4, phase: 0.5, bob: 0.8 },
+    // At the basket (x 3) the bob passes at y 18.35: clear of a rider waiting at the bottom (~16.9)
+    // and at the top (~19.8) by a safe margin, but square in the middle of the ride.
+    { type: 'pendulum', pos: [1, 29.15, 68.8], length: 11, swing: 0.38, period: 4, phase: 0.5, bob: 0.8 },
     { type: 'star', id: 'clockworks-star', pos: [3, 20.6, 65.5], script: 'clockworksComplete' },
     { type: 'door', pos: [-3, 16, 75.95], yaw: Math.PI, width: 2.4, height: 3.4, to: { level: 'underbough', spawn: 'fromClockworks' }, label: 'Up to class' },
     { type: 'sweetLine', kind: 'fizzwort', from: [-4, 16.6, 73], to: [4, 16.6, 73], count: 4 },

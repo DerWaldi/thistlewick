@@ -78,7 +78,8 @@ function build(b: LevelBuilder): void {
   // A little bell on the dais.
   deco(b, new CylinderGeometry(0.1, 0.1, 1.6, 6), [8.6, 4.4, 8], COLORS.woodDark);
   deco(b, new ConeGeometry(0.5, 0.7, 10, 1, true), [8.6, 4.7, 8.6], '#c99a3e');
-  signboard(b, 'Stand on it, cast at\nits feather-stone!', [5.98, 2.2, 3.2], -Math.PI / 2);
+  // On the dais face (z 3..9), beside the crate's path (z 5.4..6.6), not hanging off its end.
+  signboard(b, 'Stand on it, cast at\nits feather-stone!', [5.98, 2, 4.3], -Math.PI / 2);
 
   // ---------------------------------------------------------------- U2: over the light-well
   b.add(

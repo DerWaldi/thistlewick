@@ -9,6 +9,19 @@ import { mergeChildren } from '../world/merge';
 import type { Entity, SpecOf, WorldContext } from './types';
 
 const FEATHER = new Color('#e8f0ff');
+
+/**
+ * Plank seams modelled onto a box. Moving things can't use the world-space 'planks' pattern
+ * (it's drawn from world position, so it would slide across them as they move).
+ */
+function plankSeams(w: number, h: number, d: number, gap = 0.3): BoxGeometry[] {
+  const out: BoxGeometry[] = [];
+  for (let y = -h / 2 + gap; y < h / 2 - 0.05; y += gap) {
+    out.push(new BoxGeometry(w + 0.02, 0.025, d + 0.02).translate(0, y, 0));
+  }
+  return out;
+}
+
 const flat = (geo: BufferGeometry) => (geo.index ? geo.toNonIndexed() : geo);
 
 /**
@@ -56,17 +69,18 @@ export class SkyLift implements Entity, SpellTarget {
     this.postOffset = new Vector3(px, this.halfH + 1.15, pz);
 
     const mat = worldMaterial();
-    const part = (geo: BufferGeometry, color: string, x: number, y: number, z: number, pattern?: 'planks') => {
-      const m = new Mesh(paint(flat(geo), color, true, pattern), mat);
+    const part = (geo: BufferGeometry, color: string, x: number, y: number, z: number) => {
+      const m = new Mesh(paint(flat(geo), color, true), mat);
       m.position.set(x, y, z);
       m.castShadow = true;
       this.group.add(m);
     };
     if (style === 'crate') {
-      part(new BoxGeometry(w, h, d), COLORS.wood, 0, 0, 0, 'planks');
+      part(new BoxGeometry(w, h, d), COLORS.wood, 0, 0, 0);
+      for (const g of plankSeams(w, h, d)) part(g, COLORS.woodDark, 0, 0, 0);
       for (const y of [-h / 2 + 0.1, h / 2 - 0.1]) part(new BoxGeometry(w + 0.03, 0.08, d + 0.03), COLORS.woodDark, 0, y, 0);
     } else if (style === 'basket') {
-      part(new BoxGeometry(w, h, d), '#b8925a', 0, 0, 0, 'planks');
+      part(new BoxGeometry(w, h, d), '#b8925a', 0, 0, 0);
       for (const [x, z, sx, sz] of [
         [0, d / 2 - 0.05, w, 0.1],
         [0, -d / 2 + 0.05, w, 0.1],
