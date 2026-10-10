@@ -111,7 +111,7 @@ test('the Clock Tower opens once Rimewhistle is passed; seven flights up to Airs
   const tryDoor = () =>
     page.evaluate(async () => {
       const tw = window.__tw;
-      tw.teleport(7, 0, 60.4, Math.PI);
+      tw.teleport(0, 0, 60.4, Math.PI);
       tw.advance(0.2);
       tw.interact();
       await tw.idle();

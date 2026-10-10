@@ -59,7 +59,7 @@ import { HOUSE_ORDER, HOUSES } from '../houses';
  *   Kitchen Orchard     x 17..27, z 38..53     behind the court's east arch (vines: Cindersnap)
  *   Well Yard           x 13..34, z 11..30     east of the hall; gate lock frozen (Cindersnap)
  *   The great doors (hall, south) open onto the Castle Grounds after Cindersnap; the Clock
- *   Tower door is in the court's north wall (x 7), open after Rimewhistle.
+ *   Tower door is in the middle of the court's north wall, open after Rimewhistle.
  *
  * Secrets: tapestry alcove (hall), sliding bookshelf (corridor, needs Thwackwort),
  * behind the clock (court, a climb), the gallery store-room (needs Latchkin).
@@ -78,7 +78,7 @@ export const HUB: LevelDef = {
     fromUndercroft: { pos: [31.9, -8.5, 2.5], yaw: -Math.PI / 2 },
     fromAshcombe: { pos: [-30.6, 0, 25], yaw: Math.PI / 2 },
     fromGrounds: { pos: [0, 0, 2], yaw: 0 },
-    fromClockTower: { pos: [7, 0, 60.4], yaw: Math.PI },
+    fromClockTower: { pos: [0, 0, 60.4], yaw: Math.PI },
   },
   areas: [
     { id: 'hall', name: 'The Lantern Hall', min: [-12, -2, 0], max: [12, 14, 30] },
@@ -356,7 +356,7 @@ function buildHub(b: LevelBuilder): void {
   // walkway (with a parapet) that leads behind the clock tower.
   wall(b, 'z', -16.5, 30, 64, 10.5, { cap: 8, holes: [{ from: 38.8, to: 41.2, top: 3.4 }] }); // Leaps & Bounds
   wall(b, 'z', 16.5, 30, 64, 10.5, { holes: [{ from: 44.5, to: 47.5, top: 3.5 }], cap: 8 });
-  wall(b, 'x', 63, -16, 16, W, { thick: 2, holes: [{ from: 5.9, to: 8.1, top: 3.4 }] }); // the Clock Tower
+  wall(b, 'x', 63, -16, 16, W, { thick: 2, holes: [{ from: -1.1, to: 1.1, top: 3.4 }] }); // the Clock Tower, under the clock
   b.box([0, W + 0.55, 63.85], [32, 1.1, 0.3], { color: COLORS.stoneLight });
   // Keep people on the walkway: an invisible screen above the parapet.
   b.box([0, W + 5, 63.85], [32, 8, 0.3], { invisible: true, info: { noGrab: true, cameraIgnore: true } });
@@ -378,8 +378,11 @@ function buildHub(b: LevelBuilder): void {
   slab(b, 12.5, 16, 33.5, 62, R, 0.5, COLORS.slate); // east
   slab(b, -12.5, 12.5, 58.5, 62, R, 0.5, COLORS.slate); // north
   for (let x = -12; x <= 12; x += 4) {
-    if (Math.abs(x) > 1) column(b, x, 33.5, 4.5);
-    column(b, x, 58.5, 4.5);
+    // The middles stay open: the way in from the hall (south) and to the Clock Tower (north).
+    if (Math.abs(x) > 1) {
+      column(b, x, 33.5, 4.5);
+      column(b, x, 58.5, 4.5);
+    }
   }
   for (let z = 37.5; z <= 54.5; z += 4) {
     column(b, -12.5, z, 4.5);
@@ -487,7 +490,8 @@ function buildHub(b: LevelBuilder): void {
     hollyhock(b, -11.4 + Math.sin(z) * 0.2, z, seed++);
     hollyhock(b, 11.4 + Math.cos(z) * 0.2, z, seed++);
   }
-  for (let x = -5; x <= 5; x += 1.4) hollyhock(b, x, 56.4, seed++);
+  // A gap in the row in front of the Clock Tower door.
+  for (let x = -5; x <= 5; x += 1.4) if (Math.abs(x) > 1.2) hollyhock(b, x, 56.4, seed++);
   tree(b, -8.5, 37.5);
   for (const [x, z, r] of [
     [8, 37.5, 0],
@@ -777,7 +781,7 @@ function buildHub(b: LevelBuilder): void {
   b.add(
     {
       type: 'door',
-      pos: [7, 0, 61.95],
+      pos: [0, 0, 61.95],
       yaw: Math.PI,
       width: 2.2,
       height: 3.2,
