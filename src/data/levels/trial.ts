@@ -19,7 +19,13 @@ import { banner, barrel, bush, cobweb, column, crate, deco, Glow, grass, hollyho
  *                                        M1 sweeps side to side, M2 rides back and forth, M3 bobs
  *                                        up and down; Gnarlings wait on the far landing, and a
  *                                        knock switch there opens the Star gate
- *   Star Chamber     x -3..3,  z 96..102 the Thistle Star and the way back up
+ *   Passage          x -3..3,  z 96..102.5 (the old Star Chamber)
+ *   Sootling's Leap  x -8..8,  z 102.5..138 a chasm (z 106..132): seven stone pillars zig-zag
+ *                                        across with a moving slab in the middle, a Hexling
+ *                                        circling overhead, a Sootling on the far ledge (top
+ *                                        2.2) lobbing bombs the whole way; banish him to open
+ *                                        the Star gate (kick a bomb back, or thwack him twice)
+ *   Star Chamber     x -3..3,  z 138..144.5 the Thistle Star and the way back up
  */
 export const TRIAL: LevelDef = {
   id: 'trial',
@@ -31,7 +37,9 @@ export const TRIAL: LevelDef = {
     { id: 'run', name: 'The Gauntlet of Gates', min: [-4.5, -3, 26], max: [4.5, 8, 48] },
     { id: 'garden', name: 'The Overgrown Garden', min: [-10.5, -3, 48], max: [10.5, 20, 72] },
     { id: 'moat', name: 'The Clockwork Moat', min: [-8.5, -25, 72], max: [8.5, 9, 96] },
-    { id: 'star', name: 'The Star Chamber', min: [-3.5, -3, 96], max: [3.5, 8, 102.5] },
+    { id: 'moat', name: 'The Clockwork Moat', min: [-3.5, -3, 96], max: [3.5, 8, 102.5] },
+    { id: 'leap', name: "The Sootling's Leap", min: [-8.5, -25, 102.5], max: [8.5, 10, 138] },
+    { id: 'star', name: 'The Star Chamber', min: [-3.5, -3, 138], max: [3.5, 8, 144.5] },
   ],
   intro: { script: 'trialIntro', unlessFlag: 'trial-entered' },
   music: 'dungeon',
@@ -39,6 +47,8 @@ export const TRIAL: LevelDef = {
 };
 
 const STONE = '#8f7e70';
+/** The Star Chamber, at the very end now (after the Sootling's Leap). */
+const STAR_Z = 141.2;
 const FLOOR = '#7d6a5e';
 /** Gate openings: the gate entity builds its own posts at ±(w/2 + 0.3). */
 const gateHole = (x: number) => ({ from: x - 2.1, to: x + 2.1, top: 3.6 });
@@ -225,24 +235,21 @@ function build(b: LevelBuilder): void {
   bush(b, 9.2, 70.2, 1, 6, 0.05);
   bush(b, -9.4, 50.4, 0.9, 9, 0.05);
 
-  // ================================================================ star chamber (z 96..102)
+  // ================================================================ the passage (z 96..102.5), once the Star Chamber
   wall(b, 'z', -3.5, 96, 102.5, 6, { color: STONE });
   wall(b, 'z', 3.5, 96, 102.5, 6, { color: STONE });
-  wall(b, 'x', 102.5, -3.5, 3.5, 6, { color: STONE });
   slab(b, -3.5, 3.5, 96, 102.5, 6.5, 0.5, COLORS.stoneDark);
-  b.cylinder([0, 0.5, 99.2], 0.7, 1, COLORS.stoneLight, undefined, 8);
-  deco(b, new CylinderGeometry(0.85, 0.85, 0.12, 8), [0, 1.06, 99.2], '#c99a3e');
-  rug(b, [0, 0, 99.2], 3.6, 4.6, '#5d4470', '#c99a3e');
   for (const x of [-2.98, 2.98]) wallTorch(b, flames, [x, 2.6, 97.6], x < 0 ? Math.PI / 2 : -Math.PI / 2);
   banner(b, [-2.96, 3.9, 100.4], Math.PI / 2, '#8a2a3a', '#e8c25a', 1.2, 2.4);
   banner(b, [2.96, 3.9, 100.4], -Math.PI / 2, '#2f5a6a', '#e8c25a', 1.2, 2.4);
-  webs(b, -3, 3, 96.5, 102, 5.9, 0.8);
+  // The Star and the way up moved on to the new chamber (replaced in place: ids stay put).
   b.add(
-    { type: 'star', id: 'trial-star', pos: [0, 1.9, 99.2], script: 'trialComplete' },
-    { type: 'door', pos: [0, 0, 101.95], yaw: Math.PI, width: 2.4, height: 3.4, to: { level: 'classroom', spawn: 'fromTrial' }, label: 'Up to class' },
+    { type: 'star', id: 'trial-star', pos: [0, 1.9, STAR_Z], script: 'trialComplete' },
+    { type: 'door', pos: [0, 0, STAR_Z + 2.75], yaw: Math.PI, width: 2.4, height: 3.4, to: { level: 'classroom', spawn: 'fromTrial' }, label: 'Up to class' },
   );
 
   clockworkMoat(b, flames);
+  sootlingsLeap(b, flames);
 
   flames.finish(b, '#ffb060');
   b.finish();
@@ -293,3 +300,69 @@ function clockworkMoat(b: LevelBuilder, flames: Glow): void {
   }
   webs(b, -8, 8, 72.5, 95.5, 7.9, 1);
 }
+
+/**
+ * The Sootling's Leap (z 102.5..138): pillars over a chasm, a moving slab in the middle, a
+ * Hexling overhead and a Sootling lobbing bombs from the far ledge. Then the Star Chamber.
+ * Built last so the earlier rooms' sweets keep their ids.
+ */
+function sootlingsLeap(b: LevelBuilder, flames: Glow): void {
+  const Z0 = 102.5;
+  const Z1 = 138;
+  b.floor(-8.5, 8.5, Z0, Z1 + 6.5, { color: FLOOR, holes: [[-8, 8, 106, 132]] });
+  wall(b, 'x', Z0, -8.5, 8.5, 9, { color: STONE, holes: [gateHole(0)] });
+  wall(b, 'z', -8.5, Z0, Z1, 9, { color: STONE });
+  wall(b, 'z', 8.5, Z0, Z1, 9, { color: STONE });
+  wall(b, 'x', Z1, -8.5, 8.5, 9, { color: STONE, holes: [gateHole(0)] });
+  slab(b, -8.5, 8.5, Z0, Z1, 9.5, 0.5, COLORS.stoneDark);
+  b.box([0, -16, 119], [16, 0.5, 26], { color: '#1e1816', noCollide: true });
+  for (const x of [-8.1, 8.1]) b.box([x, -8, 119], [0.4, 16, 26], { color: STONE, noCollide: true });
+  for (const z of [105.9, 132.1]) b.box([0, -10, z], [16, 12, 0.2], { color: STONE, noCollide: true });
+  // Pillars, zig-zagging: running jumps, not steps.
+  const pillars: [number, number][] = [
+    [0, 108.2],
+    [-2.7, 110.7],
+    [-0.4, 113.2],
+    [2.2, 115.4],
+    [2.2, 125],
+    [-0.5, 127.5],
+    [-2.8, 129.8],
+  ];
+  for (const [x, z] of pillars) {
+    b.box([x, -7, z], [1.6, 14, 1.6], { color: COLORS.stoneLight, info: { noGrab: true } });
+    deco(b, new BoxGeometry(1.75, 0.12, 1.75), [x, -0.05, z], COLORS.stoneDark);
+  }
+  // The gap in the middle: a slab that rides back and forth between pillars 4 and 5.
+  const TAU = Math.PI * 2;
+  b.mover([2.2, 0.4, 2.2], COLORS.stoneLight, (t) => new Vector3(2.2, -0.2, 120.2 + 2.9 * Math.sin((t * TAU) / 5)));
+  // The far ledge, where the Sootling sits.
+  b.box([5.5, 1.1, 135.5], [5, 2.2, 5], { color: COLORS.stoneLight });
+  for (const z of [104.2, 134]) {
+    wallTorch(b, flames, [-7.98, 2.6, z], Math.PI / 2);
+    wallTorch(b, flames, [7.98, 2.6, z], -Math.PI / 2);
+  }
+  webs(b, -8, 8, 103, 137.5, 8.9, 1.1);
+  b.add(
+    { type: 'checkpoint', pos: [-6.5, 0, 104.2], yaw: Math.PI / 2, zone: { min: [-8, -1, 102.6], max: [8, 4, 106] } },
+    { type: 'trigger', flag: 'trial-hint-leap', script: 'trialLeap', min: [-8, -1, 102.6], max: [8, 4, 105.5] },
+    { type: 'hexling', pos: [0, 0, 118], height: 4.5, radius: 4, interval: 3.2 },
+    { type: 'sootling', id: 't-soot', pos: [5.5, 2.2, 135.5], yaw: Math.PI, wander: 0.8, range: 22, interval: 3.4, fuse: 1.5 },
+    { type: 'checkpoint', pos: [-6.5, 0, 134], yaw: Math.PI / 2, zone: { min: [-8, -1, 132.2], max: [2.8, 4, 137.8] } },
+    { type: 'gnarling', pos: [-4, 0, 135], wander: 2 },
+    { type: 'gate', pos: [0, 0, Z1], yaw: 0, width: 3, height: 3, when: ['t-soot'] },
+    { type: 'sweet', kind: 'bramble', pos: [-2.7, 0.7, 110.7] },
+    { type: 'sweet', kind: 'bramble', pos: [-0.5, 0.7, 127.5] },
+    { type: 'sweet', kind: 'humbug', pos: [7.2, 2.8, 137.2] },
+  );
+  // The Star Chamber.
+  wall(b, 'z', -3.5, Z1, Z1 + 6.5, 6, { color: STONE });
+  wall(b, 'z', 3.5, Z1, Z1 + 6.5, 6, { color: STONE });
+  wall(b, 'x', Z1 + 6.5, -3.5, 3.5, 6, { color: STONE });
+  slab(b, -3.5, 3.5, Z1, Z1 + 6.5, 6.5, 0.5, COLORS.stoneDark);
+  b.cylinder([0, 0.5, STAR_Z], 0.7, 1, COLORS.stoneLight, undefined, 8);
+  deco(b, new CylinderGeometry(0.85, 0.85, 0.12, 8), [0, 1.06, STAR_Z], '#c99a3e');
+  rug(b, [0, 0, STAR_Z], 3.6, 4.6, '#5d4470', '#c99a3e');
+  for (const x of [-2.98, 2.98]) wallTorch(b, flames, [x, 2.6, Z1 + 1.6], x < 0 ? Math.PI / 2 : -Math.PI / 2);
+  webs(b, -3, 3, Z1 + 0.5, Z1 + 6, 5.9, 0.8);
+}
+

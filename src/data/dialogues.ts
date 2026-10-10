@@ -244,6 +244,13 @@ export const DIALOGUES: Record<string, Script> = {
     ]);
   },
 
+  trialLeap: async ({ say }) => {
+    await say([
+      { speaker: 'gorse', text: "(his voice booming down a pipe) THE SOOTLING'S LEAP! My little bombardier sits on the far ledge. He lobs, you leap. Don't stand still!" },
+      { speaker: 'gorse', text: "A fizzing bomb on the ground? THWACK it his way and it'll land right in his lap. And knock that fairy out of the sky if she pesters you. Two thwacks banish either of them!" },
+    ]);
+  },
+
   trialGarden: async ({ say }) => {
     await say([
       { speaker: 'gorse', text: "(echoing) The old garden. Gnarlings, I'm afraid, and the Rattlecoat that guards the Star. Plain shoves just bounce off armour. CHARGE it!" },

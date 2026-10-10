@@ -278,8 +278,8 @@ test('the garden: hidden card up the ruin, Rattlecoat needs a charge, Star finis
     }
     const afterCharged = rc.state;
     tw.advance(3);
-    // (The Clockwork Moat between here and the Star has its own test.)
-    tw.teleport(0, 0, 97.5, 0);
+    // (The Clockwork Moat and the Sootling's Leap between here and the Star have their own tests.)
+    tw.teleport(0, 0, 139.5, 0);
     tw.advance(0.2);
     tw.input({ y: 1 });
     tw.advance(0.5);
@@ -295,7 +295,7 @@ test('the garden: hidden card up the ruin, Rattlecoat needs a charge, Star finis
   expect(r.lessons).toContain('thwackwort');
   await page.evaluate(() => {
     const tw = window.__tw;
-    tw.teleport(0, 0, 97, 0);
+    tw.teleport(0, 0, 139, 0);
     tw.advance(0.5);
   });
   await shot(page, 'm3-star-chamber', browserName);
@@ -303,7 +303,7 @@ test('the garden: hidden card up the ruin, Rattlecoat needs a charge, Star finis
   // Back up to Gorse for the reward, then the hub has changed.
   const after = await page.evaluate(async () => {
     const tw = window.__tw;
-    tw.teleport(0, 0, 100.3, 0);
+    tw.teleport(0, 0, 142.6, 0);
     tw.advance(0.3);
     tw.interact();
     tw.advance(1);

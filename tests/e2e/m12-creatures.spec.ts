@@ -185,7 +185,8 @@ test('the Ember Crypt: lamp-lit glimmer stones over the chasm to the Star', asyn
 
 test('the Clockwork Moat: three moving platforms over the pit, Gnarlings, and the switch to the Star', async ({ page, browserName }) => {
   await sandbox(page, 'trial', ['trial-hint-moat', 'trial-entered']);
-  const movers = () => page.evaluate(() => (window.__tw.game as unknown as G).session.builder.movers.slice(-3).map((m) => ({ ...m.cur })));
+  // The moat's three are the first movers in the trial (the Sootling's Leap has one more after them).
+  const movers = () => page.evaluate(() => (window.__tw.game as unknown as G).session.builder.movers.slice(0, 3).map((m) => ({ ...m.cur })));
   const a = await movers();
   await page.evaluate(() => window.__tw.advance(1.3));
   const b = await movers();
@@ -196,7 +197,7 @@ test('the Clockwork Moat: three moving platforms over the pit, Gnarlings, and th
   for (let i = 0; i < 3; i++) {
     const ride = await page.evaluate((i) => {
       const tw = window.__tw;
-      const m = (tw.game as unknown as G).session.builder.movers.slice(-3)[i];
+      const m = (tw.game as unknown as G).session.builder.movers.slice(0, 3)[i];
       tw.teleport(m.cur.x, m.cur.y + 0.4, m.cur.z, 0);
       tw.advance(1.5);
       const f = tw.state().feet;
@@ -227,7 +228,8 @@ test('the Clockwork Moat: three moving platforms over the pit, Gnarlings, and th
     await tw.idle();
     return tw.state().area;
   });
-  expect(through).toBe('star');
+  // Through the gate and the passage beyond, into the Sootling's Leap.
+  expect(through).toBe('leap');
 });
 
 test('the Strongroom: pendulums swing across, and the padlocked gates relock after 6 s', async ({ page, browserName }) => {

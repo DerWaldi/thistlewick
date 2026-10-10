@@ -25,12 +25,13 @@ type State = 'wander' | 'notice' | 'chase' | 'windup' | 'lunge' | 'recover' | 's
 const HALF = 0.18;
 const R = 0.3;
 const CENTER_TO_FEET = HALF + R;
-const NOTICE_RANGE = 7.5;
-const GIVE_UP_RANGE = 13;
-const CHASE_SPEED = 3.3;
-const WANDER_SPEED = 1.1;
-const LUNGE_SPEED = 8.5;
-const ATTACK_RANGE = 2.1;
+// Tuned up for grown-ups: they spot you sooner, close the distance faster and lunge harder.
+const NOTICE_RANGE = 9;
+const GIVE_UP_RANGE = 15;
+const CHASE_SPEED = 4.3;
+const WANDER_SPEED = 1.3;
+const LUNGE_SPEED = 10;
+const ATTACK_RANGE = 2.4;
 /** Gnarlings won't come closer than this to a lit fire, so standing by one keeps you safe. */
 const FEAR_RANGE = 3.6;
 
