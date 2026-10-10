@@ -110,13 +110,13 @@ export const QUESTS: QuestDef[] = [
     after: 'cindersnap',
     title: "Hattie's Hat",
     item: { kind: 'hat', name: "Hattie's hat" },
-    goal: "Hattie's hat blew onto the roofs over the Crooked Corridor. Get up from the Well Yard, by the court's south-east gate.",
+    goal: "Hattie's hat blew onto the old dovecote in the Well Yard, through the court's south-east gate. Climb the junk: shed, walkway, annex, tower.",
     offer: [
       "You! You're the one who does all the jumping about. I need a jumper. Somebody who jumps. Not the knitted kind.",
-      "My hat blew off in the court and over into the Well Yard, and then up onto the roofs over the Crooked Corridor. All the way up. It's my GOOD hat.",
+      "My hat blew off in the court and over into the Well Yard, and landed right on top of the old dovecote. All the way up. It's my GOOD hat.",
       "The Well Yard gate is the one with the lock frozen solid. You do fire now, don't you? There's junk piled all over that yard. Some of it might be climbable.",
     ],
-    waiting: 'Through the Well Yard gate, the south-east corner of the court. Up onto the corridor roofs. My hat is right at the top.',
+    waiting: 'Through the Well Yard gate, the south-east corner of the court. Up the junk to the top of the old dovecote. My hat is right at the top.',
     thanks: [
       "My hat! Still pointy! You're a marvel.",
       "Here. I won these off a Nettleby at cards. They're probably cursed, but only a little.",

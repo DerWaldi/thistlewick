@@ -1018,3 +1018,12 @@ kbd {
   max-height: 94vh;
   overflow-y: auto;
 }
+.menu-screen[data-screen='pause'] {
+  max-height: 94vh;
+  overflow-y: auto;
+}
+.menu-screen[data-screen='pause'] .controls {
+  columns: 2;
+  column-gap: 24px;
+  font-size: 13px;
+}

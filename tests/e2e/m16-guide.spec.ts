@@ -75,3 +75,55 @@ test('from the Sorting Lantern to Gorse, the trial and back: the goal and its co
   });
   expect((await goal(page)).hidden).toBe(true);
 });
+
+test('the goal chain runs through all seven lessons, the exams and the errands without a gap', async ({ page }) => {
+  await boot(page, '?test&new');
+  const chain = await page.evaluate(async () => {
+    const tw = window.__tw;
+    await tw.idle();
+    type S = { house: string | null; flags: Set<string>; lessons: Set<string>; knows(s: string): boolean; learn(s: string): void };
+    const g = tw.game as unknown as { state: S };
+    const { currentObjective, compassTarget } = await import(/* @vite-ignore */ '/src/data/objectives.ts' as string);
+    const s = g.state;
+    s.house = 'nettleby';
+    s.flags.add('sorted');
+    const steps: { title: string; hub: boolean }[] = [];
+    const note = () => {
+      const o = currentObjective(s);
+      steps.push({ title: o.title, hub: compassTarget(o, 'hub', { x: 0, y: 0, z: 5 }, true) !== null });
+    };
+    const lessons = [
+      ['thwackwort', 'practice-done', 'gorse-reward'],
+      ['latchkin', 'practice-latchkin', 'quince-reward'],
+      ['springwell', 'practice-springwell', 'hopgood-reward'],
+      ['glimmerwick', 'practice-glimmerwick', 'lamplough-reward'],
+      ['cindersnap', 'practice-cindersnap', 'ashcombe-reward'],
+      ['rimewhistle', 'practice-rimewhistle', 'coldharbour-reward'],
+      ['thistledown', 'practice-thistledown', 'underbough-reward'],
+    ];
+    for (const [spell, practice, reward] of lessons) {
+      note();
+      tw.learn(spell);
+      note();
+      s.flags.add(practice);
+      note();
+      s.lessons.add(spell);
+      note();
+      s.flags.add(reward);
+    }
+    note();
+    s.flags.add('year-complete');
+    s.flags.add('quest:kite');
+    note();
+    return steps;
+  });
+  const titles = chain.map((c) => c.title);
+  // Every lesson: with the teacher, practice, the trial, report back.
+  expect(titles.filter((t) => t.startsWith('Report back')).length).toBe(7);
+  expect(titles.filter((t) => t.endsWith(': practice')).length).toBe(7);
+  expect(titles.filter((t) => t.includes('trial: find the Thistle Star')).length).toBe(7);
+  // From the castle, every new lesson and the exams have somewhere to point.
+  for (const c of chain.filter((c) => / with |Final Examinations|Report back/.test(c.title))) expect(c.hub, c.title).toBe(true);
+  expect(titles).toContain('The Final Examinations');
+  expect(titles[titles.length - 1]).toBe("Pip's Kite");
+});

@@ -199,7 +199,7 @@ export const DIALOGUES: Record<string, Script> = {
     state.flags.add('practice-done');
     await say([
       { speaker: 'gorse', text: 'Splendid! Three for three! You have a natural shove, you know.' },
-      { speaker: 'gorse', text: "Now, the Thwackwort Trial. Through the iron door. Push blocks, knock switches, and DON'T dawdle on the timed gates. Bring me back the Thistle Star!" },
+      { speaker: 'gorse', text: "Now, the Thwackwort Trial. Through the iron door. Push blocks, knock switches, and DON'T dawdle on the timed gates. Right at the end there's a leap across a chasm with a bombardier on the far side. Bring me back the Thistle Star!" },
     ]);
   },
 
@@ -254,7 +254,7 @@ export const DIALOGUES: Record<string, Script> = {
 
   trialGarden: async ({ say }) => {
     await say([
-      { speaker: 'gorse', text: "(echoing) The old garden. Gnarlings, I'm afraid, and the Rattlecoat that guards the Star. Plain shoves just bounce off armour. CHARGE it!" },
+      { speaker: 'gorse', text: "(echoing) The old garden. Gnarlings, I'm afraid, and the Rattlecoat that guards the gate. Plain shoves just bounce off armour. CHARGE it!" },
     ]);
   },
 
@@ -308,7 +308,7 @@ export const DIALOGUES: Record<string, Script> = {
     state.flags.add('practice-latchkin');
     await say([
       { speaker: 'quince', text: 'Three for three. Tidy. I do like tidy.' },
-      { speaker: 'quince', text: "Now the Latchkin Vaults, through the iron door. Padlocks hide, some lock themselves again, and some chests BITE. Lock those shut and give them a Thwackwort. Bring me the Thistle Star." },
+      { speaker: 'quince', text: "Now the Latchkin Vaults, through the iron door. Padlocks hide, some lock themselves again, and some chests BITE. Lock those shut and give them a Thwackwort. The Star is beyond my Counting House. Bring it to me." },
     ]);
   },
 
@@ -409,7 +409,7 @@ export const DIALOGUES: Record<string, Script> = {
       return;
     }
     if (!state.lessons.has('springwell')) {
-      await say([{ speaker: 'hopgood', text: "The Tumbledown Tower! Iron door, there. Bounce your way to the top and grab the Star. Don't look down. Actually, do, it's lovely." }]);
+      await say([{ speaker: 'hopgood', text: "The Tumbledown Tower! Iron door, there. Bounce your way to the top, then out along the rooftops to the Weathercock and grab the Star. Don't look down. Actually, do, it's lovely." }]);
       return;
     }
     if (!state.flags.has('hopgood-reward')) {
@@ -452,7 +452,7 @@ export const DIALOGUES: Record<string, Script> = {
 
   classNotOverHopgood: async ({ say, state }) => {
     const text = state.flags.has('practice-springwell')
-      ? "Not yet! The Tower first. The Star is right at the top, you can't miss it. Well, you can, but don't."
+      ? "Not yet! The Tower first. The Star is right up on the Weathercock, you can't miss it. Well, you can, but don't."
       : 'Not yet! Three plates, then the Tower.';
     await say([{ speaker: 'hopgood', text }]);
   },
@@ -546,7 +546,7 @@ export const DIALOGUES: Record<string, Script> = {
     state.flags.add('practice-glimmerwick');
     await say([
       { speaker: 'lamplough', text: 'Splendid. You see? Most things are there all along. They are simply waiting for someone to look properly.' },
-      { speaker: 'lamplough', text: 'The Lamplit Catacombs, through the iron door. Glimmer bridges, walls that lie, and at the end, my Lantern: four lamps, all lit at once. Bring me the Thistle Star.' },
+      { speaker: 'lamplough', text: 'The Lamplit Catacombs, through the iron door. Glimmer bridges, walls that lie, my Lantern of four lamps at once, and the Ossuary, where the lamps are short and the dark is long. Bring me the Thistle Star.' },
     ]);
   },
 
@@ -671,7 +671,7 @@ export const DIALOGUES: Record<string, Script> = {
     state.flags.add('practice-cindersnap');
     await say([
       { speaker: 'ashcombe', text: 'Cobweb gone, crate down, braziers lit in order. And the kitchen still standing. Good.' },
-      { speaker: 'ashcombe', text: 'The Overgrown Glasshouse, through the iron door. Briars, ropes, braziers, Gnarlings. Bring me the Thistle Star from the Bramble Heart.' },
+      { speaker: 'ashcombe', text: 'The Overgrown Glasshouse, through the iron door. Briars, ropes, braziers, Gnarlings. The Bramble Heart opens the way to my Hothouse; the Thistle Star is at the far end of it.' },
     ]);
   },
 
@@ -808,7 +808,7 @@ export const DIALOGUES: Record<string, Script> = {
     state.flags.add('practice-rimewhistle');
     await say([
       { speaker: 'coldharbour', text: 'Adequate. More than adequate. Do not let it go to your head; heads are where the cold gets in.' },
-      { speaker: 'coldharbour', text: 'The Flooded Cisterns, through the iron door. Ice that will not wait for you, floes that go where they are pushed, and a Star frozen solid. Bring it back.' },
+      { speaker: 'coldharbour', text: 'The Flooded Cisterns, through the iron door. Ice that will not wait for you, floes that go where they are pushed, a lever frozen solid, and the Sluice Canal beyond it. The Star is at the very end. Bring it back.' },
     ]);
   },
 
@@ -911,7 +911,7 @@ export const DIALOGUES: Record<string, Script> = {
     if (!state.flags.has('underbough-reward')) {
       state.flags.add('underbough-reward');
       await say([
-        { speaker: 'underbough', text: 'The Star from the top of the bell! Oh, well floated. Well floated indeed.' },
+        { speaker: 'underbough', text: 'The Star from the top of the Mainspring! Oh, well floated. Well floated indeed.' },
         { speaker: 'underbough', text: 'My card. That is me on a calm day. You can tell, because I am only slightly off the ground.' },
       ]);
       state.collectCard('hazel-underbough');
@@ -937,7 +937,7 @@ export const DIALOGUES: Record<string, Script> = {
     state.flags.add('practice-thistledown');
     await say([
       { speaker: 'underbough', text: 'Floated, ferried and fetched! You have the knack. Some people never do. They just sort of plummet.' },
-      { speaker: 'underbough', text: "The Great Clockworks, through the iron door. All the way down through the clock to its bell. The Thistle Star is sitting on top of it. Off you float." },
+      { speaker: 'underbough', text: "The Great Clockworks, through the iron door. All the way down through the clock to its bell, then up through the Mainspring behind it. The Thistle Star is at the very top. Off you float." },
     ]);
   },
 

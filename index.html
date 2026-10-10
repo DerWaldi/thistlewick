@@ -74,6 +74,7 @@
         </div>
         <div class="menu-screen panel" data-screen="pause">
           <h2>Paused</h2>
+          <div id="pause-goal"><b></b> <span></span></div>
           <div class="menu-buttons">
             <button class="big-btn" data-action="resume">Resume</button>
             <button class="big-btn quiet" data-action="album">Card album</button>
@@ -81,8 +82,10 @@
             <button class="big-btn quiet" data-action="options">Options</button>
             <button class="big-btn quiet" data-action="quit">Save &amp; quit to title</button>
           </div>
+          <div id="pause-progress"></div>
+          <ul id="pause-quests"></ul>
           <ul class="controls">
-            <li><b>WASD</b> move (keys can be changed in Options; a gamepad works too)</li>
+            <li><b>WASD</b> move</li>
             <li><b>Mouse</b> look</li>
             <li><b>Space</b> jump (hold for higher)</li>
             <li><b>Click</b> cast at a glowing rune (hold to charge)</li>
@@ -92,9 +95,7 @@
             <li><b>Esc</b> pause</li>
             <li><b>P</b> screenshot (saved to downloads)</li>
           </ul>
-          <div id="pause-goal"><b></b> <span></span></div>
-          <div id="pause-progress"></div>
-          <ul id="pause-quests"></ul>
+          <div class="menu-hint">Keys can be changed in Options. Gamepads work too.</div>
         </div>
         <div class="menu-screen panel" data-screen="map">
           <h2>Snoop's Map</h2>
