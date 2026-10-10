@@ -23,7 +23,7 @@ export const GROUNDS: LevelDef = {
   name: 'The Castle Grounds',
   spawns: {
     default: { pos: [0, 0, -1.6], yaw: Math.PI },
-    fromBoathouse: { pos: [-28.6, -3, -40], yaw: Math.PI / 2 },
+    fromBoathouse: { pos: [-28.6, -3, -41], yaw: Math.PI / 2 },
   },
   areas: [
     { id: 'terrace', name: 'The Terrace', min: [-17, -1, -12.5], max: [17, 12, 0] },
@@ -104,8 +104,9 @@ function build(b: LevelBuilder): void {
   grass(b, -50, 50, -42, -18, LAWN, 1.2);
   // Gravel paths.
   deco(b, new BoxGeometry(5, 0.04, 25), [0, LAWN + 0.02, -30], '#c8b898');
-  deco(b, new BoxGeometry(40, 0.04, 3), [-18, LAWN + 0.02, -40], '#c8b898');
-  deco(b, new BoxGeometry(36, 0.04, 3), [18, LAWN + 0.02, -27], '#c8b898');
+  // To the boathouse door (z -41), from the edge of the middle path to the threshold.
+  deco(b, new BoxGeometry(27.5, 0.04, 3), [-16.25, LAWN + 0.02, -41], '#c8b898');
+  deco(b, new BoxGeometry(33.5, 0.04, 3), [19.25, LAWN + 0.02, -27], '#c8b898');
   for (const [x, z] of [
     [-22, -20],
     [-40, -27],
@@ -143,7 +144,7 @@ function build(b: LevelBuilder): void {
   for (const z of [-24, -30]) b.cylinder([49.8, LAWN + 1.9, z], 0.35, 3.8, COLORS.stoneLight, undefined, 8);
   b.add(
     { type: 'sweetLine', kind: 'fizzwort', from: [0, LAWN + 0.6, -19], to: [0, LAWN + 0.6, -30], count: 5 },
-    { type: 'sweetLine', kind: 'fizzwort', from: [-12, LAWN + 0.6, -40], to: [-25, LAWN + 0.6, -40], count: 5 },
+    { type: 'sweetLine', kind: 'fizzwort', from: [-12, LAWN + 0.6, -41], to: [-25, LAWN + 0.6, -41], count: 5 },
     { type: 'sweet', kind: 'bramble', pos: [-40, LAWN + 0.6, -27] },
     { type: 'sweet', kind: 'bramble', pos: [47, LAWN + 0.6, -40.5] },
   );
