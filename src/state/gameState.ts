@@ -56,6 +56,11 @@ export class GameState {
     this.events.emit('sweet', { kind, value: def.value, pos });
   }
 
+  /** Sweets handed over by someone (a quest reward), not picked up in the world. */
+  giveSweets(kind: SweetKind, n: number): void {
+    for (let i = 0; i < n; i++) this.collectSweet(kind, new Vector3());
+  }
+
   collectCard(id: string): void {
     const isNew = !this.cards.has(id);
     this.cards.add(id);

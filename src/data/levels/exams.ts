@@ -33,7 +33,8 @@ import type { SpeakerId } from '../characters';
  *   VII Underbough   z 164..190  a chasm (z 170..184): the ferry floats home after 3 s under
  *                                a pendulum; the basket waits up by the seal shelf (9):
  *                                call it from the landing and ride it up
- *   The Thistle Hall z 190..207  the Headmistress and the Golden Thistle
+ *   The Thistle Hall z 190..207  the Headmistress and the Golden Thistle; behind the plinth,
+ *                                a door down to the Lantern Hall (open once the year is done)
  */
 export const EXAMS: LevelDef = {
   id: 'exams',
@@ -336,7 +337,7 @@ function thistleHall(b: LevelBuilder, flames: Glow): void {
   b.floor(-10.5, 10.5, 190, 206.5, { color: '#8a6a4a' });
   wall(b, 'z', -11, 190, 206.5, 12, { color: STONE });
   wall(b, 'z', 11, 190, 206.5, 12, { color: STONE });
-  wall(b, 'x', 207, -11.5, 11.5, 12, { color: STONE });
+  wall(b, 'x', 207, -11.5, 11.5, 12, { color: STONE, holes: [{ from: -1.3, to: 1.3, top: 3.6 }] });
   slab(b, -11.5, 11.5, 190.5, 207.5, 12.5, 0.5, '#4a3226', 'planks');
   deco(b, new BoxGeometry(3, 0.03, 10), [0, 0.015, 195.5], COLORS.carpet);
   b.cylinder([0, 0.6, 202], 1, 1.2, COLORS.stoneLight, undefined, 10);
@@ -353,4 +354,8 @@ function thistleHall(b: LevelBuilder, flames: Glow): void {
     wallTorch(b, flames, [10.45, 3, z], -Math.PI / 2);
   }
   chandelier(b, flames, 0, 10, 198, 1.8, true);
+  // The way home, behind the plinth: straight down to the Lantern Hall once the year is done
+  // (the rooms behind you lock themselves up again).
+  b.add({ type: 'door', pos: [0, 0, 206.45], yaw: Math.PI, width: 2.4, height: 3.4, to: { level: 'hub', spawn: 'default' }, lockedUnless: 'year-complete', talk: 'examsHomeDoor', label: 'The Lantern Hall' });
+  signboard(b, 'Home', [0, 4.4, 206.44], Math.PI);
 }

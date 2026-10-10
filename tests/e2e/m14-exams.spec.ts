@@ -387,6 +387,13 @@ test('the Golden Thistle ends the year: points, the House Cup, the ending', asyn
     await tw.idle();
     let ended = false;
     (tw.game as unknown as { events: { on(t: string, f: () => void): void } }).events.on('yearComplete', () => (ended = true));
+    // The way home stays shut until the Thistle is taken.
+    tw.teleport(0, 0, 205, 0);
+    tw.advance(0.3);
+    tw.interact();
+    await tw.idle();
+    tw.advance(1.5);
+    const shutBefore = tw.state().level === 'exams';
     tw.teleport(0, 0, 196, 0);
     tw.setCamera(0, 0.15);
     tw.advance(0.3);
@@ -396,8 +403,9 @@ test('the Golden Thistle ends the year: points, the House Cup, the ending', asyn
     await tw.idle();
     tw.advance(0.3);
     const p = g.state.housePoints;
-    return { ended, done: g.state.flags.has('year-complete'), mine: p.nettleby, best: Math.max(p.bramblecote, p.mallowmere, p.yarrowdown) };
+    return { shutBefore, ended, done: g.state.flags.has('year-complete'), mine: p.nettleby, best: Math.max(p.bramblecote, p.mallowmere, p.yarrowdown) };
   }, ALL);
+  expect(r.shutBefore).toBe(true);
   expect(r.done).toBe(true);
   expect(r.ended).toBe(true);
   expect(r.mine).toBeGreaterThan(r.best);
@@ -408,4 +416,16 @@ test('the Golden Thistle ends the year: points, the House Cup, the ending', asyn
     tw.advance(0.3);
   });
   await shot(page, 'm14-thistle-hall', browserName);
+  // Home through the door behind the plinth, straight to the Lantern Hall.
+  const home = await page.evaluate(async () => {
+    const tw = window.__tw;
+    tw.teleport(0, 0, 205, 0);
+    tw.advance(0.3);
+    tw.interact();
+    await tw.idle();
+    tw.advance(1.5);
+    await tw.idle();
+    return { level: tw.state().level, area: tw.state().area };
+  });
+  expect(home.level).toBe('hub');
 });

@@ -61,6 +61,13 @@ import { HOUSE_ORDER, HOUSES } from '../houses';
  *   The great doors (hall, south) open onto the Castle Grounds after Cindersnap; the Clock
  *   Tower door is in the middle of the court's north wall, open after Rimewhistle.
  *
+ *   Old Wine Cellar     x 19.5..34.5, z 4.9..20.5, floor -7.5   under the hall, behind a false wall
+ *                                              in the Undercroft corridor: a flooded sump (z 9..15)
+ *                                              crossed on lamplit glimmer stones (Tilda's toad)
+ *   The Well Yard climb: shed roof (2.8), a walkway along the north wall (4.2) blocked by hay,
+ *   a moss pad up to the annex (8), glimmer steps to the dovecote tower (11.6) (Hattie's hat).
+ *   Pip's kite sits on the court's north walkway (8), behind the clock.
+ *
  * Secrets: tapestry alcove (hall), sliding bookshelf (corridor, needs Thwackwort),
  * behind the clock (court, a climb), the gallery store-room (needs Latchkin).
  * Latchkin also opens the court chest and the hall cabinet (cards).
@@ -85,6 +92,9 @@ export const HUB: LevelDef = {
     { id: 'hall', name: 'The Lantern Hall', min: [-12, -2, 0], max: [12, 14, 30] },
     { id: 'hall', name: 'The Lantern Hall', min: [-16, -2, 21], max: [-12, 6, 26] },
     { id: 'cupboard', name: "Crumbleton's Cupboard", min: [-18.5, -2, 4], max: [-12, 6, 12] },
+    // Before the corridor's boxes: the yard is open sky beside and above them.
+    { id: 'wellyard', name: 'The Well Yard', min: [13, -1, 24.9], max: [34, 16, 30.3] },
+    { id: 'wellyard', name: 'The Well Yard', min: [13, -1, 13.6], max: [21, 16, 24.9] },
     { id: 'corridor', name: 'The Crooked Corridor', min: [12, -2, 5], max: [42, 12, 23] },
     { id: 'corridor', name: 'The Crooked Corridor', min: [18.5, -2, 10], max: [21.5, 4, 13.5] },
     { id: 'court', name: 'Hollyhock Court', min: [-17, -3, 30], max: [17, 30, 66] },
@@ -94,6 +104,7 @@ export const HUB: LevelDef = {
     { id: 'passage', name: 'The Forgotten Passage', min: [-18.5, -2, 21], max: [-16.5, 8, 26.5] },
     { id: 'orchard', name: 'The Kitchen Orchard', min: [17, -2, 38.5], max: [27.5, 12, 53.5] },
     { id: 'undercroft', name: 'The Undercroft', min: [12.6, -10, -1.2], max: [34, -1.5, 6.2], ambience: 'dark' },
+    { id: 'cellar', name: 'The Old Wine Cellar', min: [19.5, -12, 6.2], max: [34.5, -4, 20.5], ambience: 'dark' },
   ],
   intro: { script: 'intro', unlessFlag: 'greeted' },
   npcSpots: {
@@ -722,7 +733,8 @@ function buildHub(b: LevelBuilder): void {
     b.ramp([31, LOW, 2.5], Math.hypot(2, 1), 2.8, (Math.atan2(1, 2) * 180) / Math.PI, -Math.PI / 2, '#5a5262');
     b.box([32.3, LOW - 0.25, 2.5], [2.6, 0.5, 3.8], { color: '#5a5262' });
     wall(b, 'x', 0.6, 19.4, 33.6, 4.6, { base: LOW, color: '#6a6272' });
-    wall(b, 'x', 4.4, 19.4, 33.6, 4.6, { base: LOW, color: '#6a6272' });
+    // A gap in the north wall (hidden by a false wall) into the old wine cellar.
+    wall(b, 'x', 4.4, 19.4, 33.6, 4.6, { base: LOW, color: '#6a6272', holes: [{ from: 23.6, to: 25.4, bottom: 1, top: 3.8 }] });
     wall(b, 'z', 33.6, 0.6, 4.4, 4.6, { base: LOW, color: '#6a6272' });
     slab(b, 19.4, 33.6, 0.6, 4.4, BOT + 3.6, 0.3, '#3a3242', 'planks');
     for (const x of [22, 26, 30]) {
@@ -812,6 +824,8 @@ function buildHub(b: LevelBuilder): void {
   forgottenPassage(b);
   // Up to the First Floor: a door off the gallery's east end.
   b.add({ type: 'door', pos: [11.95, 5, 25.5], yaw: -Math.PI / 2, width: 2.2, height: 3.2, to: { level: 'upper', spawn: 'default' }, lockedUnless: 'sorted', talk: 'upstairsDoor', label: 'The First Floor' });
+  // Last of all (ids follow build order): the students' errands.
+  errands(b);
 
   glow.finish(b, '#ffc68a');
   candle.finish(b, '#ffe2a0');
@@ -978,8 +992,8 @@ function wellYard(b: LevelBuilder): void {
   deco(b, new ConeGeometry(1.4, 0.8, 4), [15, 3, 25], COLORS.roof, [0, Math.PI / 4, 0]);
   deco(b, new ConeGeometry(1.45, 0.3, 4), [15, 3.3, 25], '#f4fbff', [0, Math.PI / 4, 0]);
   for (let i = 0; i < 6; i++) deco(b, new ConeGeometry(0.05, 0.4, 4), [14.1 + i * 0.36, 2.45, 25.95], '#d8f2fc', [Math.PI, 0, 0]);
-  deco(b, new BoxGeometry(2, 0.6, 0.8), [19, 0.3, 27.5], COLORS.stoneDark);
-  deco(b, new BoxGeometry(1.8, 0.04, 0.6), [19, 0.6, 27.5], COLORS.ice);
+  deco(b, new BoxGeometry(2, 0.6, 0.8), [17.5, 0.3, 21], COLORS.stoneDark);
+  deco(b, new BoxGeometry(1.8, 0.04, 0.6), [17.5, 0.6, 21], COLORS.ice);
   // Snow drifts, thickest by the walls.
   for (const [x, z, w, d] of [
     [13.8, 27, 1.4, 5],
@@ -1089,3 +1103,81 @@ function clockDial(): CanvasTexture {
   tex.colorSpace = SRGBColorSpace;
   return tex;
 }
+
+/**
+ * Lost things for the students' errands (src/data/quests.ts), and the places built to hide
+ * them: the dovecote climb in the Well Yard and the old wine cellar under the hall.
+ */
+function errands(b: LevelBuilder): void {
+  const BOT = -7.5;
+  // ---- Pip's kite: on the court's north walkway, behind the clock.
+  b.add({ type: 'questItem', quest: 'kite', pos: [13, 8.35, 63.2] });
+
+  // ---- Hattie's hat: up the Well Yard's junk to the old dovecote.
+  const SHED = '#7a5a3a';
+  b.box([19.5, 1.4, 28.6], [4, 2.8, 2.8], { color: SHED, pattern: 'planks' });
+  deco(b, new BoxGeometry(4.3, 0.15, 3.1), [19.5, 2.85, 28.6], COLORS.roof);
+  // The walkway along the north wall (4.2), on posts; hay stacked to its little roof.
+  b.box([24, 4.05, 29.2], [5, 0.3, 1.6], { color: COLORS.wood, pattern: 'planks' });
+  for (const x of [21.8, 24, 26.2]) b.cylinder([x, 1.95, 28.55], 0.12, 3.9, COLORS.woodDark, undefined, 6);
+  b.box([22.75, 6.75, 29.15], [2.5, 0.3, 1.9], { color: COLORS.roof, pattern: 'planks' });
+  for (const x of [21.6, 23.9]) b.cylinder([x, 5.4, 28.35], 0.08, 2.4, COLORS.woodDark, undefined, 5);
+  // The annex (8) and the dovecote (11.6), with pigeon holes and a little roof.
+  b.box([28.55, 4, 28.7], [4.1, 8, 2.6], { color: COLORS.stoneLight, info: { noGrab: true } });
+  b.box([32.1, 5.8, 27.6], [3, 11.6, 4.8], { color: COLORS.stone });
+  for (let i = 0; i < 3; i++) for (const y of [9, 10.2]) deco(b, new BoxGeometry(0.4, 0.4, 0.05), [31.1 + i * 1, y, 25.18], '#2a2230');
+  deco(b, new ConeGeometry(0.25, 0.5, 4), [33.2, 12, 29.4], COLORS.roof, [0, Math.PI / 4, 0]);
+  // Nobody steps from the climb onto the corridor roof, the gallery or over the north wall.
+  b.box([27.5, 12.7, 24.6], [13, 6.6, 0.5], { invisible: true, info: { noGrab: true, cameraIgnore: true } });
+  b.box([34.2, 13.2, 27.5], [0.8, 5.6, 7], { invisible: true, info: { noGrab: true, cameraIgnore: true } });
+  b.box([26, 14, 30.5], [18, 4, 1], { invisible: true, info: { noGrab: true, cameraIgnore: true } });
+  crate(b, [16.4, 0, 28.9], 0.9);
+  crate(b, [23.5, 0, 26], 1);
+  crate(b, [23.6, 1, 26.1], 0.7);
+  barrel(b, [26, 0, 26], 0.4, 1);
+  barrel(b, [30, 0, 25.6], 0.4, 1);
+  b.add(
+    { type: 'burnable', style: 'hay', pos: [22.6, 5.4, 29.2], size: [1.2, 2.4, 1.6] },
+    { type: 'springPad', pos: [25.4, 4.2, 29.2], radius: 0.75, style: 'moss', duration: 8 },
+    { type: 'wickLamp', pos: [27.4, 8, 29.3], radius: 5.5, duration: 10 },
+    { type: 'glimmerBlock', pos: [28.3, 9.05, 26.5], size: [1.4, 0.3, 1.4] },
+    { type: 'glimmerBlock', pos: [29.8, 10.25, 25.5], size: [1.4, 0.3, 1.4] },
+    { type: 'questItem', quest: 'hat', pos: [32.2, 11.95, 27.6] },
+    { type: 'sweetLine', kind: 'fizzwort', from: [22, 4.8, 29.2], to: [24.5, 4.8, 29.2], count: 3 },
+  );
+
+  // ---- Tilda's toad: the old wine cellar under the hall, behind a false wall.
+  b.floor(19.5, 34.5, 4.9, 20.5, { top: BOT, color: '#5a5262', holes: [[19.5, 34.5, 9, 15]] });
+  b.pool(19.5, 34.5, 9, 15, -9.4, -11.5);
+  // Down to the sump's bottom, or you'd see daylight under the floor.
+  wall(b, 'z', 19.5, 4.4, 21, 7.95, { base: -12, color: '#6a6272' });
+  wall(b, 'z', 34.5, 4.4, 21, 7.95, { base: -12, color: '#6a6272' });
+  wall(b, 'x', 20.5, 19, 35, 3.5, { base: BOT, color: '#6a6272' });
+  slab(b, 19, 35, 4.9, 21, -4.05, 0.3, '#3a3242', 'planks');
+  for (let z = 6; z < 20; z += 3) deco(b, new BoxGeometry(15, 0.25, 0.25), [27, -4.47, z], COLORS.woodDark);
+  // Racks of old barrels beyond the sump.
+  for (const x of [21, 23.2, 30.6, 32.8]) {
+    for (const z of [16.2, 18.8]) {
+      barrel(b, [x, BOT, z], 0.45, 1.1);
+      barrel(b, [x, BOT + 1.1, z], 0.4, 0.9);
+    }
+  }
+  for (let x = 20.5; x < 34; x += 2.6) shelf(b, [x, BOT, 20.15], Math.PI, 2.4, 2.6);
+  cobweb(b, [19.9, -4.4, 20.1], [1, 0], [0, -1], 1.1);
+  cobweb(b, [34.1, -4.4, 5.3], [-1, 0], [0, 1], 1);
+  rubble(b, 32, 6.5, 5, 4, BOT);
+  b.add(
+    { type: 'wickLamp', pos: [24.5, BOT + 2.2, 1.12], yaw: 0, style: 'wall', radius: 3.6, duration: 10 },
+    { type: 'illusionWall', pos: [24.5, BOT + 1.4, 4.4], size: [1.8, 2.8, 1], color: '#6a6272' },
+    // Inside, so nobody gets shut in.
+    { type: 'wickLamp', pos: [22.3, BOT, 6.3], radius: 3, duration: 10 },
+    { type: 'wickLamp', pos: [26.8, BOT, 7.6], radius: 7, duration: 8, light: true },
+    { type: 'glimmerBlock', pos: [27.2, BOT - 0.15, 10.2], size: [1.5, 0.3, 1.5] },
+    { type: 'glimmerBlock', pos: [25.8, BOT - 0.15, 12], size: [1.5, 0.3, 1.5] },
+    { type: 'glimmerBlock', pos: [27, BOT - 0.15, 13.8], size: [1.5, 0.3, 1.5] },
+    { type: 'questItem', quest: 'toad', pos: [27, BOT + 0.05, 18.6] },
+    { type: 'secret', id: 'hub-cellar', area: 'cellar', min: [19.5, BOT - 1, 15], max: [34.5, BOT + 3, 20.5] },
+    { type: 'sweetLine', kind: 'bramble', from: [25, BOT + 0.6, 17.5], to: [29, BOT + 0.6, 17.5], count: 3 },
+  );
+}
+

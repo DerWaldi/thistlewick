@@ -19,6 +19,7 @@ import { TRIAL } from './trial';
 import { UNDERBOUGH } from './underbough';
 import { UPPER } from './upper';
 import { VAULT } from './vault';
+import { WOODS } from './woods';
 
 /** Every level by id. */
 export const LEVELS: Record<string, LevelDef> = {
@@ -42,4 +43,5 @@ export const LEVELS: Record<string, LevelDef> = {
   clockworks: CLOCKWORKS,
   upper: UPPER,
   exams: EXAMS,
+  woods: WOODS,
 };

@@ -19,6 +19,8 @@ import {
 } from 'three';
 import { CARD_BY_ID } from '../data/cards';
 import { SPEAKERS } from '../data/characters';
+import { QUEST_BY_ID } from '../data/quests';
+import { QuestMarker } from './quests';
 import { HOUSE_ORDER, HOUSES } from '../data/houses';
 import { buildStudent, type StudentRig } from '../player/model';
 import { drawCardBack, drawCardFace } from '../ui/cardArt';
@@ -280,6 +282,7 @@ export class Npc implements Entity, Interactable {
   private t = Math.random() * 10;
   private readonly pos: Vector3;
   private yaw: number;
+  private marker: QuestMarker | null = null;
   readonly radius = 3.2; // shopkeepers stand behind a counter
 
   constructor(
@@ -296,6 +299,8 @@ export class Npc implements Entity, Interactable {
     ctx.scene.add(this.rig.root);
     ctx.physics.addStaticCylinder(this.pos.clone().add(new Vector3(0, 0.8, 0)), 0.8, 0.35);
     ctx.interactables.add(this);
+    const quest = spec.quest ? QUEST_BY_ID.get(spec.quest) : undefined;
+    if (quest) this.marker = new QuestMarker(this.rig.root, quest, ctx, 2.45);
   }
 
   position(out: Vector3): Vector3 {
@@ -320,6 +325,7 @@ export class Npc implements Entity, Interactable {
     this.rig.torso.position.y = 0.08 + Math.sin(this.t * 2.1) * 0.012;
     this.rig.head.rotation.z = Math.sin(this.t * 0.7) * 0.06;
     this.rig.armR.rotation.x = -0.3 + Math.sin(this.t * 1.3) * 0.15;
+    this.marker?.update(dt);
   }
 }
 

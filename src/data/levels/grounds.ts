@@ -14,9 +14,11 @@ import { bench, bush, crate, deco, Glow, grass, hollyhock, ivy, mushrooms, signb
  *   Lawn            x -50..50, z -42..-17, y -3   stairs down from the terrace; trees,
  *                               flower beds, a statue, benches; Coldharbour's boathouse
  *                               (x -40..-30, z -46..-36, door east) on the west shore; a
- *                               gated path east to the Old Woods (for later)
+ *                               door east (x 50.5) into the Old Woods, once Mabel asks
  *   Lake            x -50..50, z -90..-42, water y -3.6   a jetty (x 10..12) and three ice
- *                               sheets to the island folly (centre 22,-75) with a card
+ *                               sheets to the island folly (centre 22,-75) with a card;
+ *                               on the east side, old mooring rocks (x 41..43) and three
+ *                               ice sheets to a reed bank (x 47..50, z -66..-56): Ned's float
  */
 export const GROUNDS: LevelDef = {
   id: 'grounds',
@@ -24,6 +26,7 @@ export const GROUNDS: LevelDef = {
   spawns: {
     default: { pos: [0, 0, -1.6], yaw: Math.PI },
     fromBoathouse: { pos: [-28.6, -3, -41], yaw: Math.PI / 2 },
+    fromWoods: { pos: [48.4, -3, -27], yaw: -Math.PI / 2 },
   },
   areas: [
     { id: 'terrace', name: 'The Terrace', min: [-17, -1, -12.5], max: [17, 12, 0] },
@@ -148,8 +151,9 @@ function build(b: LevelBuilder): void {
   deco(b, new SphereGeometry(0.4, 8, 6), [0, LAWN + 3.3, -34], '#9aa4a0');
   deco(b, new ConeGeometry(0.5, 1, 8), [0, LAWN + 3.9, -34], '#8a948f');
   deco(b, new BoxGeometry(0.1, 1.6, 0.1), [0.55, LAWN + 2.6, -34.2], '#8a948f', [0, 0, -0.3]);
-  // The gated path to the Old Woods (later).
-  b.add({ type: 'gate', pos: [50.5, LAWN, -27], yaw: Math.PI / 2, width: 3, height: 3.4, when: ['old-woods'] });
+  // The path to the Old Woods: a door between the gateposts (it replaced a gate in place, so
+  // later ids don't shift), open once Mabel has asked you to go in.
+  b.add({ type: 'door', pos: [50.5, LAWN, -27], yaw: -Math.PI / 2, width: 3, height: 3.4, to: { level: 'woods', spawn: 'default' }, lockedUnless: 'quest:hedgehog', talk: 'oldWoodsGate', label: 'The Old Woods' });
   signboard(b, 'The Old Woods\nNo pupils beyond this gate', [49.9, LAWN + 4, -27], -Math.PI / 2);
   for (const z of [-24, -30]) b.cylinder([49.8, LAWN + 1.9, z], 0.35, 3.8, COLORS.stoneLight, undefined, 8);
   b.add(
@@ -270,6 +274,50 @@ function build(b: LevelBuilder): void {
     }
   }
 
+  // Last (ids follow build order): the students' errands.
+  errands(b);
   glow.finish(b, '#ffd890');
   b.finish();
+}
+
+/**
+ * Ned's lucky float, in the reeds on the far east shore: freeze the water between the old
+ * mooring rocks (the long middle stretch only holds if charged), and mind the Snapweed.
+ */
+function errands(b: LevelBuilder): void {
+  const ROCK = LAWN - 0.2;
+  for (const [x0, x1, z0, z1] of [
+    [41, 43, -51, -49],
+    [41, 43, -62, -60],
+  ]) {
+    b.box([(x0 + x1) / 2, (ROCK - 7) / 2, (z0 + z1) / 2], [x1 - x0, ROCK + 7, z1 - z0], { color: COLORS.stoneDark });
+    deco(b, new IcosahedronGeometry(0.6, 0), [x0 + 0.3, ROCK + 0.1, z1 - 0.2], COLORS.stone, [1, 2, 0]);
+  }
+  // The reed bank.
+  b.box([48.6, (ROCK - 7) / 2, -61], [3.2, ROCK + 7, 10], { color: '#6a7a4a' });
+  for (let i = 0; i < 18; i++) {
+    const x = 47.4 + (i % 4) * 0.8;
+    const z = -65.5 + Math.floor(i / 4) * 2.1;
+    deco(b, new CylinderGeometry(0.03, 0.05, 1.4, 4), [x, ROCK + 0.7, z], '#6a8a3a', [0.15 * Math.sin(i * 3), 0, 0.15 * Math.cos(i * 2)]);
+  }
+  // Old mooring posts mark the way.
+  for (const [x, z] of [
+    [40.2, -46],
+    [44, -46],
+    [40.2, -55],
+    [44, -55],
+    [45, -63],
+  ]) {
+    b.cylinder([x, WATER + 0.5, z], 0.14, 2.2, COLORS.woodDark, undefined, 6);
+  }
+  b.add(
+    { type: 'iceSheet', min: [40.5, -49], max: [43.5, -43.2], y: WATER, duration: 6 },
+    { type: 'iceSheet', min: [40.5, -60], max: [43.5, -51], y: WATER, duration: 1.5, chargedDuration: 9 },
+    { type: 'iceSheet', min: [43, -62], max: [47, -59.6], y: WATER, duration: 6 },
+    { type: 'snapweed', pos: [48.4, ROCK, -61.2], radius: 2.2 },
+    { type: 'questItem', quest: 'float', pos: [48.8, ROCK + 0.1, -57.6] },
+  );
+  // Beside the way onto the ice, not in front of it.
+  signboard(b, 'Old Moorings\nThe long stretch needs a strong freeze.', [38.6, LAWN + 1.7, -42.96], 0);
+  b.cylinder([38.6, LAWN + 0.85, -43.1], 0.08, 1.7, COLORS.woodDark, undefined, 5);
 }

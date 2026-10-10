@@ -1,4 +1,6 @@
 import { CARDS } from '../data/cards';
+import { SPEAKERS } from '../data/characters';
+import { QUESTS, questStage } from '../data/quests';
 import { HOUSES, type HouseId } from '../data/houses';
 import type { GameState } from '../state/gameState';
 import type { Options } from '../state/options';
@@ -69,6 +71,19 @@ export class Menu {
   private renderProgress(s: GameState): void {
     const house = s.house ? `${HOUSES[s.house].name}: ${s.housePoints[s.house]} points · ` : '';
     $('pause-progress').textContent = `${house}Cards ${s.cards.size}/${CARDS.length} · Secrets ${s.secrets.size} · Sweets ${s.sweets}`;
+    // The errand log: open ones first, with where to look; finished ones ticked off.
+    const list = $('pause-quests');
+    list.replaceChildren();
+    const quests = QUESTS.map((q) => ({ q, stage: questStage(s, q) })).filter(({ stage }) => stage === 'active' || stage === 'found' || stage === 'done');
+    quests.sort((a, b) => Number(a.stage === 'done') - Number(b.stage === 'done'));
+    for (const { q, stage } of quests) {
+      const li = document.createElement('li');
+      li.className = stage === 'done' ? 'done' : '';
+      const title = document.createElement('b');
+      title.textContent = q.title;
+      li.append(title, ' ', stage === 'done' ? 'Done.' : stage === 'found' ? `Found it: take it back to ${SPEAKERS[q.giver].name}.` : q.goal);
+      list.append(li);
+    }
   }
 
   private bindOptions(): void {

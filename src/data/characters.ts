@@ -1,6 +1,6 @@
 import type { PortraitSpec } from './portraits';
 
-export type SpeakerId = 'wendlebury' | 'lantern' | 'tansy' | 'moss' | 'gorse' | 'quince' | 'hopgood' | 'lamplough' | 'ashcombe' | 'coldharbour' | 'underbough' | 'sign';
+export type SpeakerId = 'wendlebury' | 'lantern' | 'tansy' | 'moss' | 'gorse' | 'quince' | 'hopgood' | 'lamplough' | 'ashcombe' | 'coldharbour' | 'underbough' | 'sign' | 'pip' | 'oswin' | 'tilda' | 'hattie' | 'ned' | 'mabel';
 
 export interface SpeakerDef {
   id: SpeakerId;
@@ -76,6 +76,43 @@ export const SPEAKERS: Record<SpeakerId, SpeakerDef> = {
     name: 'Professor Underbough',
     voice: 640,
     portrait: { bg: ['#e8f0ff', '#6a7a9a'], kind: 'person', skin: '#f0c9a0', robe: '#6a7a9a', hair: '#b86a3a', hat: 'pointy', hatColor: '#4a5a7a', prop: 'thistle', hairStyle: 'wild', collar: 'scarf', expression: 'smile', jewel: '#e8f0ff', eyes: '#5a7aa8' },
+  },
+  // First-years with quests (src/data/quests.ts).
+  pip: {
+    id: 'pip',
+    name: 'Pip Fernsby',
+    voice: 760,
+    portrait: { bg: ['#d8e6f5', '#4f7fb8'], kind: 'person', skin: '#f3d2b4', robe: '#2c2a3a', hair: '#e8c060', hat: 'none', prop: 'none', hairStyle: 'wild', collar: 'scarf', jewel: '#4f7fb8', expression: 'smile', eyes: '#4a6a9a' },
+  },
+  oswin: {
+    id: 'oswin',
+    name: 'Oswin Pellbright',
+    voice: 560,
+    portrait: { bg: ['#d8ecd0', '#3f7a4a'], kind: 'person', skin: '#c98e6a', robe: '#2c2a3a', hair: '#2a1e18', hat: 'none', glasses: true, prop: 'book', hairStyle: 'short', collar: 'scarf', jewel: '#3f7a4a', expression: 'kind' },
+  },
+  tilda: {
+    id: 'tilda',
+    name: 'Tilda Marchbank',
+    voice: 820,
+    portrait: { bg: ['#f5e0c0', '#d9922e'], kind: 'person', skin: '#f0c9a0', robe: '#2c2a3a', hair: '#8a3a22', hat: 'none', prop: 'none', hairStyle: 'long', collar: 'scarf', jewel: '#d9922e', expression: 'smile', eyes: '#3a6a3a' },
+  },
+  hattie: {
+    id: 'hattie',
+    name: 'Hattie Quickfoot',
+    voice: 700,
+    portrait: { bg: ['#f2d0c8', '#b0362f'], kind: 'person', skin: '#8a5a3e', robe: '#2c2a3a', hair: '#1e1612', hat: 'none', prop: 'none', hairStyle: 'bun', collar: 'scarf', jewel: '#b0362f', expression: 'smirk' },
+  },
+  ned: {
+    id: 'ned',
+    name: 'Ned Ashgrove',
+    voice: 480,
+    portrait: { bg: ['#d8e6f5', '#4f7fb8'], kind: 'person', skin: '#e8b48e', robe: '#2c2a3a', hair: '#b86a3a', hat: 'cap', hatColor: '#4f6a3a', prop: 'none', hairStyle: 'short', collar: 'scarf', jewel: '#4f7fb8', expression: 'smile' },
+  },
+  mabel: {
+    id: 'mabel',
+    name: 'Mabel Inchcombe',
+    voice: 880,
+    portrait: { bg: ['#d8ecd0', '#3f7a4a'], kind: 'person', skin: '#f3d2b4', robe: '#2c2a3a', hair: '#d8b880', hat: 'none', glasses: true, prop: 'none', hairStyle: 'bun', collar: 'scarf', jewel: '#3f7a4a', expression: 'kind', eyes: '#6a4a2a' },
   },
   sign: {
     id: 'sign',

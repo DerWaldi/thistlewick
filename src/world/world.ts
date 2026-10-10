@@ -14,6 +14,7 @@ import { PushBlock } from '../entities/pushBlock';
 import { Teaser } from '../entities/teasers';
 import { ThistleStar, Trigger } from '../entities/lessonObjects';
 import { Rattlecoat } from '../entities/rattlecoat';
+import { QuestItem } from '../entities/quests';
 import type { Entity, EntitySpec, EntityType, SpecOf, WorldContext } from '../entities/types';
 
 type Factory<T extends EntityType> = (spec: SpecOf<T>, ctx: WorldContext, id: string) => object | null;
@@ -83,6 +84,7 @@ const FACTORIES: { [T in EntityType]: Factory<T> } = {
   floe: (s, c) => new Floe(s, c),
   skyLift: (s, c) => new SkyLift(s, c),
   pendulum: (s, c) => new Pendulum(s, c),
+  questItem: (s, c) => new QuestItem(s, c),
   houseSeal: (s, c) => {
     c.signals.set(`house-door-${s.house}`, c.state.house === s.house);
     return null;

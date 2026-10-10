@@ -48,6 +48,10 @@ export class Sfx {
       if (isNew) [659, 784, 988, 1319].forEach((f, i) => setTimeout(() => this.tone(f, f, 0.3, 'sine', 0.12), i * 80));
     });
     events.on('secret', () => [392, 523, 659, 784, 1047].forEach((f, i) => setTimeout(() => this.tone(f, f * 1.01, 0.4, 'triangle', 0.1), i * 70)));
+    events.on('quest', ({ stage }) => {
+      const notes = stage === 'start' ? [523, 659] : stage === 'found' ? [659, 784, 988] : [523, 659, 784, 1047];
+      notes.forEach((f, i) => setTimeout(() => this.tone(f, f, 0.35, 'triangle', 0.11), i * 90));
+    });
     events.on('points', () => this.tone(880, 1320, 0.15, 'sine', 0.06));
     events.on('checkpoint', () => [523, 659, 784].forEach((f, i) => setTimeout(() => this.tone(f, f, 0.35, 'sine', 0.12), i * 90)));
     events.on('blockSlide', () => this.hiss(0.45, 380, 0.25));

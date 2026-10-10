@@ -851,3 +851,22 @@ kbd {
 #year-end h2 {
   color: #f0c860;
 }
+
+#pause-quests {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  max-width: 460px;
+  font-size: 14px;
+  line-height: 1.35;
+  text-align: left;
+}
+#pause-quests li {
+  margin: 4px 0;
+}
+#pause-quests li b {
+  color: #f0c860;
+}
+#pause-quests li.done {
+  opacity: 0.55;
+}

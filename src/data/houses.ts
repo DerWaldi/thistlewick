@@ -56,6 +56,7 @@ export const POINTS = {
   stunMidAir: 5,
   rattlecoat: 10,
   exams: 150,
+  quest: 15,
 };
 
 /** The Sorting Lantern's questions. Each answer leans towards one house. */

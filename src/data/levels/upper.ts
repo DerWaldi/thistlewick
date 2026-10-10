@@ -22,6 +22,9 @@ import { HOUSES, type HouseId } from '../houses';
  *                                           lamp's glow (card). Behind the north wall, through a
  *                                           sliding bookshelf (knock the odd book), the Forbidden
  *                                           Section: a Snapweed and a chest (card)
+ *                                           Along the top of the north bookcases (9), a plank
+ *                                           ledge with gaps, reached by a rune tile on the
+ *                                           mezzanine (Springwell): Oswin's book at its east end
  *   House Wing     x 5.5..36,    z 8..40    a corridor (z 21..29) with four common rooms: only
  *                                           your own house's door opens
  *   The Leads      x -30..30,    z 54.5..84, y 7.2  the roof: chimney steps up to the ridge, a
@@ -79,6 +82,8 @@ function build(b: LevelBuilder): void {
   library(b, glow, flames);
   houseWing(b, flames);
   leads(b);
+  // Last (ids follow build order): Oswin's book on top of the library's north bookcases.
+  errands(b);
   glow.finish(b, '#ffe2a0');
   flames.finish(b, '#ffb060');
   b.finish();
@@ -359,3 +364,22 @@ function leads(b: LevelBuilder): void {
   }
   b.cylinder([17.5, R + 1, 76], 0.1, 2, COLORS.woodDark, undefined, 5);
 }
+
+/** Oswin's errand: a plank ledge along the tops of the north bookcases, gaps and all. */
+function errands(b: LevelBuilder): void {
+  for (const [x0, x1] of [
+    [-33, -25.5],
+    [-23.8, -16.2],
+    [-14.6, -8],
+  ]) {
+    b.box([(x0 + x1) / 2, 9.05, 39.45], [x1 - x0, 0.3, 1.1], { color: WOOD, pattern: 'planks' });
+    for (let x = x0 + 0.4; x < x1; x += 2.2) deco(b, new BoxGeometry(0.1, 0.5, 0.9), [x, 8.7, 39.45], COLORS.woodDark, [0.6, 0, 0]);
+  }
+  b.add(
+    { type: 'springPad', pos: [-30, 5, 37.7], radius: 0.65, style: 'rune', duration: 8 },
+    { type: 'questItem', quest: 'book', pos: [-8.8, 9.25, 39.45] },
+    { type: 'sweetLine', kind: 'fizzwort', from: [-32, 9.8, 39.45], to: [-26.5, 9.8, 39.45], count: 3 },
+    { type: 'sweetLine', kind: 'fizzwort', from: [-22.5, 9.8, 39.45], to: [-17.5, 9.8, 39.45], count: 3 },
+  );
+}
+

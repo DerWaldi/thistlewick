@@ -18,6 +18,7 @@ import { LevelBuilder } from './world/builder';
 import type { AreaDef, LevelDef, SpawnPoint } from './world/level';
 import { Signals } from './world/signals';
 import { World } from './world/world';
+import { questGivers } from './data/quests';
 
 /**
  * Everything that belongs to one loaded level: its physics world, geometry,
@@ -95,7 +96,9 @@ export class LevelSession {
       changeLevel: (level, spawnId) => game.requestLevel(level, spawnId),
       secretsIn: (area) => this.world.secretsIn(area),
     });
-    this.world.spawnAll(this.builder.entities);
+    // Students with errands stand at their level's NPC spots. They go after the level's own
+    // specs, so the ids of placed pickups stay stable.
+    this.world.spawnAll([...this.builder.entities, ...questGivers(def, game.state)]);
 
     this.caster = new Caster(
       this.root,

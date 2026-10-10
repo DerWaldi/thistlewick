@@ -361,6 +361,36 @@ export const CARDS: CardDef[] = [
     hint: 'In a chest in the Forbidden Section of the Great Library.',
     portrait: { bg: ['#4f7a34', '#1e2a14'], kind: 'snapweed' },
   },
+  {
+    id: 'ignatius-peel',
+    number: 35,
+    name: 'Ignatius Peel',
+    title: 'Inventor of the Kite That Flies Itself',
+    set: 'Oddballs',
+    text: 'Built a kite so keen it no longer needed a string, or a person. It was last seen over the moor in 1871, heading somewhere with great determination.',
+    hint: 'A thank-you from Pip Fernsby, for a kite brought down to earth.',
+    portrait: { bg: ODDBALL_BG, kind: 'person', skin: '#f0c9a0', robe: '#3a6a8a', hair: '#c8642e', hat: 'cap', hatColor: '#8a3a2a', glasses: true, prop: 'scroll', hairStyle: 'wild', collar: 'scarf', expression: 'smile', jewel: '#e8c25a' },
+  },
+  {
+    id: 'ebbing-rooke',
+    number: 36,
+    name: 'Captain Ebbing Rooke',
+    title: 'Ferryman of the Lake',
+    set: 'Oddballs',
+    text: 'Rowed pupils across the lake for sixty years and never once got his feet wet. When the lake froze he simply carried on rowing, and nobody had the heart to tell him.',
+    hint: 'A thank-you from Ned Ashgrove, for a lucky float fetched from the reeds.',
+    portrait: { bg: ODDBALL_BG, kind: 'person', skin: '#d9a07a', robe: '#2f4f6a', hair: '#e8e8e8', hat: 'cap', hatColor: '#1e2638', beard: true, prop: 'pocket', hairStyle: 'short', collar: 'plain', expression: 'smirk', jewel: '#cfeefa', eyes: '#3a5a7a' },
+  },
+  {
+    id: 'mother-hazelrigg',
+    number: 37,
+    name: 'Mother Hazelrigg',
+    title: 'Keeper of the Old Woods',
+    set: 'Founders',
+    text: 'Planted the Old Woods one acorn at a time and named every tree. The trees, in return, never let her get lost, which is more than can be said for anyone else.',
+    hint: 'A thank-you from Mabel Inchcombe, for a hedgehog found in the Old Woods.',
+    portrait: { bg: FOUNDER_BG, kind: 'person', skin: '#c98e6a', robe: '#4f6a2a', hair: '#9a9a8a', hat: 'bonnet', hatColor: '#6a7a3a', prop: 'thistle', hairStyle: 'long', collar: 'scarf', expression: 'kind', jewel: '#8a5a2a', eyes: '#4a6a3a' },
+  },
 ];
 
 export const CARD_BY_ID = new Map(CARDS.map((c) => [c.id, c]));

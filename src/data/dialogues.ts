@@ -2,7 +2,10 @@ import type { EventBus } from '../engine/events';
 import type { GameState } from '../state/gameState';
 import type { DialogueLine } from '../ui/dialogue';
 import { HOUSE_ORDER, HOUSES, POINTS, SORTING_QUESTIONS, type HouseId } from './houses';
+import { SPEAKERS } from './characters';
+import { QUESTS, questStage, type QuestDef } from './quests';
 import { LOST_AND_FOUND } from './shop';
+import { SWEETS } from './sweets';
 
 export interface ScriptContext {
   say(lines: DialogueLine[]): Promise<number | null>;
@@ -940,6 +943,45 @@ export const DIALOGUES: Record<string, Script> = {
     await say([{ speaker: 'underbough', text: '(faintly) You did it! Come back up! Use the door. Please use the door.' }]);
   },
 
+  // ---------------------------------------------------------------- the Old Woods
+
+  oldWoodsGate: async ({ say, state }) => {
+    const text = state.lessons.has('thistledown')
+      ? '"THE OLD WOODS. No pupils beyond this gate." Somebody has chalked underneath: "Unless you are looking for a hedgehog."'
+      : '"THE OLD WOODS. No pupils beyond this gate." It is very firmly shut.';
+    await say([{ speaker: 'sign', text }]);
+  },
+
+  woodsIntro: async ({ say }) => {
+    await say([{ speaker: 'mabel', text: '(calling after you) Keep to the old paths! Thimble always goes for the very middle, where the big oak is. Good luck!' }]);
+  },
+
+  woodsThicket: async ({ say }) => {
+    await say([{ speaker: 'sign', text: 'A briar thicket, far too tall to climb. Briars, though, burn.' }]);
+  },
+
+  woodsDell: async ({ say }) => {
+    await say([
+      { speaker: 'sign', text: "Mother Hazelrigg's toadstools. Spring the one in the middle of the dell and bounce up to the west shelf. The one up there throws you north, onto the ridge." },
+    ]);
+  },
+
+  woodsBasket: async ({ say }) => {
+    await say([{ speaker: 'sign', text: "The basket is waiting on the far side of the gap. Cast at its feather-stone from here and it'll come over. Then hop in and cast again." }]);
+  },
+
+  woodsHollow: async ({ say }) => {
+    await say([{ speaker: 'sign', text: 'A hollow log, and holes in its floor. The lamp shows the near stones. Hold the button to charge it, and it shows the far one too.' }]);
+  },
+
+  woodsFalls: async ({ say }) => {
+    await say([{ speaker: 'sign', text: 'The cliff is too sheer to climb. The waterfall, frozen, makes a step at its foot. Climb the ice, then reach for the top.' }]);
+  },
+
+  woodsOak: async ({ say }) => {
+    await say([{ speaker: 'sign', text: 'Something small and prickly is snuffling behind the root-gate. The padlock on it is old, and not very clever.' }]);
+  },
+
   // ---------------------------------------------------------------- the Final Examinations
 
   examsDoor: async ({ say }) => {
@@ -1042,6 +1084,10 @@ export const DIALOGUES: Record<string, Script> = {
     ]);
   },
 
+  examsHomeDoor: async ({ say }) => {
+    await say([{ speaker: 'wendlebury', text: 'That door is for afterwards, dear. The Golden Thistle first.' }]);
+  },
+
   examWendlebury: async ({ say, state }) => {
     if (state.flags.has('year-complete')) {
       await say([{ speaker: 'wendlebury', text: "The hall is yours to wander, dear. The professors are re-setting their rooms. Gorse is, in fact, still ringing his bell." }]);
@@ -1078,6 +1124,7 @@ export const DIALOGUES: Record<string, Script> = {
     }
     await say([
       { speaker: 'wendlebury', text: "That is the end of your first year at Thistlewick. Go and enjoy the summer. The castle will still be here, and so will its secrets. Mind the third step." },
+      { speaker: 'wendlebury', text: 'The door behind the plinth goes straight down to the Lantern Hall. No need to go back through all seven rooms. The professors are re-setting them anyway.' },
     ]);
     events.emit('yearComplete', { house });
   },
@@ -1236,3 +1283,48 @@ async function teachThwackwort({ say, state, events }: ScriptContext): Promise<v
   }
   await say([{ speaker: 'gorse', text: 'Now then: three targets. Knock all three and I shall be impressed. Go on!' }]);
 }
+
+/**
+ * A student's errand: offer it (you can say not now), remind you while it's open, then
+ * take the thing back and hand over the reward.
+ */
+function questScript(q: QuestDef): Script {
+  return async ({ say, state, events }) => {
+    const who = q.giver;
+    const stage = questStage(state, q);
+    if (stage === 'offered') {
+      const lines: DialogueLine[] = q.offer.map((text) => ({ speaker: who, text }));
+      lines[lines.length - 1] = { ...lines[lines.length - 1], choices: ["I'll find it.", 'Not just now.'] };
+      const pick = await say(lines);
+      if (pick === 1) {
+        await say([{ speaker: who, text: "Oh. All right. I'll be here. Fretting." }]);
+        return;
+      }
+      state.flags.add(`quest:${q.id}`);
+      events.emit('toast', { text: `New errand: ${q.title}`, kind: 'info' });
+      events.emit('quest', { id: q.id, stage: 'start' });
+      await say([{ speaker: who, text: q.waiting }]);
+      return;
+    }
+    if (stage === 'active') {
+      await say([{ speaker: who, text: q.waiting }]);
+      return;
+    }
+    if (stage === 'found') {
+      await say(q.thanks.map((text) => ({ speaker: who, text })));
+      state.flags.add(`quest:${q.id}:done`);
+      for (const [kind, n] of q.reward.sweets ?? []) state.giveSweets(kind, n);
+      if (q.reward.sweets?.length) {
+        const total = q.reward.sweets.reduce((t, [kind, n]) => t + SWEETS[kind].value * n, 0);
+        events.emit('toast', { text: `+${total} sweets`, kind: 'info' });
+      }
+      if (q.reward.card) state.collectCard(q.reward.card);
+      state.award(POINTS.quest, `helping ${SPEAKERS[who].name.split(' ')[0]}`);
+      events.emit('quest', { id: q.id, stage: 'done' });
+      return;
+    }
+    await say([{ speaker: who, text: q.afterwards }]);
+  };
+}
+
+for (const q of QUESTS) DIALOGUES[`quest-${q.id}`] = questScript(q);

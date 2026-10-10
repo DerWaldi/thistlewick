@@ -73,7 +73,22 @@ export type EntitySpec = SpecBase &
     | { type: 'secret'; id: string; area: string; min: V3; max: V3 }
     | { type: 'tapestry'; pos: V3; yaw: number; width: number; height: number; color: string; trim?: string; sway?: boolean }
     | { type: 'bookshelf'; pos: V3; yaw: number; width: number; height: number; slide?: number; when?: string[] }
-    | { type: 'npc'; speaker: SpeakerId; pos: V3; yaw: number; look?: NpcLook; talk: string }
+    | {
+        type: 'npc';
+        speaker: SpeakerId;
+        pos: V3;
+        yaw: number;
+        look?: NpcLook;
+        talk: string;
+        /** A student with this errand: shows ! while it's on offer and ? once the thing is found. */
+        quest?: string;
+      }
+    | {
+        type: 'questItem';
+        /** The lost thing for this quest (src/data/quests.ts); only there while the quest is accepted. */
+        quest: string;
+        pos: V3;
+      }
     | { type: 'sortingLantern'; pos: V3; yaw: number }
     | {
         type: 'door';

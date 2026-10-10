@@ -74,6 +74,8 @@ export interface GameEvents {
   levelLoaded: { id: string };
   learned: { spell: SpellId };
   purchase: { id: string };
+  /** A student's errand: accepted, the lost thing found, handed back. */
+  quest: { id: string; stage: 'start' | 'found' | 'done' };
   /** The Golden Thistle: the end of the first year (shows the ending). */
   yearComplete: { house: HouseId | null };
   // ui
