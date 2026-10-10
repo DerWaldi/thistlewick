@@ -285,7 +285,11 @@ export class Chest implements Entity, SpellTarget {
       lidMesh.rotation.z = Math.PI / 2;
       lidMesh.position.z = 0.42 * s;
       lidMesh.castShadow = true;
-      this.lid.add(lidMesh);
+      // The half-cylinder is open underneath; this board closes it so an opened lid
+      // (seen from the front, i.e. from below) doesn't vanish.
+      const lidBoard = new Mesh(paint(new BoxGeometry(1.18 * s, 0.04, 0.82 * s).toNonIndexed(), '#5e3b22', true, 'planks'), mat);
+      lidBoard.position.set(0, 0.02, 0.42 * s);
+      this.lid.add(lidMesh, lidBoard);
       this.group.add(this.lid);
       lockLocal = new Vector3(0, 0.5 * s, 0.48 * s);
       this.top = new Vector3(x, y + 1.2 * s, z);

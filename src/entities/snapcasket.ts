@@ -115,7 +115,10 @@ export class Snapcasket implements Entity, SpellTarget {
     const lidBand = new Mesh(new TorusGeometry(0.335, 0.03, 4, 10, Math.PI), iron);
     lidBand.rotation.y = Math.PI / 2;
     lidBand.position.z = 0.33;
-    this.lid.add(lidMesh, lidBand);
+    // Close the underside of the half-cylinder lid: the roof of its mouth.
+    const palate = new Mesh(new BoxGeometry(0.88, 0.03, 0.64), mouth);
+    palate.position.set(0, 0.01, 0.33);
+    this.lid.add(lidMesh, lidBand, palate);
     for (let i = 0; i < 6; i++) {
       const t = new Mesh(new ConeGeometry(0.035, 0.1, 4), tooth);
       t.rotation.x = Math.PI;

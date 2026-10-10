@@ -63,7 +63,9 @@ export class Teaser implements Entity, SpellTarget {
     // Half-cylinder (theta 0..π covers +X) laid on its side: axis along X, dome up.
     lidMesh.rotation.z = Math.PI / 2;
     lidMesh.position.z = 0.42;
-    this.lid.add(lidMesh);
+    const lidBoard = new Mesh(paint(new BoxGeometry(1.18, 0.04, 0.82).toNonIndexed(), '#5e3b22', true), mat);
+    lidBoard.position.set(0, 0.02, 0.42);
+    this.lid.add(lidMesh, lidBoard);
     const lock = new Mesh(
       new BoxGeometry(0.2, 0.24, 0.08),
       new MeshStandardMaterial({ color: '#c99a3e', metalness: 0.7, roughness: 0.35 }),
