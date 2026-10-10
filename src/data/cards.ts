@@ -291,6 +291,36 @@ export const CARDS: CardDef[] = [
     hint: 'In the folly on the island in Fairweather Lake.',
     portrait: { bg: FOUNDER_BG, kind: 'person', skin: '#f0c9a0', robe: '#3a6a8a', hair: '#8a5a3a', hat: 'bonnet', hatColor: '#e8e2d0', prop: 'book', hairStyle: 'bun', collar: 'ruff', expression: 'kind', jewel: '#4f9fc4', eyes: '#4a6a8a' },
   },
+  {
+    id: 'hazel-underbough',
+    number: 28,
+    name: 'Hazel Underbough',
+    title: 'Has Not Touched the Ground Since Tuesday',
+    set: 'Oddballs',
+    text: 'Teaches from the roof because the classroom ceiling was "rather in the way". Floats her tea, her books and, on windy days, herself. Keeps a brick in each pocket, just in case.',
+    hint: 'A reward for an Airs & Graces trial well done.',
+    portrait: { bg: ODDBALL_BG, kind: 'person', skin: '#f0c9a0', robe: '#6a7a9a', hair: '#b86a3a', hat: 'pointy', hatColor: '#4a5a7a', prop: 'thistle', hairStyle: 'wild', collar: 'scarf', expression: 'smile', jewel: '#e8f0ff', eyes: '#5a7aa8' },
+  },
+  {
+    id: 'clockwork-owl',
+    number: 29,
+    name: 'The Clockwork Owl',
+    title: 'Hoots on the Hour, Mostly',
+    set: 'Creatures',
+    text: 'Built to keep the clock company, it wandered off into the works and now lives there, winding itself up at night. It is always exactly four minutes slow and very proud of it.',
+    hint: 'In an alcove high in the Great Clockworks.',
+    portrait: { bg: ['#5a4a2a', '#1e1610'], kind: 'owl' },
+  },
+  {
+    id: 'cornelius-cogwhistle',
+    number: 30,
+    name: 'Cornelius Cogwhistle',
+    title: 'Built the Clock, Then Climbed Inside It',
+    set: 'Founders',
+    text: 'Designed the great clock over Hollyhock Court and refused to leave until it kept perfect time. It never has. His spectacles are still somewhere in the escapement.',
+    hint: 'In a nook halfway up the Clock Tower, out of reach of anything but a floating crate.',
+    portrait: { bg: FOUNDER_BG, kind: 'person', skin: '#e8c8a8', robe: '#5a4a2a', hair: '#d8d0c0', hat: 'tall', hatColor: '#2b1d14', glasses: true, beard: true, prop: 'key', hairStyle: 'short', collar: 'ruff', expression: 'kind', jewel: '#c99a3e', eyes: '#4a5a3a' },
+  },
 ];
 
 export const CARD_BY_ID = new Map(CARDS.map((c) => [c.id, c]));

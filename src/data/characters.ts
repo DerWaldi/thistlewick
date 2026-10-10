@@ -1,6 +1,6 @@
 import type { PortraitSpec } from './portraits';
 
-export type SpeakerId = 'wendlebury' | 'lantern' | 'tansy' | 'moss' | 'gorse' | 'quince' | 'hopgood' | 'lamplough' | 'ashcombe' | 'coldharbour' | 'sign';
+export type SpeakerId = 'wendlebury' | 'lantern' | 'tansy' | 'moss' | 'gorse' | 'quince' | 'hopgood' | 'lamplough' | 'ashcombe' | 'coldharbour' | 'underbough' | 'sign';
 
 export interface SpeakerDef {
   id: SpeakerId;
@@ -70,6 +70,12 @@ export const SPEAKERS: Record<SpeakerId, SpeakerDef> = {
     name: 'Madam Coldharbour',
     voice: 560,
     portrait: { bg: ['#d8eef8', '#2f4f6a'], kind: 'person', skin: '#f3dcc8', robe: '#2f4f6a', hair: '#f0f0f0', hat: 'tall', hatColor: '#1e3040', glasses: true, prop: 'wand', hairStyle: 'long', collar: 'ruff', expression: 'stern', jewel: '#9fe6ff', eyes: '#6a9ab8' },
+  },
+  underbough: {
+    id: 'underbough',
+    name: 'Professor Underbough',
+    voice: 640,
+    portrait: { bg: ['#e8f0ff', '#6a7a9a'], kind: 'person', skin: '#f0c9a0', robe: '#6a7a9a', hair: '#b86a3a', hat: 'pointy', hatColor: '#4a5a7a', prop: 'thistle', hairStyle: 'wild', collar: 'scarf', expression: 'smile', jewel: '#e8f0ff', eyes: '#5a7aa8' },
   },
   sign: {
     id: 'sign',

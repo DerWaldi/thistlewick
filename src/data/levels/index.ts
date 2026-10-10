@@ -7,12 +7,15 @@ import { GYM } from './gym';
 import { HOPGOOD } from './hopgood';
 import { CATACOMBS } from './catacombs';
 import { CISTERNS } from './cisterns';
+import { CLOCKTOWER } from './clocktower';
+import { CLOCKWORKS } from './clockworks';
 import { COLDHARBOUR } from './coldharbour';
 import { HUB } from './hub';
 import { LAMPLOUGH } from './lamplough';
 import { QUINCE } from './quince';
 import { TOWER } from './tower';
 import { TRIAL } from './trial';
+import { UNDERBOUGH } from './underbough';
 import { VAULT } from './vault';
 
 /** Every level by id. */
@@ -32,4 +35,7 @@ export const LEVELS: Record<string, LevelDef> = {
   grounds: GROUNDS,
   coldharbour: COLDHARBOUR,
   cisterns: CISTERNS,
+  clocktower: CLOCKTOWER,
+  underbough: UNDERBOUGH,
+  clockworks: CLOCKWORKS,
 };

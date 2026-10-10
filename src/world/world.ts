@@ -1,4 +1,5 @@
 import { Vector3 } from 'three';
+import { Pendulum, SkyLift } from '../entities/air';
 import { Brazier, Burnable, Dropper } from '../entities/fire';
 import { Gnarling } from '../entities/gnarling';
 import { Floe, IceSheet, Waterfall } from '../entities/ice';
@@ -79,6 +80,8 @@ const FACTORIES: { [T in EntityType]: Factory<T> } = {
   iceSheet: (s, c) => new IceSheet(s, c),
   waterfall: (s, c) => new Waterfall(s, c),
   floe: (s, c) => new Floe(s, c),
+  skyLift: (s, c) => new SkyLift(s, c),
+  pendulum: (s, c) => new Pendulum(s, c),
   sweet: (s, c, id) => {
     if (!c.state.collected.has(id)) c.sweets.add(s.kind, new Vector3(...s.pos), id);
     return null;

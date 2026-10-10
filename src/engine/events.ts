@@ -49,6 +49,8 @@ export interface GameEvents {
   melt: { pos: Vector3 };
   iceCreak: { pos: Vector3 };
   floeSlide: { pos: Vector3 };
+  levitate: { pos: Vector3 };
+  levitateStop: { pos: Vector3 };
   snapNotice: { pos: Vector3 };
   snapBite: { pos: Vector3 };
   snapLocked: { pos: Vector3 };

@@ -285,7 +285,8 @@ export class LevelBuilder implements PlayerEnvironment {
     const collider = this.physics.world.createCollider(
       RAPIER.ColliderDesc.cuboid(size[0] / 2, size[1] / 2, size[2] / 2).setTranslation(p0.x, p0.y, p0.z),
     );
-    const info = { mover: { delta: new Vector3() } };
+    // Moving ground is never remembered as a safe respawn spot.
+    const info = { mover: { delta: new Vector3() }, temporary: true };
     this.physics.setInfo(collider, info);
     const geo = new BoxGeometry(...size).toNonIndexed();
     paint(geo, color, true);

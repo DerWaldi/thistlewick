@@ -54,6 +54,13 @@ import { HOUSE_ORDER, HOUSES } from '../houses';
  *                                              portcullis (Thwackwort the winch); portraits, a
  *                                              padlocked store-room (east), Quince's door (north)
  *
+ *   Kitchen Yard        x -32..-19, z 14..36  west of the castle through the corner behind the
+ *                                              court's west cloister; Ashcombe's kitchen door
+ *   Kitchen Orchard     x 17..27, z 38..53     behind the court's east arch (vines: Cindersnap)
+ *   Well Yard           x 13..34, z 11..30     east of the hall; gate lock frozen (Cindersnap)
+ *   The great doors (hall, south) open onto the Castle Grounds after Cindersnap; the Clock
+ *   Tower door is in the court's north wall (x 7), open after Rimewhistle.
+ *
  * Secrets: tapestry alcove (hall), sliding bookshelf (corridor, needs Thwackwort),
  * behind the clock (court, a climb), the gallery store-room (needs Latchkin).
  * Latchkin also opens the court chest and the hall cabinet (cards).
@@ -71,6 +78,7 @@ export const HUB: LevelDef = {
     fromUndercroft: { pos: [31.9, -8.5, 2.5], yaw: -Math.PI / 2 },
     fromAshcombe: { pos: [-30.6, 0, 25], yaw: Math.PI / 2 },
     fromGrounds: { pos: [0, 0, 2], yaw: 0 },
+    fromClockTower: { pos: [7, 0, 60.4], yaw: Math.PI },
   },
   areas: [
     { id: 'hall', name: 'The Lantern Hall', min: [-12, -2, 0], max: [12, 14, 30] },
@@ -346,7 +354,7 @@ function buildHub(b: LevelBuilder): void {
   // walkway (with a parapet) that leads behind the clock tower.
   wall(b, 'z', -16.5, 30, 64, 10.5, { cap: 8, holes: [{ from: 38.8, to: 41.2, top: 3.4 }] }); // Leaps & Bounds
   wall(b, 'z', 16.5, 30, 64, 10.5, { holes: [{ from: 44.5, to: 47.5, top: 3.5 }], cap: 8 });
-  wall(b, 'x', 63, -16, 16, W, { thick: 2 });
+  wall(b, 'x', 63, -16, 16, W, { thick: 2, holes: [{ from: 5.9, to: 8.1, top: 3.4 }] }); // the Clock Tower
   b.box([0, W + 0.55, 63.85], [32, 1.1, 0.3], { color: COLORS.stoneLight });
   // Keep people on the walkway: an invisible screen above the parapet.
   b.box([0, W + 5, 63.85], [32, 8, 0.3], { invisible: true, info: { noGrab: true, cameraIgnore: true } });
@@ -748,6 +756,17 @@ function buildHub(b: LevelBuilder): void {
   orchard(b);
   // Appended after everything above, so earlier sweets keep their ids.
   b.add(
+    {
+      type: 'door',
+      pos: [7, 0, 61.95],
+      yaw: Math.PI,
+      width: 2.2,
+      height: 3.2,
+      to: { level: 'clocktower', spawn: 'default' },
+      afterLesson: 'rimewhistle',
+      talk: 'clockTowerDoor',
+      label: 'The Clock Tower',
+    },
     { type: 'sweetLine', kind: 'fizzwort', from: [14.5, 0.6, 27], to: [14.5, 0.6, 14], count: 5 },
     { type: 'sweet', kind: 'humbug', pos: [19, 1.1, 27.5] },
     { type: 'sweetLine', kind: 'fizzwort', from: [22, 0.6, 27], to: [32, 0.6, 27], count: 4 },

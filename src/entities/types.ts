@@ -255,6 +255,42 @@ export type EntitySpec = SpecBase &
         /** Floats home when this signal turns on (a reset bell). */
         resetOn?: string;
       }
+    | {
+        type: 'skyLift';
+        /** Signal on while it's at (or heading to) `to`. */
+        id?: string;
+        style?: 'platform' | 'basket' | 'crate';
+        /** Where the top of its deck sits at each end. */
+        from: V3;
+        to: V3;
+        /** Width (x) and depth (z). */
+        size: [number, number];
+        /** Crate height (default 1.2). */
+        height?: number;
+        /** Start at `to` instead of `from` (a lift waiting to be called). */
+        startAt?: 'from' | 'to';
+        /** Metres per second (default 2.5). */
+        speed?: number;
+        /** Floats back to `from` this many seconds after arriving at `to`. */
+        returnAfter?: number;
+        /** Where its feather-stone post stands on the deck (x, z offset). */
+        post?: [number, number];
+      }
+    | {
+        type: 'pendulum';
+        /** The pivot. */
+        pos: V3;
+        length: number;
+        /** Amplitude in radians. */
+        swing: number;
+        period: number;
+        /** 0..1 of a period. */
+        phase?: number;
+        /** Swing plane (0 = along x). */
+        yaw?: number;
+        /** Bob radius (default 0.7). */
+        bob?: number;
+      }
   );
 
 export type EntityType = EntitySpec['type'];

@@ -41,6 +41,7 @@ export const LOST_AND_FOUND: { card: string; lesson: SpellId; blurb: string }[] 
   { card: 'gloomwisp', lesson: 'glimmerwick', blurb: 'Was hiding behind a wall in the Catacombs. Very nervous. Handle gently.' },
   { card: 'ember-newt', lesson: 'cindersnap', blurb: 'Crawled out of the Glasshouse and into our kettle. Still warm. So is the kettle.' },
   { card: 'rime-toad', lesson: 'rimewhistle', blurb: 'Found it sitting in our ice bucket. It seemed happy. We were not.' },
+  { card: 'clockwork-owl', lesson: 'thistledown', blurb: 'Flew in through the window at four minutes past. It insists it was on time.' },
 ];
 
 /** What's on the shelves for this player: the usual stock plus anything they missed in a finished trial. */

@@ -62,10 +62,18 @@ export const DIALOGUES: Record<string, Script> = {
   },
 
   wendlebury: async ({ say, state }) => {
+    if (state.lessons.has('thistledown')) {
+      await say([
+        { speaker: 'wendlebury', text: "Seven Stars. Seven! Professor Underbough floated down from the roof to tell me, and then couldn't get back up. We've sent for a ladder." },
+        { speaker: 'wendlebury', text: "That's every spell a first-year can learn, dear. The castle is yours to explore. Mind the third step. It still bites." },
+      ]);
+      return;
+    }
     if (state.lessons.has('rimewhistle')) {
       await say([
         { speaker: 'wendlebury', text: "Six Stars. Madam Coldharbour says you crossed the Cisterns without getting your socks wet. She has never managed that. She doesn't wear socks." },
         { speaker: 'wendlebury', text: 'There is a little folly on the island in the lake. Old Isolde Fairweather used to row out to it. You, I suspect, will walk.' },
+        { speaker: 'wendlebury', text: "Last of all, Airs & Graces with Professor Underbough, at the very top of the Clock Tower. The door is in Hollyhock Court's north wall. It's a lot of stairs. She'll tell you there's a quicker way." },
       ]);
       return;
     }
@@ -695,7 +703,10 @@ export const DIALOGUES: Record<string, Script> = {
         { speaker: 'coldharbour', text: 'My card. Taken the morning I broke the ice with my elbow. Note the expression. That is joy.' },
       ]);
       state.collectCard('elspeth-coldharbour');
-      await say([{ speaker: 'coldharbour', text: 'The fountain in Hollyhock Court freezes nicely, if you ask it. And the island in the lake has a folly no one has visited in forty years.' }]);
+      await say([
+        { speaker: 'coldharbour', text: 'The fountain in Hollyhock Court freezes nicely, if you ask it. And the island in the lake has a folly no one has visited in forty years.' },
+        { speaker: 'coldharbour', text: 'Professor Underbough will want you next. Top of the Clock Tower. Wrap up: it is windy, and she does not believe in walls.' },
+      ]);
       return;
     }
     await say([{ speaker: 'coldharbour', text: 'Cold is patient. Cold waits. Then cold wins. Remember that, and wear a vest.' }]);
@@ -770,6 +781,125 @@ export const DIALOGUES: Record<string, Script> = {
     state.award(POINTS.star, 'the Thistle Star');
     state.award(POINTS.lesson, 'passing Frosts & Waters');
     await say([{ speaker: 'coldharbour', text: '(echoing) The Star. Good. Come back up before your toes fall off.' }]);
+  },
+
+  // ---------------------------------------------------------------- the seventh lesson
+
+  clockTowerDoor: async ({ say, state }) => {
+    const text = state.lessons.has('cindersnap')
+      ? '"THE CLOCK TOWER. Airs & Graces, top floor. Sixth-term pupils and above." A rattle of gears from somewhere far above.'
+      : '"THE CLOCK TOWER. No admittance. The clock is busy." It ticks at you, a little rudely.';
+    await say([{ speaker: 'sign', text }]);
+  },
+
+  underboughLesson: async (ctx) => {
+    await teachThistledown(ctx);
+  },
+
+  underbough: async (ctx) => {
+    const { say, state } = ctx;
+    if (!state.knows('thistledown')) {
+      await teachThistledown(ctx);
+      return;
+    }
+    if (!state.flags.has('practice-thistledown') && !state.lessons.has('thistledown')) {
+      await say([
+        { speaker: 'underbough', text: 'Three plates! Float the crate up to the bell. Ride the platform over the light-well. And the basket on the chimney: call it down, then ride it up.' },
+      ]);
+      return;
+    }
+    if (!state.lessons.has('thistledown')) {
+      await say([{ speaker: 'underbough', text: "The Clockworks, through the iron door. Pendulums, lifts and one enormous wheel. Keep your feet light and your timing lighter." }]);
+      return;
+    }
+    if (!state.flags.has('underbough-reward')) {
+      state.flags.add('underbough-reward');
+      await say([
+        { speaker: 'underbough', text: 'The Star from the top of the bell! Oh, well floated. Well floated indeed.' },
+        { speaker: 'underbough', text: 'My card. That is me on a calm day. You can tell, because I am only slightly off the ground.' },
+      ]);
+      state.collectCard('hazel-underbough');
+      await say([{ speaker: 'underbough', text: "Halfway down the tower there's a crate by a nook nobody can reach. Well. Nobody could." }]);
+      return;
+    }
+    await say([{ speaker: 'underbough', text: 'Lightness is a habit. Practise it daily. Not on the stairs.' }]);
+  },
+
+  underboughFloatHint: async ({ say }) => {
+    await say([
+      { speaker: 'underbough', text: "Climb onto the crate, then cast at the little glowing stone on its corner. Up you go! Things float when you cast at their feather-stones." },
+    ]);
+  },
+
+  underboughCallHint: async ({ say }) => {
+    await say([
+      { speaker: 'underbough', text: "The basket is up on the chimney. Cast at its stone from across the roof, where you can see it, and it'll come down to you. Then hop in and cast again." },
+    ]);
+  },
+
+  airPracticeDone: async ({ say, state }) => {
+    state.flags.add('practice-thistledown');
+    await say([
+      { speaker: 'underbough', text: 'Floated, ferried and fetched! You have the knack. Some people never do. They just sort of plummet.' },
+      { speaker: 'underbough', text: "The Great Clockworks, through the iron door. All the way down through the clock to its bell. The Thistle Star is sitting on top of it. Off you float." },
+    ]);
+  },
+
+  lockedClockworksDoor: async ({ say, state }) => {
+    if (state.lessons.has('thistledown')) {
+      await say([{ speaker: 'underbough', text: "The Clockworks are winding themselves back up. Best leave them to it." }]);
+      return;
+    }
+    await say([{ speaker: 'underbough', text: 'The three plates first, please. Then the Clockworks.' }]);
+  },
+
+  classNotOverUnderbough: async ({ say, state }) => {
+    const text = state.flags.has('practice-thistledown')
+      ? 'Not the stairs! The iron door. The Clockworks. Go on!'
+      : 'Three plates first! Then you may go anywhere you like. Down, mostly.';
+    await say([{ speaker: 'underbough', text }]);
+  },
+
+  clockworksIntro: async ({ say }) => {
+    await say([{ speaker: 'underbough', text: '(faintly, from above) The Great Clockworks! Mind the swinging bits. Everything else, cast at its feather-stone.' }]);
+  },
+
+  clockworksGallery: async ({ say }) => {
+    await say([
+      { speaker: 'underbough', text: '(faintly) The Escapement Gallery. Three pendulums. Watch them swing, and go when there is a gap. A clout from one will knock you off the walkway.' },
+    ]);
+  },
+
+  clockworksShaft: async ({ say }) => {
+    await say([
+      { speaker: 'underbough', text: '(faintly) The Weights Shaft. Ride the lift up. The next one is waiting high up: call it down. The last one goes home by itself after three seconds, so do not dawdle.' },
+    ]);
+  },
+
+  clockworksCall: async ({ say }) => {
+    await say([
+      { speaker: 'underbough', text: "(faintly) Can't aim at the lift up there? Step back to the far corner, where you can see its stone, and call it from there." },
+    ]);
+  },
+
+  clockworksWheel: async ({ say }) => {
+    await say([
+      { speaker: 'underbough', text: "(faintly) The Great Wheel. Step onto a platform as it rises level with you, ride it over the top, and step off at the far side. Fall, and the little lift by the wall will bring you back." },
+    ]);
+  },
+
+  clockworksBell: async ({ say }) => {
+    await say([
+      { speaker: 'underbough', text: '(faintly) The Bell Chamber! The crate takes you up to the gallery. Then call the basket down from the bell and ride it up. Mind the clapper.' },
+    ]);
+  },
+
+  clockworksComplete: async ({ say, state }) => {
+    if (state.lessons.has('thistledown')) return;
+    state.lessons.add('thistledown');
+    state.award(POINTS.star, 'the Thistle Star');
+    state.award(POINTS.lesson, 'passing Airs & Graces');
+    await say([{ speaker: 'underbough', text: '(faintly) You did it! Come back up! Use the door. Please use the door.' }]);
   },
 
   tansy: async ({ say, state, openShop }) => {
@@ -863,6 +993,19 @@ async function teachRimewhistle({ say, state, events }: ScriptContext): Promise<
     events.emit('toast', { text: 'You learned Rimewhistle!', kind: 'info' });
   }
   await say([{ speaker: 'coldharbour', text: 'Three plates. The islet in the pool. The ledge above the waterfall. And the jetty across the dock: the long way, so hold the cast. Begin.' }]);
+}
+
+async function teachThistledown({ say, state, events }: ScriptContext): Promise<void> {
+  await say([
+    { speaker: 'underbough', text: 'Up here! Mind the edge. Hazel Underbough, Airs & Graces. Isn\'t it glorious? You can see the lake, the woods, and on a clear day, Tuesday.' },
+    { speaker: 'underbough', text: "THISTLEDOWN. Every lift, crate and basket that can float has a feather-stone: a little glowing stone on a post. Cast at it, and the thing floats to its other place. Cast again, and it comes back." },
+    { speaker: 'underbough', text: "Stand on it first and it carries you. If it's waiting far away, call it from where you can see the stone. And some lifts get homesick, and float back by themselves." },
+  ]);
+  if (!state.knows('thistledown')) {
+    state.learn('thistledown');
+    events.emit('toast', { text: 'You learned Thistledown!', kind: 'info' });
+  }
+  await say([{ speaker: 'underbough', text: 'Three plates: up the crate to the bell, across the light-well, and on top of the chimney. Off you float!' }]);
 }
 
 async function teachSpringwell({ say, state, events }: ScriptContext): Promise<void> {

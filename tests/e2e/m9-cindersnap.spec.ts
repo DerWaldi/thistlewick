@@ -441,9 +441,9 @@ test('back in the castle: the arch vines burn for good, and the orchard shed hid
   });
   expect(r.cards).toContain('silas-applegarth');
   expect(r.secrets).toContain('hub-orchard-shed');
-  // The arch vines and the shed's cobweb stay burnt; only the yard's hay is left.
-  expect(r.vines).toBe(2);
-  // The east alley is gated off as the Well Yard for now.
+  // The arch vines and the shed's cobweb stay burnt; the yard's hay and the Well Yard's ice are left.
+  expect(r.vines).toBe(3);
+  // The Well Yard's gate stays shut until its frozen lock is thawed.
   const gated = await walk(page, [14.5, 0, 33], Math.PI, 2);
   expect(gated.z).toBeGreaterThan(30);
 });

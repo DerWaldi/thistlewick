@@ -66,6 +66,9 @@ export function paintPortrait(g: CanvasRenderingContext2D, s: PortraitSpec, w: n
     case 'toad':
       toad(g, cx, w, h);
       break;
+    case 'owl':
+      owl(g, cx, w, h);
+      break;
   }
   if (s.kind !== 'lantern') varnish(g, w, h, rnd);
 }
@@ -1103,4 +1106,46 @@ function toad(g: CanvasRenderingContext2D, cx: number, w: number, h: number): vo
     g.lineTo(x + 4 * u, h * 0.47);
     g.fill();
   }
+}
+
+function owl(g: CanvasRenderingContext2D, cx: number, w: number, h: number): void {
+  const u = w / 160;
+  // A brass owl with gear eyes, perched on a cog, a key in its back.
+  g.fillStyle = '#5a4a2a';
+  g.beginPath();
+  g.arc(cx, h * 0.92, w * 0.3, Math.PI, 0);
+  g.fill();
+  for (let i = 0; i < 9; i++) {
+    const a = Math.PI + (i / 8) * Math.PI;
+    blob(g, cx + Math.cos(a) * w * 0.32, h * 0.92 + Math.sin(a) * w * 0.32, 4 * u, 4 * u, '#8a6a2a');
+  }
+  orb(g, cx, h * 0.62, w * 0.22, h * 0.22, '#c99a3e');
+  orb(g, cx, h * 0.68, w * 0.14, h * 0.13, '#e8c25a');
+  for (const side of [-1, 1]) {
+    g.fillStyle = '#c99a3e';
+    g.beginPath();
+    g.moveTo(cx + side * w * 0.1, h * 0.42);
+    g.lineTo(cx + side * w * 0.2, h * 0.3);
+    g.lineTo(cx + side * w * 0.22, h * 0.45);
+    g.fill();
+    orb(g, cx + side * w * 0.09, h * 0.52, 12 * u, 12 * u, '#3a3340');
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      blob(g, cx + side * w * 0.09 + Math.cos(a) * 13 * u, h * 0.52 + Math.sin(a) * 13 * u, 2 * u, 2 * u, '#8a6a2a');
+    }
+    eye(g, cx + side * w * 0.09, h * 0.52, 7 * u, '#1e1610', '#ffe6a0');
+  }
+  g.fillStyle = '#8a6a2a';
+  g.beginPath();
+  g.moveTo(cx - 4 * u, h * 0.58);
+  g.lineTo(cx + 4 * u, h * 0.58);
+  g.lineTo(cx, h * 0.63);
+  g.fill();
+  g.strokeStyle = '#8a6a2a';
+  g.lineWidth = 3 * u;
+  g.beginPath();
+  g.arc(cx + w * 0.26, h * 0.6, 7 * u, 0, Math.PI * 2);
+  g.moveTo(cx + w * 0.22, h * 0.6);
+  g.lineTo(cx + w * 0.16, h * 0.6);
+  g.stroke();
 }

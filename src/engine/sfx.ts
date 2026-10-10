@@ -118,6 +118,12 @@ export class Sfx {
       this.hiss(0.9, 2400, 0.2);
       this.tone(500, 150, 0.6, 'triangle', 0.05);
     });
+    // Thistledown: a soft rising whoosh and a high, airy chime; a little bump on arrival.
+    events.on('levitate', () => {
+      this.hiss(0.8, 3200, 0.08);
+      [784, 1175, 1568].forEach((f, i) => setTimeout(() => this.tone(f, f * 1.03, 0.5, 'sine', 0.04), i * 70));
+    });
+    events.on('levitateStop', () => this.tone(330, 300, 0.12, 'triangle', 0.05));
     events.on('floeSlide', () => this.hiss(0.7, 1200, 0.16));
     events.on('gnarlingScared', () => this.tone(1600, 2200, 0.1, 'square', 0.05));
     events.on('snapNotice', () => this.tone(300, 520, 0.12, 'square', 0.06));
