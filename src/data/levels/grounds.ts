@@ -114,10 +114,10 @@ function build(b: LevelBuilder): void {
     [40, -21],
     [33, -33],
   ]) {
-    tree(b, x, z);
+    tree(b, x, z, LAWN);
   }
-  for (let i = 0; i < 8; i++) hollyhock(b, -9 - i * 0.9, -19, i);
-  for (let i = 0; i < 8; i++) hollyhock(b, 9 + i * 0.9, -19, i + 20);
+  for (let i = 0; i < 8; i++) hollyhock(b, -9 - i * 0.9, -19, i, LAWN);
+  for (let i = 0; i < 8; i++) hollyhock(b, 9 + i * 0.9, -19, i + 20, LAWN);
   for (const [x, z, s] of [
     [-30, -18, 1.4],
     [30, -18, 1.4],

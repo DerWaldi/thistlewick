@@ -243,29 +243,29 @@ export function chandelier(b: LevelBuilder, glow: Glow, x: number, y: number, z:
   }
 }
 
-export function hollyhock(b: LevelBuilder, x: number, z: number, seed: number): void {
+export function hollyhock(b: LevelBuilder, x: number, z: number, seed: number, y0 = 0): void {
   const colors = ['#e88ab0', '#c45a9a', '#f2b8d0', '#b05aa8', '#f5d0e0'];
   const h = 1.6 + ((seed * 7919) % 100) / 100;
-  deco(b, new CylinderGeometry(0.03, 0.05, h, 4), [x, h / 2, z], '#4f7a34');
+  deco(b, new CylinderGeometry(0.03, 0.05, h, 4), [x, y0 + h / 2, z], '#4f7a34');
   for (let i = 0; i < 6; i++) {
-    const y = h * 0.45 + i * (h * 0.09);
+    const y = y0 + h * 0.45 + i * (h * 0.09);
     const c = colors[(seed + i) % colors.length];
     deco(b, new IcosahedronGeometry(0.12 - i * 0.012, 0), [x + Math.sin(i * 2.4) * 0.08, y, z + Math.cos(i * 2.4) * 0.08], c);
   }
-  deco(b, new ConeGeometry(0.18, 0.4, 4), [x, 0.2, z], '#5f8a3e');
+  deco(b, new ConeGeometry(0.18, 0.4, 4), [x, y0 + 0.2, z], '#5f8a3e');
 }
 
-export function tree(b: LevelBuilder, x: number, z: number): void {
-  b.cylinder([x, 2, z], 0.45, 4, '#6b4a2e', undefined, 7, 'plain');
-  deco(b, new CylinderGeometry(0.25, 0.4, 3, 6), [x + 0.6, 4.6, z + 0.2], '#6b4a2e', [0, 0, -0.45]);
-  deco(b, new CylinderGeometry(0.2, 0.3, 2.5, 6), [x - 0.5, 4.8, z - 0.3], '#6b4a2e', [0.3, 0, 0.4]);
+export function tree(b: LevelBuilder, x: number, z: number, y0 = 0): void {
+  b.cylinder([x, y0 + 2, z], 0.45, 4, '#6b4a2e', undefined, 7, 'plain');
+  deco(b, new CylinderGeometry(0.25, 0.4, 3, 6), [x + 0.6, y0 + 4.6, z + 0.2], '#6b4a2e', [0, 0, -0.45]);
+  deco(b, new CylinderGeometry(0.2, 0.3, 2.5, 6), [x - 0.5, y0 + 4.8, z - 0.3], '#6b4a2e', [0.3, 0, 0.4]);
   for (const [dx, dy, dz, r] of [
     [0, 6.4, 0, 2.4],
     [1.6, 5.8, 0.6, 1.8],
     [-1.4, 6, -0.8, 1.9],
     [0.4, 7.4, -0.4, 1.6],
   ]) {
-    deco(b, new IcosahedronGeometry(r, 0), [x + dx, dy, z + dz], '#6e9a3e');
+    deco(b, new IcosahedronGeometry(r, 0), [x + dx, y0 + dy, z + dz], '#6e9a3e');
   }
 }
 
