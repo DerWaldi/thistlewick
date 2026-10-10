@@ -594,6 +594,13 @@ export const DIALOGUES: Record<string, Script> = {
     ]);
   },
 
+  catacombOssuary: async ({ say }) => {
+    await say([
+      { speaker: 'lamplough', text: '(a voice from the dark) The Ossuary. My shortest lamps, I am afraid: six seconds each. Light the next one before the one you are standing in goes out.' },
+      { speaker: 'lamplough', text: 'The last stone wants a brighter lamp. So does the way out. And there is a moth in here. A large, unpleasant one. It throws things.' },
+    ]);
+  },
+
   catacombComplete: async ({ say, state }) => {
     if (state.lessons.has('glimmerwick')) return;
     state.lessons.add('glimmerwick');

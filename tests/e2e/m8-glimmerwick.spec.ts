@@ -338,8 +338,8 @@ test("Lamplough's Lantern: all four lamps at once open the gate; the Star ends t
     tw.advance(0.8);
     tw.input(null);
     const through = tw.state().feet.z > 71;
-    // The Ember Crypt beyond has its own test; on to the Star.
-    tw.teleport(0, 0, 91.5, 0);
+    // The Ember Crypt and the Moth Ossuary beyond have their own tests; on to the Star.
+    tw.teleport(0, 0, 132.5, 0);
     tw.input({ y: 1 });
     tw.advance(1.5);
     tw.input(null);
@@ -350,7 +350,7 @@ test("Lamplough's Lantern: all four lamps at once open the gate; the Star ends t
   });
   expect(r.halfway).toBe(true);
   expect(r.through).toBe(true);
-  expect(r.z).toBeGreaterThan(93);
+  expect(r.z).toBeGreaterThan(133.5);
   expect(r.lessons).toContain('glimmerwick');
   await shot(page, 'm8-star', browserName);
 });

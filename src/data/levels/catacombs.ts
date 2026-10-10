@@ -26,7 +26,14 @@ import { cobweb, column, deco, Glow, rubble, slab, urn, wall, wallTorch } from '
  *                                         C1 on the landing lights the first two, C2 on the island
  *                                         halfway lights the rest; two Ember Crabs on the far ledge
  *                                         spit fire as you cross (Thwackwort flips them a while)
- *   Star chamber     x -3..3,  z 91..98
+ *   Passage          x -3..3,  z 90.5..98.5 (the old Star chamber)
+ *   Moth Ossuary     x -8..8,  z 98.5..131 a chasm (z 102..126) crossed on ten glimmer stones lit
+ *                                         by three lamps that burn only 6 s: L1 on the landing,
+ *                                         then hanging lamps L2 and L3 over the chasm, lit from
+ *                                         the stones before them; the last stone shows only in
+ *                                         a CHARGED L3. A Hexling hunts over the chasm. The way
+ *                                         out is a false wall only a CHARGED lamp unmasks
+ *   Star chamber     x -3..3,  z 131.5..138.5
  */
 export const CATACOMBS: LevelDef = {
   id: 'catacombs',
@@ -39,6 +46,8 @@ export const CATACOMBS: LevelDef = {
     { id: 'lantern', name: "Lamplough's Lantern", min: [-9, -3, 50.5], max: [9, 9, 70.5] },
     { id: 'crypt', name: 'The Ember Crypt', min: [-7.5, -20, 70.5], max: [7.5, 9, 90.5] },
     { id: 'lantern', name: "Lamplough's Lantern", min: [-3.5, -3, 90.5], max: [3.5, 9, 98.5] },
+    { id: 'ossuary', name: 'The Moth Ossuary', min: [-8.5, -20, 98.5], max: [8.5, 10, 131.5] },
+    { id: 'star', name: 'The Star Chamber', min: [-3.5, -3, 131.5], max: [3.5, 9, 138.5] },
   ],
   intro: { script: 'catacombIntro', unlessFlag: 'catacombs-entered' },
   ambience: 'dark',
@@ -47,6 +56,8 @@ export const CATACOMBS: LevelDef = {
 };
 
 const STONE = '#6a6070';
+/** The Star Chamber, after the Moth Ossuary. */
+const STAR_Z = 135;
 const FLOOR = '#4a4450';
 
 function build(b: LevelBuilder): void {
@@ -181,17 +192,14 @@ function build(b: LevelBuilder): void {
     wallTorch(b, flames, [0.42, 3, z], Math.PI / 2);
   }
 
-  // Star chamber.
+  // The old Star chamber: a lit passage on to the Moth Ossuary.
   wall(b, 'z', -3.5, 90.5, 98.5, 6, { color: STONE });
   wall(b, 'z', 3.5, 90.5, 98.5, 6, { color: STONE });
-  wall(b, 'x', 98.5, -3.5, 3.5, 6, { color: STONE });
   slab(b, -3.5, 3.5, 90.5, 98.5, 6.5, 0.5, COLORS.stoneDark);
-  b.cylinder([0, 0.5, 95], 0.7, 1, COLORS.stoneLight, undefined, 8);
-  deco(b, new CylinderGeometry(0.85, 0.85, 0.12, 8), [0, 1.06, 95], '#c99a3e');
-  for (let i = 0; i < 6; i++) deco(b, new IcosahedronGeometry(0.12, 0), [-2 + i * 0.8, 0.12, 97.6], '#bfe8ff');
   b.add(
-    { type: 'star', id: 'catacomb-star', pos: [0, 1.9, 95], script: 'catacombComplete' },
-    { type: 'door', pos: [0, 0, 97.95], yaw: Math.PI, width: 2.4, height: 3.4, to: { level: 'lamplough', spawn: 'fromCatacombs' }, label: 'Up to class' },
+    // The Star and the way up moved on (replaced in place: ids stay put).
+    { type: 'star', id: 'catacomb-star', pos: [0, 1.9, STAR_Z], script: 'catacombComplete' },
+    { type: 'door', pos: [0, 0, STAR_Z + 2.95], yaw: Math.PI, width: 2.4, height: 3.4, to: { level: 'lamplough', spawn: 'fromCatacombs' }, label: 'Up to class' },
     { type: 'wickLamp', pos: [-2.2, 0, 92.5], radius: 2, duration: 0, lit: true },
     { type: 'wickLamp', pos: [2.2, 0, 92.5], radius: 2, duration: 0, lit: true },
   );
@@ -207,6 +215,7 @@ function build(b: LevelBuilder): void {
   }
 
   emberCrypt(b, flames);
+  mothOssuary(b, flames);
 
   flames.finish(b, '#ffb060');
   b.finish();
@@ -255,3 +264,71 @@ function emberCrypt(b: LevelBuilder, flames: Glow): void {
   }
   for (const z of [73.5, 86.5]) deco(b, new BoxGeometry(2, 0.3, 0.8), [0, -0.16, z], COLORS.stoneDark);
 }
+
+/**
+ * The Moth Ossuary (z 98.5..131): a dark chasm on short-lived lamplight, a Hexling, and a
+ * false wall out. Then the Star chamber. Built last so the earlier rooms' sweets keep their ids.
+ */
+function mothOssuary(b: LevelBuilder, flames: Glow): void {
+  const Z0 = 98.5;
+  const Z1 = 131.5;
+  b.floor(-8.5, 8.5, Z0, Z1 + 7, { color: FLOOR, holes: [[-8, 8, 102, 126]] });
+  wall(b, 'x', Z0, -8.5, 8.5, 9, { color: STONE, holes: [{ from: -1.6, to: 1.6, top: 3.6 }] });
+  wall(b, 'z', -8.5, Z0, Z1, 9, { color: STONE });
+  wall(b, 'z', 8.5, Z0, Z1, 9, { color: STONE });
+  slab(b, -8.5, 8.5, Z0, Z1, 9.5, 0.5, COLORS.stoneDark);
+  b.box([0, -16, 114], [16, 0.5, 24], { color: '#0e0c12', noCollide: true });
+  // Bones in niches along the walls (an ossuary, after all).
+  for (const x of [-8.02, 8.02]) {
+    for (let z = 103; z < 126; z += 3) {
+      deco(b, new BoxGeometry(0.1, 1.2, 2), [x, 3, z], '#2a2230');
+      for (let i = 0; i < 3; i++) deco(b, new IcosahedronGeometry(0.16, 0), [x + (x < 0 ? 0.12 : -0.12), 2.6 + i * 0.3, z - 0.5 + i * 0.5], '#d8d0c0');
+    }
+  }
+  // The false wall out, across the far landing.
+  b.box([-5.2, 1.6, Z1 - 0.3], [6.6, 3.2, 0.6], { color: STONE });
+  b.box([5.2, 1.6, Z1 - 0.3], [6.6, 3.2, 0.6], { color: STONE });
+  b.box([0, 6.1, Z1 - 0.3], [17, 5.8, 0.6], { color: STONE });
+  const stones: [number, number][] = [
+    [-1, 103.4],
+    [0.8, 105.4],
+    [2.6, 107.4],
+    [3.6, 109.8],
+    [2, 112.2],
+    [0, 114.4],
+    [-1.8, 116.6],
+    [-3.4, 119],
+    [-2.2, 121.6],
+    [-0.4, 124.2],
+  ];
+  b.add(
+    { type: 'checkpoint', pos: [-6.5, 0, 100.2], yaw: Math.PI / 2, zone: { min: [-8, -1, 98.6], max: [8, 4, 102] } },
+    { type: 'trigger', flag: 'catacomb-hint-ossuary', script: 'catacombOssuary', min: [-8, -1, 98.6], max: [8, 4, 101.5] },
+    { type: 'wickLamp', pos: [-1, 0, 100.6], radius: 5.2, duration: 6, light: true },
+    { type: 'wickLamp', pos: [2.5, 3.4, 108.5], style: 'hanging', radius: 6, duration: 6 },
+    { type: 'wickLamp', pos: [-2.5, 3.4, 117], style: 'hanging', radius: 6, duration: 7 },
+    ...stones.map(([x, z]) => ({ type: 'glimmerBlock' as const, pos: [x, -0.15, z] as V3, size: [1.5, 0.3, 1.5] as V3 })),
+    { type: 'hexling', pos: [0, 0, 114], height: 5, radius: 3.5, interval: 3.6 },
+    { type: 'checkpoint', pos: [-6.5, 0, 127.6], yaw: Math.PI / 2, zone: { min: [-8, -1, 126.2], max: [8, 4, 130.6] } },
+    // Far enough off that only its charged glow reaches the false wall.
+    { type: 'wickLamp', pos: [5, 0, 127.2], radius: 3.2, duration: 8 },
+    { type: 'illusionWall', pos: [0, 1.6, Z1 - 0.3], size: [3.8, 3.2, 0.6], color: STONE },
+    { type: 'sweet', kind: 'bramble', pos: [3.6, 0.6, 109.8] },
+    { type: 'sweet', kind: 'bramble', pos: [-3.4, 0.6, 119] },
+    { type: 'sweet', kind: 'humbug', pos: [-6.5, 0.6, 129.8] },
+  );
+  for (const z of [100, 128]) {
+    wallTorch(b, flames, [-7.98, 2.6, z], Math.PI / 2);
+    wallTorch(b, flames, [7.98, 2.6, z], -Math.PI / 2);
+  }
+  // The Star chamber, lit all the time.
+  wall(b, 'z', -3.5, Z1, Z1 + 7, 6, { color: STONE });
+  wall(b, 'z', 3.5, Z1, Z1 + 7, 6, { color: STONE });
+  wall(b, 'x', Z1 + 7, -3.5, 3.5, 6, { color: STONE });
+  slab(b, -3.5, 3.5, Z1, Z1 + 7, 6.5, 0.5, COLORS.stoneDark);
+  b.cylinder([0, 0.5, STAR_Z], 0.7, 1, COLORS.stoneLight, undefined, 8);
+  deco(b, new CylinderGeometry(0.85, 0.85, 0.12, 8), [0, 1.06, STAR_Z], '#c99a3e');
+  for (let i = 0; i < 6; i++) deco(b, new IcosahedronGeometry(0.12, 0), [-2 + i * 0.8, 0.12, STAR_Z + 2.6], '#bfe8ff');
+  for (const x of [-2.98, 2.98]) wallTorch(b, flames, [x, 2.6, Z1 + 2], x < 0 ? Math.PI / 2 : -Math.PI / 2);
+}
+

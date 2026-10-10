@@ -251,3 +251,55 @@ test('Tumbledown Tower, the Weathercock Run: rune to rune, up to the beam, flung
   });
   await shot(page, 'm18-weathercock', browserName);
 });
+
+test('Lamplit Catacombs, the Moth Ossuary: three short lamps, a charged last stone, a charged way out', async ({ page, browserName }) => {
+  await sandbox(page, 'catacombs', ['catacombs-entered', 'catacomb-hint-ossuary']);
+  await calm(page, ['Hexling']);
+  const stand = (at: [number, number, number]) =>
+    page.evaluate(async (at) => {
+      const tw = window.__tw;
+      tw.teleport(at[0], at[1] + 0.4, at[2], 0);
+      tw.advance(0.4);
+      return tw.state().feet.y;
+    }, at);
+  // L1 from the landing: the first two stones.
+  expect(await castAt(page, [0, 0, 99.6], [-1, 2.1, 100.6], 0, 0.3)).toBe('glimmerwick');
+  expect(await stand([0.8, 0, 105.4])).toBeGreaterThan(-0.2);
+  // L2, hanging over the chasm, lit from the second stone.
+  expect(await castAt(page, [0.8, 0, 105.4], [2.5, 3.4, 108.5], 0, 0.3)).toBe('glimmerwick');
+  expect(await stand([2, 0, 112.2])).toBeGreaterThan(-0.2);
+  // L3 from the fifth: plain lights up to the ninth stone, not the tenth.
+  expect(await castAt(page, [2, 0, 112.2], [-2.5, 3.4, 117], 0, 0.3)).toBe('glimmerwick');
+  expect(await stand([-2.2, 0, 121.6])).toBeGreaterThan(-0.2);
+  expect(await stand([-0.4, 0, 124.2])).toBeLessThan(-1);
+  // ...the lamps go out after their few seconds: the stones with them.
+  await page.evaluate(() => window.__tw.advance(8));
+  expect(await stand([2, 0, 112.2])).toBeLessThan(-1);
+  // Charged L3 reaches the tenth.
+  await page.evaluate(() => window.__tw.advance(4));
+  expect(await castAt(page, [-2, 0, 127.4], [-2.5, 3.4, 117], 1.2, 0.3)).toBe('glimmerwick');
+  expect(await stand([-0.4, 0, 124.2])).toBeGreaterThan(-0.2);
+  // The way out: the false wall only fades in a charged lamp.
+  const walkOut = () =>
+    page.evaluate(() => {
+      const tw = window.__tw;
+      tw.teleport(0, 0, 129.2, 0);
+      tw.setCamera(0, 0.1);
+      tw.input({ x: 0, y: 1 });
+      tw.advance(1.2);
+      tw.input(null);
+      return tw.state().feet.z;
+    });
+  expect(await castAt(page, [3, 0, 127.4], [5, 2.1, 127.2], 0, 0.3)).toBe('glimmerwick');
+  expect(await walkOut()).toBeLessThan(131);
+  await page.evaluate(() => window.__tw.advance(9));
+  expect(await castAt(page, [3, 0, 127.4], [5, 2.1, 127.2], 1.2, 0.3)).toBe('glimmerwick');
+  expect(await walkOut()).toBeGreaterThan(132);
+  await page.evaluate(() => {
+    const tw = window.__tw;
+    tw.teleport(-4, 0, 100, 0.25);
+    tw.setCamera(0.25, 0.15);
+    tw.advance(0.3);
+  });
+  await shot(page, 'm18-ossuary', browserName);
+});
