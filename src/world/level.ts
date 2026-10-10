@@ -32,6 +32,11 @@ export interface LevelDef {
   ambience?: 'day' | 'dark';
   /** Background music (default 'hub'). */
   music?: Mood;
+  /**
+   * Named places kept free for NPCs (students giving quests later): a bench, a fireside, a
+   * window seat. Nothing is placed there yet; quests pick a spot by name.
+   */
+  npcSpots?: Record<string, SpawnPoint>;
   /** Dialogue script id to run on entering, if the flag isn't set yet. */
   intro?: { script: string; unlessFlag: string };
 }

@@ -331,6 +331,36 @@ export const CARDS: CardDef[] = [
     hint: 'In an old chest in a forgotten passage behind the Cupboard.',
     portrait: { bg: ODDBALL_BG, kind: 'person', skin: '#e2a982', robe: '#6a5a4a', hair: '#9a9088', hat: 'cap', hatColor: '#4a3a2a', beard: true, prop: 'none', hairStyle: 'wild', collar: 'scarf', expression: 'stern', jewel: '#8a6a3a', eyes: '#5a4a3a' },
   },
+  {
+    id: 'orla-vellum',
+    number: 32,
+    name: 'Orla Vellum',
+    title: 'Wrote Down Everything, Twice',
+    set: 'Founders',
+    text: 'First librarian of Thistlewick. Kept a book of every book in the library, and a second book listing the first. The stacks were built tall so she could never reach the fiction.',
+    hint: 'On top of the stacks in the Great Library, where only a bright lamp shows the way.',
+    portrait: { bg: FOUNDER_BG, kind: 'person', skin: '#f0c9a0', robe: '#5d4470', hair: '#2b1d14', hat: 'none', glasses: true, prop: 'book', hairStyle: 'bun', collar: 'ruff', expression: 'stern', jewel: '#c99a3e', eyes: '#4a3a5a' },
+  },
+  {
+    id: 'chimney-imp',
+    number: 33,
+    name: 'The Chimney Imp',
+    title: 'Sooty, Sneaky, Rather Sweet',
+    set: 'Creatures',
+    text: 'Lives on the roofs and slides down chimneys to steal toast. Leaves sooty little handprints on the observatory telescope, which is why the stars sometimes look smudged.',
+    hint: 'At the lookout above the observatory, on the Leads.',
+    portrait: { bg: ['#6a6272', '#2a2230'], kind: 'imp' },
+  },
+  {
+    id: 'snapweed',
+    number: 34,
+    name: 'The Snapweed',
+    title: 'Bites First, Never Asks',
+    set: 'Creatures',
+    text: 'A hungry plant with a very short temper and a very long reach. Kept in the Forbidden Section for study. Nobody has finished studying it, because nobody has finished their fingers.',
+    hint: 'In a chest in the Forbidden Section of the Great Library.',
+    portrait: { bg: ['#4f7a34', '#1e2a14'], kind: 'snapweed' },
+  },
 ];
 
 export const CARD_BY_ID = new Map(CARDS.map((c) => [c.id, c]));

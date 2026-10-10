@@ -69,6 +69,12 @@ export function paintPortrait(g: CanvasRenderingContext2D, s: PortraitSpec, w: n
     case 'owl':
       owl(g, cx, w, h);
       break;
+    case 'imp':
+      imp(g, cx, w, h);
+      break;
+    case 'snapweed':
+      snapweedArt(g, cx, w, h);
+      break;
   }
   if (s.kind !== 'lantern') varnish(g, w, h, rnd);
 }
@@ -1148,4 +1154,52 @@ function owl(g: CanvasRenderingContext2D, cx: number, w: number, h: number): voi
   g.moveTo(cx + w * 0.22, h * 0.6);
   g.lineTo(cx + w * 0.16, h * 0.6);
   g.stroke();
+}
+
+function imp(g: CanvasRenderingContext2D, cx: number, w: number, h: number): void {
+  const u = w / 160;
+  // A chimney pot with a sooty little imp peeking out, a slice of toast in hand.
+  g.fillStyle = '#8a5a44';
+  g.fillRect(cx - w * 0.22, h * 0.62, w * 0.44, h * 0.38);
+  g.fillStyle = '#6a4434';
+  g.fillRect(cx - w * 0.26, h * 0.6, w * 0.52, h * 0.06);
+  orb(g, cx, h * 0.55, w * 0.18, h * 0.13, '#3a3340');
+  for (const side of [-1, 1]) {
+    g.fillStyle = '#3a3340';
+    g.beginPath();
+    g.moveTo(cx + side * w * 0.08, h * 0.45);
+    g.lineTo(cx + side * w * 0.2, h * 0.34);
+    g.lineTo(cx + side * w * 0.16, h * 0.5);
+    g.fill();
+    eye(g, cx + side * 9 * u, h * 0.54, 6 * u, '#2a1a10', '#ffe6a0');
+  }
+  g.fillStyle = '#d9a05a';
+  g.fillRect(cx + w * 0.16, h * 0.56, w * 0.14, h * 0.1);
+  for (let i = 0; i < 6; i++) blob(g, cx - w * 0.3 + i * w * 0.12, h * (0.25 - (i % 2) * 0.05), 6 * u, 4 * u, 'rgba(90,80,90,0.5)');
+}
+
+function snapweedArt(g: CanvasRenderingContext2D, cx: number, w: number, h: number): void {
+  const u = w / 160;
+  // A stem rising from a pot, a red bulb head with its jaws wide open.
+  g.fillStyle = '#7a4a3a';
+  g.fillRect(cx - w * 0.16, h * 0.78, w * 0.32, h * 0.22);
+  g.strokeStyle = '#4f7a34';
+  g.lineWidth = 8 * u;
+  g.beginPath();
+  g.moveTo(cx, h * 0.8);
+  g.quadraticCurveTo(cx - w * 0.15, h * 0.6, cx, h * 0.42);
+  g.stroke();
+  for (const side of [-1, 1]) blob(g, cx + side * w * 0.14, h * 0.72, 14 * u, 6 * u, '#5f9a3e');
+  orb(g, cx, h * 0.3, w * 0.22, h * 0.09, '#8a3a5a');
+  orb(g, cx, h * 0.42, w * 0.22, h * 0.07, '#8a3a5a');
+  orb(g, cx, h * 0.36, w * 0.18, h * 0.05, '#c8384a');
+  g.fillStyle = '#f4ecd8';
+  for (let i = 0; i < 6; i++) {
+    const x = cx - w * 0.15 + i * w * 0.06;
+    g.beginPath();
+    g.moveTo(x, h * 0.32);
+    g.lineTo(x + 3 * u, h * 0.37);
+    g.lineTo(x + 6 * u, h * 0.32);
+    g.fill();
+  }
 }

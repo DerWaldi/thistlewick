@@ -79,6 +79,7 @@ export const HUB: LevelDef = {
     fromAshcombe: { pos: [-30.6, 0, 25], yaw: Math.PI / 2 },
     fromGrounds: { pos: [0, 0, 2], yaw: 0 },
     fromClockTower: { pos: [0, 0, 60.4], yaw: Math.PI },
+    fromUpper: { pos: [10.6, 5, 25.5], yaw: -Math.PI / 2 },
   },
   areas: [
     { id: 'hall', name: 'The Lantern Hall', min: [-12, -2, 0], max: [12, 14, 30] },
@@ -95,6 +96,17 @@ export const HUB: LevelDef = {
     { id: 'undercroft', name: 'The Undercroft', min: [12.6, -10, -1.2], max: [34, -1.5, 6.2], ambience: 'dark' },
   ],
   intro: { script: 'intro', unlessFlag: 'greeted' },
+  npcSpots: {
+    hallStairFoot: { pos: [2.6, 0, 11.2], yaw: Math.PI },
+    galleryWindow: { pos: [-8, 5, 27], yaw: -Math.PI / 2 },
+    courtFountain: { pos: [3.5, 0, 39.6], yaw: Math.PI },
+    courtCloisterWest: { pos: [-14.2, 0, 44], yaw: Math.PI / 2 },
+    courtCloisterEast: { pos: [14.2, 0, 52], yaw: -Math.PI / 2 },
+    kitchenYard: { pos: [-24, 0, 21], yaw: Math.PI / 2 },
+    orchard: { pos: [22, 0, 44], yaw: -Math.PI / 2 },
+    wellYard: { pos: [17, 0, 21], yaw: 0 },
+    corridor: { pos: [15, 0, 8], yaw: Math.PI / 2 },
+  },
   build: buildHub,
 };
 
@@ -122,6 +134,7 @@ function buildHub(b: LevelBuilder): void {
     holes: [
       { from: 6, to: 10, top: 4.5 }, // to the corridor
       { from: 1.3, to: 3.7, top: 3.4 }, // down to the Undercroft
+      { from: 24.4, to: 26.6, bottom: 5, top: 8.4 }, // up to the First Floor, off the gallery
     ],
   });
   wall(b, 'x', 30.5, -12.5, 12.5, HH, {
@@ -797,6 +810,8 @@ function buildHub(b: LevelBuilder): void {
     { type: 'sweetLine', kind: 'fizzwort', from: [22, 0.6, 27], to: [32, 0.6, 27], count: 4 },
   );
   forgottenPassage(b);
+  // Up to the First Floor: a door off the gallery's east end.
+  b.add({ type: 'door', pos: [11.95, 5, 25.5], yaw: -Math.PI / 2, width: 2.2, height: 3.2, to: { level: 'upper', spawn: 'default' }, lockedUnless: 'sorted', talk: 'upstairsDoor', label: 'The First Floor' });
 
   glow.finish(b, '#ffc68a');
   candle.finish(b, '#ffe2a0');

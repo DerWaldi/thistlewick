@@ -83,6 +83,10 @@ const FACTORIES: { [T in EntityType]: Factory<T> } = {
   floe: (s, c) => new Floe(s, c),
   skyLift: (s, c) => new SkyLift(s, c),
   pendulum: (s, c) => new Pendulum(s, c),
+  houseSeal: (s, c) => {
+    c.signals.set(`house-door-${s.house}`, c.state.house === s.house);
+    return null;
+  },
   snapweed: (s, c, id) => {
     if (s.persist && s.id && c.state.flags.has(`down:${s.id}`)) {
       c.signals.set(s.id, true);

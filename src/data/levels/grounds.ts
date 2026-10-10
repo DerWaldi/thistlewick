@@ -30,6 +30,15 @@ export const GROUNDS: LevelDef = {
     { id: 'lawn', name: 'The Castle Grounds', min: [-51, -4, -42], max: [51, 12, -12.5] },
     { id: 'lake', name: 'Fairweather Lake', min: [-51, -8, -92], max: [51, 12, -42] },
   ],
+  npcSpots: {
+    terrace: { pos: [8, 0, -6], yaw: Math.PI },
+    lawnBench: { pos: [-6.2, -3, -26.5], yaw: Math.PI / 2 },
+    statue: { pos: [2.6, -3, -31], yaw: -Math.PI / 2 },
+    jetty: { pos: [11, -3, -45], yaw: Math.PI },
+    boathouse: { pos: [-27.5, -3, -38.5], yaw: Math.PI / 2 },
+    oldWoodsGate: { pos: [46.5, -3, -25], yaw: Math.PI / 2 },
+    lakeshore: { pos: [-15, -3, -41.5], yaw: Math.PI },
+  },
   build,
 };
 

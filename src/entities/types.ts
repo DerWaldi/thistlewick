@@ -2,6 +2,7 @@ import type { StudentLook } from '../player/model';
 import type { Object3D, Vector3 } from 'three';
 import type { SpeakerId } from '../data/characters';
 import type { SpellId } from '../data/spells';
+import type { HouseId } from '../data/houses';
 import type { SweetKind } from '../data/sweets';
 import type { Tuning } from '../data/tuning';
 import type { EventBus } from '../engine/events';
@@ -315,6 +316,11 @@ export type EntitySpec = SpecBase &
         interval?: number;
         speed?: number;
         persist?: boolean;
+      }
+    | {
+        type: 'houseSeal';
+        /** Turns on signal `house-door-<house>` if the player belongs to this house (common-room doors). */
+        house: HouseId;
       }
   );
 

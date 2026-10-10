@@ -932,6 +932,16 @@ export const DIALOGUES: Record<string, Script> = {
     await say([{ speaker: 'underbough', text: '(faintly) You did it! Come back up! Use the door. Please use the door.' }]);
   },
 
+  upstairsDoor: async ({ say }) => {
+    await say([{ speaker: 'sign', text: '"THE FIRST FLOOR. Sorted pupils only." The Sorting Lantern first, then.' }]);
+  },
+
+  upperLeads: async ({ say }) => {
+    await say([
+      { speaker: 'sign', text: '"THE LEADS. The roof is out of bounds." Someone has added underneath, in a different hand: "Unless you can get to the observatory. Then it\'s brilliant."' },
+    ]);
+  },
+
   tansy: async ({ say, state, openShop }) => {
     if (state.lessons.has('thwackwort')) {
       const first = !state.flags.has('shop-visited');
