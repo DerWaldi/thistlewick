@@ -155,7 +155,6 @@ function build(b: LevelBuilder): void {
     to: { level: 'underbough', spawn: 'default' },
     label: 'Airs & Graces',
   });
-  signboard(b, 'Airs & Graces', [-7.95, 7 * RISE + 3.9, 2], Math.PI / 2);
   b.add(
     { type: 'sweetLine', kind: 'fizzwort', from: [6, RISE * 0.25 + 0.6, 5], to: [6, RISE * 0.9 + 0.6, 11], count: 4 },
     { type: 'sweetLine', kind: 'fizzwort', from: [2, RISE * 1.3 + 0.6, 14], to: [-2, RISE * 1.7 + 0.6, 14], count: 3 },

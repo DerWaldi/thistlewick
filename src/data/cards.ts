@@ -321,6 +321,16 @@ export const CARDS: CardDef[] = [
     hint: 'In a nook halfway up the Clock Tower, out of reach of anything but a floating crate.',
     portrait: { bg: FOUNDER_BG, kind: 'person', skin: '#e8c8a8', robe: '#5a4a2a', hair: '#d8d0c0', hat: 'tall', hatColor: '#2b1d14', glasses: true, beard: true, prop: 'key', hairStyle: 'short', collar: 'ruff', expression: 'kind', jewel: '#c99a3e', eyes: '#4a5a3a' },
   },
+  {
+    id: 'wilfred-dustpan',
+    number: 31,
+    name: 'Wilfred Dustpan',
+    title: 'Swept Every Corner but One',
+    set: 'Oddballs',
+    text: 'Castle sweeper for fifty-one years. Swore he had swept every corner of Thistlewick, and was very cross to be shown the one behind the Cupboard. He left his broom there in protest.',
+    hint: 'In an old chest in a forgotten passage behind the Cupboard.',
+    portrait: { bg: ODDBALL_BG, kind: 'person', skin: '#e2a982', robe: '#6a5a4a', hair: '#9a9088', hat: 'cap', hatColor: '#4a3a2a', beard: true, prop: 'none', hairStyle: 'wild', collar: 'scarf', expression: 'stern', jewel: '#8a6a3a', eyes: '#5a4a3a' },
+  },
 ];
 
 export const CARD_BY_ID = new Map(CARDS.map((c) => [c.id, c]));

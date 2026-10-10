@@ -161,7 +161,6 @@ function build(b: LevelBuilder): void {
   }
   deco(b, new BoxGeometry(11, 0.3, 0.3), [-35, LAWN + 6, -41], COLORS.woodDark);
   b.add({ type: 'door', pos: [-30.1, LAWN, -41], yaw: Math.PI / 2, width: 2.2, height: 3, to: { level: 'coldharbour', spawn: 'default' }, label: 'Frosts & Waters' });
-  signboard(b, 'Frosts & Waters', [-29.8, LAWN + 3.8, -41], Math.PI / 2);
   // A rowing boat, pulled up on the shore.
   deco(b, new BoxGeometry(1.2, 0.5, 3.4), [-26.5, LAWN + 0.25, -44], COLORS.wood);
   deco(b, new BoxGeometry(1, 0.1, 3.2), [-26.5, LAWN + 0.45, -44], COLORS.woodDark);

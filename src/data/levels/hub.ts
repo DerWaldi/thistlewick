@@ -89,6 +89,8 @@ export const HUB: LevelDef = {
     { id: 'court', name: 'Hollyhock Court', min: [-17, -3, 30], max: [17, 30, 66] },
     { id: 'gallery', name: 'The Long Gallery', min: [34.5, 2, 23.5], max: [47.5, 11, 52.5] },
     { id: 'yard', name: 'The Kitchen Yard', min: [-32.5, -2, 13.5], max: [-18.5, 12, 36.5] },
+    { id: 'passage', name: 'The Forgotten Passage', min: [-18.5, -2, 12.5], max: [-12.5, 8, 21] },
+    { id: 'passage', name: 'The Forgotten Passage', min: [-18.5, -2, 21], max: [-16.5, 8, 26.5] },
     { id: 'orchard', name: 'The Kitchen Orchard', min: [17, -2, 38.5], max: [27.5, 12, 53.5] },
     { id: 'undercroft', name: 'The Undercroft', min: [12.6, -10, -1.2], max: [34, -1.5, 6.2], ambience: 'dark' },
   ],
@@ -771,6 +773,7 @@ function buildHub(b: LevelBuilder): void {
     { type: 'sweet', kind: 'humbug', pos: [19, 1.1, 27.5] },
     { type: 'sweetLine', kind: 'fizzwort', from: [22, 0.6, 27], to: [32, 0.6, 27], count: 4 },
   );
+  forgottenPassage(b);
 
   glow.finish(b, '#ffc68a');
   candle.finish(b, '#ffe2a0');
@@ -795,7 +798,7 @@ function kitchenYard(b: LevelBuilder, glow: Glow): void {
   wall(b, 'x', 36.5, -33, -18, 7, { cap: 4 });
   // Nobody climbs onto the tapestry alcove's roof from the corner.
   b.box([-14.5, 5.5, 26], [4, 4, 1], { invisible: true, info: { noGrab: true, cameraIgnore: true } });
-  signboard(b, 'The Kitchen Yard', [-18.5, 4.6, 29.06], Math.PI);
+  signboard(b, 'The Kitchen Yard', [-19.03, 4.75, 28.25], -Math.PI / 2);
   b.add({
     type: 'door',
     pos: [-32, 0, 25],
@@ -808,7 +811,6 @@ function kitchenYard(b: LevelBuilder, glow: Glow): void {
     label: 'Hearth & Flame',
   });
   // The bakehouse front: a brick gable, the chimney, and a bread oven's glowing mouth.
-  signboard(b, 'Hearth & Flame', [-31.95, 3.85, 25], Math.PI / 2);
   // A tiled eave along the top of the wall, and the chimney.
   deco(b, new BoxGeometry(1.6, 0.25, 23.2), [-31.9, 7.05, 25], COLORS.roof, [0, 0, -0.35]);
   b.box([-31.6, 8.5, 20], [1.4, 3, 1.6], { color: BRICK, noCollide: true });
@@ -837,9 +839,25 @@ function kitchenYard(b: LevelBuilder, glow: Glow): void {
   }
   b.box([-24, 0.4, 35.6], [2.6, 0.8, 1.2], { invisible: true });
   // A cart and some barrels by the arch.
-  b.box([-21.2, 0.8, 20.5], [1.6, 0.3, 2.8], { color: COLORS.wood, pattern: 'planks' });
-  for (const z of [19.4, 21.6]) deco(b, new CylinderGeometry(0.55, 0.55, 0.12, 10), [-20.3, 0.55, z], COLORS.woodDark, [0, 0, Math.PI / 2]);
-  deco(b, new BoxGeometry(0.1, 0.1, 2), [-21.2, 0.6, 23.4], COLORS.woodDark, [0.3, 0, 0]);
+  // A two-wheeled handcart: the bed on an axle, shafts resting on the ground in front, a
+  // prop leg at the back so it stands level.
+  const CX = -21.2;
+  b.box([CX, 0.8, 20.5], [1.6, 0.3, 2.8], { color: COLORS.wood, pattern: 'planks' });
+  for (const side of [-1, 1]) {
+    deco(b, new BoxGeometry(0.08, 0.4, 2.8), [CX + side * 0.76, 1.15, 20.5], COLORS.woodDark);
+    // The wheel: rim, hub and spokes, outside the bed.
+    const wx = CX + side * 0.95;
+    deco(b, new TorusGeometry(0.5, 0.06, 5, 14), [wx, 0.55, 20.5], COLORS.woodDark, [0, Math.PI / 2, 0]);
+    deco(b, new CylinderGeometry(0.1, 0.1, 0.16, 8), [wx, 0.55, 20.5], '#3a3340', [0, 0, Math.PI / 2]);
+    for (let i = 0; i < 4; i++) deco(b, new BoxGeometry(0.05, 0.95, 0.06), [wx, 0.55, 20.5], COLORS.woodDark, [(i / 4) * Math.PI, 0, 0]);
+    // A shaft running forward and down to the ground.
+    deco(b, new BoxGeometry(0.09, 0.09, 2.2), [CX + side * 0.6, 0.48, 22.75], COLORS.woodDark, [0.33, 0, 0]);
+  }
+  deco(b, new BoxGeometry(1.6, 0.4, 0.08), [CX, 1.15, 19.14], COLORS.woodDark);
+  deco(b, new BoxGeometry(1.6, 0.25, 0.08), [CX, 1.08, 21.86], COLORS.woodDark);
+  deco(b, new CylinderGeometry(0.05, 0.05, 2.1, 6), [CX, 0.55, 20.5], '#3a3340', [0, 0, Math.PI / 2]);
+  deco(b, new BoxGeometry(1.3, 0.08, 0.08), [CX, 0.15, 23.75], COLORS.woodDark);
+  deco(b, new BoxGeometry(0.1, 0.7, 0.1), [CX, 0.32, 19.3], COLORS.woodDark);
   for (let i = 0; i < 4; i++) deco(b, new SphereGeometry(0.22, 6, 4), [-21.6 + (i % 2) * 0.6, 1.15, 19.8 + i * 0.5], i % 2 ? '#c9883e' : '#8a6a3a');
   barrel(b, [-19.7, 0, 31.2], 0.4, 1);
   barrel(b, [-19.7, 0, 32.2], 0.4, 1);
@@ -856,17 +874,49 @@ function kitchenYard(b: LevelBuilder, glow: Glow): void {
   ] as [number, string][]) {
     deco(b, new BoxGeometry(0.9, 1, 0.03), [x, 1.95, 15], c);
   }
-  // The hay stack in the north-west corner has something tucked behind it.
+  // A lean-to in the north-west corner, stuffed to the roof with hay: something is tucked
+  // in behind it, and only burning the hay gets you in (it's far too tall to climb).
   b.add(
-    { type: 'burnable', id: 'hub-yard-hay', style: 'hay', persist: true, pos: [-30.4, 0.7, 33.2], size: [1.8, 1.4, 1.4] },
-    { type: 'burnable', id: 'hub-yard-hay2', style: 'hay', persist: true, pos: [-29, 0.7, 34.8], size: [1.4, 1.4, 1.8] },
-    { type: 'sweet', kind: 'humbug', pos: [-31.4, 0.6, 35.4] },
+    { type: 'burnable', id: 'hub-yard-hay', style: 'hay', persist: true, pos: [-30.55, 1.5, 34.1], size: [2.9, 3, 0.8] },
+    { type: 'burnable', id: 'hub-yard-hay2', style: 'hay', persist: true, pos: [-23, 0.5, 34.8], size: [1.4, 1, 1.2] },
+    { type: 'sweet', kind: 'humbug', pos: [-30.6, 0.6, 35.2] },
     { type: 'sweetLine', kind: 'fizzwort', from: [-22, 0.6, 28.2], to: [-29, 0.6, 28.2], count: 5 },
   );
-  b.box([-30.8, 0.7, 35.6], [0.3, 1.4, 1.6], { color: COLORS.stoneDark });
+  b.box([-29, 1.6, 35], [0.25, 3.2, 2], { color: COLORS.wood, pattern: 'planks', info: { noGrab: true } });
+  slab(b, -32, -28.8, 33.6, 36, 3.35, 0.3, COLORS.roof, 'planks');
+  b.box([-30.4, 3.35, 34.8], [3.4, 0.3, 2.6], { invisible: true, info: { noGrab: true } });
   grass(b, -32.5, -18.5, 13.5, 16.5, 0, 2);
   grass(b, -32.5, -29, 28, 36.5, 0, 2);
   tree(b, -21.5, 33);
+}
+
+/**
+ * The Forgotten Passage (x -18.5..-12.5, z 12.5..26): the gap between the Cupboard and the
+ * tapestry alcove, reached by squeezing past the alcove from the Kitchen Yard corner. Open
+ * to the sky, swept by nobody: an old chest (Latchkin) with a card.
+ */
+function forgottenPassage(b: LevelBuilder): void {
+  b.add(
+    { type: 'chest', id: 'hub-passage-chest', pos: [-15.5, 0, 13.5], yaw: 0, card: 'wilfred-dustpan', sweets: [['humbug', 1], ['bramble', 2]] },
+    { type: 'secret', id: 'hub-passage', area: 'passage', min: [-18, -1, 13], max: [-13, 4, 20.5] },
+    { type: 'sweetLine', kind: 'fizzwort', from: [-17.5, 0.6, 24.5], to: [-17.5, 0.6, 21.5], count: 3 },
+  );
+  crate(b, [-17.4, 0, 13.6], 0.9);
+  crate(b, [-17.4, 0.9, 13.7], 0.6);
+  barrel(b, [-13.3, 0, 13.4], 0.4, 1);
+  // An old broom and bucket, left by whoever last meant to sweep here.
+  deco(b, new CylinderGeometry(0.03, 0.03, 1.5, 5), [-13.2, 0.75, 16.5], COLORS.wood, [0.25, 0, 0.1]);
+  deco(b, new ConeGeometry(0.18, 0.4, 6), [-13.2, 0.15, 16.2], '#c8a860');
+  deco(b, new CylinderGeometry(0.22, 0.18, 0.4, 8), [-13.4, 0.2, 18], '#7a7a88');
+  rubble(b, -16.8, 18.5, 6, 21);
+  ivy(b, 'x', 13, -18, -13, 0, 3.2, 1, 8);
+  for (const [c, d1, d2] of [
+    [[-18, 3.2, 13], [1, 0], [0, 1]],
+    [[-13, 3.2, 13], [-1, 0], [0, 1]],
+    [[-18, 2.6, 20.5], [1, 0], [0, -1]],
+  ] as [V3, [number, number], [number, number]][]) {
+    cobweb(b, c, d1, d2, 1);
+  }
 }
 
 /**

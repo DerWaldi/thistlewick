@@ -68,13 +68,19 @@ function glassWall(b: LevelBuilder, axis: 'x' | 'z', at: number, from: number, t
     cap: 4,
     holes: holes.map((h) => ({ from: h.from, to: h.to, bottom: Math.max(0, (h.bottom ?? 0) - 1.2), top: h.top - 1.2 })),
   });
-  const len = to - from;
   for (let u = from + 1.5; u < to - 0.2; u += 1.5) {
     if (holes.some((h) => u > h.from - 0.1 && u < h.to + 0.1)) continue;
     deco(b, new BoxGeometry(axis === 'x' ? 0.08 : 0.5, H - 1.2, axis === 'x' ? 0.5 : 0.08), axis === 'x' ? [u, 1.2 + (H - 1.2) / 2, at] : [at, 1.2 + (H - 1.2) / 2, u], IRON);
   }
+  // Horizontal bars, broken wherever an opening crosses their height.
   for (const y of [1.25, 3.8, H - 0.05]) {
-    deco(b, new BoxGeometry(axis === 'x' ? len : 0.52, 0.1, axis === 'x' ? 0.52 : len), axis === 'x' ? [(from + to) / 2, y, at] : [at, y, (from + to) / 2], IRON);
+    const gaps = holes.filter((h) => y > (h.bottom ?? 0) - 0.1 && y < h.top + 0.1).sort((p, q) => p.from - q.from);
+    let u0 = from;
+    for (const [g0, g1] of [...gaps.map((h) => [h.from, h.to]), [to, to]]) {
+      const l = g0 - u0;
+      if (l > 0.05) deco(b, new BoxGeometry(axis === 'x' ? l : 0.52, 0.1, axis === 'x' ? 0.52 : l), axis === 'x' ? [(u0 + g0) / 2, y, at] : [at, y, (u0 + g0) / 2], IRON);
+      u0 = Math.max(u0, g1);
+    }
   }
 }
 
@@ -192,11 +198,7 @@ function build(b: LevelBuilder): void {
 
   // ================================================================ lily pond (z 28.5..48.5)
   b.pool(-9, 9, 31.5, 44.3, -0.5, -2.4);
-  // The basin walls, under the banks.
-  b.box([0, -1.2, 31.3], [19, 2.4, 0.4], { color: COLORS.stoneDark });
-  b.box([0, -1.2, 44.5], [19, 2.4, 0.4], { color: COLORS.stoneDark });
-  b.box([9.2, -1.2, 38], [0.4, 2.4, 13], { color: COLORS.stoneDark });
-  b.box([-9.2, -1.2, 38], [0.4, 2.4, 13], { color: COLORS.stoneDark });
+  // (The floor slab is 4 m deep, so its cut edges already make the basin walls.)
   // The island.
   b.box([0, -1.25, 37.75], [4, 2.5, 2.5], { color: COLORS.stone, info: { noGrab: true } });
   deco(b, new BoxGeometry(4.1, 0.08, 2.6), [0, 0.02, 37.75], COLORS.moss);
