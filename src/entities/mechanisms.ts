@@ -159,6 +159,7 @@ export class KnockSwitch implements Entity, SpellTarget {
 
   onSpell(_hit: SpellHit): void {
     this.wobble = 1;
+    if (this.spec.style === 'bell') this.ctx.events.emit('bellRing', { pos: this.center.clone() });
     if (this.spec.latch) {
       this.set(true);
       return;

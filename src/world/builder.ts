@@ -252,7 +252,9 @@ export class LevelBuilder implements PlayerEnvironment {
         );
     };
     mat.customProgramCacheKey = () => 'tw-water';
-    const geo = new PlaneGeometry(maxX - minX, maxZ - minZ, 12, 12);
+    const geo = new PlaneGeometry(maxX - minX, maxZ - minZ, Math.max(2, Math.ceil((maxX - minX) / 0.8)), Math.max(2, Math.ceil((maxZ - minZ) / 0.8)));
+    const cx = (minX + maxX) / 2;
+    const cz = (minZ + maxZ) / 2;
     const water = new Mesh(geo, mat);
     water.rotation.x = -Math.PI / 2;
     water.position.set((minX + maxX) / 2, surface, (minZ + maxZ) / 2);
@@ -264,9 +266,10 @@ export class LevelBuilder implements PlayerEnvironment {
       update: (_dt, time) => {
         waterTime.value = time;
         for (let i = 0; i < pos.count; i++) {
-          const x = base[i * 3];
-          const y = base[i * 3 + 1];
-          pos.setZ(i, Math.sin(x * 0.9 + time * 1.6) * 0.05 + Math.cos(y * 1.1 + time * 1.3) * 0.05);
+          // Waves in world space, so pools that touch meet at the same height.
+          const x = cx + base[i * 3];
+          const z = cz - base[i * 3 + 1];
+          pos.setZ(i, Math.sin(x * 0.9 + time * 1.6) * 0.05 + Math.cos(-z * 1.1 + time * 1.3) * 0.05);
         }
         pos.needsUpdate = true;
         geo.computeVertexNormals();

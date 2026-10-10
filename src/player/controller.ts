@@ -116,6 +116,14 @@ export class PlayerController {
     if (facing !== undefined) this.facing = facing;
   }
 
+  /** Stand still while the world is halted (dialogue, shop, pause): no interpolation drift, idle pose. */
+  hold(): void {
+    this.prevPos.copy(this.pos);
+    this.vel.x = 0;
+    this.vel.z = 0;
+    this.turnVelocity = 0;
+  }
+
   get environment(): PlayerEnvironment {
     return this.env;
   }

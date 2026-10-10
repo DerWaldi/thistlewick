@@ -93,6 +93,57 @@ export class Dialogue {
     return last;
   }
 
+  /**
+   * Paint the open dialogue box onto a screenshot. The box is HTML over the WebGL canvas,
+   * so a canvas grab alone misses it; this redraws it from the live layout.
+   */
+  drawOnto(g: CanvasRenderingContext2D, view: DOMRect, scale: number): void {
+    if (!this.open) return;
+    const rel = (el: Element) => {
+      const r = el.getBoundingClientRect();
+      return { x: (r.left - view.left) * scale, y: (r.top - view.top) * scale, w: r.width * scale, h: r.height * scale };
+    };
+    const box = rel(this.root);
+    const css = getComputedStyle(this.root);
+    g.save();
+    g.fillStyle = css.backgroundColor || '#f3e4c4';
+    g.strokeStyle = css.borderTopColor || '#c99a3e';
+    g.lineWidth = Math.max(2, parseFloat(css.borderTopWidth) * scale);
+    g.beginPath();
+    g.roundRect(box.x, box.y, box.w, box.h, 12 * scale);
+    g.fill();
+    g.stroke();
+    if (this.portrait.style.display !== 'none' && this.portrait.complete) {
+      const p = rel(this.portrait);
+      g.drawImage(this.portrait, p.x, p.y, p.w, p.h);
+    }
+    const textOf = (el: HTMLElement, color?: string) => {
+      if (!el.textContent || el.style.display === 'none') return;
+      const r = rel(el);
+      const st = getComputedStyle(el);
+      const size = parseFloat(st.fontSize) * scale;
+      g.font = `${st.fontStyle} ${st.fontWeight} ${size}px ${st.fontFamily}`;
+      g.fillStyle = color ?? st.color;
+      g.textBaseline = 'top';
+      const lh = (parseFloat(st.lineHeight) || parseFloat(st.fontSize) * 1.3) * scale;
+      let line = '';
+      let y = r.y;
+      for (const word of el.textContent.split(' ')) {
+        const next = line ? line + ' ' + word : word;
+        if (g.measureText(next).width > r.w && line) {
+          g.fillText(line, r.x, y);
+          line = word;
+          y += lh;
+        } else line = next;
+      }
+      g.fillText(line, r.x, y);
+    };
+    textOf(this.name);
+    textOf(this.text);
+    for (const el of Array.from(this.choicesEl.children) as HTMLElement[]) textOf(el);
+    g.restore();
+  }
+
   private setOpen(open: boolean): void {
     this.open = open;
     this.root.classList.toggle('show', open);

@@ -58,6 +58,19 @@ export class Sfx {
     });
     events.on('signal', ({ on }) => this.tone(on ? 880 : 440, on ? 1320 : 330, 0.08, 'square', 0.05));
     events.on('switchTick', () => this.tone(1500, 1500, 0.04, 'square', 0.05));
+    // A bronze bell: a strike plus inharmonic partials that ring on and fade at different rates.
+    events.on('bellRing', () => {
+      this.tone(2600, 1800, 0.05, 'triangle', 0.08);
+      for (const [f, dur, vol] of [
+        [587, 2.2, 0.14],
+        [1174, 1.6, 0.06],
+        [1621, 1.2, 0.07],
+        [2389, 0.8, 0.04],
+        [293, 2.6, 0.05],
+      ] as const) {
+        this.tone(f, f * 0.998, dur, 'sine', vol);
+      }
+    });
     events.on('hurt', () => {
       this.tone(320, 140, 0.25, 'sawtooth', 0.12);
       this.hiss(0.15, 900, 0.15);

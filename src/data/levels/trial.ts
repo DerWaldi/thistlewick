@@ -93,19 +93,20 @@ function build(b: LevelBuilder): void {
   wall(b, 'z', -8.5, 10, 26, 7, { color: STONE });
   wall(b, 'z', 8.5, 10, 26, 7, { color: STONE });
   slab(b, -8.5, 8.5, 10, 26, 7.5, 0.5, COLORS.stoneDark);
-  b.pool(-8, 8, 17, 21.5, -1.2, -2);
-  b.pool(-8, -2, 21.5, 26, -1.2, -2);
-  b.pool(2, 8, 21.5, 26, -1.2, -2);
+  // One pool for the whole pit; the pier's floor reaches down through it.
+  b.pool(-8, 8, 17, 26, -1.2, -2);
   // Pier edges so the pit reads clearly.
   for (const x of [-2.1, 2.1]) b.box([x, 0.1, 23.75], [0.2, 0.2, 4.5], { color: COLORS.stoneLight });
-  b.box([5, 1, 12], [2, 2, 2], { color: COLORS.stoneLight }); // the pillar that blocks block B
-  deco(b, new BoxGeometry(2.2, 0.2, 2.2), [5, 2.1, 12], COLORS.stoneDark);
+  // The pillar that stops block B going straight east. B starts a tile in from the south
+  // wall so there's room to stand behind it and shove it north.
+  b.box([5, 1, 14], [2, 2, 2], { color: COLORS.stoneLight });
+  deco(b, new BoxGeometry(2.2, 0.2, 2.2), [5, 2.1, 14], COLORS.stoneDark);
   wall(b, 'x', 26, -8.5, 8.5, 7, { color: STONE, holes: [gateHole(0)] });
   b.add(
     { type: 'checkpoint', pos: [-7.3, 0, 13.8], yaw: Math.PI / 2, zone: { min: [-8, -1, 10.2], max: [8, 4, 13] } },
     { type: 'pushBlock', pos: [-3, 0, 12], resetOn: 'r2-bell', sunkSignal: 'r2-a-sunk' },
-    { type: 'pushBlock', pos: [3, 0, 12], resetOn: 'r2-bell', sunkSignal: 'r2-b-sunk' },
-    { type: 'plate', id: 'r2-plate', pos: [7, 0, 14] },
+    { type: 'pushBlock', pos: [3, 0, 14], resetOn: 'r2-bell', sunkSignal: 'r2-b-sunk' },
+    { type: 'plate', id: 'r2-plate', pos: [7, 0, 16] },
     { type: 'knockSwitch', id: 'r2-bell', pos: [-7.2, 2.1, 11.2], yaw: Math.PI / 2, style: 'bell', timed: 1 },
     { type: 'gate', pos: [0, 0, 26], yaw: 0, width: 3, height: 3, when: ['r2-plate'] },
     { type: 'trigger', flag: 'trial-hint-blocks', script: 'trialBlocks', min: [-8, -1, 10.6], max: [8, 5, 15] },
@@ -116,7 +117,8 @@ function build(b: LevelBuilder): void {
     { type: 'sweet', kind: 'bramble', pos: [7, 0.8, 11] },
   );
   b.lantern([0, 5.6, 14], 10, 16);
-  signboard(b, 'Ring to reset the blocks', [-7.95, 3.9, 11.2], Math.PI / 2);
+  // Clear of the south wall (the board is 2.6 m wide), just above and beside the bell.
+  signboard(b, 'Ring to reset the blocks', [-7.95, 3.5, 12.2], Math.PI / 2);
   for (const x of [-7.98, 7.98]) wallTorch(b, flames, [x, 3.2, 15.5], x < 0 ? Math.PI / 2 : -Math.PI / 2);
   for (const x of [-5.5, 5.5]) wallTorch(b, flames, [x, 3.2, 25.48], Math.PI);
   webs(b, -8, 8, 10.5, 25.5, 6.9, 1.4);

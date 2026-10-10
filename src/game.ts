@@ -267,6 +267,7 @@ export class Game {
     c.height = src.height;
     const g = c.getContext('2d')!;
     g.drawImage(src, 0, 0);
+    this.dialogue.drawOnto(g, src.getBoundingClientRect(), c.width / src.clientWidth);
     const f = s.player.feet;
     const stamp = `${s.def.id} · ${s.currentArea?.name ?? '-'} · feet ${f.x.toFixed(2)}, ${f.y.toFixed(2)}, ${f.z.toFixed(2)} · facing ${s.player.facing.toFixed(2)} · ${s.player.mode}`;
     const px = Math.max(14, Math.round(c.height / 48));
@@ -314,6 +315,7 @@ export class Game {
 
     // Time stands still while someone is talking, shopping, reading the album or paused.
     if (!this.isHalted) s.fixedUpdate(dt);
+    else s.player.hold();
 
     this.state.playTime += dt;
     this.rivalTimer += dt;
@@ -351,7 +353,8 @@ export class Game {
       s.camera.yaw += dt * 0.07;
       s.camera.pitch = 0.08;
     }
-    s.frameUpdate(dt, alpha);
+    // Halted frames draw the latest state: interpolating between two frozen steps makes everything shake.
+    s.frameUpdate(dt, this.isHalted ? 1 : alpha);
     if (this.titleMode) s.rig.root.visible = false;
     s.shadow.hidden = this.titleMode;
     this.dialogue.update(dt);

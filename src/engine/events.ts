@@ -30,6 +30,7 @@ export interface GameEvents {
   blockStop: { pos: Vector3; fell: boolean };
   gateMove: { pos: Vector3; opening: boolean };
   switchTick: { pos: Vector3 };
+  bellRing: { pos: Vector3 };
   gnarlingNotice: { pos: Vector3 };
   gnarlingStunned: { pos: Vector3 };
   gnarlingBanished: { pos: Vector3 };

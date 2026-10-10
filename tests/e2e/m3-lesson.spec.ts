@@ -120,8 +120,8 @@ test('the Shoving Room: block A bridges the pit, block B holds the gate', async 
       });
     await shove([-5.3, 0, 12, Math.PI / 2], A, 0); // east one tile
     await shove([-1, 0, 10.6, 0], A, 1.2); // charged north into the pit
-    await shove([3, 0, 10.6, 0], Bk, 0); // north one tile
-    await shove([0.6, 0, 14, Math.PI / 2], Bk, 1.2); // east to the wall, onto the plate
+    await shove([3, 0, 12.3, 0], Bk, 0); // north one tile
+    await shove([0.6, 0, 16, Math.PI / 2], Bk, 1.2); // east to the wall, onto the plate
     const a = { ...A.pos };
     const plate = tw.signal('r2-plate');
     tw.advance(2);
@@ -169,7 +169,7 @@ test('the bell sends misplaced blocks home', async ({ page }) => {
     type B = { pos: { x: number; y: number; z: number }; home: { x: number; y: number; z: number } };
     const [, Bk] = g.world.entities.filter((e) => e.constructor.name === 'PushBlock') as unknown as B[];
     // Overshoot: charge block B straight into the pit.
-    tw.teleport(3, 0, 10.6, 0);
+    tw.teleport(3, 0, 12.3, 0);
     tw.advance(0.3);
     tw.aimAt(Bk.pos.x, Bk.pos.y, Bk.pos.z);
     tw.cast(1.2);
@@ -183,7 +183,7 @@ test('the bell sends misplaced blocks home', async ({ page }) => {
     return { sunk, back: { ...Bk.pos } };
   });
   expect(r.sunk.y).toBeLessThan(0);
-  expect(r.back).toEqual({ x: 3, y: 1, z: 12 });
+  expect(r.back).toEqual({ x: 3, y: 1, z: 14 });
 });
 
 test('the Gauntlet can be run inside the timer', async ({ page, browserName }) => {
@@ -435,11 +435,11 @@ test('sinking both blocks gets a nudge towards the reset bell', async ({ page })
     (tw.game as unknown as { events: { on(e: string, f: (x: { open?: boolean }) => void): void } }).events.on('dialogueOpen', (x) => {
       if (x.open) lines.push('open');
     });
-    for (const [b, x] of [
-      [A, -3],
-      [Bk, 3],
+    for (const [b, x, z] of [
+      [A, -3, 10.6],
+      [Bk, 3, 12.3],
     ] as const) {
-      tw.teleport(x, 0, 10.6, 0);
+      tw.teleport(x, 0, z, 0);
       tw.advance(0.3);
       tw.aimAt(b.pos.x, b.pos.y, b.pos.z);
       tw.cast(1.2);
