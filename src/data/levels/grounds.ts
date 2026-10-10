@@ -51,7 +51,8 @@ function build(b: LevelBuilder): void {
     deco(b, new ConeGeometry(4.8, 7, 12), [x, 22.5, -1], COLORS.roof);
   }
   for (const x of [-12, -6, 6, 12]) windowPane(b, glow, 'x', -0.02, x, 7, 1.6, 3, -1);
-  deco(b, new BoxGeometry(5, 0.6, 0.6), [0, 5.8, -0.2], COLORS.stoneDark);
+  // A stone lintel above the doors' name plate (which hangs at about 6 m).
+  deco(b, new BoxGeometry(5, 0.5, 0.6), [0, 6.6, -0.2], COLORS.stoneDark);
   b.add({ type: 'door', pos: [0, 0, -0.05], yaw: Math.PI, width: 4, height: 5.5, to: { level: 'hub', spawn: 'fromGrounds' }, label: 'The Lantern Hall' });
   // Balustrade round the terrace, open where the stairs go down.
   for (const [x0, x1] of [
@@ -220,7 +221,8 @@ function build(b: LevelBuilder): void {
     { type: 'card', card: 'isolde-fairweather', pos: [22, LAWN + 1.4, -75] },
     { type: 'secret', id: 'grounds-folly', area: 'lake', min: [19, LAWN - 1, -78], max: [25, LAWN + 3, -72] },
   );
-  signboard(b, 'Fairweather Lake\nNo swimming. No skating (yet).', [11, LAWN + 1.6, -43.2], Math.PI);
+  // Faces the lawn, so you read it on your way down to the jetty.
+  signboard(b, 'Fairweather Lake\nNo swimming. No skating (yet).', [11, LAWN + 1.6, -42.98], 0);
   b.cylinder([11, LAWN + 0.8, -43.1], 0.08, 1.6, COLORS.woodDark, undefined, 5);
   // Lily pads and a duck house.
   for (const [x, z] of [
