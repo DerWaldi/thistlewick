@@ -273,7 +273,8 @@ function buildHub(b: LevelBuilder): void {
   );
   wall(b, 'x', 13.5, 18.5, 21.5, 3.2, { thick: 1 });
   wall(b, 'z', 18.5, 10.5, 13.5, 3.2, { thick: 1 });
-  slab(b, 18, 22, 10.5, 14, 3.4, 0.4, COLORS.stoneDark);
+  // Ends inside the corridor wall (x 21..22) rather than flush with its face, which z-fought.
+  slab(b, 18, 21.5, 10.5, 14, 3.4, 0.4, COLORS.stoneDark);
   b.add(
     { type: 'card', card: 'barnaby-gorse', pos: [20, 1.2, 12.2] },
     { type: 'secret', id: 'hub-bookshelf', area: 'corridor', min: [19, -1, 10.8], max: [21, 3, 13.2] },

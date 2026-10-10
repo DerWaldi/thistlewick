@@ -426,6 +426,10 @@ export class Door implements Interactable {
     };
     const iron = new MeshStandardMaterial({ color: '#2a2230', metalness: 0.5, roughness: 0.6, flatShading: true });
     g.add(leaf(-w / 4), leaf(w / 4));
+    // A dark panel behind the leaves, so the gap between them never shows the hole in the wall.
+    const backing = new Mesh(paint(new BoxGeometry(w, h, 0.02).toNonIndexed(), '#1b120c', true), mat);
+    backing.position.set(0, h / 2, -0.075);
+    g.add(backing);
     for (const y of [h * 0.2, h * 0.75]) {
       const band = new Mesh(new BoxGeometry(w, 0.1, 0.15), iron);
       band.position.y = y;
@@ -465,6 +469,8 @@ export class Door implements Interactable {
     return this.spec.to && !this.isLocked ? 'Open' : this.spec.talk ? 'Read' : 'Try the door';
   }
   private get isLocked(): boolean {
+    const during = this.spec.lockedDuring;
+    if (during && this.ctx.state.knows(during) && !this.ctx.state.lessons.has(during)) return true;
     if (this.spec.lockedUnless) return !this.ctx.state.flags.has(this.spec.lockedUnless);
     return !!this.spec.locked || !this.spec.to;
   }

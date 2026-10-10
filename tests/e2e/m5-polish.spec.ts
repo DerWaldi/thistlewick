@@ -65,3 +65,36 @@ test('dressed rooms render and furniture is solid', async ({ page, browserName }
   expect(r.onTable).toBeLessThan(0.95);
   await shot(page, 'm5-hall', browserName);
 });
+
+test('the classroom keeps you in until the Trial is done', async ({ page }) => {
+  await boot(page, '?test&new');
+  const r = await page.evaluate(async () => {
+    const tw = window.__tw;
+    await tw.idle();
+    const g = tw.game as unknown as { state: { flags: Set<string>; lessons: Set<string> } };
+    g.state.flags.add('sorted');
+    g.state.flags.add('lesson-started');
+    tw.loadLevel('classroom');
+    tw.advance(0.5);
+    await tw.idle();
+    const tryLeave = async () => {
+      tw.teleport(0, 0, 1.4, Math.PI);
+      tw.advance(0.2);
+      tw.interact();
+      await tw.idle();
+      tw.advance(1.5);
+      return tw.state().level;
+    };
+    const beforeLearning = await tryLeave();
+    tw.learn('thwackwort');
+    if (beforeLearning !== 'classroom') tw.loadLevel('classroom');
+    tw.advance(0.5);
+    const midLesson = await tryLeave();
+    g.state.lessons.add('thwackwort');
+    const afterTrial = await tryLeave();
+    return { beforeLearning, midLesson, afterTrial };
+  });
+  expect(r.beforeLearning).toBe('hub');
+  expect(r.midLesson).toBe('classroom');
+  expect(r.afterTrial).toBe('hub');
+});

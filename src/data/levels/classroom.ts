@@ -37,7 +37,7 @@ function build(b: LevelBuilder): void {
 
   // Doors: back to the corridor, and the iron door down to the Trial.
   b.add(
-    { type: 'door', pos: [0, 0, 0.05], yaw: 0, width: 2.4, height: 3.4, to: { level: 'hub', spawn: 'fromClassroom' } },
+    { type: 'door', pos: [0, 0, 0.05], yaw: 0, width: 2.4, height: 3.4, to: { level: 'hub', spawn: 'fromClassroom' }, lockedDuring: 'thwackwort', talk: 'classNotOver' },
     {
       type: 'door',
       pos: [8.0, 0, 11.2],

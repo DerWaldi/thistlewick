@@ -72,6 +72,8 @@ export type EntitySpec = SpecBase &
         locked?: string;
         /** Locked until this progress flag is set. */
         lockedUnless?: string;
+        /** Locked while this spell is learned but its lesson (the trial) isn't finished: no wandering off mid-lesson. */
+        lockedDuring?: SpellId;
         /** Dialogue script to run instead of the `locked` toast. */
         talk?: string;
         label?: string;

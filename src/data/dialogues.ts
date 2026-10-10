@@ -127,6 +127,13 @@ export const DIALOGUES: Record<string, Script> = {
     ]);
   },
 
+  classNotOver: async ({ say, state }) => {
+    const text = state.flags.has('practice-done')
+      ? "Not so fast! Class isn't over until you bring me that Thistle Star. The Trial's through the iron door."
+      : "Not so fast! Class isn't over. Three practice targets first, then the Trial.";
+    await say([{ speaker: 'gorse', text }]);
+  },
+
   lockedTrialDoor: async ({ say }) => {
     await say([{ speaker: 'gorse', text: 'Ah-ah! Practice targets first. All three. I am counting.' }]);
   },
