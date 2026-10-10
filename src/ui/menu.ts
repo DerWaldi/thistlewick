@@ -1,3 +1,4 @@
+import { ATLAS } from '../data/atlas';
 import { CARDS } from '../data/cards';
 import { SPEAKERS } from '../data/characters';
 import { currentObjective } from '../data/objectives';
@@ -6,8 +7,8 @@ import { HOUSES, type HouseId } from '../data/houses';
 import type { GameState } from '../state/gameState';
 import type { Options } from '../state/options';
 
-export type Screen = 'title' | 'pause' | 'options' | 'credits';
-export type MenuAction = 'continue' | 'new' | 'options' | 'credits' | 'resume' | 'album' | 'quit' | 'back';
+export type Screen = 'title' | 'pause' | 'options' | 'credits' | 'map';
+export type MenuAction = 'continue' | 'new' | 'options' | 'credits' | 'resume' | 'album' | 'quit' | 'back' | 'map';
 
 const $ = (id: string) => document.getElementById(id)!;
 
@@ -16,6 +17,7 @@ export class Menu {
   private root = $('menu');
   screen: Screen | null = null;
   private previous: Screen = 'title';
+  private lastState: GameState | null = null;
   onAction: (a: MenuAction) => void = () => {};
   onOptions: (o: Options) => void = () => {};
 
@@ -24,9 +26,9 @@ export class Menu {
       b.addEventListener('click', (e) => {
         e.stopPropagation();
         const a = b.dataset.action as MenuAction;
-        if (a === 'options' || a === 'credits') {
+        if (a === 'options' || a === 'credits' || a === 'map') {
           this.previous = this.screen ?? 'title';
-          this.show(a);
+          this.show(a, { state: this.lastState ?? undefined });
         } else if (a === 'back') {
           this.show(this.previous);
         } else {
@@ -49,7 +51,9 @@ export class Menu {
     if (screen === 'title' && ctx) {
       (this.root.querySelector('[data-action="continue"]') as HTMLElement).classList.toggle('hidden', !ctx.canContinue);
     }
+    if (ctx?.state) this.lastState = ctx.state;
     if (screen === 'pause' && ctx?.state) this.renderProgress(ctx.state);
+    if (screen === 'map' && ctx?.state) this.renderMap(ctx.state);
     if (screen === 'options') this.syncOptions();
   }
 
@@ -69,7 +73,57 @@ export class Menu {
     this.root.classList.remove('show');
   }
 
+  /** Snoop's Map: every level and room with a card or secret, and what's still hiding there. */
+  private renderMap(s: GameState): void {
+    const list = $('map-list');
+    list.replaceChildren();
+    const placed = new Set<string>();
+    for (const lvl of ATLAS) {
+      const sec = document.createElement('div');
+      sec.className = 'map-level';
+      const h = document.createElement('h3');
+      const cardsFound = lvl.cards.filter((c) => s.cards.has(c.ref)).length;
+      const secretsFound = lvl.secrets.filter((x) => s.secrets.has(x.ref)).length;
+      h.textContent = `${lvl.name}  ·  cards ${cardsFound}/${lvl.cards.length}  ·  secrets ${secretsFound}/${lvl.secrets.length}`;
+      sec.append(h);
+      const areas = new Map<string, { cards: number; cardsFound: number; secrets: number; secretsFound: number }>();
+      const row = (area: string | null) => {
+        const k = area ?? '';
+        if (!areas.has(k)) areas.set(k, { cards: 0, cardsFound: 0, secrets: 0, secretsFound: 0 });
+        return areas.get(k)!;
+      };
+      for (const c of lvl.cards) {
+        placed.add(c.ref);
+        const r = row(c.area);
+        r.cards++;
+        if (s.cards.has(c.ref)) r.cardsFound++;
+      }
+      for (const x of lvl.secrets) {
+        const r = row(x.area);
+        r.secrets++;
+        if (s.secrets.has(x.ref)) r.secretsFound++;
+      }
+      for (const [area, r] of areas) {
+        const li = document.createElement('div');
+        const done = r.cardsFound === r.cards && r.secretsFound === r.secrets;
+        li.className = 'map-area' + (done ? ' done' : '');
+        const bits = [r.cards ? `cards ${r.cardsFound}/${r.cards}` : '', r.secrets ? `secrets ${r.secretsFound}/${r.secrets}` : ''].filter(Boolean).join(', ');
+        li.textContent = `${done ? '✓' : '✦'} ${lvl.areas[area] ?? lvl.name}: ${bits}`;
+        sec.append(li);
+      }
+      list.append(sec);
+    }
+    const elsewhere = CARDS.filter((c) => !placed.has(c.id));
+    const other = document.createElement('div');
+    other.className = 'map-level';
+    const h = document.createElement('h3');
+    h.textContent = `Teachers, errands and the Cupboard  ·  cards ${elsewhere.filter((c) => s.cards.has(c.id)).length}/${elsewhere.length}`;
+    other.append(h);
+    list.append(other);
+  }
+
   private renderProgress(s: GameState): void {
+    (this.root.querySelector('[data-action="map"]') as HTMLElement).classList.toggle('hidden', !s.upgrades.has('snoops-map'));
     const house = s.house ? `${HOUSES[s.house].name}: ${s.housePoints[s.house]} points · ` : '';
     const goal = currentObjective(s);
     ($('pause-goal').querySelector('b') as HTMLElement).textContent = `Next: ${goal.title}.`;

@@ -865,7 +865,7 @@ kbd {
   margin: 4px 0;
 }
 #pause-quests li b {
-  color: #f0c860;
+  color: #8a4f1a;
 }
 #pause-quests li.done {
   opacity: 0.55;
@@ -927,7 +927,7 @@ kbd {
   text-align: left;
 }
 #pause-goal b {
-  color: #f0c860;
+  color: #8a4f1a;
 }
 
 /* A boss's seals, as a bar across the top. */
@@ -961,4 +961,29 @@ kbd {
   height: 100%;
   background: linear-gradient(#ffd86a, #c9822e);
   transition: width 0.4s ease;
+}
+
+/* Snoop's Map */
+#map-list {
+  max-height: 58vh;
+  overflow-y: auto;
+  text-align: left;
+  min-width: min(560px, 80vw);
+  padding-right: 6px;
+}
+.map-note {
+  font-size: 14px;
+  opacity: 0.8;
+}
+.map-level h3 {
+  margin: 12px 0 4px;
+  font-size: 15px;
+  color: #8a4f1a;
+}
+.map-area {
+  font-size: 14px;
+  margin: 2px 0 2px 12px;
+}
+.map-area.done {
+  opacity: 0.5;
 }

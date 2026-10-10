@@ -27,7 +27,7 @@ export const SHOP_ITEMS: ShopItem[] = [
   { id: 'up-stout', kind: 'upgrade', ref: 'stout-heart', name: 'Stout Heart', price: 50, blurb: 'A lucky acorn on a string. One more stamina pip.' },
   { id: 'up-quick', kind: 'upgrade', ref: 'quick-wand', name: 'Quick Wand', price: 35, blurb: 'A wand-wax that makes charging Thwackwort much faster.' },
   { id: 'up-tooth', kind: 'upgrade', ref: 'sweet-tooth', name: 'Sweet Tooth Charm', price: 25, blurb: 'Sweets fly to you from twice as far away.' },
-  { id: 'up-map', kind: 'upgrade', ref: 'snoops-map', name: "Snoop's Map", price: 60, blurb: 'Shows where secrets hide. Moss is still drawing it.', soon: true },
+  { id: 'up-map', kind: 'upgrade', ref: 'snoops-map', name: "Snoop's Map", price: 60, blurb: 'Every room in the castle, and which of them still hide a card or a secret. Esc, then Map.' },
 ];
 
 /**

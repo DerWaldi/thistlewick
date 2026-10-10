@@ -77,6 +77,7 @@
           <div class="menu-buttons">
             <button class="big-btn" data-action="resume">Resume</button>
             <button class="big-btn quiet" data-action="album">Card album</button>
+            <button class="big-btn quiet hidden" data-action="map">Snoop's Map</button>
             <button class="big-btn quiet" data-action="options">Options</button>
             <button class="big-btn quiet" data-action="quit">Save &amp; quit to title</button>
           </div>
@@ -94,6 +95,12 @@
           <div id="pause-goal"><b></b> <span></span></div>
           <div id="pause-progress"></div>
           <ul id="pause-quests"></ul>
+        </div>
+        <div class="menu-screen panel" data-screen="map">
+          <h2>Snoop's Map</h2>
+          <p class="map-note">Moss drew it from memory. Where a card or secret is still hiding, the room is marked.</p>
+          <div id="map-list"></div>
+          <div class="menu-buttons"><button class="big-btn" data-action="back">Back</button></div>
         </div>
         <div class="menu-screen panel" data-screen="options">
           <h2>Options</h2>
