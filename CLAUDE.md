@@ -75,6 +75,12 @@ src/entities/          level objects: pushBlock (resetOn), mechanisms (knockSwit
                        emberCrab: patrols, lobs fireballs when it can see you; Thwackwort flips it
                        for a moment, Rimewhistle freezes it into a standable ice block, Thwackwort
                        then shatters it; its target spell switches with state and what you know),
+                       foes (hexling: a flying bad fairy circling her patch, hex orbs that drift after
+                       you, a Thwackwort knocks her down, a second banishes; sootling: lobs fuse bombs
+                       that land, fizz and blow up, kick a bomb back with Thwackwort and it lands on
+                       him, thwack him twice to banish), boss (examiner: the Brass Examiner, six seals
+                       broken by six spells while its fists are stuck after a slam you must jump),
+                       wanderer (pupils walking a loop, chatting), quests (questItem + ! / ? markers),
                        teasers (targets for spells not yet learned), hubObjects (cards, secrets, tapestry,
                        bookshelf, npc, sorting lantern, doors, hourglasses, spring pad), lessonObjects
                        (trigger, Thistle Star), sweets (instanced SweetField); types.ts holds the
@@ -87,7 +93,9 @@ src/state/             GameState (stamina, sweets, spells, house + points, cards
                        flags, upgrades + purchases, checkpoint); save.ts (versioned localStorage save with
                        migrations); options.ts (player settings, stored separately)
 src/data/              all content: spells, sweets, houses (+ sorting questions, point values), cards,
-                       characters (speakers), dialogues (scripts), portraits, tuning, levels/ (index.ts registry)
+                       characters (speakers), dialogues (scripts), portraits, tuning, levels/ (index.ts registry),
+                       objectives (the next goal + compass waypoints), quests (errands), students (wanderers),
+                       atlas (where every placed card and secret is, for Snoop's Map)
 src/ui/                hud, dialogue (typewriter + keyboard choices), album, shop (Crumbleton's Cupboard),
                        menu (title/pause/options/credits), portraits (procedural painter), cardArt, style.css
 tests/e2e/             Playwright specs; helpers.ts has boot() and shot()
@@ -135,6 +143,16 @@ Each render frame then runs the camera, animator, level and entity visuals, cast
 - Spread classroom entrances round the castle (the user asked for this): each new teacher gets a new corner, not another door off the same corridor. Later teachers' doors use `afterLesson: '<previous spell>'`.
 - `ambience: 'dark'` on a level or an area (the Undercroft area in the hub) drops to a dim cold fill and close black fog; lamps with `light: true` and torches do the lighting. Keep real point lights to ~8 (checkpoints and the Star have one each).
 
+### Guidance
+- `currentObjective(state)` (src/data/objectives.ts) is the story's next step: sort, then per lesson "<subject> with <teacher>", practice, the trial, report back; then the exams; then open errands. Each has `route`: waypoints per level (the first one not yet `passed` is the compass target); levels without one point at `WAY_OUT` (back towards the hall). The HUD shows it under the house chip with an arrow and distance (Options can hide it); the pause menu repeats it with directions. When a trial's Star or a classroom door moves, update ROUTES there.
+- Wendlebury's opening explains the year (seven Stars, the exams, the House Cup) and the arrow; pupils (`students.ts`) drop progress-aware tips.
+
+### Difficulty
+- Every trial ends in a harder room built around the new foes before its Star: the Sootling's Leap (trial), the Counting House (vault), the Weathercock Run (tower), the Moth Ossuary (catacombs), the Hothouse Pool (glasshouse), the Sluice Canal (cisterns), the Mainspring (clockworks). The old Star chambers are passages now; Stars and exit doors were moved by replacing their specs in place (ids stay put) and the new rooms are appended last. `tests/e2e/m18-hard.spec.ts` plays each one.
+- The exams have a foe in every room and the Brass Examiner in the Thistle Hall; the Golden Thistle is caged (four gates on `exam-boss`) until it falls (flag `down:exam-boss`).
+- Gnarlings are quicker than they were (gnarling.ts constants). Frozen Ember Crabs are rough ice (not slippery): they're stepping stones.
+- Foes that throw things need line of sight; give rooms cover. Hexlings high up are hard to aim at (camera pitch), which is part of the fight.
+
 ### Lessons (the core loop)
 Each lesson is content, not engine work:
 1. A classroom level with the teacher NPC, whose talk script teaches the spell (`state.learn`).
@@ -154,6 +172,7 @@ Doors enforce the flow: the classroom exit has `lockedDuring: '<spell>'` (no lea
 - To change the save shape, bump `VERSION` in `save.ts` and add a migration.
 
 ### Shop & upgrades
+- Snoop's Map (60 sweets) adds a Map button to the pause menu: every level and room with its cards and secrets found/total, from `src/data/atlas.ts`. The atlas is generated from the levels; `tests/e2e/m19-map.spec.ts` fails when it's stale (regenerate it from the same scan).
 - Stock lives in `src/data/shop.ts`. Effects come from `UPGRADE_EFFECTS` and are read through `GameState` getters (`chargeTimeScale`, `magnetScale`, `maxStamina`).
 - Scripts can `openShop()`; the Tansy and Moss scripts do so once Thwackwort is learned.
 - The world halts while the dialogue, shop, album or pause menu is open (`game.isHalted`).
@@ -161,9 +180,9 @@ Doors enforce the flow: the classroom exit has `lockedDuring: '<spell>'` (no lea
 ### Menus, options, music
 - While the world is halted the player `hold()`s (no velocity, idle pose) and frames render at alpha 1, so nothing jitters between frozen steps.
 - `main.ts` drives the menus. The title is shown over a drifting hub backdrop (`game.showBackdrop()`, `titleMode`). Losing pointer lock mid-game opens the pause menu.
-- Options: sensitivity, invert Y, music and effects volume, graphics (Fancy/Fast) and FPS display. They're stored under `thistlewick.options`, and `game.applyOptions()` applies them.
+- Options: sensitivity, invert Y, music and effects volume, graphics (Fancy/Fast), the next-goal guide, FPS display, and rebindable keys (`options.keys`, read by `Input.bindings`; arrow keys always move). A gamepad works too (`Input.pollGamepad`, once a frame): left stick moves, right stick looks, A jumps / advances dialogue, X or RT casts (hold to charge), Y or B talks, Back opens the album, Start pauses. They're stored under `thistlewick.options`, and `game.applyOptions()` applies them.
 - Fancy graphics adds bloom and grading, a pixel ratio up to 1.5 and a 4096 shadow map. If frames stay under about 42 fps for 4 s, the game drops to Fast once and shows a toast.
-- Music: `engine/music.ts` sequences two original pieces live: the Thistlewick Waltz (hub, title) and the Tumbling Vaults (trial). `LevelDef.music` picks the mood. Moods cross-fade, and the music ducks during dialogue. A file at `public/music/<mood>.mp3` replaces the synthesised version, and should be logged in ASSETS.md.
+- Music: `engine/music.ts` sequences four original pieces live: the Thistlewick Waltz (hub, title), the Tumbling Vaults (trials), Mother Hazelrigg's Jig (`woods`) and The Examination (`exams`). `LevelDef.music` picks the mood. Moods cross-fade, and the music ducks during dialogue. A file at `public/music/<mood>.mp3` replaces the synthesised version, and should be logged in ASSETS.md.
 - A `Song` is a list of `Section`s: bars of melody/bass/chords plus an `Arrangement` (lead instrument and octave shift, harp chords or arpeggio, bass style, counter-melody, chimes, ornaments, dynamics). The same bars come back re-orchestrated, so the loop takes about 1.5 minutes before it repeats. Bars get small random dynamics and grace notes.
 - P saves a screenshot (with the dialogue box redrawn onto it) (`game.screenshot()`), stamped with level, area, position, facing and mode, for bug reports.
 
@@ -228,6 +247,7 @@ Levels place objects with `b.add({ type: ..., ... })`. Objects talk to each othe
 | M4 Slice complete | done | Shop and upgrades, all 10 cards, 4 secrets, title/pause/options, music, visual pass, perf |
 | Polish 1 | done | Sectioned music, wall caps against climbing out, P screenshots, painted portraits and gilt frames, detailed characters, set dressing in every room |
 | M14 Errands & the Old Woods | done | A quest system (student givers with !/? markers, quest items, an errand log in the pause menu, rewards); six errands, each behind a new climb or spell puzzle: the court walkway, bookcase tops in the library, the Old Wine Cellar under the hall, the Well Yard dovecote, the lake moorings, and the Old Woods (a new level off the grounds); 3 new cards (37 total) |
+| M15 Overnight polish | done | The next-goal guide with a compass and timetable; the Hexling and the Sootling; a hard last room in every trial; the Brass Examiner boss and a foe per exam room; richer procedural textures; pupils wandering the castle; two more errands (Wren's scarf, Otto's watch); Snoop's Map; rebindable keys and gamepad; music for the woods and the exams |
 | M13 Final Exams | done | The Examination Hall off the First Floor: seven professors' rooms (block trough and Rattlecoat; three relocking padlocks at once; moss, fling and charged bounce; lamplit stones and a two-lamp false wall; Snapweeds, a rope drawbridge and four ordered braziers; crabs, a floe and a charged freeze; ferry, pendulum and a called basket), the Thistle Hall with the Golden Thistle, the House Cup and the ending screen |
 | M12 The First Floor | done | A new storey up from the Lantern Hall gallery: the Long Hall, the Great Library (mezzanine by stair or book lift, glimmer stacks needing a charged lamp, the Forbidden Section behind a sliding bookshelf with a Snapweed and a chest), the House Wing (only your common room opens), the Leads (chimneys, ridge, a cistern to freeze or a tile to fling across, a crate lift and a bounce to the observatory lookout); 3 new cards (34); NPC spots in castle levels |
 | M11 Enemies & longer trials | done | Snapweed and Ember Crab; a fifth/sixth room in five trials: the Clockwork Moat (moving platforms, Thwackwort Trial), the Strongroom (pendulums and relocking gates, Vaults), the Ember Crypt (glimmer stones under crab fire, Catacombs), the Snapweed Beds (Glasshouse), the Boiler Hall (frozen crabs as stepping stones, Cisterns) |
