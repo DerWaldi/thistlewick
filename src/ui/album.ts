@@ -53,6 +53,8 @@ export class Album {
     const found = CARDS.filter((c) => state.cards.has(c.id)).length;
     this.count.textContent = `${found} of ${CARDS.length} found`;
     this.grid.innerHTML = '';
+    // Two rows, however many cards there are (the stylesheet drops to 4 across on narrow screens).
+    this.grid.style.setProperty('--cols', String(Math.max(7, Math.ceil(CARDS.length / 2))));
     for (const card of CARDS) {
       const have = state.cards.has(card.id);
       const el = document.createElement('div');

@@ -179,7 +179,9 @@ test('progress survives a reload: house, cards, secrets, sweets, checkpoint', as
     const g = window.__tw.game as unknown as { world: { entities: { constructor: { name: string } }[] } };
     return g.world.entities.filter((e) => e.constructor.name === 'CardPickup').length;
   });
-  expect(cardsInWorld).toBe(4);
+  // Six placed in the hub (tapestry alcove, chandelier, window bay, clock, corridor shelf, court
+  // balcony); the tapestry one was collected.
+  expect(cardsInWorld).toBe(6 - 1);
 });
 
 test('doors and shopkeepers talk; the album lists found cards', async ({ page, browserName }) => {
@@ -206,7 +208,7 @@ test('doors and shopkeepers talk; the album lists found cards', async ({ page, b
   });
   expect(r.shopFocus).toMatch(/Talk to/);
   expect(r.doorFocus).toBe('Read');
-  await expect(page.locator('#album-count')).toHaveText('1 of 14 found');
+  await expect(page.locator('#album-count')).toHaveText('1 of 17 found');
   await expect(page.locator('.album-card:not(.missing)')).toHaveCount(1);
   await shot(page, 'm2-album', browserName);
 });

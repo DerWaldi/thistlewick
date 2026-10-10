@@ -65,6 +65,7 @@ export const HUB: LevelDef = {
     title: { pos: [0, 0, 3.5], yaw: 0 },
     fromClassroom: { pos: [38.5, 3, 20], yaw: -Math.PI / 2 },
     fromQuince: { pos: [38.5, 3, 50.3], yaw: Math.PI },
+    fromHopgood: { pos: [40.6, 3, 46], yaw: -Math.PI / 2 },
   },
   areas: [
     { id: 'hall', name: 'The Lantern Hall', min: [-12, -2, 0], max: [12, 14, 30] },
@@ -392,11 +393,12 @@ function buildHub(b: LevelBuilder): void {
   // unreachable balcony (Springwell), and a locked chest (Latchkin).
   b.add(
     { type: 'teaser', spell: 'cindersnap', prop: 'vines', pos: [16, 0, 46], yaw: -Math.PI / 2 },
-    { type: 'springPad', pos: [-14.2, R, 47], radius: 1.1 },
+    { type: 'springPad', pos: [-14.2, R, 47], radius: 1.1, style: 'moss', duration: 0 },
     { type: 'chest', id: 'hub-court-chest', pos: [-14.2, 0, 60], yaw: Math.PI / 2, card: 'lumley-lockjaw', sweets: [['bramble', 2]] },
   );
   b.box([-14.75, 9.1, 52], [2.5, 0.4, 4], { color: COLORS.stoneLight }); // balcony
   b.box([-13.6, 9.8, 52], [0.2, 1, 4], { color: COLORS.woodDark, pattern: 'planks' });
+  b.box([-14.75, 9.8, 53.9], [2.5, 1, 0.2], { color: COLORS.woodDark, pattern: 'planks' }); // north rail
   deco(b, new BoxGeometry(0.1, 3, 1.8), [-16, 10.8, 52], COLORS.woodDark);
 
   // The clock tower on the north wall; behind it, a ledge with a card (secret 3).
@@ -500,7 +502,13 @@ function buildHub(b: LevelBuilder): void {
   // Added after everything else: entity ids come from build order, so new specs go last.
   const G = 3;
   wall(b, 'z', 34.5, 23.5, 52.5, 10.4, { color: COLORS.stoneLight });
-  wall(b, 'z', 42.5, 23.5, 52.5, 10.4, { color: COLORS.stoneLight, holes: [{ from: 33.4, to: 37.6, bottom: G, top: G + 3.6 }] });
+  wall(b, 'z', 42.5, 23.5, 52.5, 10.4, {
+    color: COLORS.stoneLight,
+    holes: [
+      { from: 33.4, to: 37.6, bottom: G, top: G + 3.6 }, // the store-room
+      { from: 44.8, to: 47.2, bottom: G, top: G + 3.4 }, // Leaps & Bounds
+    ],
+  });
   wall(b, 'x', 52.5, 34.5, 42.5, 10.4, { color: COLORS.stoneLight, holes: [{ from: 37.3, to: 39.7, bottom: G, top: G + 3.4 }] });
   b.box([38.5, G / 2, 38.25], [7, G, 28.5], { color: '#8a6a4a', pattern: 'planks' });
   slab(b, 34.5, 42.5, 23.5, 52.5, 10.8, 0.4, '#5e4a3e', 'planks');
@@ -525,7 +533,6 @@ function buildHub(b: LevelBuilder): void {
   [27, 31, 40, 44, 48].forEach((z, i) => portrait(b, gallerySitters[3 + i], [41.95, G + 2.6, z], -Math.PI / 2, i % 2 ? 1.1 : 1.3, i % 2 ? 1.4 : 1.7, (i % 2 ? 1 : -1) * 0.05));
   armour(b, [41.3, G, 29], -Math.PI / 2, '#2f5a6a');
   armour(b, [41.3, G, 42], -Math.PI / 2, '#8a2a3a');
-  armour(b, [41.3, G, 46], -Math.PI / 2, '#3f7a4a');
   for (const x of [35.7, 41.3]) pottedPlant(b, [x, G, 51.3], 1.3, x);
   urn(b, [35.7, G, 24.8], true, 3);
   dustMotes(b, [35.5, G + 0.5, 24.5], [41.5, G + 6.5, 51.5], 80);
@@ -565,6 +572,26 @@ function buildHub(b: LevelBuilder): void {
     { type: 'chest', id: 'hub-hall-cabinet', pos: [11.6, 0, 19.6], yaw: -Math.PI / 2, style: 'cabinet', card: 'brass-mouse' },
     { type: 'sweetLine', kind: 'fizzwort', from: [38.5, G + 0.6, 26], to: [38.5, G + 0.6, 34], count: 5 },
     { type: 'sweetLine', kind: 'fizzwort', from: [38.5, G + 0.6, 40], to: [38.5, G + 0.6, 48], count: 5 },
+  );
+
+  // ================================================================ after Springwell (appended: ids follow build order)
+  b.add(
+    {
+      type: 'door',
+      pos: [42, G, 46],
+      yaw: -Math.PI / 2,
+      width: 2.4,
+      height: 3.4,
+      to: { level: 'hopgood', spawn: 'default' },
+      lockedUnless: 'unlocked:hub-hopgood-lock',
+      talk: 'hopgoodDoor',
+      label: 'Leaps & Bounds',
+    },
+    { type: 'padlock', id: 'hub-hopgood-lock', pos: [41.92, G + 1.5, 46.45], yaw: -Math.PI / 2, persist: true },
+    // The court balcony, reached by bouncing off the springy moss on the cloister roof.
+    { type: 'card', card: 'griselda-gusset', pos: [-14.9, 10.4, 52.8] },
+    { type: 'secret', id: 'hub-balcony', area: 'court', min: [-16, 9, 50], max: [-13.5, 12.5, 54] },
+    { type: 'sweetLine', kind: 'bramble', from: [-15, 9.8, 50.6], to: [-15, 9.8, 51.6], count: 2 },
   );
 
   glow.finish(b, '#ffc68a');

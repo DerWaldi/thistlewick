@@ -499,10 +499,10 @@ kbd {
   color: var(--ink);
 }
 
-/* Seven across keeps two full rows (14 cards) and the card text on screen at once. */
+/* Two rows (columns set from the card count in album.ts) keep the card text on screen too. */
 #album-grid {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--cols, 7), minmax(0, 1fr));
   gap: 10px;
   margin: 14px 0;
 }

@@ -51,6 +51,9 @@ export function paintPortrait(g: CanvasRenderingContext2D, s: PortraitSpec, w: n
     case 'mouse':
       mouse(g, cx, w, h);
       break;
+    case 'mushroom':
+      mushroom(g, cx, w, h);
+      break;
   }
   if (s.kind !== 'lantern') varnish(g, w, h, rnd);
 }
@@ -893,4 +896,60 @@ function mouse(g: CanvasRenderingContext2D, cx: number, w: number, h: number): v
   g.stroke();
   // Little wheels for feet.
   for (const x of [-0.12, 0.12]) blob(g, cx + w * x, h * 0.8, 6 * u, 6 * u, '#3a3340');
+}
+
+function mushroom(g: CanvasRenderingContext2D, cx: number, w: number, h: number): void {
+  const u = w / 160;
+  blob(g, cx, h * 0.9, w * 0.3, h * 0.04, 'rgba(20,10,5,0.35)');
+  // Motion lines: it has just bounced.
+  g.strokeStyle = 'rgba(255,255,255,0.5)';
+  g.lineWidth = 2 * u;
+  for (const dx of [-0.32, 0.32]) {
+    g.beginPath();
+    g.moveTo(cx + w * dx, h * 0.62);
+    g.lineTo(cx + w * dx * 1.15, h * 0.8);
+    g.stroke();
+  }
+  // A squat, springy stem with a coiled band.
+  const stem = g.createLinearGradient(cx - w * 0.12, 0, cx + w * 0.12, 0);
+  stem.addColorStop(0, '#f6ecd8');
+  stem.addColorStop(1, '#d8c8a8');
+  g.fillStyle = stem;
+  g.beginPath();
+  g.moveTo(cx - w * 0.11, h * 0.88);
+  g.quadraticCurveTo(cx - w * 0.16, h * 0.7, cx - w * 0.1, h * 0.5);
+  g.lineTo(cx + w * 0.1, h * 0.5);
+  g.quadraticCurveTo(cx + w * 0.16, h * 0.7, cx + w * 0.11, h * 0.88);
+  g.fill();
+  g.strokeStyle = '#8ef06a';
+  g.lineWidth = 2 * u;
+  for (let i = 0; i < 4; i++) {
+    g.beginPath();
+    g.ellipse(cx, h * (0.58 + i * 0.07), w * 0.12, h * 0.015, 0, 0, Math.PI);
+    g.stroke();
+  }
+  // Cap, spotted, with a cheeky face.
+  const cap = g.createRadialGradient(cx - w * 0.1, h * 0.32, 4, cx, h * 0.4, w * 0.4);
+  cap.addColorStop(0, '#f07a98');
+  cap.addColorStop(1, '#a8304e');
+  g.fillStyle = cap;
+  g.beginPath();
+  g.ellipse(cx, h * 0.48, w * 0.38, h * 0.24, 0, Math.PI, Math.PI * 2);
+  g.fill();
+  g.fillStyle = '#f3dcc8';
+  g.fillRect(cx - w * 0.38, h * 0.47, w * 0.76, h * 0.03);
+  for (const [x, y, r] of [
+    [-0.2, 0.36, 9],
+    [0.05, 0.3, 11],
+    [0.24, 0.39, 8],
+    [-0.04, 0.42, 6],
+  ]) {
+    blob(g, cx + w * x, h * y, r * u, r * u * 0.8, '#fff4dc');
+  }
+  for (const side of [-1, 1]) eye(g, cx + side * 9 * u, h * 0.6, 5 * u, '#1b120c');
+  g.strokeStyle = '#5a3a1e';
+  g.lineWidth = 1.5 * u;
+  g.beginPath();
+  g.arc(cx, h * 0.64, 6 * u, 0.2, Math.PI - 0.2);
+  g.stroke();
 }

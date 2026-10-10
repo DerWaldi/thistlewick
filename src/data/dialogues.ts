@@ -61,10 +61,18 @@ export const DIALOGUES: Record<string, Script> = {
   },
 
   wendlebury: async ({ say, state }) => {
+    if (state.lessons.has('springwell')) {
+      await say([
+        { speaker: 'wendlebury', text: "Three Thistle Stars, and you came down the Tumbledown Tower the front way. Mr. Hopgood is beside himself. Literally, he's bouncing." },
+        { speaker: 'wendlebury', text: 'There is a balcony over Hollyhock Court that nobody has stood on in years. I wonder what is up there.' },
+      ]);
+      return;
+    }
     if (state.lessons.has('latchkin')) {
       await say([
         { speaker: 'wendlebury', text: "Two Thistle Stars! Madam Quince tells me you opened her Great Vault without so much as a hairpin. I'm told she smiled. Nobody has ever seen her smile." },
         { speaker: 'wendlebury', text: "Do have a look round the castle again. Thistlewick is full of things that are locked for no good reason." },
+        { speaker: 'wendlebury', text: "Oh, and Mr. Hopgood is waiting for you. Leaps & Bounds, in the Long Gallery. Someone padlocked his door again. I can't think who." },
       ]);
       return;
     }
@@ -220,7 +228,10 @@ export const DIALOGUES: Record<string, Script> = {
       ]);
       return;
     }
-    await say([{ speaker: 'quince', text: 'A locked door is only a question. Latchkin is a very polite answer.' }]);
+    await say([
+      { speaker: 'quince', text: 'A locked door is only a question. Latchkin is a very polite answer.' },
+      { speaker: 'quince', text: "Mr. Hopgood is next. Leaps & Bounds. I locked his door myself, he kept bouncing into my lessons. You may let him out." },
+    ]);
   },
 
   latchkinPracticeDone: async ({ say, state }) => {
@@ -291,6 +302,101 @@ export const DIALOGUES: Record<string, Script> = {
     await say([{ speaker: 'quince', text: '(echoing) The Thistle Star. Well. Come up and see me, please. Promptly.' }]);
   },
 
+  // ---------------------------------------------------------------- the third lesson
+
+  hopgoodDoor: async ({ say, state }) => {
+    const text = state.knows('latchkin')
+      ? '"LEAPS & BOUNDS — Mr. T. Hopgood." Somebody has padlocked it. Again.'
+      : '"LEAPS & BOUNDS — Mr. T. Hopgood." A heavy padlock hangs on it, and something on the other side is going boing.';
+    await say([{ speaker: 'sign', text }]);
+  },
+
+  hopgoodLesson: async (ctx) => {
+    await teachSpringwell(ctx);
+  },
+
+  hopgood: async (ctx) => {
+    const { say, state } = ctx;
+    if (!state.knows('springwell')) {
+      await teachSpringwell(ctx);
+      return;
+    }
+    if (!state.flags.has('practice-springwell')) {
+      await say([{ speaker: 'hopgood', text: "Three platforms, three plates! The tall one needs a hop on landing. Hold your jump as you hit the pad. Higher, higher!" }]);
+      return;
+    }
+    if (!state.lessons.has('springwell')) {
+      await say([{ speaker: 'hopgood', text: "The Tumbledown Tower! Iron door, there. Bounce your way to the top and grab the Star. Don't look down. Actually, do, it's lovely." }]);
+      return;
+    }
+    if (!state.flags.has('hopgood-reward')) {
+      state.flags.add('hopgood-reward');
+      await say([
+        { speaker: 'hopgood', text: "You did the spire! First go! Oh, that's my favourite thing that's happened all week, and I fell up a chimney on Tuesday." },
+        { speaker: 'hopgood', text: "Here, have me. On a card. Best likeness I've had, they caught me mid-bounce." },
+      ]);
+      state.collectCard('tobias-hopgood');
+      await say([{ speaker: 'hopgood', text: 'Springwell works on the castle moss, too. There is a mossy bit on the cloister roof under a balcony. Just saying.' }]);
+      return;
+    }
+    await say([{ speaker: 'hopgood', text: 'Up is the best direction. Down is just up, waiting.' }]);
+  },
+
+  springPracticeDone: async ({ say, state }) => {
+    state.flags.add('practice-springwell');
+    await say([
+      { speaker: 'hopgood', text: 'Plates one, two AND three! Lovely bouncing, lovely!' },
+      { speaker: 'hopgood', text: "The Tumbledown Tower, through the iron door. Pads go flat after a few seconds, so cast and GO. A charged cast throws you higher. And the roof has no railings. That's the fun of it." },
+    ]);
+  },
+
+  lockedTowerDoor: async ({ say, state }) => {
+    if (state.lessons.has('springwell')) {
+      await say([{ speaker: 'hopgood', text: "The Tower's done! I'd let you go again but the spire's still wobbling." }]);
+      return;
+    }
+    await say([{ speaker: 'hopgood', text: 'Plates first! All three. Up you go!' }]);
+  },
+
+  classNotOverHopgood: async ({ say, state }) => {
+    const text = state.flags.has('practice-springwell')
+      ? "Not yet! The Tower first. The Star is right at the top, you can't miss it. Well, you can, but don't."
+      : 'Not yet! Three plates, then the Tower.';
+    await say([{ speaker: 'hopgood', text }]);
+  },
+
+  towerIntro: async ({ say }) => {
+    await say([
+      { speaker: 'hopgood', text: "(far above) Welcome to the Tumbledown Tower! It's mostly up. Springwell a pad, run on, and hold jump as you land." },
+    ]);
+  },
+
+  towerStair: async ({ say }) => {
+    await say([
+      { speaker: 'hopgood', text: "(echoing) The toadstool stair! Cast at the next cap BEFORE you jump on it. They go flat quickly. And the leaning ones throw you where they lean." },
+    ]);
+  },
+
+  towerBellfry: async ({ say }) => {
+    await say([
+      { speaker: 'hopgood', text: "(echoing) The Bellfry! The walkway is high. A plain bounce won't do, HOLD the cast to charge it. And the gate up there only opens while the knocker under the walkway is ticking." },
+    ]);
+  },
+
+  towerRoof: async ({ say }) => {
+    await say([
+      { speaker: 'hopgood', text: "(windy) The roof! Turret to turret to the spire. The leaning caps aim for you, just steer a little. The last hop is a big one: charge it, or hold that jump!" },
+    ]);
+  },
+
+  towerComplete: async ({ say, state }) => {
+    if (state.lessons.has('springwell')) return;
+    state.lessons.add('springwell');
+    state.award(POINTS.star, 'the Thistle Star');
+    state.award(POINTS.lesson, 'passing Leaps & Bounds');
+    await say([{ speaker: 'hopgood', text: '(far below) WOOHOO! The Thistle Star! Come back down and see me. The door, not the quick way.' }]);
+  },
+
   tansy: async ({ say, state, openShop }) => {
     if (state.lessons.has('thwackwort')) {
       const first = !state.flags.has('shop-visited');
@@ -337,6 +443,19 @@ export const DIALOGUES: Record<string, Script> = {
     await say([{ speaker: 'sign', text: `HOUSE POINTS — ${lines}` }]);
   },
 };
+
+async function teachSpringwell({ say, state, events }: ScriptContext): Promise<void> {
+  await say([
+    { speaker: 'hopgood', text: "Hello hello! Tobias Hopgood, Leaps & Bounds. Thank you for the door, I'd been bouncing on it for an hour." },
+    { speaker: 'hopgood', text: 'SPRINGWELL! Moss, toadstools, mattresses, anything with a bit of give. Cast at it, and for a few seconds it throws you skywards.' },
+    { speaker: 'hopgood', text: "Hold the cast to charge it, and it throws you higher. Hold jump as you land, and higher still. Both? Ooh. Mind the ceiling." },
+  ]);
+  if (!state.knows('springwell')) {
+    state.learn('springwell');
+    events.emit('toast', { text: 'You learned Springwell!', kind: 'info' });
+  }
+  await say([{ speaker: 'hopgood', text: 'Three platforms, a plate on each. Stand on all three! The tall one needs a hop as you land.' }]);
+}
 
 async function teachLatchkin({ say, state, events }: ScriptContext): Promise<void> {
   await say([

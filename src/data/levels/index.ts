@@ -1,8 +1,10 @@
 import type { LevelDef } from '../../world/level';
 import { CLASSROOM } from './classroom';
 import { GYM } from './gym';
+import { HOPGOOD } from './hopgood';
 import { HUB } from './hub';
 import { QUINCE } from './quince';
+import { TOWER } from './tower';
 import { TRIAL } from './trial';
 import { VAULT } from './vault';
 
@@ -14,4 +16,6 @@ export const LEVELS: Record<string, LevelDef> = {
   trial: TRIAL,
   quince: QUINCE,
   vault: VAULT,
+  hopgood: HOPGOOD,
+  tower: TOWER,
 };

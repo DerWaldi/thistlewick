@@ -7,7 +7,7 @@ export type Surface = 'default' | 'ice';
 export interface ColliderInfo {
   surface?: Surface;
   /** Landing on this collider launches the player. */
-  bounce?: { scale: number; onBounce?: () => void };
+  bounce?: { scale: number; onBounce?: () => void; /** Sideways launch velocity (angled toadstools). */ fling?: Vector3 };
   /** Set for colliders on moving (kinematic) bodies; the player is carried by `delta`. */
   mover?: { delta: Vector3 };
   /** Camera spring arm ignores this collider (small props, foliage). */

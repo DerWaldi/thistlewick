@@ -1,6 +1,6 @@
 import type { PortraitSpec } from './portraits';
 
-export type SpeakerId = 'wendlebury' | 'lantern' | 'tansy' | 'moss' | 'gorse' | 'quince' | 'sign';
+export type SpeakerId = 'wendlebury' | 'lantern' | 'tansy' | 'moss' | 'gorse' | 'quince' | 'hopgood' | 'sign';
 
 export interface SpeakerDef {
   id: SpeakerId;
@@ -46,6 +46,12 @@ export const SPEAKERS: Record<SpeakerId, SpeakerDef> = {
     name: 'Madam Quince',
     voice: 610,
     portrait: { bg: ['#cfe0d8', '#2f5a6a'], kind: 'person', skin: '#f0c9a0', robe: '#2f5a6a', hair: '#8a3a22', hat: 'tall', hatColor: '#24323f', glasses: true, prop: 'key', hairStyle: 'bun', collar: 'ruff', expression: 'smirk', jewel: '#c99a3e', eyes: '#3a6a5a' },
+  },
+  hopgood: {
+    id: 'hopgood',
+    name: 'Mr. Hopgood',
+    voice: 480,
+    portrait: { bg: ['#d8f0c0', '#3f7a4a'], kind: 'person', skin: '#f0c9a0', robe: '#3f7a4a', hair: '#d9822e', hat: 'cap', hatColor: '#b0362f', prop: 'wand', hairStyle: 'wild', collar: 'scarf', jewel: '#e8c25a', expression: 'smile', eyes: '#4a7a3a' },
   },
   sign: {
     id: 'sign',

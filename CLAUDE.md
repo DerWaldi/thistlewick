@@ -54,6 +54,8 @@ src/entities/          level objects: pushBlock (resetOn), mechanisms (knockSwit
                        timed/latch/persist; plate; gate; checkpoint), gnarling, rattlecoat (needs charged hits),
                        locks (padlock: relock/persist/orbit; chest/box/cabinet with card + sweets; drawbridge;
                        vaultDoor), snapcasket (Latchkin locks it, then Thwackwort; its `spell` changes),
+                       springs (springPad: moss/mushroom/mattress/rune; springy for `duration` s after
+                       Springwell, a charged cast launches higher, `fling` throws you sideways),
                        teasers (targets for spells not yet learned), hubObjects (cards, secrets, tapestry,
                        bookshelf, npc, sorting lantern, doors, hourglasses, spring pad), lessonObjects
                        (trigger, Thistle Star), sweets (instanced SweetField); types.ts holds the
@@ -82,6 +84,11 @@ Each fixed step runs in this order:
 
 Each render frame then runs the camera, animator, level and entity visuals, caster (targeting needs the fresh camera), particles, shadow, HUD and draw, all interpolated with `alpha`.
 
+### Bouncing
+- Bounce height = `jump.bounceHeight` (6.5 m) × the pad's scale (1 + 0.6 × charge for Springwell) × `bounceBoostScale` if jump is held on landing. Air time to a ledge ~1 m below the apex is about 0.85 s; plan horizontal gaps of 2.5–4.5 m for straight bounces.
+- A `fling` sets your sideways velocity outright; until you land, air control steers around it (55%) instead of braking it. Tune flings by playing them (`__tw` + `pressJump`/`input`), not on paper.
+- Pads that stand proud of the floor must be low enough to step on (≤ 0.36 m) or players have to jump onto them; prefer `rune` tiles where you walk on.
+
 ### Spells & targets
 - Line of sight is the Latchkin puzzle: a padlock must be visible from the player's chest. Colliders with `seeThrough` (grilles, bars) block bodies but not spells. Mind the camera's pitch limit: targets high above the player can't be centred, so keep them low or let the player back off.
 - Casting is context-sensitive. A `SpellTarget` names the one spell it reacts to, and the caster picks the best target in an aim cone around the crosshair (with line of sight).
@@ -95,7 +102,7 @@ Each render frame then runs the camera, animator, level and entity visuals, cast
 - A `door` entity with `to: { level, spawn }` switches levels; the game fades out and in.
 - Everything level-specific is created by `LevelSession` and torn down by its `dispose()`. Event listeners go on the session's scoped bus, so they're removed too.
 - Every level file starts with a map comment. Keep it current.
-- Levels: `hub`, then `classroom` (Gorse's lesson) and `trial` (the Thwackwort Trial); then the hub's Long Gallery leads to `quince` (Locks & Latches) and `vault` (the Latchkin Vaults). Plus the `gym` sandbox.
+- Levels: `hub`, then `classroom` (Gorse's lesson) and `trial` (the Thwackwort Trial); then the hub's Long Gallery leads to `quince` (Locks & Latches) and `vault` (the Latchkin Vaults), and through a padlocked door to `hopgood` (Leaps & Bounds) and `tower` (the Tumbledown Tower). Plus the `gym` sandbox.
 
 ### Lessons (the core loop)
 Each lesson is content, not engine work:
@@ -182,6 +189,7 @@ Levels place objects with `b.add({ type: ..., ... })`. Objects talk to each othe
 | M3 Lesson | done | Gorse's lesson, the Thwackwort Trial dungeon (~5 min), Thistle Star, a post-lesson hub secret |
 | M4 Slice complete | done | Shop and upgrades, all 10 cards, 4 secrets, title/pause/options, music, visual pass, perf |
 | Polish 1 | done | Sectioned music, wall caps against climbing out, P screenshots, painted portraits and gilt frames, detailed characters, set dressing in every room |
+| M6 Springwell | done | Hopgood's gym (padlocked off the Long Gallery), the Tumbledown Tower (toadstool stair, Bellfry with a timed gate and charged bounces, rooftop turret run to the spire), spring pads with fling, latching plates, the court balcony, 3 new cards (17 total) |
 | M5 Latchkin | done | Long Gallery wing (portcullis, portraits, padlocked store-room), Madam Quince's class, the Latchkin Vaults (line-of-sight locks, Snapcaskets, relocking shutters, drawbridge, orbiting vault locks), castle payoffs, 4 new cards (14 total) |
 
 Spell roster (data comes in M1+):

@@ -250,8 +250,9 @@ export class Plate implements Entity {
       new RAPIER.Cuboid(0.7, 0.2, 0.7),
       RAPIER.QueryFilterFlags.EXCLUDE_SENSORS,
     );
-    const pressed = hit !== null;
+    const pressed = hit !== null || (this.spec.latch === true && this.pressed);
     if (pressed !== this.pressed) {
+      if (pressed && this.spec.latch) this.ctx.events.emit('unlock', { pos: this.top.clone() });
       this.pressed = pressed;
       this.ctx.signals.set(this.spec.id, pressed);
     }

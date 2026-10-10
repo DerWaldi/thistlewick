@@ -81,6 +81,12 @@ export class Sfx {
       this.tone(70, 55, 2, 'sawtooth', 0.06);
       setTimeout(() => [392, 523, 659, 784].forEach((f, i) => setTimeout(() => this.tone(f, f, 0.6, 'triangle', 0.08), i * 110)), 900);
     });
+    // Springwell: a rising boing as a pad wakes up, a sagging one as it gives out.
+    events.on('springOn', ({ charged }) => {
+      this.tone(220, charged ? 880 : 660, 0.35, 'sine', 0.12);
+      setTimeout(() => this.tone(440, charged ? 1320 : 990, 0.25, 'triangle', 0.06), 90);
+    });
+    events.on('springOff', () => this.tone(500, 160, 0.4, 'sine', 0.08));
     events.on('snapNotice', () => this.tone(300, 520, 0.12, 'square', 0.06));
     events.on('snapBite', () => {
       this.thud(0.5, 160);

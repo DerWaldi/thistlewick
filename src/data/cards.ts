@@ -161,6 +161,36 @@ export const CARDS: CardDef[] = [
     hint: 'In a padlocked cabinet in the Lantern Hall.',
     portrait: { bg: ['#f2e2b8', '#8a6a3a'], kind: 'mouse' },
   },
+  {
+    id: 'griselda-gusset',
+    number: 15,
+    name: 'Griselda Gusset',
+    title: 'Inventor of the Upward Staircase',
+    set: 'Founders',
+    text: 'Built a staircase that only goes up. It is still going. Nobody has reached the top, but the view is said to be marvellous.',
+    hint: 'On the courtyard balcony nobody can reach.',
+    portrait: { bg: FOUNDER_BG, kind: 'person', skin: '#f3d2b4', robe: '#6a4a8a', hair: '#c8642e', hat: 'pointy', hatColor: '#4a2c5f', hairStyle: 'long', collar: 'ruff', expression: 'smirk', jewel: '#8ef06a', prop: 'scroll' },
+  },
+  {
+    id: 'tobias-hopgood',
+    number: 16,
+    name: 'Tobias Hopgood',
+    title: 'Fell Upstairs, Professionally',
+    set: 'Oddballs',
+    text: 'Has never once used the stairs. Holds the castle record for the highest bounce, set the day the Bellfry mattresses were delivered.',
+    hint: 'A reward for a Leaps & Bounds trial well done.',
+    portrait: { bg: ODDBALL_BG, kind: 'person', skin: '#f0c9a0', robe: '#3f7a4a', hair: '#d9822e', hat: 'cap', hatColor: '#b0362f', prop: 'wand', hairStyle: 'wild', collar: 'scarf', jewel: '#e8c25a', expression: 'smile', eyes: '#4a7a3a' },
+  },
+  {
+    id: 'bouncewort',
+    number: 17,
+    name: 'The Bouncewort',
+    title: 'A Toadstool With Ambitions',
+    set: 'Creatures',
+    text: 'Grows only where something once landed very hard. Its spores are spring-loaded. Do not sit on one, however tempting it looks.',
+    hint: 'Atop the great bell of the Tumbledown Tower.',
+    portrait: { bg: ['#d8f0c0', '#4f7a3a'], kind: 'mushroom' },
+  },
 ];
 
 export const CARD_BY_ID = new Map(CARDS.map((c) => [c.id, c]));

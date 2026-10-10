@@ -52,7 +52,7 @@ export type EntitySpec = SpecBase &
         /** A latched switch in the castle that stays thrown across visits (e.g. a portcullis winch). */
         persist?: boolean;
       }
-    | { type: 'plate'; id: string; pos: V3 }
+    | { type: 'plate'; id: string; pos: V3; /** Stays down once stepped on. */ latch?: boolean }
     | { type: 'gate'; pos: V3; yaw: number; width: number; height: number; when: string[] }
     | { type: 'sweet'; kind: SweetKind; pos: V3 }
     | { type: 'sweetLine'; kind: SweetKind; from: V3; to: V3; count: number }
@@ -93,7 +93,20 @@ export type EntitySpec = SpecBase &
         style?: 'wood' | 'iron';
       }
     | { type: 'hourglasses'; pos: V3; yaw: number }
-    | { type: 'springPad'; pos: V3; radius: number }
+    | {
+        type: 'springPad';
+        pos: V3;
+        /** Cushion/cap/tile radius; half the length for a mattress. */
+        radius: number;
+        style?: 'moss' | 'mushroom' | 'mattress' | 'rune';
+        yaw?: number;
+        /** Toadstool stem height (the cap sits on top). */
+        height?: number;
+        /** Seconds it stays springy after a cast (default 8; 0 = for the rest of the visit). */
+        duration?: number;
+        /** Throws you sideways too: direction (yaw) and speed. */
+        fling?: { yaw: number; speed: number };
+      }
     | {
         type: 'trigger';
         /** Progress flag set when this fires; a trigger fires once per save. */

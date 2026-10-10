@@ -47,6 +47,8 @@ export class PlayerController {
   readonly vel = new Vector3();
   facing = 0; // yaw; forward = (sin, 0, cos)
   turnVelocity = 0; // rad/s, for animation lean
+  /** Sideways velocity from an angled pad, kept until you land. */
+  private flung: Vector3 | null = null;
   mode: PlayerMode = 'air';
   grounded = false;
   groundSurface: Surface = 'default';
@@ -108,6 +110,7 @@ export class PlayerController {
     this.lastSafe.copy(this.pos);
     this.safeHistory.length = 0;
     this.vel.set(0, 0, 0);
+    this.flung = null;
     this.body.setTranslation(this.pos, true);
     this.body.setNextKinematicTranslation(this.pos);
     this.mode = 'air';
@@ -187,9 +190,12 @@ export class PlayerController {
     const wishLen = this.wishDir(cameraYaw, wish);
     const onIce = this.grounded && this.groundSurface === 'ice';
 
-    // Horizontal velocity: accelerate towards the wished velocity.
-    const tx = wish.x * m.runSpeed * this.speedScale;
-    const tz = wish.z * m.runSpeed * this.speedScale;
+    // Horizontal velocity: accelerate towards the wished velocity. After an angled
+    // pad throws you, air control steers around the throw instead of braking it.
+    if (this.grounded || this.hang) this.flung = null;
+    const steer = this.flung ? 0.55 : 1;
+    const tx = wish.x * m.runSpeed * this.speedScale * steer + (this.flung?.x ?? 0);
+    const tz = wish.z * m.runSpeed * this.speedScale * steer + (this.flung?.z ?? 0);
     let rate: number;
     if (this.grounded) {
       if (wishLen > 0.01) {
@@ -304,7 +310,7 @@ export class PlayerController {
       this.jumpedThisArc = false;
       this.vel.y = 0;
       if (this.groundInfo?.bounce) {
-        this.bounce(this.groundInfo.bounce.scale);
+        this.bounce(this.groundInfo.bounce.scale, this.groundInfo.bounce.fling);
         this.groundInfo.bounce.onBounce?.();
       } else {
         this.events.emit('land', { pos: this.feet.clone(), impact: fallSpeed });
@@ -312,7 +318,8 @@ export class PlayerController {
         if (this.buffer > 0) this.jump(j.height);
       }
     } else if (this.grounded && this.groundInfo?.bounce) {
-      this.bounce(this.groundInfo.bounce.scale);
+      this.bounce(this.groundInfo.bounce.scale, this.groundInfo.bounce.fling);
+      this.groundInfo.bounce.onBounce?.();
     }
 
     if (!this.grounded && wasGrounded && !this.jumpedThisArc && carry) {
@@ -395,17 +402,21 @@ export class PlayerController {
     const away = new Vector3(this.pos.x - from.x, 0, this.pos.z - from.z);
     if (away.lengthSq() < 1e-4) away.set(-Math.sin(this.facing), 0, -Math.cos(this.facing));
     away.normalize().multiplyScalar(strength);
+    this.flung = null;
     this.vel.x = 0;
     this.vel.z = 0;
     this.launch(0.6, away);
     this.regrab = 0.4;
   }
 
-  private bounce(scale: number): void {
+  private bounce(scale: number, fling?: Vector3): void {
     const j = this.tuning.jump;
     const boosted = this.input.jumpHeld() || this.buffer > 0;
     const h = j.bounceHeight * scale * (boosted ? j.bounceBoostScale : 1);
-    this.launch(h);
+    // An angled pad sets your sideways speed outright, so its arc is the same every time.
+    if (fling) this.vel.set(0, this.vel.y, 0);
+    this.launch(h, fling);
+    this.flung = fling ? fling.clone() : null;
     this.buffer = 0;
     this.events.emit('bounce', { pos: this.feet.clone(), power: boosted ? 1 : 0.7 });
   }

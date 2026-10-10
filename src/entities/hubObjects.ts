@@ -20,8 +20,6 @@ import {
 import { CARD_BY_ID } from '../data/cards';
 import { HOUSE_ORDER, HOUSES } from '../data/houses';
 import { buildStudent, type StudentRig } from '../player/model';
-import { RuneMarker } from '../spells/runes';
-import type { SpellHit, SpellTarget } from '../spells/targets';
 import { drawCardBack, drawCardFace } from '../ui/cardArt';
 import { paint } from '../world/builder';
 import { COLORS, worldMaterial } from '../world/materials';
@@ -601,52 +599,5 @@ export class Hourglasses implements Entity, Interactable {
       f.scale.y = h;
       f.position.y = 0.3 + h / 2;
     });
-  }
-}
-
-// ---------------------------------------------------------------- springwell teaser
-
-/**
- * A mossy pad that Springwell would make bouncy. Dormant (and grey-runed) until you
- * know the spell; once cast, it launches like the gym's mushrooms.
- */
-export class SpringPad implements SpellTarget {
-  readonly spell = 'springwell' as const;
-  readonly marker: RuneMarker;
-  readonly radius = 1;
-  private collider: RAPIER.Collider;
-  private readonly pos: Vector3;
-  private active = false;
-  private pad: Mesh;
-
-  constructor(
-    spec: SpecOf<'springPad'>,
-    private ctx: WorldContext,
-  ) {
-    this.pos = new Vector3(...spec.pos);
-    this.pad = new Mesh(paint(new CylinderGeometry(spec.radius, spec.radius * 1.05, 0.25, 12).toNonIndexed(), COLORS.moss, true), worldMaterial());
-    this.pad.position.copy(this.pos).add(new Vector3(0, 0.125, 0));
-    this.pad.receiveShadow = true;
-    ctx.scene.add(this.pad);
-    this.collider = ctx.physics.addStaticCylinder(this.pos.clone().add(new Vector3(0, 0.125, 0)), 0.125, spec.radius);
-    this.marker = new RuneMarker(ctx.scene, 'springwell', 0.7);
-    this.marker.sprite.position.copy(this.pos).add(new Vector3(0, 1, 0));
-    ctx.targets.add(this);
-  }
-
-  aimPoint(out: Vector3): Vector3 {
-    return out.copy(this.pos).add(new Vector3(0, 0.25, 0));
-  }
-  enabled(): boolean {
-    return !this.active;
-  }
-  owns(c: RAPIER.Collider): boolean {
-    return c.handle === this.collider.handle;
-  }
-  onSpell(_hit: SpellHit): void {
-    this.active = true;
-    this.ctx.physics.setInfo(this.collider, { bounce: { scale: 1.3 }, noGrab: true });
-    (this.pad.material as MeshStandardMaterial).emissive = new Color('#8ef06a');
-    (this.pad.material as MeshStandardMaterial).emissiveIntensity = 0.4;
   }
 }

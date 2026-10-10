@@ -36,6 +36,8 @@ export interface GameEvents {
   chestOpen: { pos: Vector3 };
   bridgeMove: { pos: Vector3 };
   vaultOpen: { pos: Vector3 };
+  springOn: { pos: Vector3; charged: boolean };
+  springOff: { pos: Vector3 };
   snapNotice: { pos: Vector3 };
   snapBite: { pos: Vector3 };
   snapLocked: { pos: Vector3 };
