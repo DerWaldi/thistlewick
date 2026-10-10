@@ -154,7 +154,7 @@ export class Caster {
           this.events.emit('chargeStart', { spell: this.pressed.spell });
         }
         if (this.charging) {
-          this.charge = Math.min(1, (this.holdTime - c.tapTime) / c.chargeTime);
+          this.charge = Math.min(1, (this.holdTime - c.tapTime) / (c.chargeTime * this.state.chargeTimeScale));
           this.player.faceOverride = this.faceYaw(this.pressed);
         }
       } else {

@@ -1,0 +1,347 @@
+/**
+ * Procedural music: two small original pieces, sequenced live with WebAudio.
+ * Moods cross-fade; each has its own scheduler so it resumes where it left off.
+ * Files in public/music/<mood>.mp3 (if present) are used instead of the
+ * synthesised version, so CC0 recordings can be dropped in later.
+ */
+export type Mood = 'hub' | 'dungeon' | 'title';
+
+type Note = [midi: number | null, beats: number];
+interface Bar {
+  chord: number[]; // accompaniment chord tones (MIDI)
+  bass: number;
+  melody: Note[];
+}
+interface Song {
+  bpm: number;
+  beatsPerBar: number;
+  bars: Bar[];
+  style: 'waltz' | 'vaults';
+}
+
+const DM = [62, 65, 69];
+const G = [62, 67, 71];
+const C = [60, 64, 67];
+const AM = [60, 64, 69];
+const BB = [62, 65, 70];
+const A = [61, 64, 69];
+const F = [60, 65, 69];
+const GM = [62, 67, 70];
+
+/** "The Thistlewick Waltz" (D dorian, 3/4). */
+const WALTZ: Song = {
+  bpm: 104,
+  beatsPerBar: 3,
+  style: 'waltz',
+  bars: [
+    { chord: DM, bass: 38, melody: [[69, 1], [74, 1], [77, 1]] },
+    { chord: G, bass: 43, melody: [[76, 2], [74, 1]] },
+    { chord: C, bass: 36, melody: [[72, 1], [76, 1], [79, 1]] },
+    { chord: AM, bass: 45, melody: [[76, 2], [72, 1]] },
+    { chord: DM, bass: 38, melody: [[74, 1], [77, 1], [81, 1]] },
+    { chord: G, bass: 43, melody: [[79, 1], [77, 1], [74, 1]] },
+    { chord: BB, bass: 46, melody: [[77, 1.5], [76, 0.5], [74, 1]] },
+    { chord: A, bass: 45, melody: [[73, 3]] },
+    { chord: DM, bass: 38, melody: [[81, 1], [77, 1], [74, 1]] },
+    { chord: G, bass: 43, melody: [[71, 1], [74, 1], [79, 1]] },
+    { chord: C, bass: 36, melody: [[79, 2], [76, 1]] },
+    { chord: F, bass: 41, melody: [[77, 1], [72, 1], [69, 1]] },
+    { chord: BB, bass: 46, melody: [[74, 1], [77, 1], [82, 1]] },
+    { chord: A, bass: 45, melody: [[81, 2], [79, 1]] },
+    { chord: GM, bass: 43, melody: [[77, 1], [76, 1], [73, 1]] },
+    { chord: DM, bass: 38, melody: [[74, 2], [null, 1]] },
+  ],
+};
+
+const AMIN = [57, 60, 64];
+const FMAJ = [57, 60, 65];
+const GMAJ = [55, 59, 62];
+const EMAJ = [56, 59, 64];
+const DMIN = [57, 62, 65];
+
+/** "The Tumbling Vaults" (A minor, 4/4): pizzicato bass, sparse bells. */
+const VAULTS: Song = {
+  bpm: 78,
+  beatsPerBar: 4,
+  style: 'vaults',
+  bars: [
+    { chord: AMIN, bass: 45, melody: [[76, 2], [72, 2]] },
+    { chord: FMAJ, bass: 41, melody: [[69, 3], [null, 1]] },
+    { chord: GMAJ, bass: 43, melody: [[71, 1], [74, 1], [72, 2]] },
+    { chord: EMAJ, bass: 40, melody: [[71, 2], [68, 2]] },
+    { chord: AMIN, bass: 45, melody: [[76, 1], [77, 1], [76, 1], [72, 1]] },
+    { chord: FMAJ, bass: 41, melody: [[69, 2], [72, 2]] },
+    { chord: DMIN, bass: 38, melody: [[74, 2], [77, 1], [76, 1]] },
+    { chord: EMAJ, bass: 40, melody: [[71, 4]] },
+  ],
+};
+
+const SONGS: Record<Mood, { song: Song; tempo: number; sparse?: boolean }> = {
+  hub: { song: WALTZ, tempo: 1 },
+  title: { song: WALTZ, tempo: 0.82, sparse: true },
+  dungeon: { song: VAULTS, tempo: 1 },
+};
+
+const hz = (midi: number) => 440 * Math.pow(2, (midi - 69) / 12);
+
+interface Track {
+  bus: GainNode;
+  bar: number;
+  nextBarTime: number;
+  level: number; // target gain
+  file?: AudioBufferSourceNode;
+}
+
+export class Music {
+  private ctx: AudioContext | null = null;
+  private master: GainNode | null = null;
+  private reverb: ConvolverNode | null = null;
+  private tracks = new Map<Mood, Track>();
+  private mood: Mood | null = null;
+  private files = new Map<Mood, AudioBuffer | null>();
+  volume = 0.5;
+  /** Lowered while dialogue is open. */
+  private duck = 1;
+
+  constructor(private getCtx: () => AudioContext | null) {}
+
+  setVolume(v: number): void {
+    this.volume = v;
+    this.applyMaster();
+  }
+
+  setDuck(on: boolean): void {
+    this.duck = on ? 0.55 : 1;
+    this.applyMaster();
+  }
+
+  private applyMaster(): void {
+    if (this.master && this.ctx) this.master.gain.setTargetAtTime(this.volume * this.duck * 0.55, this.ctx.currentTime, 0.4);
+  }
+
+  setMood(mood: Mood): void {
+    this.mood = mood;
+    if (!this.ctx) return;
+    for (const [m, t] of this.tracks) {
+      t.level = m === mood ? 1 : 0;
+      t.bus.gain.cancelScheduledValues(this.ctx.currentTime);
+      t.bus.gain.setTargetAtTime(t.level, this.ctx.currentTime, m === mood ? 1.2 : 0.8);
+    }
+    if (!this.tracks.has(mood)) this.addTrack(mood);
+  }
+
+  /** Call every frame; schedules notes a little ahead. */
+  update(): void {
+    if (!this.ctx) {
+      const c = this.getCtx();
+      if (!c || c.state !== 'running') return;
+      this.init(c);
+    }
+    const ctx = this.ctx!;
+    const now = ctx.currentTime;
+    for (const [mood, t] of this.tracks) {
+      if (t.level === 0 && t.bus.gain.value < 0.01) {
+        // Silent: park it, and restart from the top of the bar later.
+        t.nextBarTime = 0;
+        continue;
+      }
+      if (this.files.get(mood)) {
+        this.ensureFile(mood, t);
+        continue;
+      }
+      const { song, tempo, sparse } = SONGS[mood];
+      const beat = 60 / (song.bpm * tempo);
+      if (t.nextBarTime < now) t.nextBarTime = now + 0.1;
+      while (t.nextBarTime < now + 0.6) {
+        this.scheduleBar(song, song.bars[t.bar % song.bars.length], t.nextBarTime, beat, t.bus, !!sparse);
+        t.nextBarTime += beat * song.beatsPerBar;
+        t.bar++;
+      }
+    }
+  }
+
+  private init(c: AudioContext): void {
+    this.ctx = c;
+    this.master = c.createGain();
+    this.master.gain.value = 0;
+    this.master.connect(c.destination);
+    this.applyMaster();
+    // A soft hall reverb from a synthesised impulse response.
+    this.reverb = c.createConvolver();
+    const len = Math.floor(c.sampleRate * 2.6);
+    const ir = c.createBuffer(2, len, c.sampleRate);
+    for (let ch = 0; ch < 2; ch++) {
+      const d = ir.getChannelData(ch);
+      for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.6);
+    }
+    this.reverb.buffer = ir;
+    const wet = c.createGain();
+    wet.gain.value = 0.35;
+    this.reverb.connect(wet).connect(this.master);
+    if (this.mood) this.setMood(this.mood);
+    for (const m of ['hub', 'dungeon', 'title'] as Mood[]) void this.tryLoadFile(m);
+  }
+
+  private addTrack(mood: Mood): void {
+    const c = this.ctx!;
+    const bus = c.createGain();
+    bus.gain.value = 0;
+    bus.connect(this.master!);
+    bus.connect(this.reverb!);
+    bus.gain.setTargetAtTime(1, c.currentTime, 1.2);
+    this.tracks.set(mood, { bus, bar: 0, nextBarTime: 0, level: 1 });
+  }
+
+  /** Optional recorded tracks: public/music/<mood>.mp3. */
+  private async tryLoadFile(mood: Mood): Promise<void> {
+    if (this.files.has(mood)) return;
+    this.files.set(mood, null);
+    try {
+      const res = await fetch(`${import.meta.env.BASE_URL}music/${mood}.mp3`);
+      if (!res.ok || !(res.headers.get('content-type') ?? '').includes('audio')) return;
+      const buf = await this.ctx!.decodeAudioData(await res.arrayBuffer());
+      this.files.set(mood, buf);
+    } catch {
+      // No file: keep the synthesised version.
+    }
+  }
+
+  private ensureFile(mood: Mood, t: Track): void {
+    if (t.file) return;
+    const src = this.ctx!.createBufferSource();
+    src.buffer = this.files.get(mood)!;
+    src.loop = true;
+    src.connect(t.bus);
+    src.start();
+    t.file = src;
+  }
+
+  // ---------------------------------------------------------------- arrangement
+
+  private scheduleBar(song: Song, bar: Bar, t0: number, beat: number, out: GainNode, sparse: boolean): void {
+    // Melody.
+    let t = t0;
+    for (const [m, beats] of bar.melody) {
+      if (m !== null) {
+        if (song.style === 'waltz') this.musicBox(out, t, hz(m), beats * beat, 0.16);
+        else this.bell(out, t, hz(m), 0.11);
+      }
+      t += beats * beat;
+    }
+    if (song.style === 'waltz') {
+      // Oom-pah-pah: bass on one, a rippled harp chord on two and three.
+      if (!sparse) this.bass(out, t0, hz(bar.bass), beat * 1.6, 0.22);
+      for (const b of [1, 2]) {
+        bar.chord.forEach((m, i) => this.pluck(out, t0 + b * beat + i * 0.025, hz(m - 12), 0.05));
+      }
+      this.pad(out, t0, bar.chord.map((m) => hz(m - 12)), beat * 3, sparse ? 0.03 : 0.022);
+    } else {
+      // Pizzicato bass in eighths: root, fifth, octave, fifth...
+      const pattern = [0, 7, 12, 7, 0, 7, 12, 7];
+      pattern.forEach((iv, i) => this.pluck(out, t0 + i * beat * 0.5, hz(bar.bass + iv - 12), i % 4 === 0 ? 0.12 : 0.08, 0.35));
+      this.pad(out, t0, [hz(bar.bass - 12), hz(bar.bass - 5)], beat * 4, 0.03);
+      for (const b of [1, 3]) this.tick(out, t0 + b * beat);
+    }
+  }
+
+  // ---------------------------------------------------------------- instruments
+
+  private env(g: GainNode, t: number, peak: number, attack: number, decay: number): void {
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(peak, t + attack);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + attack + decay);
+  }
+
+  private osc(type: OscillatorType, f: number, t: number, dur: number, out: AudioNode): OscillatorNode {
+    const o = this.ctx!.createOscillator();
+    o.type = type;
+    o.frequency.value = f;
+    o.connect(out);
+    o.start(t);
+    o.stop(t + dur + 0.05);
+    return o;
+  }
+
+  private musicBox(out: AudioNode, t: number, f: number, len: number, vol: number): void {
+    const g = this.ctx!.createGain();
+    g.connect(out);
+    const decay = Math.max(1.2, len * 1.4);
+    this.env(g, t, vol, 0.004, decay);
+    this.osc('sine', f, t, decay, g);
+    const g2 = this.ctx!.createGain();
+    g2.gain.value = 0.3;
+    g2.connect(g);
+    this.osc('sine', f * 2.003, t, decay, g2);
+    const g3 = this.ctx!.createGain();
+    g3.gain.value = 0.08;
+    g3.connect(g);
+    this.osc('triangle', f * 4.01, t, decay * 0.5, g3);
+  }
+
+  private bell(out: AudioNode, t: number, f: number, vol: number): void {
+    const g = this.ctx!.createGain();
+    g.connect(out);
+    this.env(g, t, vol, 0.003, 2.6);
+    this.osc('sine', f, t, 2.6, g);
+    const g2 = this.ctx!.createGain();
+    g2.gain.value = 0.25;
+    g2.connect(g);
+    this.osc('sine', f * 2.76, t, 1.4, g2);
+  }
+
+  private pluck(out: AudioNode, t: number, f: number, vol: number, decay = 0.7): void {
+    const c = this.ctx!;
+    const lp = c.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 2400;
+    const g = c.createGain();
+    lp.connect(g).connect(out);
+    this.env(g, t, vol, 0.003, decay);
+    this.osc('triangle', f, t, decay, lp);
+  }
+
+  private bass(out: AudioNode, t: number, f: number, len: number, vol: number): void {
+    const g = this.ctx!.createGain();
+    g.connect(out);
+    this.env(g, t, vol, 0.01, len);
+    this.osc('sine', f, t, len, g);
+  }
+
+  private pad(out: AudioNode, t: number, freqs: number[], len: number, vol: number): void {
+    const c = this.ctx!;
+    const lp = c.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 900;
+    const g = c.createGain();
+    lp.connect(g).connect(out);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(vol, t + len * 0.35);
+    g.gain.linearRampToValueAtTime(0.0001, t + len * 1.05);
+    for (const f of freqs) {
+      this.osc('sawtooth', f * 0.997, t, len * 1.05, lp);
+      this.osc('sawtooth', f * 1.003, t, len * 1.05, lp);
+    }
+  }
+
+  private noiseBuf: AudioBuffer | null = null;
+
+  private tick(out: AudioNode, t: number): void {
+    const c = this.ctx!;
+    if (!this.noiseBuf) {
+      this.noiseBuf = c.createBuffer(1, c.sampleRate * 0.1, c.sampleRate);
+      const d = this.noiseBuf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    }
+    const src = c.createBufferSource();
+    src.buffer = this.noiseBuf;
+    const bp = c.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.value = 3200;
+    bp.Q.value = 4;
+    const g = c.createGain();
+    src.connect(bp).connect(g).connect(out);
+    this.env(g, t, 0.05, 0.002, 0.06);
+    src.start(t);
+    src.stop(t + 0.1);
+  }
+}

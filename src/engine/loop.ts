@@ -11,6 +11,8 @@ export class Loop {
   timeScale = 1;
   /** When true, the simulation only advances through `advance()` (used by tests). */
   manual = false;
+  /** In manual mode, frames are only drawn on request (rendering is slow in headless browsers). */
+  private drawRequested = true;
 
   constructor(
     private fixedUpdate: (dt: number) => void,
@@ -35,9 +37,16 @@ export class Loop {
         if (steps === 8) this.acc = 0;
       }
       if (!this.manual) this.frameUpdate(dt, this.acc / FIXED_DT);
-      this.draw();
+      if (!this.manual || this.drawRequested) {
+        this.draw();
+        this.drawRequested = false;
+      }
     };
     this.raf = requestAnimationFrame(frame);
+  }
+
+  requestDraw(): void {
+    this.drawRequested = true;
   }
 
   stop(): void {

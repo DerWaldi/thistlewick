@@ -35,7 +35,7 @@ export class LevelSession {
   readonly world: World;
   readonly interactables = new Set<Interactable>();
   private animator: StudentAnimator;
-  private shadow: BlobShadow;
+  readonly shadow: BlobShadow;
   private puffs: Puffs;
   private area: AreaDef | null = null;
   /** The interactable whose prompt is showing. */

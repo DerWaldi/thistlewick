@@ -8,6 +8,7 @@
   </head>
   <body>
     <canvas id="game"></canvas>
+    <div id="loading">Opening the castle gates…</div>
     <div id="ui">
       <div id="crosshair"></div>
       <div id="charge-ring"></div>
@@ -30,6 +31,18 @@
           <div id="dlg-more">▼</div>
         </div>
       </div>
+      <div id="shop" class="hidden">
+        <div class="shop-book panel">
+          <div class="album-head">
+            <h2>Crumbleton's Cupboard</h2>
+            <div class="shop-wallet"><span class="sweet-icon"></span> <b id="shop-balance">0</b></div>
+            <button id="shop-close" title="Close (E)">✕</button>
+          </div>
+          <div id="shop-quip"></div>
+          <div id="shop-grid"></div>
+          <div class="album-foot">Press <kbd>E</kbd> to close</div>
+        </div>
+      </div>
       <div id="album" class="hidden">
         <div class="album-book panel">
           <div class="album-head">
@@ -42,25 +55,61 @@
           <div class="album-foot">Press <kbd>C</kbd> to close</div>
         </div>
       </div>
-      <div id="click-to-play" class="panel">
-        <h1>Thistlewick</h1>
-        <h2>First Year</h2>
-        <div id="title-buttons">
-          <button id="btn-continue" class="big-btn hidden">Continue</button>
-          <button id="btn-new" class="big-btn">New Game</button>
+      <div id="menu">
+        <div class="menu-screen" data-screen="title">
+          <div class="logo">
+            <div class="logo-small">The Chronicles of</div>
+            <h1>Thistlewick</h1>
+            <div class="logo-sub">~ First Year ~</div>
+          </div>
+          <div class="menu-buttons">
+            <button class="big-btn" data-action="continue">Continue</button>
+            <button class="big-btn" data-action="new">New Game</button>
+            <button class="big-btn quiet" data-action="options">Options</button>
+            <button class="big-btn quiet" data-action="credits">Credits</button>
+          </div>
+          <div class="menu-hint">Best with a mouse. Click a button to begin.</div>
         </div>
-        <p class="hint" id="resume-hint">Click to play</p>
-        <ul class="controls">
-          <li><b>WASD</b> move</li>
-          <li><b>Mouse</b> look</li>
-          <li><b>Space</b> jump (hold for higher)</li>
-          <li><b>Click</b> cast at a glowing rune (hold to charge)</li>
-          <li><b>E</b> talk / open</li>
-          <li><b>C</b> card album</li>
-          <li><b>S</b> while hanging: let go</li>
-          <li><b>Esc</b> release mouse</li>
-          <li><b>`</b> tuning panel</li>
-        </ul>
+        <div class="menu-screen panel" data-screen="pause">
+          <h2>Paused</h2>
+          <div class="menu-buttons">
+            <button class="big-btn" data-action="resume">Resume</button>
+            <button class="big-btn quiet" data-action="album">Card album</button>
+            <button class="big-btn quiet" data-action="options">Options</button>
+            <button class="big-btn quiet" data-action="quit">Save &amp; quit to title</button>
+          </div>
+          <ul class="controls">
+            <li><b>WASD</b> move</li>
+            <li><b>Mouse</b> look</li>
+            <li><b>Space</b> jump (hold for higher)</li>
+            <li><b>Click</b> cast at a glowing rune (hold to charge)</li>
+            <li><b>E</b> talk / open</li>
+            <li><b>C</b> card album</li>
+            <li><b>S</b> while hanging: let go</li>
+            <li><b>Esc</b> pause</li>
+          </ul>
+          <div id="pause-progress"></div>
+        </div>
+        <div class="menu-screen panel" data-screen="options">
+          <h2>Options</h2>
+          <div class="opt-grid">
+            <label for="opt-sens">Mouse sensitivity</label><input id="opt-sens" type="range" min="0.3" max="2.5" step="0.05" />
+            <label for="opt-invert">Invert mouse Y</label><input id="opt-invert" type="checkbox" />
+            <label for="opt-music">Music volume</label><input id="opt-music" type="range" min="0" max="1" step="0.05" />
+            <label for="opt-sfx">Effects volume</label><input id="opt-sfx" type="range" min="0" max="1" step="0.05" />
+            <label for="opt-quality">Graphics</label>
+            <select id="opt-quality"><option value="high">Fancy</option><option value="low">Fast</option></select>
+            <label for="opt-fps">Show FPS</label><input id="opt-fps" type="checkbox" />
+          </div>
+          <div class="menu-buttons"><button class="big-btn" data-action="back">Back</button></div>
+        </div>
+        <div class="menu-screen panel" data-screen="credits">
+          <h2>Credits</h2>
+          <p>A nostalgic little wizard-school adventure.</p>
+          <p>Design &amp; direction: Sebastian Murgul<br />Built with Claude Code</p>
+          <p>Made with three.js and Rapier. Every model, texture, sound and tune is made in code; see ASSETS.md for anything that isn't.</p>
+          <div class="menu-buttons"><button class="big-btn" data-action="back">Back</button></div>
+        </div>
       </div>
       <div id="fade"></div>
       <div id="stats"></div>

@@ -1,4 +1,5 @@
 import type { SpellId } from '../data/spells';
+import type { Mood } from '../engine/music';
 import type { LevelBuilder, V3 } from './builder';
 
 export interface AreaDef {
@@ -25,6 +26,8 @@ export interface LevelDef {
   grants?: SpellId[];
   /** Sandbox levels never touch the save. */
   sandbox?: boolean;
+  /** Background music (default 'hub'). */
+  music?: Mood;
   /** Dialogue script id to run on entering, if the flag isn't set yet. */
   intro?: { script: string; unlessFlag: string };
 }

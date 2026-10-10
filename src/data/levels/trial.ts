@@ -2,7 +2,7 @@ import { BoxGeometry, CylinderGeometry } from 'three';
 import type { LevelBuilder } from '../../world/builder';
 import type { LevelDef } from '../../world/level';
 import { COLORS } from '../../world/materials';
-import { column, crate, deco, hollyhock, signboard, slab, tree, wall } from '../../world/props';
+import { column, crate, deco, grass, hollyhock, signboard, slab, tree, wall } from '../../world/props';
 
 /**
  * The Thwackwort Trial, under Gorse's classroom. Five rooms, south to north (+Z):
@@ -29,6 +29,7 @@ export const TRIAL: LevelDef = {
     { id: 'star', name: 'The Star Chamber', min: [-3.5, -3, 72], max: [3.5, 8, 78.5] },
   ],
   intro: { script: 'trialIntro', unlessFlag: 'trial-entered' },
+  music: 'dungeon',
   build,
 };
 
@@ -120,6 +121,7 @@ function build(b: LevelBuilder): void {
   wall(b, 'z', 10.5, 48, 72, 6, { color: STONE });
   wall(b, 'x', 72, -10.5, 10.5, 6, { color: STONE, holes: [gateHole(0)] });
   deco(b, new BoxGeometry(20, 0.05, 23.5), [0, 0.025, 60], '#6e8a44');
+  grass(b, -9.8, 9.8, 48.6, 71.4, 0.05, 1.6);
   // Hedges (jumpable), beds and an old tree.
   for (const [x, z, w, d] of [
     [-6.5, 53, 4, 1],

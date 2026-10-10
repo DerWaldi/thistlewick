@@ -2,7 +2,7 @@ import { BoxGeometry, CanvasTexture, Mesh, MeshBasicMaterial, PlaneGeometry, SRG
 import type { LevelBuilder } from '../../world/builder';
 import type { LevelDef } from '../../world/level';
 import { COLORS } from '../../world/materials';
-import { deco, Glow, portrait, shelf, slab, wall, windowPane } from '../../world/props';
+import { deco, dustMotes, Glow, lightShaft, portrait, shelf, slab, wall, windowPane } from '../../world/props';
 import { CARD_BY_ID } from '../cards';
 
 /**
@@ -118,7 +118,11 @@ function build(b: LevelBuilder): void {
   shelf(b, [-7.7, 0, 4], Math.PI / 2, 2.6, 3.4);
   shelf(b, [-7.7, 0, 7], Math.PI / 2, 2.6, 3.4);
   shelf(b, [7.7, 0, 4], -Math.PI / 2, 2.6, 3.4);
-  for (const z of [3, 7, 11]) windowPane(b, glow, 'z', -8.5, z, 5, 1.4, 2.8, 1);
+  for (const z of [3, 7, 11]) {
+    windowPane(b, glow, 'z', -8.5, z, 5, 1.4, 2.8, 1);
+    lightShaft(b, [-7.95, 5.3, z], [0.85, -0.65, 0.2], 8, 1.3, 0.18);
+  }
+  dustMotes(b, [-7.5, 0.5, 1], [7.5, 6.5, 13.5], 90);
   portrait(b, CARD_BY_ID.get('barnaby-gorse')!.portrait, [7.95, 3.6, 7], -Math.PI / 2, 1.2, 1.5, 0.05);
   b.lantern([-4, 5.6, 6], 10, 14);
   b.lantern([4, 5.6, 9], 10, 14);

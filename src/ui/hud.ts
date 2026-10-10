@@ -39,7 +39,6 @@ export class Hud {
     private src: HudSources,
     events: EventBus,
   ) {
-    $('hud').classList.remove('hidden');
     events.on('toast', ({ text, kind }) => this.toast(text, kind));
     events.on('hurt', () => {
       this.hurt.classList.add('on');
@@ -56,6 +55,11 @@ export class Hud {
     events.on('areaEnter', ({ id, name }) => this.showBanner(name, this.src.secretsIn(id)));
     events.on('secret', ({ found, total }) => this.toast(`Secret found! (${found}/${total} here)`));
     events.on('dialogueOpen', ({ open }) => document.body.classList.toggle('in-dialogue', open));
+  }
+
+  setVisible(v: boolean): void {
+    $('hud').classList.toggle('hidden', !v);
+    $('crosshair').style.display = v ? '' : 'none';
   }
 
   showBanner(name: string, secrets: { found: number; total: number }): void {

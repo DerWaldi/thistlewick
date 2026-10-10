@@ -43,6 +43,7 @@ export interface GameEvents {
   areaEnter: { id: string; name: string };
   levelLoaded: { id: string };
   learned: { spell: SpellId };
+  purchase: { id: string };
   // ui
   toast: { text: string; kind?: 'info' | 'hint' };
   dialogueOpen: { open: boolean };

@@ -1,19 +1,28 @@
 import {
+  AdditiveBlending,
   BoxGeometry,
+  BufferAttribute,
+  BufferGeometry,
   CanvasTexture,
   CircleGeometry,
   Color,
   ConeGeometry,
   CylinderGeometry,
+  DoubleSide,
   IcosahedronGeometry,
+  InstancedMesh,
+  Matrix4,
   Mesh,
   MeshBasicMaterial,
   MeshStandardMaterial,
   PlaneGeometry,
   PointLight,
+  Points,
+  PointsMaterial,
+  Quaternion,
   SRGBColorSpace,
   TorusGeometry,
-  type BufferGeometry,
+  Vector3,
 } from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type { PortraitSpec } from '../data/portraits';
@@ -102,7 +111,8 @@ export class Glow {
   }
   finish(b: LevelBuilder, color: string): void {
     if (!this.geos.length) return;
-    const m = new Mesh(mergeGeometries(this.geos)!, new MeshBasicMaterial({ color: new Color(color), fog: true }));
+    // Over-bright so the bloom pass gives windows and flames a soft halo.
+    const m = new Mesh(mergeGeometries(this.geos)!, new MeshBasicMaterial({ color: new Color(color).multiplyScalar(1.9), fog: true }));
     b.prop(m);
   }
 }
@@ -242,4 +252,138 @@ export function signboard(b: LevelBuilder, text: string, pos: V3, rotY: number):
   m.position.set(...pos);
   m.rotation.y = rotY;
   b.prop(m);
+}
+
+// ---------------------------------------------------------------- atmosphere
+
+let shaftMat: MeshBasicMaterial | null = null;
+
+/** A soft beam of light from a window: two crossed additive planes that fade out. */
+export function lightShaft(b: LevelBuilder, from: V3, dir: V3, length: number, width: number, strength = 0.22): void {
+  if (!shaftMat) {
+    const c = document.createElement('canvas');
+    c.width = 32;
+    c.height = 128;
+    const g = c.getContext('2d')!;
+    const grad = g.createLinearGradient(0, 0, 0, 128);
+    grad.addColorStop(0, 'rgba(255,220,160,1)');
+    grad.addColorStop(1, 'rgba(255,220,160,0)');
+    g.fillStyle = grad;
+    g.fillRect(0, 0, 32, 128);
+    const side = g.createLinearGradient(0, 0, 32, 0);
+    side.addColorStop(0, 'rgba(0,0,0,1)');
+    side.addColorStop(0.3, 'rgba(0,0,0,0)');
+    side.addColorStop(0.7, 'rgba(0,0,0,0)');
+    side.addColorStop(1, 'rgba(0,0,0,1)');
+    g.globalCompositeOperation = 'destination-out';
+    g.fillStyle = side;
+    g.fillRect(0, 0, 32, 128);
+    const tex = new CanvasTexture(c);
+    shaftMat = new MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, blending: AdditiveBlending, side: DoubleSide, fog: false });
+  }
+  const d = new Vector3(...dir).normalize();
+  const mat = shaftMat.clone();
+  mat.opacity = strength;
+  for (const spin of [0, Math.PI / 2]) {
+    const geo = new PlaneGeometry(width, length);
+    geo.translate(0, -length / 2, 0); // top edge at the window
+    const m = new Mesh(geo, mat);
+    m.position.set(...from);
+    m.quaternion.setFromUnitVectors(new Vector3(0, -1, 0), d);
+    m.rotateY(spin);
+    m.renderOrder = 3;
+    b.prop(m);
+  }
+}
+
+/** Dust motes drifting in a box (slow, sparkly in light shafts). */
+export function dustMotes(b: LevelBuilder, min: V3, max: V3, count: number): void {
+  const pos = new Float32Array(count * 3);
+  const seeds = new Float32Array(count);
+  for (let i = 0; i < count; i++) {
+    pos[i * 3] = min[0] + Math.random() * (max[0] - min[0]);
+    pos[i * 3 + 1] = min[1] + Math.random() * (max[1] - min[1]);
+    pos[i * 3 + 2] = min[2] + Math.random() * (max[2] - min[2]);
+    seeds[i] = Math.random() * 100;
+  }
+  const geo = new BufferGeometry();
+  geo.setAttribute('position', new BufferAttribute(pos, 3));
+  const c = document.createElement('canvas');
+  c.width = c.height = 32;
+  const g = c.getContext('2d')!;
+  const grad = g.createRadialGradient(16, 16, 0, 16, 16, 16);
+  grad.addColorStop(0, 'rgba(255,240,210,1)');
+  grad.addColorStop(1, 'rgba(255,240,210,0)');
+  g.fillStyle = grad;
+  g.fillRect(0, 0, 32, 32);
+  const mat = new PointsMaterial({ size: 0.06, map: new CanvasTexture(c), transparent: true, depthWrite: false, blending: AdditiveBlending, opacity: 0.7 });
+  // Cap the on-screen size so a mote drifting past the lens doesn't become a big white blob.
+  mat.onBeforeCompile = (shader) => {
+    shader.vertexShader = shader.vertexShader.replace('#include <fog_vertex>', 'gl_PointSize = min(gl_PointSize, 5.0);\n#include <fog_vertex>');
+  };
+  const points = new Points(geo, mat);
+  b.prop(points);
+  const base = Float32Array.from(pos);
+  b.animated.push({
+    update: (_dt, t) => {
+      for (let i = 0; i < count; i++) {
+        const s = seeds[i];
+        pos[i * 3] = base[i * 3] + Math.sin(t * 0.13 + s) * 0.6;
+        pos[i * 3 + 1] = min[1] + ((base[i * 3 + 1] - min[1] + t * 0.05 + s) % (max[1] - min[1]));
+        pos[i * 3 + 2] = base[i * 3 + 2] + Math.cos(t * 0.11 + s * 1.3) * 0.6;
+      }
+      geo.attributes.position.needsUpdate = true;
+    },
+  });
+}
+
+let grassMat: MeshStandardMaterial | null = null;
+const grassTime = { value: 0 };
+
+/** Swaying grass tufts over a rectangle (one instanced mesh per call). */
+export function grass(b: LevelBuilder, x0: number, x1: number, z0: number, z1: number, y = 0, density = 3): void {
+  const count = Math.max(1, Math.round((x1 - x0) * (z1 - z0) * density));
+  // A tuft: three leaning blades.
+  const parts: BufferGeometry[] = [];
+  for (let k = 0; k < 3; k++) {
+    const blade = new ConeGeometry(0.035, 0.32 + k * 0.06, 3, 1, true).toNonIndexed();
+    blade.translate(0, (0.32 + k * 0.06) / 2, 0);
+    blade.rotateZ((k - 1) * 0.35);
+    blade.rotateY((k * Math.PI * 2) / 3);
+    blade.deleteAttribute('uv');
+    parts.push(blade);
+  }
+  const tuft = mergeGeometries(parts)!;
+  if (!grassMat) {
+    grassMat = new MeshStandardMaterial({ color: '#ffffff', roughness: 1, flatShading: true });
+    grassMat.onBeforeCompile = (shader) => {
+      shader.uniforms.uTime = grassTime;
+      shader.vertexShader = shader.vertexShader
+        .replace('#include <common>', '#include <common>\nuniform float uTime;')
+        .replace(
+          '#include <begin_vertex>',
+          `#include <begin_vertex>
+          #ifdef USE_INSTANCING
+            vec3 ip = vec3(instanceMatrix[3][0], instanceMatrix[3][1], instanceMatrix[3][2]);
+            float sway = sin(uTime * 1.7 + ip.x * 0.7 + ip.z * 0.5) * 0.06 + sin(uTime * 3.1 + ip.z) * 0.02;
+            transformed.x += sway * position.y * 2.5;
+          #endif`,
+        );
+    };
+    grassMat.customProgramCacheKey = () => 'tw-grass';
+  }
+  const mesh = new InstancedMesh(tuft, grassMat, count);
+  const m = new Matrix4();
+  const q = new Quaternion();
+  const col = new Color();
+  for (let i = 0; i < count; i++) {
+    const s = 0.7 + Math.random() * 0.7;
+    q.setFromAxisAngle(new Vector3(0, 1, 0), Math.random() * Math.PI * 2);
+    m.compose(new Vector3(x0 + Math.random() * (x1 - x0), y, z0 + Math.random() * (z1 - z0)), q, new Vector3(s, s, s));
+    mesh.setMatrixAt(i, m);
+    mesh.setColorAt(i, col.setHSL(0.24 + Math.random() * 0.06, 0.45, 0.32 + Math.random() * 0.12));
+  }
+  mesh.receiveShadow = true;
+  b.prop(mesh);
+  b.animated.push({ update: (_dt, t) => (grassTime.value = t) });
 }

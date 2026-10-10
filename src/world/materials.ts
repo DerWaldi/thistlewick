@@ -92,6 +92,11 @@ const FRAG_BODY = /* glsl */ `
     diffuseColor.rgb *= mix(1.0, tint, fade);
     diffuseColor.rgb *= 1.0 - line * 0.32 * fade;
   }
+  // Soft contact shadow where walls meet ground-level floors (a cheap stand-in for AO).
+  if (abs(vWNormal.y) < 0.5) {
+    float h = vWPos.y;
+    diffuseColor.rgb *= mix(0.68, 1.0, smoothstep(-0.05, 0.9, h));
+  }
 }
 `;
 

@@ -38,8 +38,15 @@ export class BlobShadow {
     scene.add(this.mesh);
   }
 
+  /** Hidden along with the player (title screen). */
+  hidden = false;
+
   update(alpha: number): void {
     const p = this.player;
+    if (this.hidden) {
+      this.mesh.visible = false;
+      return;
+    }
     const pos = new Vector3().lerpVectors(p.prevPos, p.pos, alpha);
     const hit = this.physics.raycast(pos, new Vector3(0, -1, 0), 30, p.collider);
     if (!hit || p.mode === 'reset') {

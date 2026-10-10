@@ -4,6 +4,7 @@ import { HOUSE_ORDER, HOUSES, POINTS, type HouseId } from '../data/houses';
 import type { SpellId } from '../data/spells';
 import { SWEETS, type SweetKind } from '../data/sweets';
 import type { EventBus } from '../engine/events';
+import { UPGRADE_EFFECTS, type ShopItem } from '../data/shop';
 
 export interface CheckpointRef {
   level: string;
@@ -96,6 +97,39 @@ export class GameState {
   /** Slow background drift of rival points while you play (called every few minutes). */
   rivalsTick(): void {
     for (const h of HOUSE_ORDER) if (h !== this.house) this.housePoints[h] += Math.floor(Math.random() * 4);
+  }
+
+  /** Charge time multiplier from upgrades. */
+  get chargeTimeScale(): number {
+    return this.upgrades.has('quick-wand') ? UPGRADE_EFFECTS.chargeTimeScale : 1;
+  }
+
+  /** Sweet magnet radius multiplier from upgrades. */
+  get magnetScale(): number {
+    return this.upgrades.has('sweet-tooth') ? UPGRADE_EFFECTS.magnetScale : 1;
+  }
+
+  owns(item: ShopItem): boolean {
+    return item.kind === 'card' ? this.cards.has(item.ref) : this.upgrades.has(item.ref);
+  }
+
+  /** Spend sweets on a shop item. Returns false if it can't be bought. */
+  buy(item: ShopItem): boolean {
+    if (item.soon || this.owns(item) || this.sweets < item.price) return false;
+    this.sweets -= item.price;
+    if (item.kind === 'card') {
+      this.collectCard(item.ref);
+    } else {
+      this.upgrades.add(item.ref);
+      const bonus = UPGRADE_EFFECTS.staminaBonus[item.ref as keyof typeof UPGRADE_EFFECTS.staminaBonus] ?? 0;
+      if (bonus) {
+        this.maxStamina += bonus;
+        this.stamina = this.maxStamina;
+      }
+      this.events.emit('toast', { text: `Bought ${item.name}!`, kind: 'info' });
+    }
+    this.events.emit('purchase', { id: item.id });
+    return true;
   }
 
   houseColor(): { color: string; trim: string } {

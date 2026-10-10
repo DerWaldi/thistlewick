@@ -61,6 +61,8 @@ interface Mover {
   cur: Vector3;
 }
 
+const waterTime = { value: 0 };
+
 /** Things with their own per-frame animation (bounce pads, lanterns...). */
 export interface Animated {
   update(dt: number, time: number): void;
@@ -229,6 +231,27 @@ export class LevelBuilder implements PlayerEnvironment {
       metalness: 0.1,
       flatShading: true,
     });
+    // Moving glints and a lighter rim at grazing angles.
+    mat.onBeforeCompile = (shader) => {
+      shader.uniforms.uTime = waterTime;
+      shader.vertexShader = shader.vertexShader
+        .replace('#include <common>', '#include <common>\nvarying vec3 vWaterPos;')
+        .replace('#include <begin_vertex>', '#include <begin_vertex>\nvWaterPos = (modelMatrix * vec4(transformed, 1.0)).xyz;');
+      shader.fragmentShader = shader.fragmentShader
+        .replace('#include <common>', '#include <common>\nuniform float uTime;\nvarying vec3 vWaterPos;')
+        .replace(
+          '#include <emissivemap_fragment>',
+          `#include <emissivemap_fragment>
+          {
+            vec2 p = vWaterPos.xz;
+            float w = sin(p.x * 2.1 + uTime * 1.3) * sin(p.y * 1.7 - uTime * 1.1) + sin((p.x + p.y) * 3.3 + uTime * 2.0) * 0.5;
+            totalEmissiveRadiance += vec3(0.55, 0.75, 0.85) * smoothstep(1.05, 1.45, w) * 0.5;
+            float fres = pow(1.0 - abs(dot(normalize(vViewPosition), normal)), 3.0);
+            diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.75, 0.88, 0.95), fres * 0.5);
+          }`,
+        );
+    };
+    mat.customProgramCacheKey = () => 'tw-water';
     const geo = new PlaneGeometry(maxX - minX, maxZ - minZ, 12, 12);
     const water = new Mesh(geo, mat);
     water.rotation.x = -Math.PI / 2;
@@ -239,6 +262,7 @@ export class LevelBuilder implements PlayerEnvironment {
     const base = Float32Array.from(pos.array);
     this.animated.push({
       update: (_dt, time) => {
+        waterTime.value = time;
         for (let i = 0; i < pos.count; i++) {
           const x = base[i * 3];
           const y = base[i * 3 + 1];
@@ -383,7 +407,7 @@ export class LevelBuilder implements PlayerEnvironment {
     add(this.iceGeos, worldMaterial({ roughness: 0.2 }));
     if (this.glowGeos.length) {
       for (const g of this.glowGeos) for (const n of Object.keys(g.attributes)) if (n !== 'position' && n !== 'normal') g.deleteAttribute(n);
-      const glow = new Mesh(mergeGeometries(this.glowGeos), new MeshBasicMaterial({ color: new Color(COLORS.lantern) }));
+      const glow = new Mesh(mergeGeometries(this.glowGeos), new MeshBasicMaterial({ color: new Color(COLORS.lantern).multiplyScalar(2) }));
       this.root.add(glow);
       this.glowGeos = [];
     }

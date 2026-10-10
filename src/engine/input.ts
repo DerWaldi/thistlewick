@@ -20,6 +20,9 @@ export class Input {
   private mouseDX = 0;
   private mouseDY = 0;
   locked = false;
+  /** From Options: multiplies mouse deltas; invertY flips vertical look. */
+  sensitivityScale = 1;
+  invertY = false;
   virtual: VirtualInput | null = null;
   private onLockChange: ((locked: boolean) => void)[] = [];
 
@@ -132,7 +135,8 @@ export class Input {
   }
 
   consumeMouse(): { dx: number; dy: number } {
-    const d = { dx: this.mouseDX, dy: this.mouseDY };
+    const k = this.sensitivityScale;
+    const d = { dx: this.mouseDX * k, dy: this.mouseDY * k * (this.invertY ? -1 : 1) };
     this.mouseDX = 0;
     this.mouseDY = 0;
     return d;

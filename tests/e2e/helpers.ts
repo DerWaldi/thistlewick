@@ -45,6 +45,7 @@ export interface TwApi {
   continueGame(): boolean;
   save(): void;
   loadLevel(id: string, spawn?: string): void;
+  render(): void;
   game: unknown;
 }
 
@@ -64,7 +65,10 @@ export async function boot(page: Page, query = '?test&level=gym'): Promise<void>
 }
 
 export async function shot(page: Page, name: string, browserName: string): Promise<void> {
-  // Let a couple of real frames draw after manual stepping.
-  await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+  // Tests only draw on request: draw, then let the frame reach the screen.
+  await page.evaluate(() => {
+    (window.__tw as unknown as { render(): void }).render();
+    return new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+  });
   await page.screenshot({ path: `tests/e2e/__shots__/${browserName}-${name}.png` });
 }

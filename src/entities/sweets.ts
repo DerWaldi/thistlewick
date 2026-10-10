@@ -134,7 +134,7 @@ export class SweetField {
   fixedUpdate(dt: number): void {
     this.time += dt;
     const target = new Vector3(this.player.pos.x, this.player.pos.y + 0.1, this.player.pos.z);
-    const magnet = this.tuning.cast.magnetRadius;
+    const magnet = this.tuning.cast.magnetRadius * this.state.magnetScale;
     const canCollect = this.player.mode !== 'reset';
     this.sweets = this.sweets.filter((s) => {
       s.delay -= dt;

@@ -61,11 +61,12 @@ src/world/             builder (level DSL: geometry + entity specs), world (spaw
                        holes, slabs, windows, shelves, portraits, banners, chandeliers, plants), materials,
                        merge (draw-call merging)
 src/state/             GameState (stamina, sweets, spells, house + points, cards, secrets, collected ids,
-                       flags, checkpoint); save.ts (versioned localStorage save with migrations)
+                       flags, upgrades + purchases, checkpoint); save.ts (versioned localStorage save with
+                       migrations); options.ts (player settings, stored separately)
 src/data/              all content: spells, sweets, houses (+ sorting questions, point values), cards,
                        characters (speakers), dialogues (scripts), portraits, tuning, levels/ (index.ts registry)
-src/ui/                hud, dialogue (typewriter + keyboard choices), album, portraits (procedural painter),
-                       cardArt (card faces/backs), style.css
+src/ui/                hud, dialogue (typewriter + keyboard choices), album, shop (Crumbleton's Cupboard),
+                       menu (title/pause/options/credits), portraits (procedural painter), cardArt, style.css
 tests/e2e/             Playwright specs; helpers.ts has boot() and shot()
 ```
 
@@ -109,6 +110,24 @@ Progress lives in flags (`practice-done`, `down:<rattlecoat id>`, `trial-hint-*`
 - Autosave runs on cards, secrets, checkpoints, learning a spell, level loads, and finished dialogue scripts; sweets and points are batched. Sandbox runs never save.
 - To change the save shape, bump `VERSION` in `save.ts` and add a migration.
 
+### Shop & upgrades
+- Stock lives in `src/data/shop.ts`. Effects come from `UPGRADE_EFFECTS` and are read through `GameState` getters (`chargeTimeScale`, `magnetScale`, `maxStamina`).
+- Scripts can `openShop()`; the Tansy and Moss scripts do so once Thwackwort is learned.
+- The world halts while the dialogue, shop, album or pause menu is open (`game.isHalted`).
+
+### Menus, options, music
+- `main.ts` drives the menus. The title is shown over a drifting hub backdrop (`game.showBackdrop()`, `titleMode`). Losing pointer lock mid-game opens the pause menu.
+- Options: sensitivity, invert Y, music and effects volume, graphics (Fancy/Fast) and FPS display. They're stored under `thistlewick.options`, and `game.applyOptions()` applies them.
+- Fancy graphics adds bloom and grading, a pixel ratio up to 1.5 and a 4096 shadow map. If frames stay under about 42 fps for 4 s, the game drops to Fast once and shows a toast.
+- Music: `engine/music.ts` sequences two original pieces live: the Thistlewick Waltz (hub, title) and the Tumbling Vaults (trial). `LevelDef.music` picks the mood. Moods cross-fade, and the music ducks during dialogue. A file at `public/music/<mood>.mp3` replaces the synthesised version, and should be logged in ASSETS.md.
+
+### Atmosphere props (`world/props.ts`)
+- `lightShaft(from, dir, length, width)`: window light beams.
+- `dustMotes(min, max, count)`: drifting dust.
+- `grass(x0, x1, z0, z1, y, density)`: instanced swaying tufts.
+- Water has animated glints and a lighter rim at grazing angles.
+- The world material darkens vertical faces near y=0, as a cheap contact shadow.
+
 ### Dialogue
 - Conversations are async scripts in `src/data/dialogues.ts`. They `say(lines)` (with optional `choices`) and may change progress; the Sorting Lantern, for example, sets your house.
 - NPCs, doors, the lantern and the hourglasses are `Interactable`s: E triggers them, and the HUD shows the nearest prompt.
@@ -130,6 +149,7 @@ Levels place objects with `b.add({ type: ..., ... })`. Objects talk to each othe
 - **Draw calls:** props built from primitives should call `mergeChildren(group, animatedParts)`. Static decoration in levels goes into the merged level mesh via `b.geo(geometry, color, pattern)`. Lantern glass is batched automatically. Keep hub views under about 60 draws without shadows.
 - **Surface patterns:** stone, planks, plaster and grid are drawn in the shader from world position (`materials.ts`), chosen per box with `pattern`. The builder's `defaultPattern` is 'stone' (the gym uses 'grid').
 - **Lights:** keep point lights to about 8 per level, and never add or remove lights at runtime: that triggers shader recompiles, which hitch. Use `lantern(pos, 0, 0, false)` for unlit decorative lanterns.
+- **Tests draw on demand:** in `?test` mode nothing renders unless asked. `shot()` calls `__tw.render()` first, so use it for screenshots.
 - **Tests and triggers:** room triggers open dialogues, and dialogues freeze the player until the script ends. In tests, `await tw.idle()` after anything that might trigger one, or pre-set the trigger's flag.
 - **Ledges must be flush:** the grab looks for a lip directly above a wall face, plus room to stand (at least about 0.9 m deep). Overhanging sills can't be grabbed.
 - **Events:** communicate through the typed `EventBus`. Add new events to `GameEvents` in `src/engine/events.ts`. SFX, particles and animation subscribe to events and never poll.
@@ -146,7 +166,7 @@ Levels place objects with `b.add({ type: ..., ... })`. Objects talk to each othe
 | M1 Casting core | done | Spell targeting/aim assist/charge, Thwackwort, push blocks, switches, doors, health, checkpoints, sweets, HUD, Gnarling, SFX |
 | M2 Hub | done | Level pipeline, Lantern Hall / Crooked Corridor / Hollyhock Court / Cupboard, secrets, cards & album, save, house sorting & points |
 | M3 Lesson | done | Gorse's lesson, the Thwackwort Trial dungeon (~5 min), Thistle Star, a post-lesson hub secret |
-| M4 Slice complete | next | Shop and upgrades, all 10 cards, 3 secrets, title/pause screens, CC0 music, polish, perf |
+| M4 Slice complete | done | Shop and upgrades, all 10 cards, 4 secrets, title/pause/options, music, visual pass, perf |
 
 Spell roster (data comes in M1+):
 - Thwackwort (knockback)

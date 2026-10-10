@@ -6,13 +6,16 @@ import { EventBus } from './engine/events';
 import { Input } from './engine/input';
 import { Loop } from './engine/loop';
 import { Renderer } from './engine/render';
+import { Music } from './engine/music';
 import { Sfx } from './engine/sfx';
+import { loadOptions, saveOptions, type Options } from './state/options';
 import { LevelSession } from './session';
 import { GameState } from './state/gameState';
 import { apply, clearSave, loadSave, writeSave } from './state/save';
 import { Album } from './ui/album';
 import { Dialogue } from './ui/dialogue';
 import { Hud } from './ui/hud';
+import { Shop } from './ui/shop';
 import type { SpawnPoint } from './world/level';
 
 export interface GameOptions {
@@ -34,8 +37,15 @@ export class Game {
   readonly renderer: Renderer;
   readonly input: Input;
   readonly sfx: Sfx;
+  readonly music: Music;
+  readonly options: Options = loadOptions();
+  /** The title screen: camera drifts around the hall, no HUD, no control. */
+  titleMode = false;
   readonly dialogue: Dialogue;
   readonly album: Album;
+  readonly shop: Shop;
+  /** Paused by the menu (pointer unlocked mid-game). */
+  paused = false;
   readonly loop: Loop;
   session: LevelSession | null = null;
   private hud: Hud;
@@ -58,8 +68,11 @@ export class Game {
     this.renderer = new Renderer(canvas);
     this.input = new Input(canvas);
     this.sfx = new Sfx(this.events);
+    this.music = new Music(() => this.sfx.context);
+    this.events.on('dialogueOpen', ({ open }) => this.music.setDuck(open));
     this.dialogue = new Dialogue(this.events, (pitch) => this.sfx.blip(pitch));
     this.album = new Album(() => this.state);
+    this.shop = new Shop(() => this.state);
     this.hud = new Hud(
       {
         state: () => this.state,
@@ -70,8 +83,10 @@ export class Game {
       this.events,
     );
 
+    this.applyOptions();
+
     // Autosave on meaningful progress; sweets are batched.
-    for (const e of ['card', 'secret', 'checkpoint', 'learned', 'levelLoaded'] as const) this.events.on(e, () => this.save());
+    for (const e of ['card', 'secret', 'checkpoint', 'learned', 'levelLoaded', 'purchase'] as const) this.events.on(e, () => this.save());
     this.events.on('sweet', () => (this.dirty = true));
     this.events.on('points', () => (this.dirty = true));
     document.addEventListener('visibilitychange', () => {
@@ -152,7 +167,32 @@ export class Game {
     this.state = new GameState(this.events);
     this.loadLevel('hub', 'title');
     this.session!.player.frozen = true;
+    this.titleMode = true;
+    this.hud.setVisible(false);
+    this.music.setMood('title');
   }
+
+  /** Leave the title screen (after New Game / Continue). */
+  beginPlay(): void {
+    this.titleMode = false;
+    this.hud.setVisible(true);
+    if (this.session) this.music.setMood(this.session.def.music ?? 'hub');
+  }
+
+  applyOptions(): void {
+    const o = this.options;
+    this.input.sensitivityScale = o.sensitivity;
+    this.input.invertY = o.invertY;
+    this.sfx.setVolume(o.sfx);
+    this.music.setVolume(o.music);
+    this.renderer.setQuality(o.quality);
+    this.showStats = o.showFps || this.debugStats;
+    this.statsEl.style.display = this.showStats ? '' : 'none';
+    saveOptions(o);
+  }
+
+  /** Dev builds always show the stats line. */
+  debugStats = false;
 
   // ---------------------------------------------------------------- levels
 
@@ -165,6 +205,7 @@ export class Game {
     const sp = typeof spawn === 'string' ? (def.spawns[spawn] ?? def.spawns.default) : spawn;
     this.session = new LevelSession(this, def, sp);
     this.state.level = id;
+    if (!this.titleMode) this.music.setMood(def.music ?? 'hub');
     this.input.clearPressed();
     this.events.emit('levelLoaded', { id });
     if (def.intro && !this.state.flags.has(def.intro.unlessFlag) && !this.sandbox) {
@@ -187,7 +228,15 @@ export class Game {
   runScript(id: string): Promise<number | null> {
     const script = DIALOGUES[id];
     if (!script || this.scriptRunning) return Promise.resolve(null);
-    const run = script({ say: (lines) => this.dialogue.run(lines), state: this.state, events: this.events }).finally(() => {
+    const run = script({
+      say: (lines) => this.dialogue.run(lines),
+      state: this.state,
+      events: this.events,
+      openShop: () => {
+        if (this.input.locked) document.exitPointerLock();
+        return this.shop.open();
+      },
+    }).finally(() => {
       this.scriptRunning = null;
       this.input.clearPressed();
       // House colours may have changed (sorting).
@@ -202,6 +251,10 @@ export class Game {
   /** Resolves when no dialogue script is running (tests). */
   async idle(): Promise<void> {
     while (this.scriptRunning) await this.scriptRunning;
+  }
+
+  get isHalted(): boolean {
+    return this.paused || this.dialogue.isOpen || this.shop.isOpen || this.album.isOpen;
   }
 
   // ---------------------------------------------------------------- saving
@@ -229,8 +282,8 @@ export class Game {
       if (this.album.isOpen && this.input.locked) document.exitPointerLock();
     }
 
-    // Time stands still while someone is talking (no Gnarling bites mid-sentence).
-    if (!this.dialogue.isOpen) s.fixedUpdate(dt);
+    // Time stands still while someone is talking, shopping, reading the album or paused.
+    if (!this.isHalted) s.fixedUpdate(dt);
 
     this.state.playTime += dt;
     this.rivalTimer += dt;
@@ -263,18 +316,42 @@ export class Game {
   private frameUpdate(dt: number, alpha: number): void {
     const s = this.session;
     if (!s) return;
+    if (this.titleMode) {
+      // A slow drift around the hall behind the title.
+      s.camera.yaw += dt * 0.07;
+      s.camera.pitch = 0.08;
+    }
     s.frameUpdate(dt, alpha);
+    if (this.titleMode) s.rig.root.visible = false;
+    s.shadow.hidden = this.titleMode;
     this.dialogue.update(dt);
+    this.music.update();
     this.renderer.followShadow(s.player.pos);
     this.hud.update();
 
     if (dt > 0) this.fps += (1 / dt - this.fps) * 0.05;
+    this.adaptQuality(dt);
     if (this.showStats) {
       const p = s.player;
       this.statsEl.textContent =
         `${this.fps.toFixed(0)} fps  draw calls ${this.renderer.renderer.info.render.calls}\n` +
         `${s.def.id} · ${s.currentArea?.name ?? '-'}  ${p.mode}  speed ${p.horizontalSpeed.toFixed(2)}  vy ${p.vel.y.toFixed(2)}\n` +
         `feet ${fmt(p.feet)}`;
+    }
+  }
+
+  private slowTime = 0;
+  private adapted = false;
+
+  /** If Fancy graphics can't hold ~45 fps for a few seconds, drop to Fast (once per session). */
+  private adaptQuality(dt: number): void {
+    if (this.adapted || this.loop.manual || this.options.quality !== 'high' || dt <= 0 || document.hidden) return;
+    this.slowTime = this.fps < 42 ? this.slowTime + dt : Math.max(0, this.slowTime - dt * 2);
+    if (this.slowTime > 4) {
+      this.adapted = true;
+      this.options.quality = 'low';
+      this.applyOptions();
+      this.events.emit('toast', { text: 'Switched to Fast graphics for smoother play (see Options).', kind: 'hint' });
     }
   }
 

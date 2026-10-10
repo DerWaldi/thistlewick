@@ -69,7 +69,7 @@ export class ThistleStar implements Entity {
     this.pos = new Vector3(...spec.pos);
     const star = new Mesh(
       starGeometry(),
-      new MeshStandardMaterial({ color: '#f5c04a', emissive: new Color('#ffb020'), emissiveIntensity: 0.9, metalness: 0.5, roughness: 0.3, flatShading: true }),
+      new MeshStandardMaterial({ color: '#f5c04a', emissive: new Color('#ffb020'), emissiveIntensity: 1.8, metalness: 0.5, roughness: 0.3, flatShading: true }),
     );
     star.castShadow = true;
     this.group.add(star, this.light);

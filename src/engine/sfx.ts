@@ -124,6 +124,16 @@ export class Sfx {
     osc.stop(t + dur + 0.02);
   }
 
+  setVolume(v: number): void {
+    this.volume = v;
+    if (this.master) this.master.gain.value = v;
+  }
+
+  /** The shared audio context (music uses it too), created on the first user gesture. */
+  get context(): AudioContext | null {
+    return this.ctx;
+  }
+
   /** A short voice blip for dialogue typewriter text. */
   blip(pitch: number): void {
     this.tone(pitch, pitch * 1.06, 0.045, 'square', 0.035);

@@ -7,6 +7,8 @@ export interface ScriptContext {
   say(lines: DialogueLine[]): Promise<number | null>;
   state: GameState;
   events: EventBus;
+  /** Open Crumbleton's Cupboard; resolves when it's closed. */
+  openShop(): Promise<void>;
 }
 
 export type Script = (ctx: ScriptContext) => Promise<void>;
@@ -164,11 +166,24 @@ export const DIALOGUES: Record<string, Script> = {
     await say([{ speaker: 'gorse', text: '(echoing) BRAVO! The Thistle Star! Come back up and see me, there is something in it for you.' }]);
   },
 
-  tansy: async ({ say, state }) => {
+  tansy: async ({ say, state, openShop }) => {
     if (state.lessons.has('thwackwort')) {
+      const first = !state.flags.has('shop-visited');
+      state.flags.add('shop-visited');
+      await say(
+        first
+          ? [
+              { speaker: 'tansy', text: "A Thistle Star! Gorse was shouting about it all the way down the corridor. That means we're OPEN." },
+              { speaker: 'moss', text: 'Cards, charms, curiosities. Paid in sweets. All prices final. Mostly.' },
+            ]
+          : [{ speaker: 'tansy', text: 'Back for more? Excellent. Moss, look busy.' }],
+      );
+      const before = state.sweets;
+      await openShop();
       await say([
-        { speaker: 'tansy', text: 'A Thistle Star! Gorse was shouting about it all the way down the corridor.' },
-        { speaker: 'moss', text: "Cupboard opens properly tomorrow. Cards, charms, the lot. Bring sweets. All of them." },
+        state.sweets < before
+          ? { speaker: 'moss', text: 'Pleasure doing business. Mind the step, it bites.' }
+          : { speaker: 'tansy', text: 'Just browsing? Come back when your pockets rattle.' },
       ]);
       return;
     }
@@ -186,7 +201,9 @@ export const DIALOGUES: Record<string, Script> = {
     }
   },
 
-  moss: async ({ say }) => {
+  moss: async (ctx) => {
+    if (ctx.state.lessons.has('thwackwort')) return DIALOGUES.tansy(ctx);
+    const { say } = ctx;
     await say([{ speaker: 'moss', text: "Psst. The Lantern Hall's got more holes in it than a Gnarling's sock. Tapestries, mostly. Didn't hear it from me." }]);
   },
 

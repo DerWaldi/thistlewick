@@ -3,6 +3,7 @@ import { Vector3 } from 'three';
 import { createTuningPanel } from './engine/debug';
 import { Game } from './game';
 import { loadSave } from './state/save';
+import { Menu } from './ui/menu';
 
 const params = new URLSearchParams(location.search);
 const debug = params.has('debug') || import.meta.env.DEV;
@@ -14,63 +15,94 @@ async function boot(): Promise<void> {
   await RAPIER.init();
   const canvas = document.getElementById('game') as HTMLCanvasElement;
   const game = new Game(canvas, { manual: testMode });
-  game.showStats = debug;
+  game.debugStats = debug;
+  game.applyOptions();
   if (testMode) game.dialogue.autoAdvance = true;
 
-  const overlay = document.getElementById('click-to-play')!;
-  const titleButtons = document.getElementById('title-buttons')!;
-  const resumeHint = document.getElementById('resume-hint')!;
-  const btnContinue = document.getElementById('btn-continue')!;
-  const btnNew = document.getElementById('btn-new')!;
+  const menu = new Menu(game.options);
+  menu.onOptions = () => game.applyOptions();
   let playing = false;
 
-  const showOverlay = (show: boolean) => overlay.classList.toggle('hidden', !show || testMode);
-  const beginPlay = () => {
+  const lock = () => game.input.requestLock();
+  const start = (how: 'new' | 'continue') => {
+    if (how === 'new' || !game.continueGame()) game.newGame();
+    game.beginPlay();
     playing = true;
-    titleButtons.classList.add('hidden');
-    resumeHint.classList.remove('hidden');
-    showOverlay(false);
-    game.input.requestLock();
+    menu.hide();
+    lock();
+  };
+  const pause = () => {
+    game.paused = true;
+    menu.show('pause', { state: game.state });
+  };
+  const resume = () => {
+    menu.hide();
+    game.paused = false;
+    lock();
+  };
+
+  menu.onAction = (a) => {
+    switch (a) {
+      case 'continue':
+        start('continue');
+        break;
+      case 'new':
+        if (loadSave() && !confirm('Start a new game? Your current progress will be lost.')) return;
+        start('new');
+        break;
+      case 'resume':
+        resume();
+        break;
+      case 'album':
+        menu.hide();
+        game.album.open();
+        break;
+      case 'quit':
+        game.save();
+        location.reload();
+        break;
+    }
   };
 
   if (sandboxLevel) {
     game.startSandbox(sandboxLevel);
+    game.beginPlay();
     playing = true;
-    titleButtons.classList.add('hidden');
+    if (!testMode) menu.show('pause', { state: game.state });
   } else if (testMode) {
     if (params.has('new') || !game.continueGame()) game.newGame();
+    game.beginPlay();
     playing = true;
   } else {
     game.showBackdrop();
-    resumeHint.classList.add('hidden');
-    btnContinue.classList.toggle('hidden', !loadSave());
-    btnContinue.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (!game.continueGame()) game.newGame();
-      beginPlay();
-    });
-    btnNew.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (loadSave() && !confirm('Start a new game? Your current progress will be lost.')) return;
-      game.newGame();
-      beginPlay();
-    });
+    menu.show('title', { canContinue: !!loadSave() });
   }
   game.start();
+  const loading = document.getElementById('loading');
+  loading?.classList.add('done');
+  setTimeout(() => loading?.remove(), 600);
+  if (testMode) loading?.remove();
 
-  overlay.addEventListener('click', () => {
-    if (playing) game.input.requestLock();
-  });
   canvas.addEventListener('click', () => {
-    if (playing && !game.input.locked) game.input.requestLock();
+    if (playing && !game.input.locked && !menu.isOpen) lock();
   });
+  // Losing the mouse mid-game (Esc, alt-tab) pauses, unless a UI that needs the mouse is up.
   game.input.onLock((locked) => {
-    if (playing) showOverlay(!locked && !game.album.isOpen);
+    if (!playing || testMode) return;
+    if (locked) {
+      menu.hide();
+      game.paused = false;
+    } else if (!game.album.isOpen && !game.shop.isOpen) {
+      pause();
+    }
   });
   game.album.onClose = () => {
-    if (!game.input.locked) showOverlay(true);
+    if (!playing || testMode) return;
+    pause();
   };
-  if (testMode) showOverlay(false);
+  game.shop.onClose = () => {
+    if (playing && !testMode) lock();
+  };
 
   let panel: { toggle(): void } | null = null;
   window.addEventListener('keydown', async (e) => {
@@ -159,6 +191,8 @@ function exposeTestApi(game: Game): void {
       if (pitch !== undefined) game.camera.pitch = pitch;
     },
     advance: (seconds: number) => game.loop.advance(seconds),
+    /** Draw the next frame (tests only draw on request). */
+    render: () => game.loop.requestDraw(),
     setManual: (m: boolean) => (game.loop.manual = m),
     /** Press E on whatever is in front of the player. */
     interact: () => game.session!.interact(),

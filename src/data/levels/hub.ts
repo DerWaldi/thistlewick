@@ -2,7 +2,25 @@ import { BoxGeometry, ConeGeometry, CylinderGeometry, Group, Mesh, MeshStandardM
 import type { LevelBuilder } from '../../world/builder';
 import type { LevelDef } from '../../world/level';
 import { COLORS } from '../../world/materials';
-import { banner, chandelier, column, crate, deco, Glow, hollyhock, portrait, shelf, signboard, slab, tree, wall, windowPane } from '../../world/props';
+import {
+  banner,
+  chandelier,
+  column,
+  crate,
+  deco,
+  dustMotes,
+  Glow,
+  grass,
+  hollyhock,
+  lightShaft,
+  portrait,
+  shelf,
+  signboard,
+  slab,
+  tree,
+  wall,
+  windowPane,
+} from '../../world/props';
 import { CARD_BY_ID } from '../cards';
 import { HOUSE_ORDER, HOUSES } from '../houses';
 
@@ -96,7 +114,11 @@ function buildHub(b: LevelBuilder): void {
 
   // House banners on the east wall, windows on both long walls.
   HOUSE_ORDER.forEach((h, i) => banner(b, [11.95, 7.5, 3 + i * 4], -Math.PI / 2, HOUSES[h].color, HOUSES[h].trim));
-  for (const z of [4, 10, 16]) windowPane(b, glow, 'z', -12.5, z, 8, 1.6, 3.6, 1);
+  for (const z of [4, 10, 16]) {
+    windowPane(b, glow, 'z', -12.5, z, 8, 1.6, 3.6, 1);
+    lightShaft(b, [-11.9, 8.4, z], [0.85, -0.8, 0.25], 13, 1.5, 0.16);
+  }
+  dustMotes(b, [-11, 0.5, 1], [11, 10, 28], 170);
   for (const z of [18.5]) windowPane(b, glow, 'z', 12.5, z, 8, 1.6, 3.6, -1);
   portrait(b, CARD_BY_ID.get('pellam-fogg')!.portrait, [-11.95, 2.8, 15], Math.PI / 2, 1.4, 1.8, 0.04);
   portrait(b, CARD_BY_ID.get('agnes-thistlewick')!.portrait, [-11.95, 2.8, 18.5], Math.PI / 2, 1.2, 1.5, -0.05);
@@ -238,6 +260,7 @@ function buildHub(b: LevelBuilder): void {
     [-6, 6, 35, 39],
   ]) {
     deco(b, new BoxGeometry(x1 - x0, 0.06, z1 - z0), [(x0 + x1) / 2, 0.03, (z0 + z1) / 2], '#7f9a5a');
+    grass(b, x0 + 0.2, x1 - 0.2, z0 + 0.2, z1 - 0.2, 0.06, 2.6);
   }
   // Cloister: covered walk on all four sides (roof walkable at y=5).
   const R = 5;
