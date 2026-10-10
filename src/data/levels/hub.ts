@@ -924,6 +924,9 @@ function forgottenPassage(b: LevelBuilder): void {
  * gate's lock is iced over until Cindersnap thaws it.
  */
 function wellYard(b: LevelBuilder): void {
+  // Its north side, between the court's east wall and the Long Gallery, used to open onto
+  // nothing at all.
+  wall(b, 'x', 30.5, 17, 34, 8, { cap: 4 });
   b.add(
     { type: 'gate', pos: [14.5, 0, 30], yaw: 0, width: 3.2, height: 3.4, when: ['hub-well-ice'] },
     // The lock is frozen into a lump of ice: Cindersnap thaws it, for good.
