@@ -92,7 +92,7 @@ function build(b: LevelBuilder): void {
     { type: 'sweetLine', kind: 'fizzwort', from: [-5, 0.6, 9.5], to: [5, 0.6, 9.5], count: 4 },
   );
   // The cliff up to the ferry (top 3.2), with a waterfall into a basin at its foot.
-  b.box([0, UP / 2, 34.5], [17, UP, 1], { color: STONE, info: { noGrab: true } });
+  b.box([0, UP / 2, 34.5], [21, UP, 1], { color: STONE, info: { noGrab: true } });
   for (const [c, sz] of [
     [[0, 0.25, 32.3], [2.8, 0.5, 0.2]],
     [[-1.4, 0.25, 33.1], [0.2, 0.5, 1.8]],
@@ -117,7 +117,8 @@ function build(b: LevelBuilder): void {
   b.lantern([0, 7, 20], 7, 18);
 
   // ================================================================ the floe ferry (z 34..56, y 3.2)
-  b.floor(-10.5, 10.5, 34, 59, {
+  // Starts behind the cliff block (z 34..35), so their faces never overlap.
+  b.floor(-10.5, 10.5, 35, 59, {
     top: UP,
     color: FLOOR,
     holes: [
