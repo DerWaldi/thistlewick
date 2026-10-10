@@ -40,6 +40,7 @@ export const WOODS: LevelDef = {
     { id: 'oak', name: 'The Old Oak', min: [-17, 12.5, 104], max: [17, 40, 131] },
   ],
   intro: { script: 'woodsIntro', unlessFlag: 'woods-entered' },
+  music: 'woods',
   build,
 };
 

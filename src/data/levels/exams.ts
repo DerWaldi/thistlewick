@@ -55,7 +55,7 @@ export const EXAMS: LevelDef = {
     { id: 'thistle', name: 'The Thistle Hall', min: [-10.5, -20, 190], max: [10.5, 20, 207] },
   ],
   intro: { script: 'examsIntro', unlessFlag: 'exams-entered' },
-  music: 'dungeon',
+  music: 'exams',
   build,
 };
 

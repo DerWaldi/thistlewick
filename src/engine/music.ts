@@ -4,7 +4,7 @@
  * Files in public/music/<mood>.mp3 (if present) are used instead of the
  * synthesised version, so CC0 recordings can be dropped in later.
  */
-export type Mood = 'hub' | 'dungeon' | 'title';
+export type Mood = 'hub' | 'dungeon' | 'title' | 'woods' | 'exams';
 
 type Note = [midi: number | null, beats: number];
 interface Bar {
@@ -155,10 +155,95 @@ const VAULTS: Song = {
   ],
 };
 
+// "Mother Hazelrigg's Jig" (G major, a lilting 3): the Old Woods. Flute over a drone.
+const GJ = [59, 62, 67];
+const CJ = [60, 64, 67];
+const DJ = [57, 62, 66];
+const EMJ = [59, 64, 67];
+const AMJ = [57, 60, 64];
+const JIG_A: Bar[] = [
+  { chord: GJ, bass: 43, melody: [[74, 1], [71, 0.5], [74, 0.5], [79, 1]] },
+  { chord: CJ, bass: 48, melody: [[76, 1], [72, 0.5], [76, 0.5], [79, 1]] },
+  { chord: GJ, bass: 43, melody: [[79, 1.5], [78, 0.5], [76, 1]] },
+  { chord: DJ, bass: 38, melody: [[74, 2], [71, 1]] },
+  { chord: EMJ, bass: 40, melody: [[71, 1], [74, 0.5], [76, 0.5], [79, 1]] },
+  { chord: CJ, bass: 48, melody: [[79, 1], [81, 1], [79, 1]] },
+  { chord: DJ, bass: 38, melody: [[78, 1], [76, 1], [74, 1]] },
+  { chord: GJ, bass: 43, melody: [[79, 3]] },
+];
+const JIG_B: Bar[] = [
+  { chord: EMJ, bass: 40, melody: [[83, 1.5], [81, 0.5], [79, 1]] },
+  { chord: DJ, bass: 38, melody: [[78, 1], [74, 1], [78, 1]] },
+  { chord: CJ, bass: 48, melody: [[76, 1.5], [79, 0.5], [76, 1]] },
+  { chord: GJ, bass: 43, melody: [[74, 3]] },
+  { chord: AMJ, bass: 45, melody: [[72, 1], [76, 1], [81, 1]] },
+  { chord: DJ, bass: 38, melody: [[78, 1.5], [76, 0.5], [74, 1]] },
+  { chord: CJ, bass: 48, melody: [[72, 1], [71, 1], [69, 1]] },
+  { chord: DJ, bass: 38, melody: [[74, 2], [null, 1]] },
+];
+const JIG_INTRO: Bar[] = [
+  { chord: GJ, bass: 43, melody: [] },
+  { chord: DJ, bass: 38, melody: [] },
+];
+const JIG: Song = {
+  bpm: 132,
+  beatsPerBar: 3,
+  sections: [
+    { bars: JIG_INTRO, arr: { lead: 'none', harp: 'arp', bass: 'drone', pad: 0.02, dyn: 0.8 } },
+    { bars: JIG_A, arr: { lead: 'flute', harp: 'arp', bass: 'drone', pad: 0.02, ornaments: true } },
+    { bars: JIG_A, arr: { lead: 'box', harp: 'chords', bass: 'pizz', pad: 0.02, ornaments: true, dyn: 0.9 } },
+    { bars: JIG_B, arr: { lead: 'flute', shift: 12, harp: 'arp', bass: 'drone', pad: 0.022, dyn: 0.85 } },
+    { bars: JIG_B, arr: { lead: 'bell', harp: 'arp', bass: 'pizz', counter: true, pad: 0.02 } },
+    { bars: JIG_A, arr: { lead: 'flute', harp: 'chords', bass: 'waltz', chimes: true, ornaments: true, pad: 0.022, dyn: 1.05 } },
+    { bars: JIG_INTRO, arr: { lead: 'none', harp: 'none', bass: 'drone', pad: 0.03, dyn: 0.7 } },
+  ],
+};
+
+// "The Examination" (D minor, 4/4): ticking, pizzicato, bells; a bold lift into F major.
+const DMX = [57, 62, 65];
+const BBX = [58, 62, 65];
+const CX = [55, 60, 64];
+const AX = [57, 61, 64];
+const GMX = [55, 58, 62];
+const FX = [57, 60, 65];
+const EXAM_A: Bar[] = [
+  { chord: DMX, bass: 38, melody: [[74, 1], [77, 1], [81, 1], [77, 1]] },
+  { chord: BBX, bass: 34, melody: [[79, 2], [77, 1], [74, 1]] },
+  { chord: CX, bass: 36, melody: [[76, 1], [79, 1], [76, 1], [72, 1]] },
+  { chord: AX, bass: 33, melody: [[73, 2], [76, 2]] },
+  { chord: DMX, bass: 38, melody: [[74, 1], [77, 1], [81, 1], [86, 1]] },
+  { chord: GMX, bass: 43, melody: [[82, 2], [79, 1], [77, 1]] },
+  { chord: AX, bass: 33, melody: [[76, 1], [73, 1], [76, 1], [79, 1]] },
+  { chord: DMX, bass: 38, melody: [[74, 3], [null, 1]] },
+];
+const EXAM_B: Bar[] = [
+  { chord: FX, bass: 41, melody: [[77, 2], [81, 2]] },
+  { chord: CX, bass: 36, melody: [[79, 1], [76, 1], [72, 2]] },
+  { chord: BBX, bass: 34, melody: [[74, 1], [77, 1], [82, 2]] },
+  { chord: FX, bass: 41, melody: [[81, 4]] },
+  { chord: GMX, bass: 43, melody: [[79, 1], [82, 1], [86, 2]] },
+  { chord: DMX, bass: 38, melody: [[84, 1], [81, 1], [77, 2]] },
+  { chord: BBX, bass: 34, melody: [[77, 2], [74, 1], [77, 1]] },
+  { chord: AX, bass: 33, melody: [[76, 4]] },
+];
+const EXAM: Song = {
+  bpm: 96,
+  beatsPerBar: 4,
+  sections: [
+    { bars: EXAM_A, arr: { lead: 'bell', harp: 'none', bass: 'pizz', pad: 0.03, ticks: true, dyn: 0.9 } },
+    { bars: EXAM_A, arr: { lead: 'box', harp: 'chords', bass: 'pizz', pad: 0.03, ticks: true, ornaments: true } },
+    { bars: EXAM_B, arr: { lead: 'flute', harp: 'arp', bass: 'drone', counter: true, pad: 0.03, dyn: 0.95 } },
+    { bars: EXAM_B, arr: { lead: 'box', shift: 12, harp: 'chords', bass: 'pizz', chimes: true, pad: 0.03, ticks: true, dyn: 1.05 } },
+    { bars: EXAM_A, arr: { lead: 'bell', shift: 12, harp: 'arp', bass: 'pizz', counter: true, pad: 0.03, ticks: true } },
+  ],
+};
+
 export const SONGS: Record<Mood, Song> = {
   hub: WALTZ,
   title: TITLE,
   dungeon: VAULTS,
+  woods: JIG,
+  exams: EXAM,
 };
 
 const hz = (midi: number) => 440 * Math.pow(2, (midi - 69) / 12);
@@ -259,7 +344,7 @@ export class Music {
     wet.gain.value = 0.35;
     this.reverb.connect(wet).connect(this.master);
     if (this.mood) this.setMood(this.mood);
-    for (const m of ['hub', 'dungeon', 'title'] as Mood[]) void this.tryLoadFile(m);
+    for (const m of Object.keys(SONGS) as Mood[]) void this.tryLoadFile(m);
   }
 
   private addTrack(mood: Mood): void {
