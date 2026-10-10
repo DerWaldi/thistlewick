@@ -74,6 +74,8 @@ export interface GameEvents {
   levelLoaded: { id: string };
   learned: { spell: SpellId };
   purchase: { id: string };
+  /** The Golden Thistle: the end of the first year (shows the ending). */
+  yearComplete: { house: HouseId | null };
   // ui
   toast: { text: string; kind?: 'info' | 'hint' };
   dialogueOpen: { open: boolean };

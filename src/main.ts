@@ -100,9 +100,16 @@ async function boot(): Promise<void> {
     if (locked) {
       menu.hide();
       game.paused = false;
-    } else if (!game.album.isOpen && !game.shop.isOpen) {
+    } else if (!game.album.isOpen && !game.shop.isOpen && !menu.isOpen) {
       pause();
     }
+  });
+  // The Golden Thistle: the end-of-year summary and credits; Back leads to the pause menu.
+  game.events.on('yearComplete', () => {
+    if (testMode) return;
+    game.paused = true;
+    document.exitPointerLock();
+    menu.showEnding(game.state);
   });
   game.album.onClose = () => {
     if (!playing || testMode) return;

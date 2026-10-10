@@ -844,3 +844,10 @@ kbd {
     opacity: 0.45;
   }
 }
+
+#year-end.hidden {
+  display: none;
+}
+#year-end h2 {
+  color: #f0c860;
+}

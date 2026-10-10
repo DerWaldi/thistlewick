@@ -62,10 +62,18 @@ export const DIALOGUES: Record<string, Script> = {
   },
 
   wendlebury: async ({ say, state }) => {
+    if (state.flags.has('year-complete')) {
+      await say([
+        { speaker: 'wendlebury', text: "The House Cup is on the mantelpiece and the Golden Thistle is on my desk. Mostly I look at the Thistle. Don't tell the Cup." },
+        { speaker: 'wendlebury', text: "There's still plenty of castle you haven't found, I expect. There always is. Mind the third step." },
+      ]);
+      return;
+    }
     if (state.lessons.has('thistledown')) {
       await say([
         { speaker: 'wendlebury', text: "Seven Stars. Seven! Professor Underbough floated down from the roof to tell me, and then couldn't get back up. We've sent for a ladder." },
-        { speaker: 'wendlebury', text: "That's every spell a first-year can learn, dear. The castle is yours to explore. Mind the third step. It still bites." },
+        { speaker: 'wendlebury', text: "That's every spell a first-year can learn, dear. Which means only one thing is left: the Final Examinations." },
+        { speaker: 'wendlebury', text: "The Examination Hall is on the First Floor, the iron door beside the stair to the roof. All seven professors have set you a room. Take your time. Explore first, if you like. The exams will wait." },
       ]);
       return;
     }
@@ -930,6 +938,148 @@ export const DIALOGUES: Record<string, Script> = {
     state.award(POINTS.star, 'the Thistle Star');
     state.award(POINTS.lesson, 'passing Airs & Graces');
     await say([{ speaker: 'underbough', text: '(faintly) You did it! Come back up! Use the door. Please use the door.' }]);
+  },
+
+  // ---------------------------------------------------------------- the Final Examinations
+
+  examsDoor: async ({ say }) => {
+    await say([{ speaker: 'sign', text: '"THE EXAMINATION HALL. Final-year... no, FIRST-year examinations. Pupils who have passed all seven lessons only."' }]);
+  },
+
+  examsIntro: async ({ say }) => {
+    await say([
+      { speaker: 'wendlebury', text: '(her voice rings down the hall) Welcome to your Final Examinations, dear! Seven professors, seven rooms, one Golden Thistle at the end.' },
+      { speaker: 'wendlebury', text: 'Each professor has set you a room. Every gate opens only when you have shown them what you learned. Lecterns along the way, as usual. Good luck!' },
+    ]);
+  },
+
+  'exam-gorse': async ({ say }) => {
+    await say([
+      { speaker: 'gorse', text: 'AH! First up, and first is always loudest! Three blocks, one trough. Shove them in, nice and straight, and walk across.' },
+      { speaker: 'gorse', text: 'Beyond it, an old friend in armour. Charged knocks, remember! Hold the button. And the bell resets the blocks, if you make a hash of it.' },
+    ]);
+  },
+  'exam-gorse-hint': async ({ say }) => {
+    await say([
+      { speaker: 'gorse', text: 'The side blocks first want shoving INTO the middle lane. Stand beside one and knock it towards the trough. Then from behind, push it north. One block, one tile, one thwack!' },
+    ]);
+  },
+
+  'exam-quince': async ({ say }) => {
+    await say([
+      { speaker: 'quince', text: 'Three padlocks on my pillar. They snap shut after six seconds. My gate opens only while all three are open.' },
+      { speaker: 'quince', text: 'You will have to see each one to open it. Plan your walk. And my Snapcaskets will insist on helping. Lock them shut first, then a knock sends them packing.' },
+    ]);
+  },
+  'exam-quince-hint': async ({ say }) => {
+    await say([
+      { speaker: 'quince', text: 'From the south-east corner you can see two of my locks at once. Open those, then hurry round the east side for the third. Then through the gate, quickly.' },
+    ]);
+  },
+
+  'exam-hopgood': async ({ say }) => {
+    await say([
+      { speaker: 'hopgood', text: "UP! Everything in here goes up! The moss to the left ledge, the toadstool flings you over to the right, and the rune tile takes you to the seal on the top shelf." },
+      { speaker: 'hopgood', text: "The top shelf is high. VERY high. Charge the tile, or hold jump as you land. Both, if you're showing off. I'd show off." },
+    ]);
+  },
+  'exam-hopgood-hint': async ({ say }) => {
+    await say([
+      { speaker: 'hopgood', text: 'Hold the button to CHARGE the rune tile, then hop on and hold jump as you land. The tile nudges you north onto the shelf.' },
+    ]);
+  },
+
+  'exam-lamplough': async ({ say }) => {
+    await say([
+      { speaker: 'lamplough', text: '(blinking) Ah. The dark. My favourite room. The stones over the drop show only in lamplight, and the lamps burn six seconds.' },
+      { speaker: 'lamplough', text: 'The second lamp stands on the pillar halfway. Light it before the first goes out. And the far wall... is not entirely a wall. My gate wants two lamps burning at once.' },
+    ]);
+  },
+  'exam-lamplough-hint2': async ({ say }) => {
+    await say([
+      { speaker: 'lamplough', text: '(from somewhere in the dark) There is a lamp on this side too. Light it, and the wall lets you back. Light both, and my gate lets you on.' },
+    ]);
+  },
+  'exam-lamplough-hint': async ({ say }) => {
+    await say([
+      { speaker: 'lamplough', text: 'Light the lamp by the wall: in its glow the middle of the wall is only a rumour. Walk through, and light the lamp on the other side while the first still burns. That one opens the wall from the far side, too.' },
+    ]);
+  },
+
+  'exam-ashcombe': async ({ say }) => {
+    await say([
+      { speaker: 'ashcombe', text: 'Snapweeds in the beds. Toast them before they toast you. Then the drawbridge: it hangs by a rope, and ropes burn.' },
+      { speaker: 'ashcombe', text: 'Last, my four braziers, lit in order, one, two, three, four, before the first goes out. Count the notches on the bowls.' },
+    ]);
+  },
+  'exam-ashcombe-hint': async ({ say }) => {
+    await say([
+      { speaker: 'ashcombe', text: "The braziers go round in a figure of eight: west front, east back, west back, east front. Walk the line between them before you start, then light them at a run." },
+    ]);
+  },
+
+  'exam-coldharbour': async ({ say }) => {
+    await say([
+      { speaker: 'coldharbour', text: 'Ember crabs on the stepping stones. Freeze them, then a knock and they shatter. Then the stones are yours.' },
+      { speaker: 'coldharbour', text: 'Knock the floe north from the bank, and the post will stop it by the island. The last stretch needs a CHARGED freeze. And a third crab guards my gate. Shatter it.' },
+    ]);
+  },
+  'exam-coldharbour-hint': async ({ say }) => {
+    await say([
+      { speaker: 'coldharbour', text: "The floe wants knocking north from the bank, behind it. Then from the island hop on, and hold the button to charge your freeze over the water ahead. A tap won't last long enough." },
+    ]);
+  },
+
+  'exam-underbough': async ({ say }) => {
+    await say([
+      { speaker: 'underbough', text: 'The last room! The ferry takes you over to the landing and floats home three seconds later. Mind the pendulum, it swings across the ferry.' },
+      { speaker: 'underbough', text: 'The basket is waiting up by my seal. Call it down from the landing, step in, cast again. Up and over, and stand on the seal.' },
+    ]);
+  },
+  'exam-underbough-hint': async ({ say }) => {
+    await say([
+      { speaker: 'underbough', text: "The basket's feather-stone is up on the shelf by the gate. Aim at it from the landing and it'll come to you." },
+    ]);
+  },
+
+  examWendlebury: async ({ say, state }) => {
+    if (state.flags.has('year-complete')) {
+      await say([{ speaker: 'wendlebury', text: "The hall is yours to wander, dear. The professors are re-setting their rooms. Gorse is, in fact, still ringing his bell." }]);
+      return;
+    }
+    await say([{ speaker: 'wendlebury', text: 'Seven rooms! Well? The Golden Thistle is right there, on the plinth. It has been waiting all year.' }]);
+  },
+
+  examComplete: async ({ say, state, events }) => {
+    if (state.flags.has('year-complete')) return;
+    state.flags.add('year-complete');
+    state.award(POINTS.star, 'the Golden Thistle');
+    state.award(POINTS.exams, 'passing the Final Examinations');
+    await say([
+      { speaker: 'wendlebury', text: 'The Golden Thistle! Oh, well done. Very well done indeed. Seven professors, and not one of them could stop you.' },
+      { speaker: 'wendlebury', text: 'Which brings us, dear, to the House Cup.' },
+    ]);
+    const house = state.house;
+    if (house) {
+      const rivals = HOUSE_ORDER.filter((h) => h !== house);
+      const best = Math.max(...rivals.map((h) => state.housePoints[h]));
+      // The Headmistress's last-minute points, as is traditional.
+      if (state.housePoints[house] <= best) {
+        const extra = best - state.housePoints[house] + 10;
+        state.housePoints[house] += extra;
+        events.emit('points', { house, amount: extra, reason: 'seeing the whole year through' });
+        await say([{ speaker: 'wendlebury', text: `It was terribly close. But I have a few points left to give, for seeing the whole year through: ${extra} to ${HOUSES[house].name}.` }]);
+      }
+      const order = [...HOUSE_ORDER].sort((a, b) => state.housePoints[b] - state.housePoints[a]);
+      await say([
+        { speaker: 'wendlebury', text: `In fourth place, ${HOUSES[order[3]].name}. Third, ${HOUSES[order[2]].name}. Second, ${HOUSES[order[1]].name}...` },
+        { speaker: 'wendlebury', text: `...and the House Cup goes to ${HOUSES[order[0]].name.toUpperCase()}! ${state.housePoints[order[0]]} points!` },
+      ]);
+    }
+    await say([
+      { speaker: 'wendlebury', text: "That is the end of your first year at Thistlewick. Go and enjoy the summer. The castle will still be here, and so will its secrets. Mind the third step." },
+    ]);
+    events.emit('yearComplete', { house });
   },
 
   upstairsDoor: async ({ say }) => {

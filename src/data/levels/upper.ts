@@ -12,6 +12,8 @@ import { HOUSES, type HouseId } from '../houses';
  *   Long Hall      x -4.5..4.5,  z 0..54    the spine: portraits, armour, benches; the door
  *                                           back down (south); doorways west (library) and
  *                                           east (house wing); a stair (z 44..54) up to the roof
+ *                                           and, beside the stair (east), the iron door to the
+ *                                           Final Examinations (after all seven lessons)
  *   Great Library  x -36..-5.5,  z 8..40    12 m tall. A U-shaped mezzanine (top 5: west,
  *                                           north and south strips) up a stair by the door, or
  *                                           on the book lift (Thistledown, north). The stack
@@ -32,6 +34,7 @@ export const UPPER: LevelDef = {
   name: 'The First Floor',
   spawns: {
     default: { pos: [0, 0, 1.6], yaw: 0 },
+    fromExams: { pos: [3.2, 0, 49], yaw: -Math.PI / 2 },
   },
   areas: [
     { id: 'hall', name: 'The Long Hall', min: [-4.5, -1, 0], max: [4.5, 12, 54.5] },
@@ -117,7 +120,9 @@ function longHall(b: LevelBuilder, glow: Glow, flames: Glow): void {
   // The stair hall at the north end: up to the roof.
   slab(b, -5.5, 5.5, 44, 54.5, 11.5, 0.5, '#4a3226', 'planks');
   wall(b, 'x', 54.5, -5.5, 5.5, 11.5, { color: STONE, holes: [{ from: -1.5, to: 1.5, bottom: 7.2, top: 10.6 }] });
-  wall(b, 'z', 5, 44, 54.5, 11.5, { color: STONE });
+  wall(b, 'z', 5, 44, 54.5, 11.5, { color: STONE, holes: [{ from: 47.8, to: 50.2, top: 3.4 }] });
+  // Beside the stair, east: the Examination Hall, once all seven lessons are done.
+  b.add({ type: 'door', pos: [4.55, 0, 49], yaw: -Math.PI / 2, width: 2.2, height: 3.2, to: { level: 'exams', spawn: 'default' }, afterLesson: 'thistledown', talk: 'examsDoor', label: 'The Examination Hall', style: 'iron' });
   b.stairs([0, 0, 44.4], 0, 18, 0.4, 0.52, 3, COLORS.stoneLight);
   // Beside the stair foot, not in the way.
   signboard(b, 'To the Leads (the roof)', [-3, 3, 43.95], Math.PI);

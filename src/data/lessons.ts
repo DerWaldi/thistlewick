@@ -86,7 +86,7 @@ export const LESSONS: LessonDef[] = [
 
 /** Spells you'd know by the time you reach this level (for sandbox runs). The hub gets them all. */
 export function spellsBy(level: string): SpellId[] {
-  if (level === 'hub' || level === 'grounds' || level === 'clocktower') return LESSONS.map((l) => l.spell);
+  if (['hub', 'grounds', 'clocktower', 'upper', 'exams'].includes(level)) return LESSONS.map((l) => l.spell);
   const i = LESSONS.findIndex((l) => l.classroom === level || l.trial === level);
   return i < 0 ? [] : LESSONS.slice(0, i + 1).map((l) => l.spell);
 }

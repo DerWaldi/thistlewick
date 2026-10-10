@@ -10,6 +10,7 @@ import { CISTERNS } from './cisterns';
 import { CLOCKTOWER } from './clocktower';
 import { CLOCKWORKS } from './clockworks';
 import { COLDHARBOUR } from './coldharbour';
+import { EXAMS } from './exams';
 import { HUB } from './hub';
 import { LAMPLOUGH } from './lamplough';
 import { QUINCE } from './quince';
@@ -40,4 +41,5 @@ export const LEVELS: Record<string, LevelDef> = {
   underbough: UNDERBOUGH,
   clockworks: CLOCKWORKS,
   upper: UPPER,
+  exams: EXAMS,
 };

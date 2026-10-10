@@ -1,5 +1,5 @@
 import { CARDS } from '../data/cards';
-import { HOUSES } from '../data/houses';
+import { HOUSES, type HouseId } from '../data/houses';
 import type { GameState } from '../state/gameState';
 import type { Options } from '../state/options';
 
@@ -50,7 +50,18 @@ export class Menu {
     if (screen === 'options') this.syncOptions();
   }
 
+  /** The credits with the end-of-year summary on top; Back leads to the pause menu. */
+  showEnding(s: GameState): void {
+    const order = Object.keys(HOUSES).sort((a, b) => s.housePoints[b as HouseId] - s.housePoints[a as HouseId]) as HouseId[];
+    $('year-end-cup').textContent = `House Cup: ${HOUSES[order[0]].name}, with ${s.housePoints[order[0]]} points.`;
+    $('year-end-stats').textContent = `Cards ${s.cards.size} of ${CARDS.length} · Secrets ${s.secrets.size} · Stars ${s.lessons.size + (s.flags.has('year-complete') ? 1 : 0)} of 8 · Sweets ${s.sweets}`;
+    $('year-end').classList.remove('hidden');
+    this.previous = 'pause';
+    this.show('credits');
+  }
+
   hide(): void {
+    $('year-end').classList.add('hidden');
     this.screen = null;
     this.root.classList.remove('show');
   }
