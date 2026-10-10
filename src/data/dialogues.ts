@@ -61,10 +61,17 @@ export const DIALOGUES: Record<string, Script> = {
   },
 
   wendlebury: async ({ say, state }) => {
+    if (state.lessons.has('latchkin')) {
+      await say([
+        { speaker: 'wendlebury', text: "Two Thistle Stars! Madam Quince tells me you opened her Great Vault without so much as a hairpin. I'm told she smiled. Nobody has ever seen her smile." },
+        { speaker: 'wendlebury', text: "Do have a look round the castle again. Thistlewick is full of things that are locked for no good reason." },
+      ]);
+      return;
+    }
     if (state.lessons.has('thwackwort')) {
       await say([
         { speaker: 'wendlebury', text: "A Thistle Star already! Professor Gorse hasn't stopped talking about it. Well, he never stops talking, but now it's about you." },
-        { speaker: 'wendlebury', text: 'I hear the Crumbleton twins are opening their Cupboard. Mind your sweets.' },
+        { speaker: 'wendlebury', text: 'Next, Locks & Latches with Madam Quince, up in the Long Gallery. The portcullis by Practical Charms sticks. Give its winch a firm Thwackwort.' },
       ]);
       return;
     }
@@ -114,9 +121,13 @@ export const DIALOGUES: Record<string, Script> = {
       ]);
       state.collectCard('agnes-thistlewick');
       events.emit('toast', { text: 'Thwackwort now works on the castle, too. Look for things to knock.', kind: 'hint' });
+      await say([{ speaker: 'gorse', text: "Next stop: Locks & Latches, Madam Quince. The Long Gallery, past the portcullis on the landing outside. Thwack the winch, it's always stuck." }]);
       return;
     }
-    await say([{ speaker: 'gorse', text: 'Keep practising! A good Thwackwort opens more doors than a key. Not literally. Well, sometimes literally.' }]);
+    await say([
+      { speaker: 'gorse', text: 'Keep practising! A good Thwackwort opens more doors than a key. Not literally. Well, sometimes literally.' },
+      { speaker: 'gorse', text: "Madam Quince is expecting you for Locks & Latches. Long Gallery, past the portcullis outside. Thwack the winch, it's always stuck." },
+    ]);
   },
 
   practiceDone: async ({ say, state }) => {
@@ -177,6 +188,109 @@ export const DIALOGUES: Record<string, Script> = {
     await say([{ speaker: 'gorse', text: '(echoing) BRAVO! The Thistle Star! Come back up and see me, there is something in it for you.' }]);
   },
 
+  // ---------------------------------------------------------------- the second lesson
+
+  quinceLesson: async (ctx) => {
+    await teachLatchkin(ctx);
+  },
+
+  quince: async (ctx) => {
+    const { say, state } = ctx;
+    if (!state.knows('latchkin')) {
+      await teachLatchkin(ctx);
+      return;
+    }
+    if (!state.flags.has('practice-latchkin')) {
+      await say([{ speaker: 'quince', text: 'Three boxes, three locks. Look at the lock, not the box. Then ask it nicely.' }]);
+      return;
+    }
+    if (!state.lessons.has('latchkin')) {
+      await say([{ speaker: 'quince', text: 'The Vaults are behind the iron door. Every lock down there can be opened. The trick is seeing it first.' }]);
+      return;
+    }
+    if (!state.flags.has('quince-reward')) {
+      state.flags.add('quince-reward');
+      await say([
+        { speaker: 'quince', text: 'The Great Vault. Opened. By a first-year. Hm.' },
+        { speaker: 'quince', text: "...That was me being impressed. Take this. It's a terribly flattering likeness, I'm told." },
+      ]);
+      state.collectCard('ottoline-quince');
+      await say([
+        { speaker: 'quince', text: 'Latchkin works on the castle, too. Old Lockjaw put a lock on everything he could reach. Chests, cabinets, store-rooms. Go and be nosy.' },
+      ]);
+      return;
+    }
+    await say([{ speaker: 'quince', text: 'A locked door is only a question. Latchkin is a very polite answer.' }]);
+  },
+
+  latchkinPracticeDone: async ({ say, state }) => {
+    state.flags.add('practice-latchkin');
+    await say([
+      { speaker: 'quince', text: 'Three for three. Tidy. I do like tidy.' },
+      { speaker: 'quince', text: "Now the Latchkin Vaults, through the iron door. Padlocks hide, some lock themselves again, and some chests BITE. Lock those shut and give them a Thwackwort. Bring me the Thistle Star." },
+    ]);
+  },
+
+  lockedVaultDoor: async ({ say, state }) => {
+    if (state.lessons.has('latchkin')) {
+      await say([{ speaker: 'quince', text: 'The Vaults are done with, and so are you. Well done. Shoo.' }]);
+      return;
+    }
+    await say([{ speaker: 'quince', text: 'Practice boxes first. All three. I will know.' }]);
+  },
+
+  classNotOverQuince: async ({ say, state }) => {
+    const text = state.flags.has('practice-latchkin')
+      ? 'Class is not over until the Great Vault is open. The iron door, if you please.'
+      : 'Class is not over. Three practice boxes, then the Vaults.';
+    await say([{ speaker: 'quince', text }]);
+  },
+
+  galleryDoor: async ({ say }) => {
+    await say([{ speaker: 'sign', text: '"LOCKS & LATCHES — Madam O. Quince. Knock. Then wait. Then knock again, properly."' }]);
+  },
+
+  vaultIntro: async ({ say }) => {
+    await say([
+      { speaker: 'quince', text: '(echoing) The Latchkin Vaults. Old Lockjaw built them to keep his keys in, and then lost the keys. Typical.' },
+      { speaker: 'quince', text: '(echoing) That gate has a padlock on it. Point. Persuade. Proceed.' },
+    ]);
+  },
+
+  vaultLocks: async ({ say }) => {
+    await say([
+      { speaker: 'quince', text: "(echoing) The Lockwork Hall. Three padlocks hold that door, and you'll only see one from here." },
+      { speaker: 'quince', text: "(echoing) A spell needs to SEE its lock. Climb up for a better look, and peer through anything with holes in it." },
+    ]);
+  },
+
+  vaultPantry: async ({ say }) => {
+    await say([
+      { speaker: 'quince', text: "(echoing) The pantry. Some of those chests are chests. Some are Snapcaskets. Look for teeth." },
+      { speaker: 'quince', text: "(echoing) Latchkin LOCKS a Snapcasket shut. While it's locked, Thwackwort it. Quickly, they don't stay locked." },
+    ]);
+  },
+
+  vaultShutters: async ({ say }) => {
+    await say([
+      { speaker: 'quince', text: "(echoing) The shutters lock themselves again. Open one, look through it for the next lock, and don't dawdle." },
+    ]);
+  },
+
+  vaultGreat: async ({ say }) => {
+    await say([
+      { speaker: 'quince', text: "(echoing) The Great Vault. Four locks ride round the wheel. Catch each one as it comes past. And mind the furniture." },
+    ]);
+  },
+
+  vaultComplete: async ({ say, state }) => {
+    if (state.lessons.has('latchkin')) return;
+    state.lessons.add('latchkin');
+    state.award(POINTS.star, 'the Thistle Star');
+    state.award(POINTS.lesson, 'passing Locks & Latches');
+    await say([{ speaker: 'quince', text: '(echoing) The Thistle Star. Well. Come up and see me, please. Promptly.' }]);
+  },
+
   tansy: async ({ say, state, openShop }) => {
     if (state.lessons.has('thwackwort')) {
       const first = !state.flags.has('shop-visited');
@@ -223,6 +337,19 @@ export const DIALOGUES: Record<string, Script> = {
     await say([{ speaker: 'sign', text: `HOUSE POINTS — ${lines}` }]);
   },
 };
+
+async function teachLatchkin({ say, state, events }: ScriptContext): Promise<void> {
+  await say([
+    { speaker: 'quince', text: 'You are the Gorse pupil. The one who shoves things. Sit. No, stand. Watch.' },
+    { speaker: 'quince', text: 'Ottoline Quince, Locks & Latches. A lock is not an obstacle. It is a question, asked rudely. LATCHKIN answers it politely.' },
+    { speaker: 'quince', text: 'Aim at the lock itself, the padlock, the keyhole, and cast. The lock must be in plain sight. Locks are shy.' },
+  ]);
+  if (!state.knows('latchkin')) {
+    state.learn('latchkin');
+    events.emit('toast', { text: 'You learned Latchkin!', kind: 'info' });
+  }
+  await say([{ speaker: 'quince', text: 'Three practice boxes. Open them all. What is inside is yours. I am feeling generous.' }]);
+}
 
 async function teachThwackwort({ say, state, events }: ScriptContext): Promise<void> {
   await say([

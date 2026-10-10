@@ -36,6 +36,7 @@ import {
   windowPane,
 } from '../../world/props';
 import { CARD_BY_ID } from '../cards';
+import type { PortraitSpec } from '../portraits';
 import { HOUSE_ORDER, HOUSES } from '../houses';
 
 /**
@@ -47,9 +48,13 @@ import { HOUSE_ORDER, HOUSES } from '../houses';
  *   Crumbleton's Cupboard x -18..-12, z 4..12 the shop (west door of the hall)
  *   Crooked Corridor    x 12..42, z 5..23     east from the hall, north, then east up stairs
  *                                              (y=3) to Gorse's classroom door
+ *   Long Gallery        x 35..42, z 24..52    (y=3) north off the corridor landing, behind a
+ *                                              portcullis (Thwackwort the winch); portraits, a
+ *                                              padlocked store-room (east), Quince's door (north)
  *
  * Secrets: tapestry alcove (hall), sliding bookshelf (corridor, needs Thwackwort),
- * behind the clock (court, a climb).
+ * behind the clock (court, a climb), the gallery store-room (needs Latchkin).
+ * Latchkin also opens the court chest and the hall cabinet (cards).
  */
 export const HUB: LevelDef = {
   id: 'hub',
@@ -59,6 +64,7 @@ export const HUB: LevelDef = {
     start: { pos: [0, 0, 3.5], yaw: 0 },
     title: { pos: [0, 0, 3.5], yaw: 0 },
     fromClassroom: { pos: [38.5, 3, 20], yaw: -Math.PI / 2 },
+    fromQuince: { pos: [38.5, 3, 50.3], yaw: Math.PI },
   },
   areas: [
     { id: 'hall', name: 'The Lantern Hall', min: [-12, -2, 0], max: [12, 14, 30] },
@@ -67,6 +73,7 @@ export const HUB: LevelDef = {
     { id: 'corridor', name: 'The Crooked Corridor', min: [12, -2, 5], max: [42, 12, 23] },
     { id: 'corridor', name: 'The Crooked Corridor', min: [18.5, -2, 10], max: [21.5, 4, 13.5] },
     { id: 'court', name: 'Hollyhock Court', min: [-17, -3, 30], max: [17, 30, 66] },
+    { id: 'gallery', name: 'The Long Gallery', min: [34.5, 2, 23.5], max: [47.5, 11, 52.5] },
   ],
   intro: { script: 'intro', unlessFlag: 'greeted' },
   build: buildHub,
@@ -250,7 +257,7 @@ function buildHub(b: LevelBuilder): void {
   wall(b, 'z', 26.5, 5, 17.5, CH);
   slab(b, 21, 27, 10.5, 17.5, CH + 0.4, 0.4, '#5e4a3e', 'planks');
   // Leg 3: east and up (x 22..42, z 18..22), stairs x 28..34 to y=3.
-  wall(b, 'x', 23.5, 21, 42.5, 9);
+  wall(b, 'x', 23.5, 21, 42.5, 9, { holes: [{ from: 36.4, to: 40.6, bottom: 3, top: 6.6 }] }); // portcullis to the Long Gallery
   wall(b, 'x', 17.5, 26.5, 42.5, 9);
   wall(b, 'z', 21.5, 17.5, 23.5, 9);
   wall(b, 'z', 42.5, 17.5, 23.5, 9);
@@ -286,7 +293,7 @@ function buildHub(b: LevelBuilder): void {
   barrel(b, [22.4, 0, 22.6]);
   crate(b, [23.3, 0, 22.55], 0.8);
   pottedPlant(b, [25.6, 0, 17.2], 1.1, 7);
-  bench(b, [37.4, 3, 22.75], 0, 2.4);
+  bench(b, [38.2, 3, 18.25], 0, 2.4);
   pottedPlant(b, [41.55, 3, 22.55], 1.2, 9);
   armour(b, [35, 3, 18.5], 0, '#c99a3e');
   for (const [c, d1, d2] of [
@@ -386,7 +393,7 @@ function buildHub(b: LevelBuilder): void {
   b.add(
     { type: 'teaser', spell: 'cindersnap', prop: 'vines', pos: [16, 0, 46], yaw: -Math.PI / 2 },
     { type: 'springPad', pos: [-14.2, R, 47], radius: 1.1 },
-    { type: 'teaser', spell: 'latchkin', prop: 'chest', pos: [-14.2, 0, 60], yaw: Math.PI / 2, id: 'hub-court-chest' },
+    { type: 'chest', id: 'hub-court-chest', pos: [-14.2, 0, 60], yaw: Math.PI / 2, card: 'lumley-lockjaw', sweets: [['bramble', 2]] },
   );
   b.box([-14.75, 9.1, 52], [2.5, 0.4, 4], { color: COLORS.stoneLight }); // balcony
   b.box([-13.6, 9.8, 52], [0.2, 1, 4], { color: COLORS.woodDark, pattern: 'planks' });
@@ -488,6 +495,77 @@ function buildHub(b: LevelBuilder): void {
   ]) {
     b.lantern([x, 3.8, z], 0, 0, false);
   }
+
+  // ================================================================ LONG GALLERY (x 35..42, z 24..52, y=3)
+  // Added after everything else: entity ids come from build order, so new specs go last.
+  const G = 3;
+  wall(b, 'z', 34.5, 23.5, 52.5, 10.4, { color: COLORS.stoneLight });
+  wall(b, 'z', 42.5, 23.5, 52.5, 10.4, { color: COLORS.stoneLight, holes: [{ from: 33.4, to: 37.6, bottom: G, top: G + 3.6 }] });
+  wall(b, 'x', 52.5, 34.5, 42.5, 10.4, { color: COLORS.stoneLight, holes: [{ from: 37.3, to: 39.7, bottom: G, top: G + 3.4 }] });
+  b.box([38.5, G / 2, 38.25], [7, G, 28.5], { color: '#8a6a4a', pattern: 'planks' });
+  slab(b, 34.5, 42.5, 23.5, 52.5, 10.8, 0.4, '#5e4a3e', 'planks');
+  for (let z = 26; z < 52; z += 4) deco(b, new BoxGeometry(7.2, 0.35, 0.35), [38.5, 10.42, z], COLORS.woodDark);
+  rug(b, [38.5, G, 38], 2.2, 25, '#5d4470', '#c99a3e');
+  for (const z of [29, 37, 45]) {
+    windowPane(b, glow, 'z', 34.5, z, G + 4.4, 1.5, 3.4, 1);
+    lightShaft(b, [35.05, G + 5.2, z], [0.8, -0.7, 0.15], 9, 1.4, 0.15);
+    bench(b, [35.6, G, z], Math.PI / 2, 2);
+  }
+  const gallerySitters = [
+    CARD_BY_ID.get('mother-wortle')!.portrait,
+    { bg: ['#d8c4a4', '#7a5a3a'], kind: 'person', skin: '#e8b48e', robe: '#5a2a3a', hair: '#2b1d14', hat: 'tall', hatColor: '#2b1d14', beard: true, collar: 'ruff', expression: 'stern', prop: 'book' },
+    CARD_BY_ID.get('ezekiel-crumbleton')!.portrait,
+    { bg: ['#c8d8c0', '#4a6a4a'], kind: 'person', skin: '#f3d2b4', robe: '#3f7a4a', hair: '#e8c25a', hat: 'pointy', hatColor: '#3f5a3a', hairStyle: 'long', collar: 'scarf', jewel: '#7aa8c8', expression: 'kind', prop: 'thistle' },
+    CARD_BY_ID.get('puddlewump')!.portrait,
+    { bg: ['#e0c8e8', '#5a3a6a'], kind: 'person', skin: '#d9a07a', robe: '#4a2c4f', hair: '#d8d8d8', hat: 'none', hairStyle: 'wild', glasses: true, collar: 'ruff', expression: 'smirk', prop: 'scroll' },
+    CARD_BY_ID.get('grey-lady')!.portrait,
+    { bg: ['#f2d48a', '#9a6a2e'], kind: 'person', skin: '#f0c9a0', robe: '#7a2f3a', hair: '#5a3a1e', hat: 'bonnet', hatColor: '#e8d8c0', hairStyle: 'bun', collar: 'plain', expression: 'smile', prop: 'cauldron' },
+  ] as PortraitSpec[];
+  [33, 41, 49].forEach((z, i) => portrait(b, gallerySitters[i], [35.05, G + 2.6, z], Math.PI / 2, 1.2, 1.5, (i % 2 ? -1 : 1) * 0.04));
+  [27, 31, 40, 44, 48].forEach((z, i) => portrait(b, gallerySitters[3 + i], [41.95, G + 2.6, z], -Math.PI / 2, i % 2 ? 1.1 : 1.3, i % 2 ? 1.4 : 1.7, (i % 2 ? 1 : -1) * 0.05));
+  armour(b, [41.3, G, 29], -Math.PI / 2, '#2f5a6a');
+  armour(b, [41.3, G, 42], -Math.PI / 2, '#8a2a3a');
+  armour(b, [41.3, G, 46], -Math.PI / 2, '#3f7a4a');
+  for (const x of [35.7, 41.3]) pottedPlant(b, [x, G, 51.3], 1.3, x);
+  urn(b, [35.7, G, 24.8], true, 3);
+  dustMotes(b, [35.5, G + 0.5, 24.5], [41.5, G + 6.5, 51.5], 80);
+  cobweb(b, [35, 10.2, 52], [1, 0], [0, -1], 1.2);
+  cobweb(b, [42, 10.2, 24], [-1, 0], [0, 1], 1.2);
+  b.lantern([38.5, G + 5.5, 38], 9, 16);
+  signboard(b, 'The Long Gallery', [38.5, G + 4.3, 22.98], Math.PI);
+  // The padlocked store-room off the east wall (x 43..47, z 33..38).
+  b.box([45, G / 2, 35.75], [4, G, 5.5], { color: COLORS.stone });
+  wall(b, 'x', 32.75, 42.5, 47.5, 4.5, { base: G, color: COLORS.stone });
+  wall(b, 'x', 38.75, 42.5, 47.5, 4.5, { base: G, color: COLORS.stone });
+  wall(b, 'z', 47.5, 33, 38.5, 4.5, { base: G, color: COLORS.stone });
+  slab(b, 42.5, 47.5, 32.75, 38.75, G + 4.6, 0.4, COLORS.stoneDark);
+  barrel(b, [46.4, G, 33.9]);
+  crate(b, [46.3, G, 37.6], 0.9);
+  crate(b, [46.35, G + 0.9, 37.65], 0.6);
+  bookStack(b, [44, G, 37.8], 6, 33);
+  b.add(
+    { type: 'gate', pos: [38.5, G, 23.5], yaw: 0, width: 3, height: 3, when: ['hub-portcullis'] },
+    { type: 'knockSwitch', id: 'hub-portcullis', pos: [35.6, G + 1.7, 22.95], yaw: Math.PI, latch: true, persist: true },
+    {
+      type: 'door',
+      pos: [38.5, G, 52],
+      yaw: Math.PI,
+      width: 2.4,
+      height: 3.4,
+      to: { level: 'quince', spawn: 'default' },
+      talk: 'galleryDoor',
+      lockedUnless: 'sorted',
+      label: 'Locks & Latches',
+    },
+    { type: 'gate', pos: [42.5, G, 35.5], yaw: Math.PI / 2, width: 3, height: 3, when: ['hub-store-lock'] },
+    { type: 'padlock', id: 'hub-store-lock', pos: [42.4, G + 1.5, 36.2], yaw: -Math.PI / 2, persist: true },
+    { type: 'secret', id: 'hub-storeroom', area: 'gallery', min: [43, G - 1, 33], max: [47, G + 3, 38.5] },
+    { type: 'sweet', kind: 'humbug', pos: [44, G + 0.6, 34.2] },
+    { type: 'chest', id: 'hub-store-chest', pos: [45.8, G, 35.75], yaw: -Math.PI / 2, sweets: [['bramble', 2], ['fizzwort', 4]] },
+    { type: 'chest', id: 'hub-hall-cabinet', pos: [11.6, 0, 19.6], yaw: -Math.PI / 2, style: 'cabinet', card: 'brass-mouse' },
+    { type: 'sweetLine', kind: 'fizzwort', from: [38.5, G + 0.6, 26], to: [38.5, G + 0.6, 34], count: 5 },
+    { type: 'sweetLine', kind: 'fizzwort', from: [38.5, G + 0.6, 40], to: [38.5, G + 0.6, 48], count: 5 },
+  );
 
   glow.finish(b, '#ffc68a');
   candle.finish(b, '#ffe2a0');

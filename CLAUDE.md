@@ -51,7 +51,9 @@ src/player/            controller (kinematic character), camera (orbit + spring 
 src/spells/            caster (soft-lock targeting, tap/charge, bolts), targets (SpellTarget interface +
                        registry), runes (procedural rune glyphs + floating markers)
 src/entities/          level objects: pushBlock (resetOn), mechanisms (knockSwitch: plate/book/target/bell,
-                       timed/latch; plate; gate; checkpoint), gnarling, rattlecoat (needs charged hits),
+                       timed/latch/persist; plate; gate; checkpoint), gnarling, rattlecoat (needs charged hits),
+                       locks (padlock: relock/persist/orbit; chest/box/cabinet with card + sweets; drawbridge;
+                       vaultDoor), snapcasket (Latchkin locks it, then Thwackwort; its `spell` changes),
                        teasers (targets for spells not yet learned), hubObjects (cards, secrets, tapestry,
                        bookshelf, npc, sorting lantern, doors, hourglasses, spring pad), lessonObjects
                        (trigger, Thistle Star), sweets (instanced SweetField); types.ts holds the
@@ -81,6 +83,7 @@ Each fixed step runs in this order:
 Each render frame then runs the camera, animator, level and entity visuals, caster (targeting needs the fresh camera), particles, shadow, HUD and draw, all interpolated with `alpha`.
 
 ### Spells & targets
+- Line of sight is the Latchkin puzzle: a padlock must be visible from the player's chest. Colliders with `seeThrough` (grilles, bars) block bodies but not spells. Mind the camera's pitch limit: targets high above the player can't be centred, so keep them low or let the player back off.
 - Casting is context-sensitive. A `SpellTarget` names the one spell it reacts to, and the caster picks the best target in an aim cone around the crosshair (with line of sight).
 - Clicking casts that target's spell. Holding the button charges it, if the spell is `chargeable`.
 - If the player doesn't know the spell yet, the target shows a grey rune and casting says so.
@@ -92,7 +95,7 @@ Each render frame then runs the camera, animator, level and entity visuals, cast
 - A `door` entity with `to: { level, spawn }` switches levels; the game fades out and in.
 - Everything level-specific is created by `LevelSession` and torn down by its `dispose()`. Event listeners go on the session's scoped bus, so they're removed too.
 - Every level file starts with a map comment. Keep it current.
-- Levels: `hub`, then `classroom` (Gorse's lesson), then `trial` (the Thwackwort Trial), then back. Plus the `gym` sandbox.
+- Levels: `hub`, then `classroom` (Gorse's lesson) and `trial` (the Thwackwort Trial); then the hub's Long Gallery leads to `quince` (Locks & Latches) and `vault` (the Latchkin Vaults). Plus the `gym` sandbox.
 
 ### Lessons (the core loop)
 Each lesson is content, not engine work:
@@ -102,7 +105,8 @@ Each lesson is content, not engine work:
 4. The trial level: rooms built around the spell, room `trigger`s with hint scripts, checkpoints, and a `star` whose script records `state.lessons` and awards points.
 5. The teacher's script hands out a reward once the lesson is in `state.lessons`.
 6. Hub content gated with `requires: '<spell>'` appears afterwards.
-Progress lives in flags (`practice-done`, `down:<rattlecoat id>`, `trial-hint-*`...), so revisits are consistent.
+Progress lives in flags (`practice-done`, `practice-latchkin`, `down:<rattlecoat/snapcasket id>`, `trial-hint-*`, `vault-hint-*`...), so revisits are consistent.
+Each lesson's later payoffs sit in the hub: Thwackwort raises the Long Gallery portcullis (a `persist` knock switch, flag `on:<id>`); Latchkin opens the court chest, the hall cabinet and the gallery store-room (a `persist` padlock, flag `unlocked:<id>`; chests are remembered in `collected`).
 Doors enforce the flow: the classroom exit has `lockedDuring: '<spell>'` (no leaving mid-lesson) and the trial door `closedAfter: '<spell>'` (each trial runs once; `?level=trial` sandboxes still work for debugging). Nothing in a level may be farmable: placed sweets are remembered, and respawning Gnarlings only drop sweets the first time (`looted:<id>` flags).
 
 ### Progress & saving
@@ -178,6 +182,7 @@ Levels place objects with `b.add({ type: ..., ... })`. Objects talk to each othe
 | M3 Lesson | done | Gorse's lesson, the Thwackwort Trial dungeon (~5 min), Thistle Star, a post-lesson hub secret |
 | M4 Slice complete | done | Shop and upgrades, all 10 cards, 4 secrets, title/pause/options, music, visual pass, perf |
 | Polish 1 | done | Sectioned music, wall caps against climbing out, P screenshots, painted portraits and gilt frames, detailed characters, set dressing in every room |
+| M5 Latchkin | done | Long Gallery wing (portcullis, portraits, padlocked store-room), Madam Quince's class, the Latchkin Vaults (line-of-sight locks, Snapcaskets, relocking shutters, drawbridge, orbiting vault locks), castle payoffs, 4 new cards (14 total) |
 
 Spell roster (data comes in M1+):
 - Thwackwort (knockback)

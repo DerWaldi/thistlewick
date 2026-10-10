@@ -14,6 +14,8 @@ export interface ColliderInfo {
   cameraIgnore?: boolean;
   /** Ledges on this collider can't be grabbed. */
   noGrab?: boolean;
+  /** Spells see (and fly) through it: grilles and bars that block bodies but not sight. */
+  seeThrough?: boolean;
 }
 
 export class Physics {

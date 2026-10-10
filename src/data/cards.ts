@@ -19,7 +19,7 @@ const FOUNDER_BG: [string, string] = ['#f2d48a', '#b9823e'];
 const ODDBALL_BG: [string, string] = ['#c9b6e8', '#6e4f9a'];
 const CREATURE_BG: [string, string] = ['#b8e0a8', '#4f8a5a'];
 
-/** The Fabled Folk collection: ten cards in the first-year slice. */
+/** The Fabled Folk collection. Numbers are fixed once released; new cards go on the end. */
 export const CARDS: CardDef[] = [
   {
     id: 'mother-wortle',
@@ -120,6 +120,46 @@ export const CARDS: CardDef[] = [
     text: 'Follows anyone carrying both a candle and something to read. Will sit on the page you are on, which is helpful until you need to turn it.',
     hint: 'Atop the great chandelier of the Lantern Hall.',
     portrait: { bg: ['#f5e6b8', '#9a6a2e'], kind: 'moth' },
+  },
+  {
+    id: 'lumley-lockjaw',
+    number: 11,
+    name: 'Lumley Lockjaw',
+    title: 'Locksmith to Three Kings and a Duck',
+    set: 'Founders',
+    text: 'Built every lock in Thistlewick and hid each key somewhere only he would think of. He has since forgotten all of them, and says it is the happiest he has ever been.',
+    hint: 'Locked away in Hollyhock Court, until you learn to ask nicely.',
+    portrait: { bg: FOUNDER_BG, kind: 'person', skin: '#e8b48e', robe: '#3a4a5a', hair: '#9a9a9a', hat: 'cap', hatColor: '#5a3a22', beard: true, prop: 'key', hairStyle: 'short', collar: 'plain', expression: 'smile', jewel: '#c99a3e' },
+  },
+  {
+    id: 'ottoline-quince',
+    number: 12,
+    name: 'Ottoline Quince',
+    title: 'Never Met a Lock She Couldn’t Talk Round',
+    set: 'Oddballs',
+    text: 'Once talked the Royal Treasury open with nothing but a compliment and a cough drop. She gave everything back, alphabetised.',
+    hint: 'A reward for a Locks & Latches trial well done.',
+    portrait: { bg: ODDBALL_BG, kind: 'person', skin: '#f0c9a0', robe: '#2f5a6a', hair: '#8a3a22', hat: 'tall', hatColor: '#24323f', glasses: true, prop: 'key', hairStyle: 'bun', collar: 'ruff', expression: 'smirk', jewel: '#c99a3e', eyes: '#3a6a5a' },
+  },
+  {
+    id: 'snapcasket',
+    number: 13,
+    name: 'The Snapcasket',
+    title: 'A Chest With Opinions',
+    set: 'Creatures',
+    text: 'Looks like a perfectly good chest. Is not. Always check for teeth before storing your socks.',
+    hint: 'Hidden behind a loose brick, deep in the Latchkin Vaults.',
+    portrait: { bg: ['#e8c9a0', '#7a4a26'], kind: 'snapcasket' },
+  },
+  {
+    id: 'brass-mouse',
+    number: 14,
+    name: 'The Brass Mouse',
+    title: 'Collector of Keys',
+    set: 'Creatures',
+    text: 'A clockwork mouse that gathers keys and never, ever gives them back. Somewhere in the walls it has a nest of nine hundred.',
+    hint: 'In a padlocked cabinet in the Lantern Hall.',
+    portrait: { bg: ['#f2e2b8', '#8a6a3a'], kind: 'mouse' },
   },
 ];
 

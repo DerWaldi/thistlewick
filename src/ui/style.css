@@ -468,7 +468,7 @@ kbd {
 }
 
 .album-book {
-  width: min(900px, calc(100vw - 32px));
+  width: min(980px, calc(100vw - 32px));
   max-height: calc(100vh - 32px);
   overflow: auto;
   padding: 18px 22px;
@@ -499,11 +499,18 @@ kbd {
   color: var(--ink);
 }
 
+/* Seven across keeps two full rows (14 cards) and the card text on screen at once. */
 #album-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 10px;
   margin: 14px 0;
+}
+
+@media (max-width: 700px) {
+  #album-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 
 .album-card {

@@ -88,6 +88,7 @@ export class Game {
     // Autosave on meaningful progress; sweets are batched.
     for (const e of ['card', 'secret', 'checkpoint', 'learned', 'levelLoaded', 'purchase'] as const) this.events.on(e, () => this.save());
     this.events.on('sweet', () => (this.dirty = true));
+    for (const e of ['unlock', 'chestOpen'] as const) this.events.on(e, () => (this.dirty = true));
     this.events.on('points', () => (this.dirty = true));
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden') this.save();

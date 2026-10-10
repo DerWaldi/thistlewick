@@ -1,5 +1,7 @@
 import { Vector3 } from 'three';
 import { Gnarling } from '../entities/gnarling';
+import { Chest, Drawbridge, Padlock, VaultDoor } from '../entities/locks';
+import { Snapcasket } from '../entities/snapcasket';
 import { Bookshelf, CardPickup, Door, Hourglasses, Npc, SecretVolume, SortingLantern, SpringPad, Tapestry } from '../entities/hubObjects';
 import { Checkpoint, Gate, KnockSwitch, Plate } from '../entities/mechanisms';
 import { PushBlock } from '../entities/pushBlock';
@@ -40,6 +42,23 @@ const FACTORIES: { [T in EntityType]: Factory<T> } = {
       return null;
     }
     return new Rattlecoat(s, c);
+  },
+  padlock: (s, c) => {
+    if (s.persist && c.state.flags.has(`unlocked:${s.id}`)) {
+      c.signals.set(s.id, true);
+      return null;
+    }
+    return new Padlock(s, c);
+  },
+  chest: (s, c) => new Chest(s, c),
+  drawbridge: (s, c) => new Drawbridge(s, c),
+  vaultDoor: (s, c) => new VaultDoor(s, c),
+  snapcasket: (s, c) => {
+    if (c.state.flags.has(`down:${s.id}`)) {
+      c.signals.set(s.id, true);
+      return null;
+    }
+    return new Snapcasket(s, c);
   },
   sweet: (s, c, id) => {
     if (!c.state.collected.has(id)) c.sweets.add(s.kind, new Vector3(...s.pos), id);

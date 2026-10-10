@@ -166,6 +166,14 @@ export class RuneMarker {
     parent.add(this.sprite);
   }
 
+  /** Targets whose spell changes (a Snapcasket: Latchkin while snapping, Thwackwort once locked). */
+  setSpell(spell: SpellId): void {
+    if (spell === this.spell) return;
+    this.spell = spell;
+    this.material.map = runeTexture(spell, this.unknown);
+    this.material.needsUpdate = true;
+  }
+
   setUnknown(unknown: boolean): void {
     if (unknown === this.unknown) return;
     this.unknown = unknown;

@@ -58,6 +58,42 @@ export class Sfx {
     });
     events.on('signal', ({ on }) => this.tone(on ? 880 : 440, on ? 1320 : 330, 0.08, 'square', 0.05));
     events.on('switchTick', () => this.tone(1500, 1500, 0.04, 'square', 0.05));
+    // Locks: a rising two-note chime and a click; relocking is a dull clack.
+    events.on('unlock', () => {
+      this.tone(1900, 1900, 0.04, 'square', 0.05);
+      setTimeout(() => this.tone(784, 1046, 0.18, 'triangle', 0.1), 40);
+      setTimeout(() => this.tone(1046, 1568, 0.25, 'sine', 0.08), 140);
+    });
+    events.on('relock', () => {
+      this.tone(600, 300, 0.08, 'square', 0.07);
+      this.thud(0.3, 220);
+    });
+    events.on('chestOpen', () => {
+      this.tone(220, 330, 0.3, 'sawtooth', 0.03);
+      [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => this.tone(f, f, 0.25, 'sine', 0.09), 200 + i * 70));
+    });
+    events.on('bridgeMove', () => {
+      this.tone(110, 70, 1.4, 'sawtooth', 0.04);
+      this.hiss(1.2, 300, 0.15);
+    });
+    events.on('vaultOpen', () => {
+      this.thud(1, 60);
+      this.tone(70, 55, 2, 'sawtooth', 0.06);
+      setTimeout(() => [392, 523, 659, 784].forEach((f, i) => setTimeout(() => this.tone(f, f, 0.6, 'triangle', 0.08), i * 110)), 900);
+    });
+    events.on('snapNotice', () => this.tone(300, 520, 0.12, 'square', 0.06));
+    events.on('snapBite', () => {
+      this.thud(0.5, 160);
+      this.tone(900, 400, 0.08, 'square', 0.06);
+    });
+    events.on('snapLocked', () => {
+      this.tone(1900, 1900, 0.04, 'square', 0.05);
+      this.tone(500, 380, 0.3, 'triangle', 0.08);
+    });
+    events.on('snapBanished', () => {
+      this.thud(0.8, 120);
+      this.tone(700, 1400, 0.3, 'triangle', 0.08);
+    });
     // A bronze bell: a strike plus inharmonic partials that ring on and fade at different rates.
     events.on('bellRing', () => {
       this.tone(2600, 1800, 0.05, 'triangle', 0.08);

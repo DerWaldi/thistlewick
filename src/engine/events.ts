@@ -31,6 +31,15 @@ export interface GameEvents {
   gateMove: { pos: Vector3; opening: boolean };
   switchTick: { pos: Vector3 };
   bellRing: { pos: Vector3 };
+  unlock: { pos: Vector3 };
+  relock: { pos: Vector3 };
+  chestOpen: { pos: Vector3 };
+  bridgeMove: { pos: Vector3 };
+  vaultOpen: { pos: Vector3 };
+  snapNotice: { pos: Vector3 };
+  snapBite: { pos: Vector3 };
+  snapLocked: { pos: Vector3 };
+  snapBanished: { pos: Vector3 };
   gnarlingNotice: { pos: Vector3 };
   gnarlingStunned: { pos: Vector3 };
   gnarlingBanished: { pos: Vector3 };

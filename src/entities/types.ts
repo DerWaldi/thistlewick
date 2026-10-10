@@ -41,7 +41,17 @@ export type EntitySpec = SpecBase &
         /** Signal that's on while the block has dropped below its starting height (into a pit). */
         sunkSignal?: string;
       }
-    | { type: 'knockSwitch'; id: string; pos: V3; yaw: number; timed?: number; style?: 'plate' | 'book' | 'target' | 'bell'; latch?: boolean }
+    | {
+        type: 'knockSwitch';
+        id: string;
+        pos: V3;
+        yaw: number;
+        timed?: number;
+        style?: 'plate' | 'book' | 'target' | 'bell';
+        latch?: boolean;
+        /** A latched switch in the castle that stays thrown across visits (e.g. a portcullis winch). */
+        persist?: boolean;
+      }
     | { type: 'plate'; id: string; pos: V3 }
     | { type: 'gate'; pos: V3; yaw: number; width: number; height: number; when: string[] }
     | { type: 'sweet'; kind: SweetKind; pos: V3 }
@@ -101,6 +111,35 @@ export type EntitySpec = SpecBase &
       }
     | { type: 'star'; id: string; pos: V3; script?: string }
     | { type: 'rattlecoat'; id: string; pos: V3; yaw: number; arena: { min: V3; max: V3 } }
+    | {
+        type: 'padlock';
+        /** Signal turned on while it's open. */
+        id: string;
+        pos: V3;
+        /** The way it faces (out from whatever it hangs on). */
+        yaw: number;
+        /** Snaps shut again after this many seconds. */
+        relock?: number;
+        /** Stays open across visits (castle locks). */
+        persist?: boolean;
+        /** Rides round a wheel in the plane facing `yaw`; `pos` is then ignored. */
+        orbit?: { center: V3; radius: number; speed: number; phase: number };
+      }
+    | {
+        type: 'chest';
+        /** Remembered once opened. */
+        id: string;
+        pos: V3;
+        yaw: number;
+        style?: 'chest' | 'box' | 'cabinet';
+        card?: string;
+        sweets?: [SweetKind, number][];
+        /** Signal turned on once it's open. */
+        signal?: string;
+      }
+    | { type: 'drawbridge'; pos: V3; yaw: number; length: number; width: number; when: string[] }
+    | { type: 'vaultDoor'; pos: V3; yaw: number; radius: number; when: string[] }
+    | { type: 'snapcasket'; id: string; pos: V3; yaw?: number; wander?: number }
   );
 
 export type EntityType = EntitySpec['type'];

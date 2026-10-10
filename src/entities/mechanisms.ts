@@ -144,6 +144,11 @@ export class KnockSwitch implements Entity, SpellTarget {
     this.marker = new RuneMarker(ctx.scene, 'thwackwort', 0.6);
     this.marker.sprite.position.copy(this.center).addScaledVector(out, 0.5).add(new Vector3(0, 0.75, 0));
     ctx.targets.add(this);
+    if (spec.persist && ctx.state.flags.has(`on:${spec.id}`)) {
+      this.on = true;
+      this.spin = Math.PI / 2;
+      ctx.signals.set(spec.id, true);
+    }
   }
 
   aimPoint(out: Vector3): Vector3 {
@@ -176,6 +181,7 @@ export class KnockSwitch implements Entity, SpellTarget {
   private set(on: boolean): void {
     this.on = on;
     this.ctx.signals.set(this.spec.id, on);
+    if (on && this.spec.persist) this.ctx.state.flags.add(`on:${this.spec.id}`);
   }
 
   fixedUpdate(dt: number): void {
@@ -333,12 +339,24 @@ export class Gate implements Entity {
     );
     ctx.physics.setInfo(this.collider, { noGrab: true });
 
-    const update = () => (this.wantOpen = ctx.signals.all(spec.when));
+    const update = () => {
+      this.wantOpen = ctx.signals.all(spec.when);
+      // Already open when the level loads (a remembered switch): no grinding up on arrival.
+      if (this.fresh && this.wantOpen) this.snapOpen();
+    };
     ctx.signals.onChange(spec.when, update);
     update();
   }
 
+  private fresh = true;
+  private snapOpen(): void {
+    this.open = this.prevOpen = 1;
+    const h = this.spec.height;
+    this.collider.setTranslation({ x: this.base.x, y: this.base.y + h / 2 + (h - 0.15), z: this.base.z });
+  }
+
   fixedUpdate(dt: number): void {
+    this.fresh = false;
     this.prevOpen = this.open;
     const h = this.spec.height;
     const target = this.wantOpen ? 1 : 0;

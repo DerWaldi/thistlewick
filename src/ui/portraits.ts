@@ -45,6 +45,12 @@ export function paintPortrait(g: CanvasRenderingContext2D, s: PortraitSpec, w: n
     case 'lantern':
       lantern(g, cx, w, h);
       break;
+    case 'snapcasket':
+      snapcasket(g, cx, w, h);
+      break;
+    case 'mouse':
+      mouse(g, cx, w, h);
+      break;
   }
   if (s.kind !== 'lantern') varnish(g, w, h, rnd);
 }
@@ -785,4 +791,106 @@ function lantern(g: CanvasRenderingContext2D, cx: number, w: number, h: number):
   g.beginPath();
   g.arc(cx, h * 0.6, 8 * u, 0.3, Math.PI - 0.3);
   g.stroke();
+}
+
+function snapcasket(g: CanvasRenderingContext2D, cx: number, w: number, h: number): void {
+  const u = w / 160;
+  blob(g, cx, h * 0.88, w * 0.36, h * 0.05, 'rgba(20,10,5,0.35)');
+  // Body.
+  const bx = cx - w * 0.3;
+  const by = h * 0.56;
+  const bw = w * 0.6;
+  const bh = h * 0.3;
+  const body = g.createLinearGradient(bx, 0, bx + bw, 0);
+  body.addColorStop(0, '#8a5a36');
+  body.addColorStop(1, '#5a3a20');
+  g.fillStyle = body;
+  g.fillRect(bx, by, bw, bh);
+  g.fillStyle = '#3a3340';
+  g.fillRect(bx - 3 * u, by + bh * 0.25, bw + 6 * u, 6 * u);
+  g.fillRect(bx + bw * 0.15, by, 6 * u, bh);
+  g.fillRect(bx + bw * 0.85 - 6 * u, by, 6 * u, bh);
+  // Open mouth and the lid tipped back.
+  g.fillStyle = '#5a1420';
+  g.beginPath();
+  g.moveTo(bx, by);
+  g.lineTo(bx + bw, by);
+  g.lineTo(bx + bw * 0.95, by - h * 0.16);
+  g.lineTo(bx + bw * 0.05, by - h * 0.16);
+  g.fill();
+  const lid = g.createLinearGradient(0, by - h * 0.32, 0, by - h * 0.14);
+  lid.addColorStop(0, '#a06a3e');
+  lid.addColorStop(1, '#6e4226');
+  g.fillStyle = lid;
+  g.beginPath();
+  g.ellipse(cx, by - h * 0.17, bw * 0.52, h * 0.1, 0, Math.PI, Math.PI * 2);
+  g.fill();
+  g.fillRect(bx - bw * 0.02, by - h * 0.18, bw * 1.04, h * 0.03);
+  // Teeth top and bottom.
+  g.fillStyle = '#f3ead8';
+  for (let i = 0; i < 7; i++) {
+    const x = bx + bw * (0.08 + i * 0.14);
+    g.beginPath();
+    g.moveTo(x - 5 * u, by);
+    g.lineTo(x + 5 * u, by);
+    g.lineTo(x, by - 10 * u);
+    g.fill();
+    g.beginPath();
+    g.moveTo(x - 5 * u + 7 * u, by - h * 0.15);
+    g.lineTo(x + 5 * u + 7 * u, by - h * 0.15);
+    g.lineTo(x + 7 * u, by - h * 0.15 + 10 * u);
+    g.fill();
+  }
+  // Glowing eyes in the dark of the lid, and a lolling tongue.
+  for (const side of [-1, 1]) eye(g, cx + side * 14 * u, by - h * 0.09, 6 * u, '#1b120c', '#ffd84a');
+  blob(g, cx + 12 * u, by + 6 * u, 12 * u, 6 * u, '#e0607a');
+  blob(g, cx + 10 * u, by + 4 * u, 4 * u, 2 * u, 'rgba(255,255,255,0.4)');
+}
+
+function mouse(g: CanvasRenderingContext2D, cx: number, w: number, h: number): void {
+  const u = w / 160;
+  blob(g, cx, h * 0.84, w * 0.34, h * 0.05, 'rgba(20,10,5,0.35)');
+  // A long curling tail.
+  g.strokeStyle = '#a07a3a';
+  g.lineWidth = 3 * u;
+  g.beginPath();
+  g.moveTo(cx - w * 0.22, h * 0.72);
+  g.bezierCurveTo(cx - w * 0.45, h * 0.7, cx - w * 0.42, h * 0.45, cx - w * 0.3, h * 0.42);
+  g.stroke();
+  orb(g, cx, h * 0.66, w * 0.27, h * 0.16, '#c99a3e');
+  // Riveted seams.
+  g.strokeStyle = 'rgba(90,60,20,0.6)';
+  g.lineWidth = 1.5 * u;
+  g.beginPath();
+  g.ellipse(cx, h * 0.66, w * 0.2, h * 0.16, 0, Math.PI * 1.1, Math.PI * 1.9);
+  g.stroke();
+  for (let i = 0; i < 5; i++) blob(g, cx - w * 0.12 + i * w * 0.06, h * 0.56, 1.6 * u, 1.6 * u, '#7a5a20');
+  // Head, ears, a pink nose, whiskers.
+  orb(g, cx + w * 0.24, h * 0.62, w * 0.12, h * 0.09, '#d4a94a');
+  orb(g, cx + w * 0.2, h * 0.5, w * 0.07, w * 0.07, '#d4a94a');
+  blob(g, cx + w * 0.2, h * 0.5, w * 0.04, w * 0.04, '#e8a0a0');
+  blob(g, cx + w * 0.35, h * 0.63, 4 * u, 4 * u, '#e0607a');
+  eye(g, cx + w * 0.27, h * 0.59, 4 * u, '#1b120c', '#1b120c');
+  g.strokeStyle = '#5a3a1e';
+  g.lineWidth = u;
+  for (const dy of [-3, 0, 3]) {
+    g.beginPath();
+    g.moveTo(cx + w * 0.34, h * 0.64);
+    g.lineTo(cx + w * 0.46, h * 0.64 + dy * u * 2);
+    g.stroke();
+  }
+  // The wind-up key on its back, and a stolen key in its mouth.
+  g.fillStyle = '#e8c25a';
+  g.fillRect(cx - 3 * u, h * 0.42, 6 * u, h * 0.08);
+  blob(g, cx - 9 * u, h * 0.41, 8 * u, 6 * u, '#e8c25a');
+  blob(g, cx + 9 * u, h * 0.41, 8 * u, 6 * u, '#e8c25a');
+  g.strokeStyle = '#b0b8c0';
+  g.lineWidth = 3 * u;
+  g.beginPath();
+  g.arc(cx + w * 0.42, h * 0.7, 6 * u, 0, Math.PI * 2);
+  g.moveTo(cx + w * 0.36, h * 0.7);
+  g.lineTo(cx + w * 0.3, h * 0.72);
+  g.stroke();
+  // Little wheels for feet.
+  for (const x of [-0.12, 0.12]) blob(g, cx + w * x, h * 0.8, 6 * u, 6 * u, '#3a3340');
 }

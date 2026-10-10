@@ -119,7 +119,7 @@ export class Caster {
 
   private visible(from: Vector3, to: Vector3, dist: number, t: SpellTarget): boolean {
     const dir = new Vector3().subVectors(to, from).divideScalar(Math.max(dist, 1e-4));
-    const hit = this.physics.raycast(from, dir, dist, this.player.collider);
+    const hit = this.physics.raycast(from, dir, dist, this.player.collider, (c) => !this.physics.getInfo(c)?.seeThrough);
     return !hit || t.owns(hit.collider) || hit.distance > dist - t.radius * 0.8;
   }
 
