@@ -21,15 +21,19 @@ export function mergeChildren(group: Group, keep: Object3D[] = []): void {
     const geos: BufferGeometry[] = meshes.map((m) => {
       m.updateMatrix();
       const g = (m.geometry.index ? m.geometry.toNonIndexed() : m.geometry.clone()).applyMatrix4(m.matrix);
-      for (const name of Object.keys(g.attributes)) if (name !== 'position' && name !== 'normal' && name !== 'color') g.deleteAttribute(name);
+      for (const name of Object.keys(g.attributes)) {
+        if (name !== 'position' && name !== 'normal' && name !== 'color' && name !== 'pattern') g.deleteAttribute(name);
+      }
       return g;
     });
-    // Only merge geometries with matching attribute sets (vertex-coloured vs not).
-    const withColor = geos.filter((g) => g.getAttribute('color'));
-    const without = geos.filter((g) => !g.getAttribute('color'));
+    // Only merge geometries with matching attribute sets.
+    const groups = new Map<string, BufferGeometry[]>();
+    for (const g of geos) {
+      const key = Object.keys(g.attributes).sort().join(',');
+      groups.set(key, [...(groups.get(key) ?? []), g]);
+    }
     const castShadow = meshes.some((m) => m.castShadow);
-    for (const set of [withColor, without]) {
-      if (!set.length) continue;
+    for (const set of groups.values()) {
       const merged = new Mesh(set.length === 1 ? set[0] : mergeGeometries(set)!, mat);
       merged.castShadow = castShadow;
       merged.receiveShadow = true;

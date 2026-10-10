@@ -1,3 +1,4 @@
+import { HOUSES } from '../data/houses';
 import { SPELLS } from '../data/spells';
 import { SWEETS } from '../data/sweets';
 import type { EventBus } from '../engine/events';
@@ -6,24 +7,36 @@ import type { GameState } from '../state/gameState';
 
 const $ = (id: string) => document.getElementById(id)!;
 
-/** DOM overlay: stamina pips, sweets counter, target hint, charge ring and toasts. */
+export interface HudSources {
+  state(): GameState;
+  caster(): Caster | null;
+  prompt(): string | null;
+  secretsIn(area: string): { found: number; total: number };
+}
+
+/**
+ * DOM overlay: stamina pips, sweets, house points, target hint, charge ring,
+ * interact prompt, area banner and toasts.
+ */
 export class Hud {
   private stamina = $('hud-stamina');
   private sweetsChip = $('hud-sweets');
   private sweetsN = $('hud-sweets-n');
+  private house = $('hud-house');
+  private houseName = $('hud-house-name');
+  private housePts = $('hud-house-pts');
   private target = $('hud-target');
   private ring = $('charge-ring');
   private crosshair = $('crosshair');
   private toasts = $('toasts');
   private hurt = $('hurt-flash');
-  private shownStamina = -1;
-  private shownMax = -1;
-  private shownSweets = -1;
-  private shownTarget = '';
+  private banner = $('area-banner');
+  private promptEl = $('interact-prompt');
+  private shown = { stamina: -1, max: -1, sweets: -1, target: '', house: '', pts: -1, prompt: '' };
+  private bannerTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
-    private state: GameState,
-    private caster: Caster,
+    private src: HudSources,
     events: EventBus,
   ) {
     $('hud').classList.remove('hidden');
@@ -39,6 +52,18 @@ export class Hud {
       (this.sweetsChip.querySelector('.sweet-icon') as HTMLElement).style.background =
         `radial-gradient(circle at 35% 35%, #fff, ${SWEETS[kind].color} 55%, #222)`;
     });
+    events.on('points', ({ house, amount, reason }) => this.toast(`+${amount} ${HOUSES[house].name} for ${reason}`));
+    events.on('areaEnter', ({ id, name }) => this.showBanner(name, this.src.secretsIn(id)));
+    events.on('secret', ({ found, total }) => this.toast(`Secret found! (${found}/${total} here)`));
+    events.on('dialogueOpen', ({ open }) => document.body.classList.toggle('in-dialogue', open));
+  }
+
+  showBanner(name: string, secrets: { found: number; total: number }): void {
+    (this.banner.querySelector('.name') as HTMLElement).textContent = name;
+    (this.banner.querySelector('.sub') as HTMLElement).textContent = secrets.total ? `Secrets found ${secrets.found}/${secrets.total}` : '';
+    this.banner.classList.add('show');
+    if (this.bannerTimer) clearTimeout(this.bannerTimer);
+    this.bannerTimer = setTimeout(() => this.banner.classList.remove('show'), 3200);
   }
 
   toast(text: string, kind: 'info' | 'hint' = 'info'): void {
@@ -49,49 +74,71 @@ export class Hud {
     el.textContent = text;
     this.toasts.appendChild(el);
     while (this.toasts.children.length > 3) this.toasts.firstElementChild!.remove();
-    setTimeout(() => el.classList.add('out'), 2200);
-    setTimeout(() => el.remove(), 2700);
+    setTimeout(() => el.classList.add('out'), 2600);
+    setTimeout(() => el.remove(), 3100);
   }
 
   update(): void {
-    const s = this.state;
-    if (s.stamina !== this.shownStamina || s.maxStamina !== this.shownMax) {
-      const lost = s.stamina < this.shownStamina;
+    const s = this.src.state();
+    const sh = this.shown;
+    if (s.stamina !== sh.stamina || s.maxStamina !== sh.max) {
+      const lost = s.stamina < sh.stamina;
       this.stamina.innerHTML = '';
       for (let i = 0; i < s.maxStamina; i++) {
         const pip = document.createElement('div');
         pip.className = 'pip' + (i >= s.stamina ? ' empty' : '') + (lost && i === s.stamina ? ' lost' : '');
         this.stamina.appendChild(pip);
       }
-      this.shownStamina = s.stamina;
-      this.shownMax = s.maxStamina;
+      sh.stamina = s.stamina;
+      sh.max = s.maxStamina;
     }
-    if (s.sweets !== this.shownSweets) {
+    if (s.sweets !== sh.sweets) {
       this.sweetsN.textContent = String(s.sweets);
-      this.shownSweets = s.sweets;
+      sh.sweets = s.sweets;
+    }
+    const houseId = s.house ?? '';
+    if (houseId !== sh.house || (s.house && s.housePoints[s.house] !== sh.pts)) {
+      this.house.classList.toggle('hidden', !s.house);
+      if (s.house) {
+        const h = HOUSES[s.house];
+        this.house.style.setProperty('--hc', h.color);
+        this.house.style.setProperty('--hc-trim', h.trim);
+        this.houseName.textContent = h.name;
+        this.housePts.textContent = String(s.housePoints[s.house]);
+        sh.pts = s.housePoints[s.house];
+      }
+      sh.house = houseId;
     }
 
-    const t = this.caster.current;
+    const caster = this.src.caster();
+    const t = caster?.current ?? null;
     let html = '';
-    if (t) {
+    if (t && caster) {
       const def = SPELLS[t.spell];
-      html = this.caster.currentUnknown
+      html = caster.currentUnknown
         ? `<span class="unknown">${def.name} — not learned yet</span>`
         : `<span style="color:${def.color}">${def.name}</span>`;
     }
-    if (html !== this.shownTarget) {
+    if (html !== sh.target) {
       if (html) this.target.innerHTML = html;
       this.target.classList.toggle('show', !!html);
-      this.shownTarget = html;
+      sh.target = html;
     }
-    this.crosshair.classList.toggle('locked', !!t && !this.caster.currentUnknown);
+    this.crosshair.classList.toggle('locked', !!t && !caster?.currentUnknown);
 
-    const charging = this.caster.charging;
+    const charging = !!caster?.charging;
     this.ring.classList.toggle('show', charging);
-    if (charging) {
-      this.ring.style.setProperty('--p', this.caster.charge.toFixed(3));
+    if (charging && caster) {
+      this.ring.style.setProperty('--p', caster.charge.toFixed(3));
       if (t) this.ring.style.setProperty('--c', SPELLS[t.spell].color);
-      this.ring.classList.toggle('full', this.caster.charge >= 1);
+      this.ring.classList.toggle('full', caster.charge >= 1);
+    }
+
+    const prompt = this.src.prompt() ?? '';
+    if (prompt !== sh.prompt) {
+      if (prompt) (this.promptEl.querySelector('span') as HTMLElement).textContent = prompt;
+      this.promptEl.classList.toggle('show', !!prompt);
+      sh.prompt = prompt;
     }
   }
 }

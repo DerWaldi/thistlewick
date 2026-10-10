@@ -10,7 +10,7 @@ import {
   Quaternion,
   SphereGeometry,
   Vector3,
-  type Scene,
+  type Object3D,
 } from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { SWEETS, type SweetKind } from '../data/sweets';
@@ -21,6 +21,8 @@ import type { GameState } from '../state/gameState';
 
 interface Sweet {
   kind: SweetKind;
+  /** Placed sweets have an id so collecting them is remembered. */
+  id?: string;
   pos: Vector3;
   home: Vector3;
   vel: Vector3;
@@ -68,7 +70,7 @@ export class SweetField {
   private time = 0;
 
   constructor(
-    scene: Scene,
+    scene: Object3D,
     private physics: Physics,
     private player: PlayerController,
     private state: GameState,
@@ -97,9 +99,10 @@ export class SweetField {
     return this.sweets.length;
   }
 
-  add(kind: SweetKind, pos: Vector3): void {
+  add(kind: SweetKind, pos: Vector3, id?: string): void {
     this.sweets.push({
       kind,
+      id,
       pos: pos.clone(),
       home: pos.clone(),
       vel: new Vector3(),
@@ -139,7 +142,7 @@ export class SweetField {
       const d = s.pos.distanceTo(target);
       if (canCollect && s.delay <= 0) {
         if (d < 0.75) {
-          this.state.collectSweet(s.kind, s.pos.clone());
+          this.state.collectSweet(s.kind, s.pos.clone(), s.id);
           return false;
         }
         if (d < magnet) s.magnet = true;

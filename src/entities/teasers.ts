@@ -16,7 +16,7 @@ export class Teaser implements Entity, SpellTarget {
   readonly spell;
   readonly marker: RuneMarker;
   readonly radius = 0.8;
-  private collider: RAPIER.Collider;
+  private collider: RAPIER.Collider | null = null;
   private group = new Group();
   private lid: Group | null = null;
   private vines: Group | null = null;
@@ -37,6 +37,9 @@ export class Teaser implements Entity, SpellTarget {
       this.center = new Vector3(x, y + 0.45, z);
       this.buildChest();
       this.collider = ctx.physics.addStaticBox(this.center, new Vector3(0.6, 0.45, 0.42), q);
+    } else if (spec.prop === 'marker') {
+      // Just a rune hanging over something (a pool to freeze, a rope to burn later).
+      this.center = new Vector3(x, y, z);
     } else {
       this.center = new Vector3(x, y + 1.5, z);
       this.buildVines();
@@ -44,7 +47,7 @@ export class Teaser implements Entity, SpellTarget {
     }
     ctx.scene.add(this.group);
     this.marker = new RuneMarker(ctx.scene, spec.spell, 0.7);
-    this.marker.sprite.position.copy(this.center).add(new Vector3(0, spec.prop === 'chest' ? 0.9 : 0.4, 0));
+    this.marker.sprite.position.copy(this.center).add(new Vector3(0, spec.prop === 'chest' ? 0.9 : spec.prop === 'marker' ? 0.6 : 0.4, 0));
     ctx.targets.add(this);
   }
 
@@ -113,7 +116,7 @@ export class Teaser implements Entity, SpellTarget {
     return !this.done;
   }
   owns(c: RAPIER.Collider): boolean {
-    return c.handle === this.collider.handle;
+    return !!this.collider && c.handle === this.collider.handle;
   }
 
   onSpell(_hit: SpellHit): void {
@@ -122,7 +125,7 @@ export class Teaser implements Entity, SpellTarget {
     if (this.spec.prop === 'chest') {
       this.ctx.sweets.burst('bramble', this.center.clone().add(new Vector3(0, 0.4, 0)), 2);
       this.ctx.sweets.burst('fizzwort', this.center.clone().add(new Vector3(0, 0.4, 0)), 5);
-    } else {
+    } else if (this.collider) {
       this.ctx.physics.world.removeCollider(this.collider, false);
       this.ctx.fx.burst(this.center, 30, new Color('#ff8a3c'), 3, 0.2, 2);
     }

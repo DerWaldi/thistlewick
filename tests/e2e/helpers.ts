@@ -15,6 +15,15 @@ export interface TwState {
   targetUnknown: boolean;
   charging: boolean;
   checkpoint: [number, number, number] | null;
+  level: string;
+  area: string | null;
+  house: string | null;
+  housePoints: Record<string, number>;
+  cards: string[];
+  secrets: string[];
+  known: string[];
+  focus: string | null;
+  dialogueOpen: boolean;
 }
 
 /** Shape of `window.__tw` as seen from tests (see src/main.ts). */
@@ -29,6 +38,13 @@ export interface TwApi {
   cast(hold?: number): void;
   learn(spell: string): void;
   signal(id: string): boolean;
+  interact(): void;
+  choose(...indices: number[]): void;
+  idle(): Promise<void>;
+  newGame(): void;
+  continueGame(): boolean;
+  save(): void;
+  loadLevel(id: string, spawn?: string): void;
   game: unknown;
 }
 
@@ -38,10 +54,11 @@ declare global {
   }
 }
 
-export async function boot(page: Page): Promise<void> {
+/** Load the game in test mode. Default: the gym sandbox. Use '?test&new' for a fresh hub game. */
+export async function boot(page: Page, query = '?test&level=gym'): Promise<void> {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
-  await page.goto('/?test');
+  await page.goto('/' + query);
   await page.waitForFunction(() => !!window.__tw, null, { timeout: 30_000 });
   if (errors.length) throw new Error('Page errors: ' + errors.join('\n'));
 }

@@ -531,7 +531,8 @@ export class PlayerController {
       // Probe downward just behind the wall face to find the top surface.
       const top = this.pos.y + l.maxAbove + 0.3;
       const probe = new Vector3(wall.point.x - n.x * 0.15, top, wall.point.z - n.z * 0.15);
-      const down = this.physics.raycast(probe, new Vector3(0, -1, 0), l.maxAbove + 0.3 - l.minAbove, this.collider);
+      // A little past the bottom of the window, so a lip exactly at minAbove isn't missed.
+      const down = this.physics.raycast(probe, new Vector3(0, -1, 0), l.maxAbove + 0.3 - l.minAbove + 0.1, this.collider);
       if (!down || down.distance < 0.02 || down.normal.y < 0.8) return null;
       const lipY = down.point.y;
       if (lipY < this.pos.y + l.minAbove || lipY > this.pos.y + l.maxAbove) return null;

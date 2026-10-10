@@ -20,7 +20,9 @@ Screenshots from e2e runs go to `tests/e2e/__shots__/` (gitignored). Look at the
 ## URL flags
 
 - `?debug`: FPS/state readout and `window.__tw` in production builds. Both are always on in dev.
-- `?test`: the simulation only advances through `__tw.advance(seconds)`, which makes tests deterministic. The click-to-play overlay is hidden.
+- `?test`: the simulation only advances through `__tw.advance(seconds)`, which makes tests deterministic. There's no title screen, and dialogues auto-advance (choices come from `__tw.choose(...)`, otherwise 0). It continues the saved game if there is one, otherwise starts a new one.
+- `?test&new`: clears the save and starts a fresh game in the hub.
+- `?level=<id>`: sandbox mode in that level (e.g. `gym`). Fresh state, the level's `grants`, and nothing is saved. The M0/M1 specs boot with `?test&level=gym`.
 
 `window.__tw` (src/main.ts) provides:
 - `state()`: mode, feet, vel, camera, `cameraInsideSolid`, stamina, sweets, current target, charging, checkpoint
@@ -28,13 +30,19 @@ Screenshots from e2e runs go to `tests/e2e/__shots__/` (gitignored). Look at the
 - `pressJump()`, `teleport(x, y, z, facing?)`, `setCamera(yaw, pitch?)`, `advance(s)`
 - `aimAt(x, y, z)`: point the crosshair at a world position; `cast(holdSeconds)`: click or hold-and-release
 - `learn(spell)`, `signal(id)`
+- `interact()`: press E on the focused object; `choose(...indices)` queues dialogue choices; `idle()` resolves when the running dialogue script ends
+- `newGame()`, `continueGame()`, `save()`, `loadLevel(id, spawn)`
+- `state()` also reports level, area, house, points, cards, secrets, known spells, the interact prompt and whether a dialogue is open
 - `game`: the Game instance, for poking around
 
 ## Architecture
 
 ```
-src/main.ts            boot: Rapier init, Game, pointer lock, tuning panel, test API
-src/game.ts            wires systems together; fixedUpdate / frameUpdate order lives here
+src/main.ts            boot: title screen (Continue/New Game), pointer lock, tuning panel, test API
+src/game.ts            long-lived shell: renderer, input, sfx, HUD, dialogue, album, GameState, autosave,
+                       level loading with fades, dialogue scripts
+src/session.ts         LevelSession: everything for one loaded level (physics world, builder, entities,
+                       player, camera, caster, interactables, areas); dispose() tears it all down
 src/engine/            loop (fixed 60 Hz + interpolated render), input, physics (Rapier wrapper +
                        ColliderInfo metadata), render (renderer, sky, sun), events (typed bus), sfx, debug
 src/player/            controller (kinematic character), camera (orbit + spring arm + shoulder offset), model
@@ -47,9 +55,12 @@ src/entities/          level objects: pushBlock, mechanisms (knockSwitch, plate,
                        types.ts holds the EntitySpec union and WorldContext
 src/world/             builder (level DSL: geometry + entity specs), world (spawns specs via a factory map,
                        steps entities), signals (named on/off wires), materials, merge (draw-call merging)
-src/state/             GameState: stamina, sweets, known spells, checkpoint (persisted from M2)
-src/data/              all content and tuning: spells.ts, sweets.ts, tuning.ts, levels/*.ts
-src/ui/                hud.ts (stamina, sweets, target hint, charge ring, toasts) + style.css
+src/state/             GameState (stamina, sweets, spells, house + points, cards, secrets, collected ids,
+                       flags, checkpoint); save.ts (versioned localStorage save with migrations)
+src/data/              all content: spells, sweets, houses (+ sorting questions, point values), cards,
+                       characters (speakers), dialogues (scripts), portraits, tuning, levels/ (index.ts registry)
+src/ui/                hud, dialogue (typewriter + keyboard choices), album, portraits (procedural painter),
+                       cardArt (card faces/backs), style.css
 tests/e2e/             Playwright specs; helpers.ts has boot() and shot()
 ```
 
@@ -69,6 +80,23 @@ Each render frame then runs the camera, animator, level and entity visuals, cast
 - If the player doesn't know the spell yet, the target shows a grey rune and casting says so.
 - Spell *effects* live in the target's `onSpell`, not in the spell definition. A new spell therefore means: a `SPELLS` entry, a rune in `runes.ts`, and targets that respond to it.
 
+### Levels
+- A `LevelDef` (`src/world/level.ts`) has an id, a `build(b)` function, named `spawns` (must include `default`), named `areas` (boxes that share an id form one area), and optionally `grants`, `sandbox`, and an `intro` script.
+- Register new levels in `src/data/levels/index.ts`.
+- A `door` entity with `to: { level, spawn }` switches levels; the game fades out and in.
+- Everything level-specific is created by `LevelSession` and torn down by its `dispose()`. Event listeners go on the session's scoped bus, so they're removed too.
+- The hub (`src/data/levels/hub.ts`) has a map comment at the top. Keep it current.
+
+### Progress & saving
+- `GameState` is the single source of progress. Its helpers (`collectCard`, `findSecret`, `award`, `learn`...) emit events, and the HUD, sound and autosave react to those.
+- Placed sweets get stable ids from build order (`<level>/<type><index>[.<n>]`) and are remembered in `collected`. **Inserting new sweet specs before existing ones changes their ids**, so append new ones in a level instead.
+- Autosave runs on cards, secrets, checkpoints, learning a spell, level loads, and finished dialogue scripts; sweets and points are batched. Sandbox runs never save.
+- To change the save shape, bump `VERSION` in `save.ts` and add a migration.
+
+### Dialogue
+- Conversations are async scripts in `src/data/dialogues.ts`. They `say(lines)` (with optional `choices`) and may change progress; the Sorting Lantern, for example, sets your house.
+- NPCs, doors, the lantern and the hourglasses are `Interactable`s: E triggers them, and the HUD shows the nearest prompt.
+
 ### Adding a level object
 1. Add a variant to `EntitySpec` in `src/entities/types.ts`.
 2. Write the class (implement `Entity`, and `SpellTarget` if it can be cast at).
@@ -83,7 +111,10 @@ Levels place objects with `b.add({ type: ..., ... })`. Objects talk to each othe
 - **Gameplay metadata:** colliders carry it through `physics.setInfo(collider, ColliderInfo)`. That covers surface, bounce, mover, noGrab and cameraIgnore. Extend `ColliderInfo` rather than keeping parallel maps.
 - **Moving platforms:** these are *bodiless colliders* moved by hand. The player adds `mover.delta` itself and matches its vertical motion exactly; pressing down into the platform makes Rapier drop the horizontal part. Don't use kinematic rigid bodies for them: Rapier's character controller applies their velocity inconsistently. Push blocks use the same scheme.
 - **Enemies:** they use sensor colliders, so the player's controller and the spell line-of-sight rays pass through them. Contact is handled by distance checks.
-- **Draw calls:** props built from primitives should call `mergeChildren(group, animatedParts)`.
+- **Draw calls:** props built from primitives should call `mergeChildren(group, animatedParts)`. Static decoration in levels goes into the merged level mesh via `b.geo(geometry, color, pattern)`. Lantern glass is batched automatically. Keep hub views under about 60 draws without shadows.
+- **Surface patterns:** stone, planks, plaster and grid are drawn in the shader from world position (`materials.ts`), chosen per box with `pattern`. The builder's `defaultPattern` is 'stone' (the gym uses 'grid').
+- **Lights:** keep point lights to about 8 per level, and never add or remove lights at runtime: that triggers shader recompiles, which hitch. Use `lantern(pos, 0, 0, false)` for unlit decorative lanterns.
+- **Ledges must be flush:** the grab looks for a lip directly above a wall face, plus room to stand (at least about 0.9 m deep). Overhanging sills can't be grabbed.
 - **Events:** communicate through the typed `EventBus`. Add new events to `GameEvents` in `src/engine/events.ts`. SFX, particles and animation subscribe to events and never poll.
 - **Tuning:** all game-feel numbers live in `src/data/tuning.ts`. Edit them live in the panel (`` ` `` key); edits persist in localStorage (`thistlewick.tuning`). Use "Copy tuning JSON" to promote values to defaults.
 - **Data-driven content:** levels are TS modules in `src/data/levels/` that call the `LevelBuilder` DSL (`box`, `ramp`, `stairs`, `cylinder`, `pool`, `mover`, `bouncePad`, `lantern`, `label`, `prop`) and finish with `b.finish()`, which merges static geometry into one draw call.
@@ -96,8 +127,8 @@ Levels place objects with `b.add({ type: ..., ... })`. Objects talk to each othe
 |---|---|---|
 | M0 Feel gym | done | Controller, camera, procedural student, gym, tuning panel, e2e harness |
 | M1 Casting core | done | Spell targeting/aim assist/charge, Thwackwort, push blocks, switches, doors, health, checkpoints, sweets, HUD, Gnarling, SFX |
-| M2 Hub | next | Level pipeline, Lantern Hall / Crooked Corridor / Hollyhock Court / Cupboard, secrets, cards & album, save, house sorting & points |
-| M3 Lesson | | Gorse's lesson, the Thwackwort Trial dungeon (~5 min), Thistle Star, a post-lesson hub secret |
+| M2 Hub | done | Level pipeline, Lantern Hall / Crooked Corridor / Hollyhock Court / Cupboard, secrets, cards & album, save, house sorting & points |
+| M3 Lesson | next | Gorse's lesson, the Thwackwort Trial dungeon (~5 min), Thistle Star, a post-lesson hub secret |
 | M4 Slice complete | | Shop and upgrades, all 10 cards, 3 secrets, title/pause screens, CC0 music, polish, perf |
 
 Spell roster (data comes in M1+):

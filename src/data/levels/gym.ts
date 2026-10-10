@@ -1,4 +1,5 @@
 import { ConeGeometry, CylinderGeometry, Group, Mesh, Vector3 } from 'three';
+import type { LevelDef } from '../../world/level';
 import { paint, type LevelBuilder } from '../../world/builder';
 import { COLORS, worldMaterial } from '../../world/materials';
 
@@ -9,7 +10,17 @@ import { COLORS, worldMaterial } from '../../world/materials';
  *   ramps (-30..-18)   stairs (-10)   ice (-14..-4)   bounce pad (0,22)   gaps (8)   pool (14..26)
  *   corridor & low tunnel in the south-west, ledge walls south of spawn, movers in the east.
  */
-export function buildGym(b: LevelBuilder): { spawn: Vector3; yaw: number } {
+export const GYM: LevelDef = {
+  id: 'gym',
+  name: 'Feel Gym',
+  sandbox: true,
+  grants: ['thwackwort'],
+  spawns: { default: { pos: [0, 0, 0], yaw: 0 } },
+  build: buildGym,
+};
+
+function buildGym(b: LevelBuilder): void {
+  b.defaultPattern = 'grid';
   // ---------------------------------------------------------------- floor with a pool and a pit
   b.floor(-45, 45, -40, 55, {
     holes: [
@@ -131,7 +142,6 @@ export function buildGym(b: LevelBuilder): { spawn: Vector3; yaw: number } {
   b.lantern([10.5, 3.6, 12]);
 
   b.finish();
-  return { spawn: new Vector3(0, 0, 0), yaw: 0 };
 }
 
 /**

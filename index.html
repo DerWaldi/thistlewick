@@ -15,18 +15,48 @@
         <div id="hud-stamina" class="hud-chip"></div>
         <div id="hud-sweets" class="hud-chip"><span class="sweet-icon"></span><span id="hud-sweets-n">0</span></div>
         <div id="hud-target"></div>
+        <div id="hud-house" class="hud-chip hidden"><span class="crest"></span><span id="hud-house-name"></span><b id="hud-house-pts">0</b></div>
+        <div id="area-banner"><div class="name"></div><div class="sub"></div></div>
+        <div id="interact-prompt"><kbd>E</kbd> <span></span></div>
         <div id="toasts"></div>
         <div id="hurt-flash"></div>
+      </div>
+      <div id="dialogue">
+        <img id="dlg-portrait" alt="" />
+        <div class="dlg-body">
+          <div id="dlg-name"></div>
+          <div id="dlg-text"></div>
+          <div id="dlg-choices"></div>
+          <div id="dlg-more">▼</div>
+        </div>
+      </div>
+      <div id="album" class="hidden">
+        <div class="album-book panel">
+          <div class="album-head">
+            <h2>Fabled Folk</h2>
+            <div id="album-count"></div>
+            <button id="album-close" title="Close (C)">✕</button>
+          </div>
+          <div id="album-grid"></div>
+          <div id="album-detail"></div>
+          <div class="album-foot">Press <kbd>C</kbd> to close</div>
+        </div>
       </div>
       <div id="click-to-play" class="panel">
         <h1>Thistlewick</h1>
         <h2>First Year</h2>
-        <p class="hint">Click to play</p>
+        <div id="title-buttons">
+          <button id="btn-continue" class="big-btn hidden">Continue</button>
+          <button id="btn-new" class="big-btn">New Game</button>
+        </div>
+        <p class="hint" id="resume-hint">Click to play</p>
         <ul class="controls">
           <li><b>WASD</b> move</li>
           <li><b>Mouse</b> look</li>
           <li><b>Space</b> jump (hold for higher)</li>
           <li><b>Click</b> cast at a glowing rune (hold to charge)</li>
+          <li><b>E</b> talk / open</li>
+          <li><b>C</b> card album</li>
           <li><b>S</b> while hanging: let go</li>
           <li><b>Esc</b> release mouse</li>
           <li><b>`</b> tuning panel</li>

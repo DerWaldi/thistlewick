@@ -44,6 +44,11 @@ export class Sfx {
       this.tone(base, base * 1.5, 0.09, 'sine', 0.14);
       setTimeout(() => this.tone(base * 1.5, base * 2, 0.12, 'sine', 0.1), 60);
     });
+    events.on('card', ({ isNew }) => {
+      if (isNew) [659, 784, 988, 1319].forEach((f, i) => setTimeout(() => this.tone(f, f, 0.3, 'sine', 0.12), i * 80));
+    });
+    events.on('secret', () => [392, 523, 659, 784, 1047].forEach((f, i) => setTimeout(() => this.tone(f, f * 1.01, 0.4, 'triangle', 0.1), i * 70)));
+    events.on('points', () => this.tone(880, 1320, 0.15, 'sine', 0.06));
     events.on('checkpoint', () => [523, 659, 784].forEach((f, i) => setTimeout(() => this.tone(f, f, 0.35, 'sine', 0.12), i * 90)));
     events.on('blockSlide', () => this.hiss(0.45, 380, 0.25));
     events.on('blockStop', ({ fell }) => this.thud(fell ? 1 : 0.6, fell ? 90 : 130));
@@ -106,6 +111,11 @@ export class Sfx {
     osc.connect(g).connect(this.master);
     osc.start(t);
     osc.stop(t + dur + 0.02);
+  }
+
+  /** A short voice blip for dialogue typewriter text. */
+  blip(pitch: number): void {
+    this.tone(pitch, pitch * 1.06, 0.045, 'square', 0.035);
   }
 
   private hiss(dur: number, freq: number, vol: number): void {

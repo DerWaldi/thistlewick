@@ -6,7 +6,7 @@ import {
   MeshBasicMaterial,
   Vector3,
   type PerspectiveCamera,
-  type Scene,
+  type Object3D,
 } from 'three';
 import { SPELLS, type SpellId } from '../data/spells';
 import type { Tuning } from '../data/tuning';
@@ -50,7 +50,7 @@ export class Caster {
   currentUnknown = false;
 
   constructor(
-    private scene: Scene,
+    private scene: Object3D,
     private camera: PerspectiveCamera,
     private input: Input,
     private physics: Physics,
@@ -89,6 +89,7 @@ export class Caster {
       const p = t.aimPoint(tmp);
       const dist = p.distanceTo(chest);
       if (dist > Math.max(c.range, c.markerRange)) continue;
+      if (t.revealRange !== undefined && dist > t.revealRange) continue;
 
       const v = tmp2.subVectors(p, camPos);
       const along = v.dot(camDir);

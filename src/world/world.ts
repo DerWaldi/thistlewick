@@ -1,11 +1,12 @@
 import { Vector3 } from 'three';
 import { Gnarling } from '../entities/gnarling';
+import { Bookshelf, CardPickup, Door, Hourglasses, Npc, SecretVolume, SortingLantern, SpringPad, Tapestry } from '../entities/hubObjects';
 import { Checkpoint, Gate, KnockSwitch, Plate } from '../entities/mechanisms';
 import { PushBlock } from '../entities/pushBlock';
 import { Teaser } from '../entities/teasers';
 import type { Entity, EntitySpec, EntityType, SpecOf, WorldContext } from '../entities/types';
 
-type Factory<T extends EntityType> = (spec: SpecOf<T>, ctx: WorldContext) => Entity | null;
+type Factory<T extends EntityType> = (spec: SpecOf<T>, ctx: WorldContext, id: string) => object | null;
 
 /**
  * Maps level data to entity classes. Adding a new kind of object means adding a
@@ -19,14 +20,26 @@ const FACTORIES: { [T in EntityType]: Factory<T> } = {
   checkpoint: (s, c) => new Checkpoint(s, c),
   gnarling: (s, c) => new Gnarling(s, c),
   teaser: (s, c) => new Teaser(s, c),
-  sweet: (s, c) => {
-    c.sweets.add(s.kind, new Vector3(...s.pos));
+  card: (s, c) => (c.state.cards.has(s.card) ? null : new CardPickup(s, c)),
+  secret: (s, c) => new SecretVolume(s, c),
+  tapestry: (s, c) => new Tapestry(s, c),
+  bookshelf: (s, c) => new Bookshelf(s, c),
+  npc: (s, c) => new Npc(s, c),
+  sortingLantern: (s, c) => new SortingLantern(s, c),
+  door: (s, c) => new Door(s, c),
+  hourglasses: (s, c) => new Hourglasses(s, c),
+  springPad: (s, c) => new SpringPad(s, c),
+  sweet: (s, c, id) => {
+    if (!c.state.collected.has(id)) c.sweets.add(s.kind, new Vector3(...s.pos), id);
     return null;
   },
-  sweetLine: (s, c) => {
+  sweetLine: (s, c, id) => {
     const a = new Vector3(...s.from);
     const b = new Vector3(...s.to);
-    for (let i = 0; i < s.count; i++) c.sweets.add(s.kind, a.clone().lerp(b, s.count === 1 ? 0.5 : i / (s.count - 1)));
+    for (let i = 0; i < s.count; i++) {
+      const sid = `${id}.${i}`;
+      if (!c.state.collected.has(sid)) c.sweets.add(s.kind, a.clone().lerp(b, s.count === 1 ? 0.5 : i / (s.count - 1)), sid);
+    }
     return null;
   },
 };
@@ -34,18 +47,29 @@ const FACTORIES: { [T in EntityType]: Factory<T> } = {
 /** Owns the live entities of the current level and steps them. */
 export class World {
   readonly entities: Entity[] = [];
+  private secretAreas = new Map<string, string[]>();
 
   constructor(readonly ctx: WorldContext) {}
 
-  spawn(spec: EntitySpec): Entity | null {
+  spawn(spec: EntitySpec, index: number): Entity | null {
+    if (spec.requires && !this.ctx.state.knows(spec.requires)) return null;
+    if (spec.unless && this.ctx.state.knows(spec.unless)) return null;
+    if (spec.type === 'secret') this.secretAreas.set(spec.area, [...(this.secretAreas.get(spec.area) ?? []), spec.id]);
+    // Stable ids from build order, so collected pickups stay collected across sessions.
+    const id = `${this.ctx.levelId}/${spec.type}${index}`;
     const make = FACTORIES[spec.type] as Factory<typeof spec.type>;
-    const e = make(spec as never, this.ctx);
+    const e = make(spec as never, this.ctx, id) as Entity | null;
     if (e) this.entities.push(e);
     return e;
   }
 
   spawnAll(specs: EntitySpec[]): void {
-    for (const s of specs) this.spawn(s);
+    specs.forEach((s, i) => this.spawn(s, i));
+  }
+
+  secretsIn(area: string): { found: number; total: number } {
+    const ids = this.secretAreas.get(area) ?? [];
+    return { found: ids.filter((id) => this.ctx.state.secrets.has(id)).length, total: ids.length };
   }
 
   fixedUpdate(dt: number): void {

@@ -21,6 +21,7 @@ export class PlayerHealth {
     private state: GameState,
     private events: EventBus,
     private fallbackSpawn: { pos: Vector3; yaw: number },
+    private levelId = 'level',
   ) {
     events.on('respawn', ({ reason }) => {
       if ((reason === 'water' || reason === 'fall') && !this.fainting) this.hurt(1, null, false);
@@ -60,7 +61,8 @@ export class PlayerHealth {
     if (this.fainting) {
       this.faintTimer += dt;
       if (this.faintTimer >= FAINT_TIME) {
-        const cp = this.state.checkpoint ?? this.fallbackSpawn;
+        const saved = this.state.checkpoint;
+        const cp = saved && saved.level === this.levelId ? saved : this.fallbackSpawn;
         this.player.teleport(cp.pos, cp.yaw);
         this.player.frozen = false;
         this.heal(true);

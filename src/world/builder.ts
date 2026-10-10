@@ -9,6 +9,7 @@ import {
   Euler,
   Group,
   Mesh,
+  MeshBasicMaterial,
   MeshStandardMaterial,
   PlaneGeometry,
   PointLight,
@@ -21,13 +22,12 @@ import {
   type BufferGeometry,
   type Material,
   type Object3D,
-  type Scene,
 } from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type { ColliderInfo, Physics } from '../engine/physics';
 import type { EntitySpec } from '../entities/types';
 import type { PlayerEnvironment } from '../player/controller';
-import { COLORS, worldMaterial } from './materials';
+import { COLORS, PATTERN, worldMaterial, type Pattern } from './materials';
 
 export type V3 = [number, number, number];
 
@@ -40,6 +40,8 @@ export interface BoxOpts {
   noCollide?: boolean;
   /** Collider only, no mesh. */
   invisible?: boolean;
+  /** Surface pattern (defaults to the builder's `defaultPattern`). */
+  pattern?: Pattern;
 }
 
 interface WaterVolume {
@@ -73,18 +75,22 @@ export class LevelBuilder implements PlayerEnvironment {
   readonly root = new Group();
   private staticGeos: BufferGeometry[] = [];
   private iceGeos: BufferGeometry[] = [];
+  private glowGeos: BufferGeometry[] = [];
   private water: WaterVolume[] = [];
   private movers: Mover[] = [];
   readonly animated: Animated[] = [];
   /** Entities to spawn once the world exists (see World.spawnAll). */
   readonly entities: EntitySpec[] = [];
+  /** Pattern for boxes/cylinders that don't specify one. */
+  defaultPattern: Pattern = 'stone';
   private time = 0;
 
   constructor(
-    scene: Scene,
+    parent: Object3D,
     private physics: Physics,
+    readonly levelId = 'level',
   ) {
-    scene.add(this.root);
+    parent.add(this.root);
   }
 
   // ---------------------------------------------------------------- primitives
@@ -99,7 +105,7 @@ export class LevelBuilder implements PlayerEnvironment {
     const geo = new BoxGeometry(...size).toNonIndexed();
     if (q) geo.applyQuaternion(q);
     geo.translate(...center);
-    paint(geo, opts.color ?? COLORS.stone, true);
+    paint(geo, opts.color ?? COLORS.stone, true, opts.pattern ?? this.defaultPattern);
     if (opts.info?.surface === 'ice') this.iceGeos.push(geo);
     else this.staticGeos.push(geo);
   }
@@ -152,12 +158,22 @@ export class LevelBuilder implements PlayerEnvironment {
     });
   }
 
-  cylinder(center: V3, radius: number, height: number, color: string, info?: ColliderInfo, segments = 10): void {
+  cylinder(center: V3, radius: number, height: number, color: string, info?: ColliderInfo, segments = 10, pattern?: Pattern): void {
     this.physics.addStaticCylinder(new Vector3(...center), height / 2, radius, info);
     const geo = new CylinderGeometry(radius, radius, height, segments).toNonIndexed();
     geo.translate(...center);
-    paint(geo, color, true);
+    paint(geo, color, true, pattern ?? this.defaultPattern);
     this.staticGeos.push(geo);
+  }
+
+  /**
+   * Add decorative static geometry (no collider) to the merged level mesh. The geometry
+   * is consumed; transform it into place first.
+   */
+  geo(geometry: BufferGeometry, color: string, pattern: Pattern = 'plain'): void {
+    const g = geometry.index ? geometry.toNonIndexed() : geometry;
+    paint(g, color, true, pattern);
+    this.staticGeos.push(g);
   }
 
   /** A ramp rising from `bottom` (centre of its low edge) along `yaw` at `angleDeg`. */
@@ -290,31 +306,27 @@ export class LevelBuilder implements PlayerEnvironment {
     });
   }
 
-  lantern(pos: V3, intensity = 6, distance = 9): void {
-    const light = new PointLight(COLORS.lantern, intensity, distance, 1.6);
-    light.position.set(...pos);
-    this.root.add(light);
-    const glow = new Mesh(
-      new BoxGeometry(0.22, 0.32, 0.22),
-      new MeshStandardMaterial({ color: COLORS.lantern, emissive: new Color(COLORS.lantern), emissiveIntensity: 1.6 }),
-    );
-    glow.position.set(...pos);
-    const iron = new MeshStandardMaterial({ color: '#2a2230', flatShading: true });
-    const cap = new Mesh(new ConeGeometry(0.2, 0.18, 4), iron);
-    cap.position.y = 0.25;
-    cap.rotation.y = Math.PI / 4;
-    const base = new Mesh(new BoxGeometry(0.26, 0.05, 0.26), iron);
-    base.position.y = -0.18;
-    const ring = new Mesh(new TorusGeometry(0.06, 0.015, 4, 8), iron);
-    ring.position.y = 0.38;
-    glow.add(cap, base, ring);
-    this.root.add(glow);
+  /** A hanging lantern. Only `lit` lanterns cast real light; keep those few per level. */
+  lantern(pos: V3, intensity = 6, distance = 9, lit = true): void {
+    const light = lit ? new PointLight(COLORS.lantern, intensity, distance, 1.6) : null;
+    if (light) {
+      light.position.set(...pos);
+      this.root.add(light);
+    }
+    // Ironwork goes into the merged level mesh; the glowing glass into one shared batch.
+    const [x, y, z] = pos;
+    this.geo(new BoxGeometry(0.26, 0.05, 0.26).translate(x, y - 0.18, z), '#2a2230');
+    this.geo(new ConeGeometry(0.2, 0.18, 4).rotateY(Math.PI / 4).translate(x, y + 0.25, z), '#2a2230');
+    this.geo(new TorusGeometry(0.06, 0.015, 4, 8).translate(x, y + 0.38, z), '#2a2230');
+    this.glowGeos.push(new BoxGeometry(0.22, 0.32, 0.22).toNonIndexed().translate(x, y, z));
     const phase = Math.random() * 10;
-    this.animated.push({
-      update: (_dt, t) => {
-        light.intensity = intensity * (0.92 + Math.sin(t * 7 + phase) * 0.04 + Math.sin(t * 13.3 + phase) * 0.04);
-      },
-    });
+    if (light) {
+      this.animated.push({
+        update: (_dt, t) => {
+          light.intensity = intensity * (0.92 + Math.sin(t * 7 + phase) * 0.04 + Math.sin(t * 13.3 + phase) * 0.04);
+        },
+      });
+    }
   }
 
   /** Floating signpost text (greybox annotations). */
@@ -354,6 +366,12 @@ export class LevelBuilder implements PlayerEnvironment {
   finish(): void {
     const add = (geos: BufferGeometry[], material: Material) => {
       if (!geos.length) return;
+      for (const g of geos) {
+        for (const name of Object.keys(g.attributes)) {
+          if (name !== 'position' && name !== 'normal' && name !== 'color' && name !== 'pattern') g.deleteAttribute(name);
+        }
+        if (!g.getAttribute('pattern')) setPattern(g, 'plain');
+      }
       const merged = mergeGeometries(geos, false);
       const mesh = new Mesh(merged, material);
       mesh.castShadow = true;
@@ -361,8 +379,14 @@ export class LevelBuilder implements PlayerEnvironment {
       this.root.add(mesh);
       geos.forEach((g) => g.dispose());
     };
-    add(this.staticGeos, worldMaterial({ grid: true }));
-    add(this.iceGeos, worldMaterial({ grid: true, roughness: 0.2 }));
+    add(this.staticGeos, worldMaterial());
+    add(this.iceGeos, worldMaterial({ roughness: 0.2 }));
+    if (this.glowGeos.length) {
+      for (const g of this.glowGeos) for (const n of Object.keys(g.attributes)) if (n !== 'position' && n !== 'normal') g.deleteAttribute(n);
+      const glow = new Mesh(mergeGeometries(this.glowGeos), new MeshBasicMaterial({ color: new Color(COLORS.lantern) }));
+      this.root.add(glow);
+      this.glowGeos = [];
+    }
     this.staticGeos = [];
     this.iceGeos = [];
   }
@@ -401,8 +425,16 @@ export class LevelBuilder implements PlayerEnvironment {
   }
 }
 
+/** Tag every vertex with a surface pattern (see materials.ts). */
+export function setPattern(geo: BufferGeometry, pattern: Pattern): BufferGeometry {
+  const n = geo.getAttribute('position').count;
+  geo.setAttribute('pattern', new BufferAttribute(new Float32Array(n).fill(PATTERN[pattern]), 1));
+  return geo;
+}
+
 /** Fill a geometry's vertex colours, with gentle per-face variation for a hand-made look. */
-export function paint(geo: BufferGeometry, color: string, vary = false): BufferGeometry {
+export function paint(geo: BufferGeometry, color: string, vary = false, pattern?: Pattern): BufferGeometry {
+  if (pattern) setPattern(geo, pattern);
   const pos = geo.getAttribute('position');
   const colors = new Float32Array(pos.count * 3);
   const base = new Color(color);

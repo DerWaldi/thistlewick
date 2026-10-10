@@ -1,5 +1,6 @@
 import type { Vector3 } from 'three';
 import type { SpellId } from '../data/spells';
+import type { HouseId } from '../data/houses';
 import type { SweetKind } from '../data/sweets';
 
 /** All game-wide events. Add new events here so emitters and listeners stay type-checked. */
@@ -32,16 +33,38 @@ export interface GameEvents {
   gnarlingNotice: { pos: Vector3 };
   gnarlingStunned: { pos: Vector3 };
   gnarlingBanished: { pos: Vector3 };
+  // progress
+  card: { id: string; isNew: boolean };
+  secret: { id: string; area: string; found: number; total: number };
+  points: { house: HouseId; amount: number; reason: string };
+  areaEnter: { id: string; name: string };
+  levelLoaded: { id: string };
+  learned: { spell: SpellId };
   // ui
   toast: { text: string; kind?: 'info' | 'hint' };
+  dialogueOpen: { open: boolean };
 }
 
 type Handler<T> = (payload: T) => void;
 
 export class EventBus {
   private handlers = new Map<keyof GameEvents, Set<Handler<never>>>();
+  private unsubs: (() => void)[] | null = null;
+
+  /**
+   * @param parent When given, this bus is a *scope*: listeners register on the parent
+   * and are all removed by `dispose()` (used for everything that lives in one level).
+   */
+  constructor(private parent?: EventBus) {
+    if (parent) this.unsubs = [];
+  }
 
   on<K extends keyof GameEvents>(type: K, fn: Handler<GameEvents[K]>): () => void {
+    if (this.parent) {
+      const off = this.parent.on(type, fn);
+      this.unsubs!.push(off);
+      return off;
+    }
     let set = this.handlers.get(type);
     if (!set) this.handlers.set(type, (set = new Set()));
     set.add(fn as Handler<never>);
@@ -49,8 +72,22 @@ export class EventBus {
   }
 
   emit<K extends keyof GameEvents>(type: K, payload: GameEvents[K]): void {
+    if (this.parent) {
+      this.parent.emit(type, payload);
+      return;
+    }
     const set = this.handlers.get(type);
     if (!set) return;
-    for (const fn of set) (fn as Handler<GameEvents[K]>)(payload);
+    for (const fn of [...set]) (fn as Handler<GameEvents[K]>)(payload);
+  }
+
+  /** A child bus whose listeners can be removed together. */
+  scope(): EventBus {
+    return new EventBus(this);
+  }
+
+  dispose(): void {
+    this.unsubs?.forEach((off) => off());
+    if (this.unsubs) this.unsubs.length = 0;
   }
 }

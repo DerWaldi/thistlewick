@@ -22,6 +22,8 @@ export interface SpellTarget {
   readonly marker: RuneMarker;
   /** How forgiving aiming at this target is (metres around the aim point). */
   readonly radius: number;
+  /** Hidden targets (disguised switches) only show their rune and lock on within this distance. */
+  readonly revealRange?: number;
   /** Where bolts fly to and where the marker floats near. */
   aimPoint(out: Vector3): Vector3;
   /** Whether this target can currently be cast at (e.g. a switch mid-animation can't). */

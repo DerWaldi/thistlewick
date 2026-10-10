@@ -30,6 +30,7 @@ export class KnockSwitch implements Entity, SpellTarget {
   readonly spell = 'thwackwort' as const;
   readonly marker: RuneMarker;
   readonly radius = 0.6;
+  revealRange?: number;
   private collider: RAPIER.Collider;
   private disc: Group;
   private glow: MeshStandardMaterial;
@@ -50,12 +51,30 @@ export class KnockSwitch implements Entity, SpellTarget {
     group.position.set(x, y, z);
     group.rotation.y = spec.yaw;
 
+    this.disc = new Group();
+    if (spec.style === 'book') {
+      // A single fat book sticking out of a shelf, with a faint rune on its spine.
+      this.revealRange = 6;
+      this.glow = new MeshStandardMaterial({ color: '#7a2f3a', roughness: 0.8, flatShading: true });
+      const book = new Mesh(new BoxGeometry(0.14, 0.36, 0.34), this.glow);
+      book.position.z = 0.17;
+      const band = new Mesh(new BoxGeometry(0.15, 0.04, 0.35), brass());
+      band.position.set(0, 0.1, 0.17);
+      this.disc.add(book, band);
+      group.add(this.disc);
+      ctx.scene.add(group);
+      const q = new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), spec.yaw);
+      this.collider = ctx.physics.addStaticBox(this.center, new Vector3(0.1, 0.2, 0.2), q);
+      this.marker = new RuneMarker(ctx.scene, 'thwackwort', 0.45);
+      this.marker.sprite.position.copy(this.center).addScaledVector(out, 0.4).add(new Vector3(0, 0.45, 0));
+      ctx.targets.add(this);
+      return;
+    }
     const back = new Mesh(paint(new BoxGeometry(1.1, 1.1, 0.12).toNonIndexed(), COLORS.wood, true), worldMaterial());
     back.position.z = 0.06;
     back.castShadow = true;
     group.add(back);
 
-    this.disc = new Group();
     this.disc.position.z = 0.16;
     this.glow = brass();
     const ring = new Mesh(new TorusGeometry(0.36, 0.07, 6, 16), this.glow);
@@ -124,6 +143,11 @@ export class KnockSwitch implements Entity, SpellTarget {
 
   frameUpdate(dt: number): void {
     this.spin = MathUtils.damp(this.spin, this.on ? Math.PI / 2 : 0, 10, dt);
+    if (this.spec.style === 'book') {
+      // The book tips forward like a lever.
+      this.disc.rotation.x = this.spin * 0.5;
+      return;
+    }
     this.disc.rotation.z = this.spin;
     this.glow.emissive = new Color(this.on ? '#ffb347' : '#000000');
     this.glow.emissiveIntensity = this.on ? 0.6 + (this.spec.timed ? Math.sin(this.timer * 10) * 0.3 : 0) : 0;
@@ -349,9 +373,8 @@ export class Checkpoint implements Entity {
     const dz = p.z - this.pos.z;
     const near = dx * dx + dz * dz < 2.2 * 2.2 && Math.abs(p.y - this.pos.y) < 1.5;
     if (!near) return;
-    const current = this.ctx.state.checkpoint?.pos.equals(this.respawn) ?? false;
-    if (!current) {
-      this.ctx.state.setCheckpoint(this.respawn, this.spec.yaw);
+    if (!this.isCurrent()) {
+      this.ctx.state.setCheckpoint(this.ctx.levelId, this.respawn, this.spec.yaw);
       this.ctx.events.emit('toast', { text: 'Checkpoint', kind: 'info' });
       this.ctx.fx.burst(this.flame.getWorldPosition(new Vector3()), 14, new Color('#ffd27a'), 1.5, 0.08, 1.5);
     }
@@ -359,9 +382,14 @@ export class Checkpoint implements Entity {
     this.lit = true;
   }
 
+  private isCurrent(): boolean {
+    const cp = this.ctx.state.checkpoint;
+    return !!cp && cp.level === this.ctx.levelId && cp.pos.distanceToSquared(this.respawn) < 0.01;
+  }
+
   frameUpdate(dt: number): void {
     this.flicker += dt;
-    const isCurrent = this.ctx.state.checkpoint?.pos.equals(this.respawn) ?? false;
+    const isCurrent = this.isCurrent();
     const base = isCurrent ? 2.2 : this.lit ? 0.8 : 0.35;
     this.light.intensity = base * (0.85 + Math.sin(this.flicker * 11) * 0.08 + Math.sin(this.flicker * 17.3) * 0.07);
     const s = isCurrent ? 1.6 : 1;

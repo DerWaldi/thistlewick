@@ -13,6 +13,7 @@ export interface VirtualInput {
 export class Input {
   readonly keys = new Set<string>();
   private jumpLatch = false;
+  private pressed = new Set<string>();
   private castDown = false;
   private castPressLatch = false;
   private castReleaseLatch = false;
@@ -26,6 +27,7 @@ export class Input {
     window.addEventListener('keydown', (e) => {
       if (e.repeat) return;
       this.keys.add(e.code);
+      this.pressed.add(e.code);
       if (e.code === 'Space') {
         this.jumpLatch = true;
         e.preventDefault();
@@ -109,6 +111,19 @@ export class Input {
     if (down && !this.castDown) this.castPressLatch = true;
     if (!down && this.castDown) this.castReleaseLatch = true;
     this.castDown = down;
+  }
+
+  /** True once per press of a key since the last call (E to interact, C for the album...). */
+  consumeKey(code: string): boolean {
+    const had = this.pressed.has(code);
+    this.pressed.delete(code);
+    return had;
+  }
+
+  /** Forget pending key presses (e.g. after a dialogue swallowed them). */
+  clearPressed(): void {
+    this.pressed.clear();
+    this.jumpLatch = false;
   }
 
   /** Lets tests trigger a jump press. */

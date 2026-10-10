@@ -10,7 +10,7 @@ import {
   MeshStandardMaterial,
   Quaternion,
   Vector3,
-  type Scene,
+  type Object3D,
 } from 'three';
 import type { EventBus } from '../engine/events';
 import type { Physics } from '../engine/physics';
@@ -23,7 +23,7 @@ import { FOOT_OFFSET, type PlayerController } from './controller';
 export class BlobShadow {
   private mesh: Mesh;
   constructor(
-    scene: Scene,
+    scene: Object3D,
     private physics: Physics,
     private player: PlayerController,
   ) {
@@ -73,7 +73,7 @@ export class Puffs {
   private m = new Matrix4();
   private q = new Quaternion();
 
-  constructor(scene: Scene, events: EventBus, player: PlayerController) {
+  constructor(scene: Object3D, events: EventBus, player: PlayerController) {
     const mat = new MeshStandardMaterial({ color: '#ffffff', flatShading: true, roughness: 1, transparent: true, opacity: 0.85 });
     this.mesh = new InstancedMesh(new IcosahedronGeometry(1, 0), mat, this.max);
     this.mesh.count = 0;
