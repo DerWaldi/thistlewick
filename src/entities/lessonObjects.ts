@@ -6,22 +6,33 @@ import type { Entity, SpecOf, WorldContext } from './types';
  * when a set of signals are all on. Sets `flag` so it never repeats.
  */
 export class Trigger implements Entity {
+  private fired = false;
+  private held = 0;
+
   constructor(
     private spec: SpecOf<'trigger'>,
     private ctx: WorldContext,
   ) {}
 
-  fixedUpdate(): void {
+  private conditionsHold(): boolean {
     const { spec, ctx } = this;
-    if (ctx.state.flags.has(spec.flag)) return;
-    if (spec.when && !ctx.signals.all(spec.when)) return;
+    if (spec.when && !ctx.signals.all(spec.when)) return false;
+    if (spec.unlessSignals && spec.unlessSignals.some((id) => ctx.signals.get(id))) return false;
     if (spec.min && spec.max) {
       const p = ctx.player.pos;
       const [a, b] = [spec.min, spec.max];
-      if (p.x < a[0] || p.x > b[0] || p.y < a[1] || p.y > b[1] || p.z < a[2] || p.z > b[2]) return;
+      if (p.x < a[0] || p.x > b[0] || p.y < a[1] || p.y > b[1] || p.z < a[2] || p.z > b[2]) return false;
     }
-    if (ctx.dialogue.isOpen) return;
-    ctx.state.flags.add(spec.flag);
+    return true;
+  }
+
+  fixedUpdate(dt: number): void {
+    const { spec, ctx } = this;
+    if (this.fired || (!spec.perVisit && ctx.state.flags.has(spec.flag))) return;
+    this.held = this.conditionsHold() ? this.held + dt : 0;
+    if (this.held < (spec.delay ?? 0) || this.held === 0 || ctx.dialogue.isOpen) return;
+    this.fired = true;
+    if (!spec.perVisit) ctx.state.flags.add(spec.flag);
     void ctx.talk(spec.script);
   }
 }

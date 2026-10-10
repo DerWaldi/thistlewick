@@ -31,7 +31,7 @@ export class PushBlock implements Entity, SpellTarget {
   private falling: { vy: number; landY: number } | null = null;
 
   constructor(
-    spec: SpecOf<'pushBlock'>,
+    private spec: SpecOf<'pushBlock'>,
     private ctx: WorldContext,
   ) {
     this.size = spec.size ?? 2;
@@ -209,12 +209,14 @@ export class PushBlock implements Entity, SpellTarget {
   private stop(fell: boolean): void {
     this.moving = null;
     this.falling = null;
+    if (this.spec.sunkSignal) this.ctx.signals.set(this.spec.sunkSignal, this.pos.y < this.home.y - 0.5);
     this.ctx.events.emit('blockStop', { pos: this.pos.clone(), fell });
     this.ctx.fx.burst(new Vector3(this.pos.x, this.pos.y - this.size / 2, this.pos.z), fell ? 18 : 8, dustColor, fell ? 3 : 1.6, 0.18);
   }
 
   private reset(): void {
     this.ctx.fx.burst(this.pos, 16, dustColor, 2.5, 0.2);
+    if (this.spec.sunkSignal) this.ctx.signals.set(this.spec.sunkSignal, false);
     this.pos.copy(this.home);
     this.prev.copy(this.home);
     this.collider.setTranslation(this.pos);

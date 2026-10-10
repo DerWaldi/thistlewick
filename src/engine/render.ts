@@ -16,6 +16,11 @@ import {
   WebGLRenderer,
 } from 'three';
 
+const SHADOW_MAP = 4096;
+/** Half-size of the sun's shadow area (m). Big enough that roofs over the player's surroundings cast. */
+const SHADOW_HALF = 36;
+const UP = new Vector3(0, 1, 0);
+
 export const PALETTE = {
   skyTop: '#3a3a78',
   skyHorizon: '#f2a65a',
@@ -32,7 +37,7 @@ export class Renderer {
   readonly scene = new Scene();
   readonly camera: PerspectiveCamera;
   readonly sun: DirectionalLight;
-  private readonly sunOffset = new Vector3(-14, 22, -10);
+  private readonly sunOffset = new Vector3(-21, 33, -15);
   private sky: Mesh;
 
   constructor(canvas: HTMLCanvasElement) {
@@ -51,16 +56,16 @@ export class Renderer {
 
     this.sun = new DirectionalLight(PALETTE.sun, 2.4);
     this.sun.castShadow = true;
-    this.sun.shadow.mapSize.set(2048, 2048);
+    this.sun.shadow.mapSize.set(SHADOW_MAP, SHADOW_MAP);
     const s = this.sun.shadow.camera;
-    s.left = -24;
-    s.right = 24;
-    s.top = 24;
-    s.bottom = -24;
+    s.left = -SHADOW_HALF;
+    s.right = SHADOW_HALF;
+    s.top = SHADOW_HALF;
+    s.bottom = -SHADOW_HALF;
     s.near = 1;
-    s.far = 80;
-    this.sun.shadow.bias = -0.0004;
-    this.sun.shadow.normalBias = 0.03;
+    s.far = 110;
+    this.sun.shadow.bias = -0.0003;
+    this.sun.shadow.normalBias = 0.045;
     this.scene.add(this.sun, this.sun.target);
 
     this.sky = this.buildSky();
@@ -102,14 +107,24 @@ export class Renderer {
     return m;
   }
 
-  /** Keep the shadow frustum centred on the player so shadows stay crisp. */
+  /**
+   * Keep the shadow frustum centred on the player. The centre is snapped to whole
+   * shadow-map texels in the light's own frame, so shadow edges don't crawl or
+   * shimmer as you walk.
+   */
   followShadow(target: Vector3): void {
-    // Snap to texel-ish increments to avoid shimmering.
-    const snap = 0.5;
-    const x = Math.round(target.x / snap) * snap;
-    const z = Math.round(target.z / snap) * snap;
-    this.sun.target.position.set(x, target.y, z);
-    this.sun.position.set(x + this.sunOffset.x, target.y + this.sunOffset.y, z + this.sunOffset.z);
+    const fwd = this.sunOffset.clone().normalize().negate();
+    const right = new Vector3().crossVectors(fwd, UP).normalize();
+    const up = new Vector3().crossVectors(right, fwd);
+    const texel = (SHADOW_HALF * 2) / SHADOW_MAP;
+    const snap = (v: number) => Math.round(v / texel) * texel;
+    const c = right
+      .clone()
+      .multiplyScalar(snap(target.dot(right)))
+      .addScaledVector(up, snap(target.dot(up)))
+      .addScaledVector(fwd, target.dot(fwd));
+    this.sun.target.position.copy(c);
+    this.sun.position.copy(c).add(this.sunOffset);
     this.sky.position.copy(this.camera.position);
   }
 

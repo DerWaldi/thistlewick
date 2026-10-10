@@ -2,7 +2,7 @@ import { BoxGeometry, CylinderGeometry } from 'three';
 import type { LevelBuilder } from '../../world/builder';
 import type { LevelDef } from '../../world/level';
 import { COLORS } from '../../world/materials';
-import { column, crate, deco, hollyhock, slab, tree, wall } from '../../world/props';
+import { column, crate, deco, hollyhock, signboard, slab, tree, wall } from '../../world/props';
 
 /**
  * The Thwackwort Trial, under Gorse's classroom. Five rooms, south to north (+Z):
@@ -79,16 +79,20 @@ function build(b: LevelBuilder): void {
   wall(b, 'x', 26, -8.5, 8.5, 7, { color: STONE, holes: [gateHole(0)] });
   b.add(
     { type: 'checkpoint', pos: [-7.3, 0, 13.8], yaw: Math.PI / 2, zone: { min: [-8, -1, 10.2], max: [8, 4, 13] } },
-    { type: 'pushBlock', pos: [-3, 0, 12], resetOn: 'r2-bell' },
-    { type: 'pushBlock', pos: [3, 0, 12], resetOn: 'r2-bell' },
+    { type: 'pushBlock', pos: [-3, 0, 12], resetOn: 'r2-bell', sunkSignal: 'r2-a-sunk' },
+    { type: 'pushBlock', pos: [3, 0, 12], resetOn: 'r2-bell', sunkSignal: 'r2-b-sunk' },
     { type: 'plate', id: 'r2-plate', pos: [7, 0, 14] },
     { type: 'knockSwitch', id: 'r2-bell', pos: [-7.2, 2.1, 11.2], yaw: Math.PI / 2, style: 'bell', timed: 1 },
     { type: 'gate', pos: [0, 0, 26], yaw: 0, width: 3, height: 3, when: ['r2-plate'] },
     { type: 'trigger', flag: 'trial-hint-blocks', script: 'trialBlocks', min: [-8, -1, 10.6], max: [8, 5, 15] },
+    // If it's gone wrong (both blocks in the water, or a long while without the gate), point at the bell.
+    { type: 'trigger', flag: 'hint-bell-sunk', script: 'trialBell', when: ['r2-a-sunk', 'r2-b-sunk'], unlessSignals: ['r2-plate'], perVisit: true },
+    { type: 'trigger', flag: 'hint-bell-slow', script: 'trialBell', min: [-8, -1, 10.2], max: [8, 5, 17], unlessSignals: ['r2-plate'], delay: 75, perVisit: true },
     { type: 'sweetLine', kind: 'fizzwort', from: [-1, 0.6, 22.2], to: [1, 0.6, 25.2], count: 3 },
     { type: 'sweet', kind: 'bramble', pos: [7, 0.8, 11] },
   );
   b.lantern([0, 5.6, 14], 10, 16);
+  signboard(b, 'Ring to reset the blocks', [-7.95, 3.9, 11.2], Math.PI / 2);
   b.lantern([-7.9, 3.5, 20], 0, 0, false);
   b.lantern([7.9, 3.5, 20], 0, 0, false);
 

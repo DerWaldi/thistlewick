@@ -64,7 +64,7 @@ function buildHub(b: LevelBuilder): void {
   wall(b, 'x', 30.5, -12.5, 12.5, HH, {
     holes: [
       { from: -2, to: 2, top: 4.5 }, // to the court
-      { from: 8, to: 10, bottom: 5, top: 8 }, // gallery door onto the cloister roof
+      { from: 8, to: 10, bottom: 4.98, top: 8 }, // gallery door onto the cloister roof (sill just under the roof, no z-fighting)
     ],
   });
   slab(b, -12.5, 12.5, 0, 30.5, HH + 0.6, 0.6, '#5e4a3e', 'planks');
@@ -193,7 +193,6 @@ function buildHub(b: LevelBuilder): void {
   );
   wall(b, 'x', 13.5, 18.5, 21.5, 3.2, { thick: 1 });
   wall(b, 'z', 18.5, 10.5, 13.5, 3.2, { thick: 1 });
-  wall(b, 'z', 21.5, 10.5, 13.5, 3.2, { thick: 1 });
   slab(b, 18, 22, 10.5, 14, 3.4, 0.4, COLORS.stoneDark);
   b.add(
     { type: 'card', card: 'barnaby-gorse', pos: [20, 1.2, 12.2] },

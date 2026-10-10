@@ -437,7 +437,21 @@ export class Door implements Interactable {
       ringM.position.set(side * 0.18, h * 0.48, 0.09);
       g.add(ringM);
     }
-    if (spec.label) g.add(labelPlate(spec.label, w, h));
+    // A chunky frame that overlaps the wall around the opening, so no seams show.
+    const frameMat = worldMaterial();
+    const fw = 0.32;
+    const jamb = (side: number) => {
+      const m = new Mesh(paint(new BoxGeometry(fw, h + fw, 0.42).toNonIndexed(), COLORS.woodDark, true, 'planks'), frameMat);
+      m.position.set(side * (w / 2 + fw / 2 - 0.08), (h + fw) / 2, 0.02);
+      m.castShadow = true;
+      return m;
+    };
+    const lintel = new Mesh(paint(new BoxGeometry(w + fw * 2 - 0.16, fw, 0.42).toNonIndexed(), COLORS.woodDark, true, 'planks'), frameMat);
+    lintel.position.set(0, h + fw / 2 - 0.08, 0.02);
+    const step = new Mesh(paint(new BoxGeometry(w + 0.3, 0.06, 0.5).toNonIndexed(), COLORS.stoneLight, true), frameMat);
+    step.position.set(0, 0.03, 0.1);
+    g.add(jamb(-1), jamb(1), lintel, step);
+    if (spec.label) g.add(labelPlate(spec.label, w, h + fw));
     mergeChildren(g);
     ctx.scene.add(g);
     ctx.physics.addStaticBox(this.pos.clone().add(new Vector3(0, h / 2, 0)), new Vector3(w / 2, h / 2, 0.1), yawQ(yaw), { noGrab: true });

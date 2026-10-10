@@ -35,7 +35,15 @@ export interface NpcLook {
 /** Level data: everything placed in a level that isn't static geometry. */
 export type EntitySpec = SpecBase &
   (
-    | { type: 'pushBlock'; pos: V3; size?: number; resetOn?: string }
+    | {
+        type: 'pushBlock';
+        pos: V3;
+        size?: number;
+        /** Send the block home when this signal turns on (a reset bell). */
+        resetOn?: string;
+        /** Signal that's on while the block has dropped below its starting height (into a pit). */
+        sunkSignal?: string;
+      }
     | { type: 'knockSwitch'; id: string; pos: V3; yaw: number; timed?: number; style?: 'plate' | 'book' | 'target' | 'bell'; latch?: boolean }
     | { type: 'plate'; id: string; pos: V3 }
     | { type: 'gate'; pos: V3; yaw: number; width: number; height: number; when: string[] }
@@ -83,6 +91,12 @@ export type EntitySpec = SpecBase &
         max?: V3;
         /** ...and/or when all these signals are on. */
         when?: string[];
+        /** Never fire while any of these signals are on (e.g. the puzzle is solved). */
+        unlessSignals?: string[];
+        /** Conditions must hold this many seconds first. */
+        delay?: number;
+        /** Fire once per visit to the level rather than once per save (hints). */
+        perVisit?: boolean;
       }
     | { type: 'star'; id: string; pos: V3; script?: string }
     | { type: 'rattlecoat'; id: string; pos: V3; yaw: number; arena: { min: V3; max: V3 } }

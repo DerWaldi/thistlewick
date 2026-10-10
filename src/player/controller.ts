@@ -563,7 +563,11 @@ export class PlayerController {
     const wishLen = this.wishDir(cameraYaw, wish);
     const pushingIn = wishLen > 0.3 && wish.dot(ledge.normal) < -0.35 * wishLen;
     const lowLip = ledge.lipY < this.pos.y + 0.25;
-    if (lowLip || (l.autoClimb && pushingIn)) {
+    // Hanging puts the body ~0.8 m below the lip: on anything less than head-high above the
+    // ground below us, that would sink us into the floor. Vault onto it instead.
+    const ground = this.physics.raycast(this.pos, new Vector3(0, -1, 0), 4, this.collider);
+    const lowObstacle = !!ground && ledge.lipY - ground.point.y < 1.7;
+    if (lowLip || lowObstacle || (l.autoClimb && pushingIn)) {
       this.startClimb();
     } else {
       this.mode = 'hang';
@@ -595,7 +599,7 @@ export class PlayerController {
     const wish = new Vector3();
     const wishLen = this.wishDir(cameraYaw, wish);
     const toward = -wish.dot(h.normal);
-    if (this.buffer > 0 || (l.autoClimb && toward > 0.5 && this.stateTime > 0.15)) {
+    if (this.buffer > 0 || (l.autoClimb && toward > 0.3 && this.stateTime > 0.15)) {
       this.buffer = 0;
       this.startClimb();
       return;

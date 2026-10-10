@@ -405,3 +405,110 @@ test('the Rattlecoat comes for you and swings', async ({ page }) => {
   });
   expect(hurt).toBeGreaterThan(0);
 });
+
+test("a closed gate keeps the next room's checkpoint asleep", async ({ page }) => {
+  await prepared(page, 'trial', ['trial-entered', 'trial-hint-blocks']);
+  const cp = await page.evaluate(() => {
+    const tw = window.__tw;
+    // On the pier, pressed against the Gauntlet's closed gate (lectern ~2.4 m away through it).
+    tw.teleport(-1.5, 0, 25.4, 0);
+    tw.advance(1);
+    return tw.state().checkpoint;
+  });
+  expect(cp === null || cp[2] < 26).toBe(true);
+});
+
+test('sinking both blocks gets a nudge towards the reset bell', async ({ page }) => {
+  await prepared(page, 'trial', ['trial-entered', 'trial-hint-blocks']);
+  const r = await page.evaluate(async () => {
+    const tw = window.__tw;
+    const g = tw.game as unknown as G;
+    tw.teleport(1, 0, 6, 0);
+    tw.advance(0.3);
+    tw.aimAt(3.5, 2, 9.45);
+    tw.cast(0);
+    tw.advance(2.5);
+    type B = { pos: { x: number; y: number; z: number } };
+    const [A, Bk] = g.world.entities.filter((e) => e.constructor.name === 'PushBlock') as unknown as B[];
+    const toasts: string[] = [];
+    const lines: string[] = [];
+    (tw.game as unknown as { events: { on(e: string, f: (x: { open?: boolean }) => void): void } }).events.on('dialogueOpen', (x) => {
+      if (x.open) lines.push('open');
+    });
+    for (const [b, x] of [
+      [A, -3],
+      [Bk, 3],
+    ] as const) {
+      tw.teleport(x, 0, 10.6, 0);
+      tw.advance(0.3);
+      tw.aimAt(b.pos.x, b.pos.y, b.pos.z);
+      tw.cast(1.2);
+      tw.advance(2.5);
+      await tw.idle();
+    }
+    tw.advance(0.2);
+    const hinted = lines.length;
+    await tw.idle();
+    return { a: A.pos.y, b: Bk.pos.y, hinted, toasts };
+  });
+  expect(r.a).toBeLessThan(0);
+  expect(r.b).toBeLessThan(0);
+  expect(r.hinted).toBeGreaterThan(0);
+});
+
+test('doors sit in proper frames', async ({ page, browserName }) => {
+  await prepared(page, 'classroom', ['lesson-started']);
+  await page.evaluate(() => {
+    const tw = window.__tw;
+    tw.teleport(4.2, 0, 11.2, Math.PI / 2);
+    tw.setCamera(Math.PI / 2 + 0.35, -0.05);
+    tw.advance(0.8);
+  });
+  await shot(page, 'm3-door', browserName);
+});
+
+test('hopping at a waist-high obstacle vaults onto it instead of hanging in the floor', async ({ page }) => {
+  await prepared(page, 'trial', ['trial-entered', 'trial-hint-run']);
+  const r = await page.evaluate(() => {
+    const tw = window.__tw;
+    const modes = new Set<string>();
+    let minY = 9;
+    // Facing the 0.9 m hurdle at z 31 from just in front, a straight-up hop.
+    for (const lead of [0.45, 0.6, 0.8]) {
+      tw.teleport(0, 0, 30.75 - 0.35 - lead, 0);
+      tw.advance(0.2);
+      tw.pressJump();
+      tw.input({ jump: true });
+      for (let i = 0; i < 90; i++) {
+        tw.advance(1 / 60);
+        const s = tw.state();
+        modes.add(s.mode);
+        minY = Math.min(minY, s.feet.y);
+        if (i === 8) tw.input({ y: 0.4, jump: true });
+      }
+      tw.input(null);
+    }
+    return { modes: [...modes], minY };
+  });
+  expect(r.modes).not.toContain('hang');
+  expect(r.minY).toBeGreaterThan(-0.05);
+});
+
+test('walking back into an earlier room keeps the newer checkpoint', async ({ page }) => {
+  await prepared(page, 'trial', ['trial-entered', 'trial-hint-blocks']);
+  const r = await page.evaluate(() => {
+    const tw = window.__tw;
+    tw.teleport(0, 0, 5, 0); // antechamber
+    tw.advance(0.3);
+    const first = tw.state().checkpoint;
+    tw.teleport(1, 0, 11.5, 0); // shoving room entrance
+    tw.advance(0.3);
+    const second = tw.state().checkpoint;
+    tw.teleport(0, 0, 5, Math.PI); // back again
+    tw.advance(0.3);
+    return { first, second, after: tw.state().checkpoint };
+  });
+  expect(r.first![2]).toBeLessThan(10);
+  expect(r.second![2]).toBeGreaterThan(10);
+  expect(r.after).toEqual(r.second);
+});

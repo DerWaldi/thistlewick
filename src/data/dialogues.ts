@@ -137,8 +137,13 @@ export const DIALOGUES: Record<string, Script> = {
 
   trialBlocks: async ({ say }) => {
     await say([
-      { speaker: 'gorse', text: "(echoing) The Shoving Room! One block makes a bridge, the other holds the gate. Get it wrong? Ring the bell and they'll come home." },
+      { speaker: 'gorse', text: '(echoing) The Shoving Room! One block makes a bridge over the water, the other must sit on the plate to hold the gate open.' },
+      { speaker: 'gorse', text: "Blocks only go where you shove them, and they don't come back on their own. Get in a muddle? Thwack the BELL by the door." },
     ]);
+  },
+
+  trialBell: async ({ say }) => {
+    await say([{ speaker: 'gorse', text: '(echoing) Got yourself in a muddle? Give the bell by the door a thwack, and the blocks will trot back home.' }]);
   },
 
   trialRun: async ({ say }) => {
