@@ -20,6 +20,7 @@ import {
   Points,
   PointsMaterial,
   Quaternion,
+  SphereGeometry,
   SRGBColorSpace,
   TorusGeometry,
   Vector3,
@@ -55,11 +56,19 @@ export function wall(
   a: number,
   bEnd: number,
   height: number,
-  opts: { base?: number; thick?: number; color?: string; holes?: Hole[] } = {},
+  opts: { base?: number; thick?: number; color?: string; holes?: Hole[]; cap?: number } = {},
 ): void {
   const base = opts.base ?? 0;
   const t = opts.thick ?? 1;
   const color = opts.color ?? COLORS.stone;
+  // Boundary walls whose tops could be reached get an invisible extension, so nobody
+  // climbs out of the level.
+  if (opts.cap) {
+    const mid = (a + bEnd) / 2;
+    const len = bEnd - a;
+    const y = base + height + opts.cap / 2;
+    b.box(axis === 'x' ? [mid, y, at] : [at, y, mid], axis === 'x' ? [len, opts.cap, t] : [t, opts.cap, len], { invisible: true, info: { noGrab: true, cameraIgnore: true } });
+  }
   const piece = (from: number, to: number, y0: number, y1: number) => {
     if (to - from < 0.01 || y1 - y0 < 0.01) return;
     const mid = (from + to) / 2;
@@ -141,9 +150,9 @@ export function windowPane(b: LevelBuilder, glow: Glow, axis: 'x' | 'z', at: num
 /** A framed portrait on a wall, slightly crooked. */
 export function portrait(b: LevelBuilder, spec: PortraitSpec, pos: V3, rotY: number, w = 1.2, h = 1.5, tilt = 0): void {
   const c = document.createElement('canvas');
-  c.width = 160;
-  c.height = 200;
-  paintPortrait(c.getContext('2d')!, spec, 160, 200);
+  c.width = 240;
+  c.height = 300;
+  paintPortrait(c.getContext('2d')!, spec, 240, 300);
   const tex = new CanvasTexture(c);
   tex.colorSpace = SRGBColorSpace;
   const pic = new Mesh(new PlaneGeometry(w, h), new MeshStandardMaterial({ map: tex, roughness: 0.8 }));
@@ -151,9 +160,45 @@ export function portrait(b: LevelBuilder, spec: PortraitSpec, pos: V3, rotY: num
   pic.rotation.set(0, rotY, tilt);
   pic.translateZ(0.06);
   b.prop(pic);
-  // The gilt frame goes into the merged level mesh.
-  const frame = new BoxGeometry(w + 0.24, h + 0.24, 0.1).toNonIndexed().rotateZ(tilt).rotateY(rotY).translate(...pos);
-  b.geo(frame, '#c99a3e');
+  // An ornate gilt frame (merged into the level mesh): a dark backing, a stepped
+  // moulding with a bright inner lip, corner rosettes and a brass name plaque.
+  const place = (geo: BufferGeometry, x: number, y: number, z: number, c: string) => {
+    b.geo((geo.index ? geo.toNonIndexed() : geo).translate(x, y, z).rotateZ(tilt).rotateY(rotY).translate(...pos), c);
+  };
+  const F = 0.16;
+  place(new BoxGeometry(w + 0.1, h + 0.1, 0.06), 0, 0, 0, '#3a2617');
+  for (const [x, y, bw, bh] of [
+    [0, h / 2 + F / 2, w + F * 2, F],
+    [0, -h / 2 - F / 2, w + F * 2, F],
+    [-w / 2 - F / 2, 0, F, h],
+    [w / 2 + F / 2, 0, F, h],
+  ] as const) {
+    place(new BoxGeometry(bw, bh, 0.12), x, y, 0.02, '#a87a2c');
+    // Raised bead along the middle of each side.
+    const along = bw > bh;
+    place(new BoxGeometry(along ? bw - F : F * 0.4, along ? F * 0.4 : bh - F, 0.05), x, y, 0.1, '#e0b85a');
+  }
+  // Inner lip hugging the canvas.
+  for (const [x, y, bw, bh] of [
+    [0, h / 2 + 0.02, w + 0.04, 0.04],
+    [0, -h / 2 - 0.02, w + 0.04, 0.04],
+    [-w / 2 - 0.02, 0, 0.04, h],
+    [w / 2 + 0.02, 0, 0.04, h],
+  ] as const) {
+    place(new BoxGeometry(bw, bh, 0.1), x, y, 0.04, '#f0cf78');
+  }
+  for (const sx of [-1, 1]) {
+    for (const sy of [-1, 1]) {
+      const cx = sx * (w / 2 + F / 2);
+      const cy = sy * (h / 2 + F / 2);
+      place(new BoxGeometry(F * 1.25, F * 1.25, 0.14), cx, cy, 0.03, '#b88a34');
+      place(new SphereGeometry(F * 0.42, 8, 6), cx, cy, 0.12, '#f0cf78');
+    }
+  }
+  // A crest on top and the plaque below.
+  place(new SphereGeometry(F * 0.9, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2).scale(1.3, 1, 0.4), 0, h / 2 + F, 0.03, '#c99a3e');
+  place(new BoxGeometry(w * 0.45, 0.12, 0.04), 0, -h / 2 - F - 0.12, 0.02, '#d4a94a');
+  place(new BoxGeometry(w * 0.38, 0.06, 0.02), 0, -h / 2 - F - 0.12, 0.05, '#4a3420');
 }
 
 /** A hanging house banner, baked into the level mesh (it doesn't move). */
@@ -386,4 +431,306 @@ export function grass(b: LevelBuilder, x0: number, x1: number, z0: number, z1: n
   mesh.receiveShadow = true;
   b.prop(mesh);
   b.animated.push({ update: (_dt, t) => (grassTime.value = t) });
+}
+
+// ---------------------------------------------------------------- set dressing
+
+/** Place a local-space geometry: offset, then turn by `rotY`, then move to `origin`. */
+function put(b: LevelBuilder, geo: BufferGeometry, origin: V3, rotY: number, local: V3, color: string, rot?: V3): void {
+  const g = geo.index ? geo.toNonIndexed() : geo;
+  if (rot) g.rotateX(rot[0]).rotateY(rot[1]).rotateZ(rot[2]);
+  b.geo(g.translate(...local).rotateY(rotY).translate(...origin), color);
+}
+
+/** A tiny deterministic random sequence for scattering props. */
+function scatter(seed: number): () => number {
+  let s = seed * 9301 + 49297;
+  return () => {
+    s = (s * 9301 + 49297) % 233280;
+    return s / 233280;
+  };
+}
+
+/** A rug: a border, a field, a central medallion and tasselled ends. Lies flat; no collider. */
+export function rug(b: LevelBuilder, pos: V3, w: number, d: number, field: string, border: string, rotY = 0): void {
+  const y = 0.012;
+  put(b, new BoxGeometry(w, 0.02, d), pos, rotY, [0, y, 0], border);
+  put(b, new BoxGeometry(w - 0.3, 0.02, d - 0.3), pos, rotY, [0, y + 0.004, 0], field);
+  put(b, new BoxGeometry(w - 0.5, 0.02, d - 0.5), pos, rotY, [0, y + 0.006, 0], field);
+  const m = Math.min(w, d) * 0.32;
+  put(b, new BoxGeometry(m, 0.02, m), pos, rotY, [0, y + 0.009, 0], border, [0, Math.PI / 4, 0]);
+  put(b, new BoxGeometry(m * 0.55, 0.02, m * 0.55), pos, rotY, [0, y + 0.012, 0], field, [0, Math.PI / 4, 0]);
+  for (const side of [-1, 1]) {
+    for (let i = 0; i < Math.floor(w / 0.2); i++) {
+      put(b, new BoxGeometry(0.05, 0.015, 0.14), pos, rotY, [-w / 2 + 0.1 + i * 0.2, 0.008, side * (d / 2 + 0.06)], '#e8d8b0');
+    }
+  }
+}
+
+/** A plank bench, sat along local X. `rotY` must be a multiple of π/2. */
+export function bench(b: LevelBuilder, pos: V3, rotY: number, len = 2.2): void {
+  const along = Math.abs(Math.sin(rotY)) > 0.5;
+  b.box([pos[0], pos[1] + 0.42, pos[2]], along ? [0.5, 0.1, len] : [len, 0.1, 0.5], { color: COLORS.wood, pattern: 'planks' });
+  for (const x of [-len / 2 + 0.2, len / 2 - 0.2]) put(b, new BoxGeometry(0.12, 0.38, 0.44), pos, rotY, [x, 0.19, 0], COLORS.woodDark);
+  put(b, new BoxGeometry(len - 0.4, 0.06, 0.06), pos, rotY, [0, 0.12, 0], COLORS.woodDark);
+}
+
+/** A candlestick: brass foot, a candle and a flame (into `flames`, which glows). */
+export function candlestick(b: LevelBuilder, flames: Glow, pos: V3, h = 0.3): void {
+  deco(b, new CylinderGeometry(0.08, 0.1, 0.04, 8), [pos[0], pos[1] + 0.02, pos[2]], '#c99a3e');
+  deco(b, new CylinderGeometry(0.02, 0.03, 0.14, 6), [pos[0], pos[1] + 0.1, pos[2]], '#c99a3e');
+  deco(b, new CylinderGeometry(0.045, 0.045, 0.03, 8), [pos[0], pos[1] + 0.18, pos[2]], '#c99a3e');
+  deco(b, new CylinderGeometry(0.03, 0.03, h, 6), [pos[0], pos[1] + 0.195 + h / 2, pos[2]], '#f3ead8');
+  flames.add(new ConeGeometry(0.03, 0.09, 5), [pos[0], pos[1] + 0.24 + h, pos[2]]);
+}
+
+/** A long table with candles, plates and goblets. `rotY` must be a multiple of π/2. */
+export function table(b: LevelBuilder, flames: Glow, pos: V3, rotY: number, len: number, wid = 1.3, seed = 1): void {
+  const along = Math.abs(Math.sin(rotY)) > 0.5;
+  const H = 0.85;
+  b.box([pos[0], pos[1] + H - 0.05, pos[2]], along ? [wid, 0.1, len] : [len, 0.1, wid], { color: COLORS.wood, pattern: 'planks' });
+  b.box([pos[0], pos[1] + (H - 0.1) / 2, pos[2]], along ? [wid - 0.3, H - 0.1, len - 0.4] : [len - 0.4, H - 0.1, wid - 0.3], { invisible: true });
+  for (const x of [-len / 2 + 0.25, len / 2 - 0.25]) {
+    for (const z of [-wid / 2 + 0.2, wid / 2 - 0.2]) put(b, new BoxGeometry(0.14, H - 0.1, 0.14), pos, rotY, [x, (H - 0.1) / 2, z], COLORS.woodDark);
+  }
+  put(b, new BoxGeometry(len - 0.5, 0.08, 0.08), pos, rotY, [0, 0.2, 0], COLORS.woodDark);
+  // A runner down the middle.
+  put(b, new BoxGeometry(len - 0.3, 0.012, 0.4), pos, rotY, [0, H + 0.006, 0], '#8a2a3a');
+  const rnd = scatter(seed);
+  const top = (x: number, z: number): V3 => {
+    const v = new Vector3(x, 0, z).applyAxisAngle(new Vector3(0, 1, 0), rotY);
+    return [pos[0] + v.x, pos[1] + H, pos[2] + v.z];
+  };
+  for (let x = -len / 2 + 0.9; x < len / 2 - 0.5; x += 1.6) candlestick(b, flames, top(x, 0), 0.18 + rnd() * 0.15);
+  for (let x = -len / 2 + 0.5; x < len / 2 - 0.3; x += 0.8) {
+    for (const z of [-wid / 2 + 0.3, wid / 2 - 0.3]) {
+      const p = top(x + (rnd() - 0.5) * 0.2, z);
+      deco(b, new CylinderGeometry(0.16, 0.13, 0.02, 10), [p[0], p[1] + 0.01, p[2]], '#e8e0d0');
+      if (rnd() < 0.5) {
+        const q = top(x + 0.25, z * 0.6);
+        deco(b, new CylinderGeometry(0.05, 0.03, 0.12, 6), [q[0], q[1] + 0.12, q[2]], '#c99a3e');
+        deco(b, new CylinderGeometry(0.01, 0.01, 0.06, 4), [q[0], q[1] + 0.03, q[2]], '#c99a3e');
+        deco(b, new CylinderGeometry(0.05, 0.05, 0.01, 6), [q[0], q[1] + 0.005, q[2]], '#c99a3e');
+      }
+    }
+  }
+}
+
+/** A terracotta pot with a leafy plant. */
+export function pottedPlant(b: LevelBuilder, pos: V3, s = 1, seed = 1): void {
+  const [x, y, z] = pos;
+  b.box([x, y + 0.3 * s, z], [0.5 * s, 0.6 * s, 0.5 * s], { invisible: true });
+  deco(b, new CylinderGeometry(0.3 * s, 0.22 * s, 0.5 * s, 10), [x, y + 0.25 * s, z], '#b8643a');
+  deco(b, new CylinderGeometry(0.33 * s, 0.33 * s, 0.08 * s, 10), [x, y + 0.5 * s, z], '#a0522d');
+  deco(b, new CylinderGeometry(0.28 * s, 0.28 * s, 0.02, 10), [x, y + 0.53 * s, z], '#4a3220');
+  const rnd = scatter(seed);
+  for (let i = 0; i < 9; i++) {
+    const a = (i / 9) * Math.PI * 2 + rnd();
+    const tilt = 0.5 + rnd() * 0.5;
+    const len = (0.6 + rnd() * 0.5) * s;
+    const leaf = new ConeGeometry(0.1 * s, len, 4).scale(1, 1, 0.3).translate(0, len / 2, 0).rotateZ(-tilt).rotateY(a);
+    deco(b, leaf, [x, y + 0.52 * s, z], i % 2 ? '#5f8a3a' : '#4f7a2e');
+  }
+  deco(b, new IcosahedronGeometry(0.18 * s, 0), [x, y + 0.7 * s, z], '#6f9a42');
+}
+
+/** A stone urn on a square foot; flowers optional. */
+export function urn(b: LevelBuilder, pos: V3, flowers = false, seed = 1): void {
+  const [x, y, z] = pos;
+  b.box([x, y + 0.5, z], [0.6, 1, 0.6], { invisible: true });
+  deco(b, new BoxGeometry(0.55, 0.12, 0.55), [x, y + 0.06, z], COLORS.stoneDark);
+  deco(b, new CylinderGeometry(0.12, 0.2, 0.25, 8), [x, y + 0.24, z], COLORS.stoneLight);
+  deco(b, new SphereGeometry(0.32, 10, 7).scale(1, 0.9, 1), [x, y + 0.6, z], COLORS.stoneLight);
+  deco(b, new CylinderGeometry(0.3, 0.22, 0.2, 10), [x, y + 0.92, z], COLORS.stoneLight);
+  deco(b, new TorusGeometry(0.3, 0.035, 5, 12).rotateX(Math.PI / 2), [x, y + 1.02, z], COLORS.stone);
+  for (const side of [-1, 1]) deco(b, new TorusGeometry(0.1, 0.03, 4, 8), [x + side * 0.33, y + 0.72, z], COLORS.stone);
+  if (flowers) {
+    const rnd = scatter(seed);
+    deco(b, new IcosahedronGeometry(0.28, 0).scale(1, 0.6, 1), [x, y + 1.1, z], '#5f8a3a');
+    for (let i = 0; i < 7; i++) {
+      const a = rnd() * Math.PI * 2;
+      const r = rnd() * 0.25;
+      deco(b, new IcosahedronGeometry(0.07, 0), [x + Math.cos(a) * r, y + 1.2 + rnd() * 0.12, z + Math.sin(a) * r], ['#e86a8a', '#f5d36a', '#b98ae0', '#f3ead8'][i % 4]);
+    }
+  }
+}
+
+/** A stack of books, slightly askew. */
+export function bookStack(b: LevelBuilder, pos: V3, n = 4, seed = 1): void {
+  const rnd = scatter(seed);
+  let y = pos[1];
+  const colors = ['#7a2f3a', '#2f5a6a', '#5a6a3a', '#8a5a36', '#4a2c4f', '#a0522d'];
+  for (let i = 0; i < n; i++) {
+    const h = 0.06 + rnd() * 0.05;
+    const w = 0.32 + rnd() * 0.12;
+    const d = 0.24 + rnd() * 0.06;
+    const r = (rnd() - 0.5) * 0.5;
+    deco(b, new BoxGeometry(w, h, d), [pos[0], y + h / 2, pos[2]], colors[Math.floor(rnd() * colors.length)], [0, r, 0]);
+    deco(b, new BoxGeometry(w - 0.03, h - 0.02, d + 0.005), [pos[0], y + h / 2, pos[2]], '#f3ead8', [0, r, 0]);
+    y += h;
+  }
+}
+
+/** A black iron cauldron on three legs with something green bubbling in it. */
+export function cauldron(b: LevelBuilder, pos: V3, r = 0.5): void {
+  const [x, y, z] = pos;
+  b.box([x, y + r * 0.8, z], [r * 1.6, r * 1.6, r * 1.6], { invisible: true });
+  deco(b, new SphereGeometry(r, 12, 8, 0, Math.PI * 2, Math.PI * 0.3, Math.PI * 0.7), [x, y + r + 0.12, z], '#2a2230');
+  deco(b, new TorusGeometry(r * 0.82, 0.05, 5, 16).rotateX(Math.PI / 2), [x, y + r * 1.58 + 0.12, z], '#3a3240');
+  deco(b, new CylinderGeometry(r * 0.78, r * 0.78, 0.02, 14), [x, y + r * 1.5 + 0.12, z], '#7ac86a');
+  for (let i = 0; i < 3; i++) {
+    const a = (i / 3) * Math.PI * 2;
+    deco(b, new BoxGeometry(0.07, 0.3, 0.07), [x + Math.cos(a) * r * 0.6, y + 0.15, z + Math.sin(a) * r * 0.6], '#2a2230');
+  }
+  for (let i = 0; i < 4; i++) deco(b, new IcosahedronGeometry(0.04 + i * 0.012, 0), [x - 0.15 + i * 0.1, y + r * 1.55 + 0.14, z + (i % 2) * 0.1], '#a8e890');
+}
+
+/** A suit of armour on a plinth, holding a halberd (decor; Rattlecoats are the ones that move). */
+export function armour(b: LevelBuilder, pos: V3, rotY: number, plume = '#8a2a3a'): void {
+  const steel = '#9aa0a8';
+  const dark = '#5a6068';
+  b.box([pos[0], pos[1] + 1.1, pos[2]], [0.9, 2.2, 0.9], { invisible: true });
+  put(b, new BoxGeometry(0.9, 0.3, 0.9), pos, rotY, [0, 0.15, 0], COLORS.stoneDark);
+  for (const side of [-1, 1]) {
+    put(b, new CylinderGeometry(0.08, 0.1, 0.65, 6), pos, rotY, [side * 0.13, 0.65, 0], steel);
+    put(b, new BoxGeometry(0.16, 0.08, 0.26), pos, rotY, [side * 0.13, 0.34, 0.04], dark);
+    put(b, new SphereGeometry(0.08, 6, 4), pos, rotY, [side * 0.13, 0.66, 0.05], dark);
+    put(b, new SphereGeometry(0.12, 8, 6), pos, rotY, [side * 0.27, 1.45, 0], steel);
+    put(b, new CylinderGeometry(0.06, 0.07, 0.5, 6), pos, rotY, [side * 0.3, 1.15, 0.02], steel, [0, 0, side * 0.1]);
+  }
+  put(b, new CylinderGeometry(0.22, 0.17, 0.25, 8), pos, rotY, [0, 1.0, 0], dark);
+  put(b, new CylinderGeometry(0.25, 0.22, 0.45, 8), pos, rotY, [0, 1.3, 0], steel);
+  put(b, new BoxGeometry(0.06, 0.4, 0.04), pos, rotY, [0, 1.3, 0.24], '#c99a3e');
+  put(b, new SphereGeometry(0.17, 10, 8), pos, rotY, [0, 1.72, 0], steel);
+  put(b, new BoxGeometry(0.22, 0.03, 0.05), pos, rotY, [0, 1.72, 0.15], '#1b1b22');
+  put(b, new ConeGeometry(0.06, 0.32, 6), pos, rotY, [0, 1.98, -0.02], plume, [-0.4, 0, 0]);
+  // Halberd in the right hand.
+  put(b, new CylinderGeometry(0.025, 0.025, 2.3, 6), pos, rotY, [-0.36, 1.25, 0.12], COLORS.woodDark);
+  put(b, new BoxGeometry(0.02, 0.3, 0.22), pos, rotY, [-0.36, 2.3, 0.2], steel);
+  put(b, new ConeGeometry(0.05, 0.2, 4), pos, rotY, [-0.36, 2.5, 0.12], steel);
+}
+
+let webTexture: CanvasTexture | null = null;
+/** A cobweb strung across a corner: `corner` is the top of the corner, `d1`/`d2` run along the two walls. */
+export function cobweb(b: LevelBuilder, corner: V3, d1: [number, number], d2: [number, number], s = 1.2): void {
+  if (!webTexture) {
+    const c = document.createElement('canvas');
+    c.width = c.height = 128;
+    const g = c.getContext('2d')!;
+    g.strokeStyle = 'rgba(240,240,240,0.85)';
+    g.lineWidth = 1.2;
+    const ox = 64;
+    const oy = 0;
+    for (let i = 0; i <= 8; i++) {
+      const a = (i / 8) * Math.PI;
+      g.beginPath();
+      g.moveTo(ox, oy);
+      g.lineTo(ox + Math.cos(a) * 130, oy + Math.sin(a) * 130);
+      g.stroke();
+    }
+    for (let r = 14; r < 130; r += 13) {
+      g.beginPath();
+      for (let i = 0; i <= 8; i++) {
+        const a = (i / 8) * Math.PI;
+        const rr = r * (i % 2 ? 0.92 : 1);
+        if (i === 0) g.moveTo(ox + Math.cos(a) * rr, oy + Math.sin(a) * rr);
+        else g.lineTo(ox + Math.cos(a) * rr, oy + Math.sin(a) * rr);
+      }
+      g.stroke();
+    }
+    webTexture = new CanvasTexture(c);
+    webTexture.colorSpace = SRGBColorSpace;
+  }
+  const [cx, cy, cz] = corner;
+  const p1 = [cx + d1[0] * s, cy, cz + d1[1] * s];
+  const p2 = [cx + d2[0] * s, cy, cz + d2[1] * s];
+  const p3 = [cx + (d1[0] + d2[0]) * 0.15 * s, cy - s, cz + (d1[1] + d2[1]) * 0.15 * s];
+  const geo = new BufferGeometry();
+  geo.setAttribute('position', new BufferAttribute(new Float32Array([...p1, ...p2, ...p3]), 3));
+  geo.setAttribute('uv', new BufferAttribute(new Float32Array([0, 1, 1, 1, 0.5, 0]), 2));
+  // All of a level's cobwebs share one mesh (one draw call), rebuilt as each is added.
+  let batch = webBatches.get(b);
+  if (!batch) {
+    batch = { geos: [], mesh: new Mesh(new BufferGeometry(), new MeshBasicMaterial({ map: webTexture, transparent: true, opacity: 0.55, depthWrite: false, side: DoubleSide, fog: true })) };
+    webBatches.set(b, batch);
+    b.prop(batch.mesh);
+  }
+  batch.geos.push(geo);
+  batch.mesh.geometry.dispose();
+  batch.mesh.geometry = mergeGeometries(batch.geos)!;
+}
+const webBatches = new WeakMap<LevelBuilder, { geos: BufferGeometry[]; mesh: Mesh }>();
+
+/** A heap of fallen stones (no collider). */
+export function rubble(b: LevelBuilder, x: number, z: number, n = 7, seed = 1, y = 0, spread = 0.8): void {
+  const rnd = scatter(seed);
+  for (let i = 0; i < n; i++) {
+    const r = 0.1 + rnd() * 0.2;
+    const a = rnd() * Math.PI * 2;
+    const d = rnd() * spread;
+    deco(b, new IcosahedronGeometry(r, 0).scale(1, 0.6, 1), [x + Math.cos(a) * d, y + r * 0.4, z + Math.sin(a) * d], [COLORS.stoneLight, COLORS.stone, COLORS.stoneDark][i % 3], [rnd(), rnd() * 3, 0]);
+  }
+}
+
+/** A banded barrel. */
+export function barrel(b: LevelBuilder, pos: V3, r = 0.4, h = 1): void {
+  const [x, y, z] = pos;
+  b.box([x, y + h / 2, z], [r * 1.8, h, r * 1.8], { invisible: true });
+  deco(b, new CylinderGeometry(r * 0.9, r * 0.9, h, 10), [x, y + h / 2, z], COLORS.wood);
+  deco(b, new CylinderGeometry(r, r, h * 0.5, 10), [x, y + h / 2, z], COLORS.wood);
+  for (const t of [0.12, 0.88]) deco(b, new CylinderGeometry(r * 0.94, r * 0.94, 0.05, 10), [x, y + h * t, z], '#3a3240');
+  for (const t of [0.33, 0.67]) deco(b, new CylinderGeometry(r * 1.01, r * 1.01, 0.05, 10), [x, y + h * t, z], '#3a3240');
+  deco(b, new CylinderGeometry(r * 0.86, r * 0.86, 0.02, 10), [x, y + h + 0.005, z], COLORS.woodDark);
+}
+
+/** An iron wall sconce with a burning torch. `rotY` faces away from the wall. */
+export function wallTorch(b: LevelBuilder, flames: Glow, pos: V3, rotY: number): void {
+  put(b, new BoxGeometry(0.16, 0.3, 0.04), pos, rotY, [0, 0, 0.02], '#2a2230');
+  put(b, new BoxGeometry(0.05, 0.05, 0.3), pos, rotY, [0, -0.05, 0.17], '#2a2230');
+  put(b, new CylinderGeometry(0.09, 0.06, 0.1, 6), pos, rotY, [0, 0.02, 0.3], '#2a2230');
+  put(b, new CylinderGeometry(0.04, 0.03, 0.4, 5), pos, rotY, [0, 0.12, 0.3], COLORS.woodDark, [0.15, 0, 0]);
+  const v = new Vector3(0, 0, 0.33).applyAxisAngle(new Vector3(0, 1, 0), rotY);
+  flames.add(new ConeGeometry(0.09, 0.3, 6), [pos[0] + v.x, pos[1] + 0.42, pos[2] + v.z]);
+  flames.add(new ConeGeometry(0.05, 0.42, 5), [pos[0] + v.x, pos[1] + 0.45, pos[2] + v.z]);
+}
+
+/** Ivy creeping over a wall face. `facing` is the direction the face looks (±1 along the wall's normal axis). */
+export function ivy(b: LevelBuilder, axis: 'x' | 'z', at: number, from: number, to: number, y0: number, y1: number, facing: 1 | -1, seed = 1): void {
+  const rnd = scatter(seed);
+  const n = Math.round((to - from) * (y1 - y0) * 6);
+  const greens = ['#4f7a2e', '#5f8a3a', '#6f9a42', '#3f6a2a'];
+  for (let i = 0; i < n; i++) {
+    const u = from + rnd() * (to - from);
+    // Denser near the bottom, thinning out as it climbs.
+    const v = y0 + Math.pow(rnd(), 1.6) * (y1 - y0);
+    const leaf = new BoxGeometry(0.24, 0.2, 0.02).rotateZ(rnd() * Math.PI);
+    const off = at + facing * (0.03 + rnd() * 0.04);
+    if (axis === 'x') deco(b, leaf, [u, v, off], greens[i % 4]);
+    else deco(b, leaf.rotateY(Math.PI / 2), [off, v, u], greens[i % 4]);
+  }
+}
+
+/** A clump of toadstools. */
+export function mushrooms(b: LevelBuilder, x: number, z: number, n = 4, seed = 1, y = 0): void {
+  const rnd = scatter(seed);
+  for (let i = 0; i < n; i++) {
+    const a = rnd() * Math.PI * 2;
+    const d = rnd() * 0.4;
+    const h = 0.1 + rnd() * 0.18;
+    const px = x + Math.cos(a) * d;
+    const pz = z + Math.sin(a) * d;
+    deco(b, new CylinderGeometry(0.03, 0.04, h, 5), [px, y + h / 2, pz], '#efe6c8');
+    deco(b, new SphereGeometry(0.06 + h * 0.4, 7, 4, 0, Math.PI * 2, 0, Math.PI / 2), [px, y + h, pz], i % 3 ? '#c84a3a' : '#d9a24a');
+    deco(b, new IcosahedronGeometry(0.015, 0), [px + 0.03, y + h + 0.05 + h * 0.2, pz], '#f6f1e6');
+  }
+}
+
+/** A round leafy bush (no collider). */
+export function bush(b: LevelBuilder, x: number, z: number, s = 1, seed = 1, y = 0): void {
+  const rnd = scatter(seed);
+  for (let i = 0; i < 5; i++) {
+    const a = rnd() * Math.PI * 2;
+    const d = rnd() * 0.35 * s;
+    deco(b, new IcosahedronGeometry((0.35 + rnd() * 0.2) * s, 0), [x + Math.cos(a) * d, y + (0.35 + rnd() * 0.25) * s, z + Math.sin(a) * d], ['#4f7a2e', '#5f8a3a', '#6f9a42'][i % 3], [rnd(), rnd(), 0]);
+  }
 }

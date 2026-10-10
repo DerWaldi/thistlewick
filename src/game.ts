@@ -253,6 +253,36 @@ export class Game {
     while (this.scriptRunning) await this.scriptRunning;
   }
 
+  /**
+   * Save a PNG of the current view, stamped with where you are (P key). Handy for
+   * bug reports: the stamp says exactly which level, area and position.
+   */
+  screenshot(): void {
+    const s = this.session;
+    if (!s) return;
+    this.renderer.draw();
+    const src = this.renderer.renderer.domElement;
+    const c = document.createElement('canvas');
+    c.width = src.width;
+    c.height = src.height;
+    const g = c.getContext('2d')!;
+    g.drawImage(src, 0, 0);
+    const f = s.player.feet;
+    const stamp = `${s.def.id} · ${s.currentArea?.name ?? '-'} · feet ${f.x.toFixed(2)}, ${f.y.toFixed(2)}, ${f.z.toFixed(2)} · facing ${s.player.facing.toFixed(2)} · ${s.player.mode}`;
+    const px = Math.max(14, Math.round(c.height / 48));
+    g.font = `${px}px ui-monospace, Menlo, monospace`;
+    const w = g.measureText(stamp).width + px;
+    g.fillStyle = 'rgba(0,0,0,0.55)';
+    g.fillRect(0, c.height - px * 1.8, w, px * 1.8);
+    g.fillStyle = '#f3e4c4';
+    g.fillText(stamp, px / 2, c.height - px * 0.6);
+    const a = document.createElement('a');
+    a.download = `thistlewick-${s.def.id}-${new Date().toISOString().replace(/[:.]/g, '-')}.png`;
+    a.href = c.toDataURL('image/png');
+    a.click();
+    this.events.emit('toast', { text: 'Screenshot saved to your downloads.', kind: 'info' });
+  }
+
   get isHalted(): boolean {
     return this.paused || this.dialogue.isOpen || this.shop.isOpen || this.album.isOpen;
   }

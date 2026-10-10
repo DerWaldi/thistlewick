@@ -120,6 +120,8 @@ Progress lives in flags (`practice-done`, `down:<rattlecoat id>`, `trial-hint-*`
 - Options: sensitivity, invert Y, music and effects volume, graphics (Fancy/Fast) and FPS display. They're stored under `thistlewick.options`, and `game.applyOptions()` applies them.
 - Fancy graphics adds bloom and grading, a pixel ratio up to 1.5 and a 4096 shadow map. If frames stay under about 42 fps for 4 s, the game drops to Fast once and shows a toast.
 - Music: `engine/music.ts` sequences two original pieces live: the Thistlewick Waltz (hub, title) and the Tumbling Vaults (trial). `LevelDef.music` picks the mood. Moods cross-fade, and the music ducks during dialogue. A file at `public/music/<mood>.mp3` replaces the synthesised version, and should be logged in ASSETS.md.
+- A `Song` is a list of `Section`s: bars of melody/bass/chords plus an `Arrangement` (lead instrument and octave shift, harp chords or arpeggio, bass style, counter-melody, chimes, ornaments, dynamics). The same bars come back re-orchestrated, so the loop takes about 1.5 minutes before it repeats. Bars get small random dynamics and grace notes.
+- P saves a screenshot (`game.screenshot()`), stamped with level, area, position, facing and mode, for bug reports.
 
 ### Atmosphere props (`world/props.ts`)
 - `lightShaft(from, dir, length, width)`: window light beams.
@@ -127,6 +129,9 @@ Progress lives in flags (`practice-done`, `down:<rattlecoat id>`, `trial-hint-*`
 - `grass(x0, x1, z0, z1, y, density)`: instanced swaying tufts.
 - Water has animated glints and a lighter rim at grazing angles.
 - The world material darkens vertical faces near y=0, as a cheap contact shadow.
+- Set dressing (all merged into the level mesh, except cobwebs, which share one batched mesh per level): `rug`, `bench`, `table` (with candles into a `Glow`), `candlestick`, `pottedPlant`, `urn`, `bookStack`, `cauldron`, `armour`, `barrel`, `cobweb(corner, d1, d2)`, `rubble`, `wallTorch`, `ivy`, `mushrooms`, `bush`. Furniture gets invisible box colliders. Remember walls are 1 m thick centred on `at`, so faces sit at `at ± 0.5`.
+- `wall(..., { cap })` adds an invisible, ungrabbable, camera-ignored extension on top of a boundary wall, so nobody hops onto it and out of the level. Use it on any outer wall whose top can be reached from a ledge, ruin or walkway.
+- `portrait()` paints a `PortraitSpec` (oil-painting style: curtain, brushwork, varnish; optional `hairStyle`, `collar`, `expression`, `jewel`, `eyes`) into an ornate gilt frame with rosettes and a plaque.
 
 ### Dialogue
 - Conversations are async scripts in `src/data/dialogues.ts`. They `say(lines)` (with optional `choices`) and may change progress; the Sorting Lantern, for example, sets your house.
@@ -158,6 +163,9 @@ Levels place objects with `b.add({ type: ..., ... })`. Objects talk to each othe
 - **Visual style:** flat-shaded vertex colours with a warm palette (`COLORS` in `world/materials.ts`). Build from primitives. External assets must be CC0 and recorded in `ASSETS.md`.
 - **Comments:** explain *why*, not what.
 
+### Characters
+`buildStudent(look)` (player/model.ts) builds every person: robe with gold-edged front, shirt and tie, belt and buckle, cuffs, crest, boots, a face with eyes, brows, ears, cheeks and a smile. `StudentLook` adds `skin`, `hair`, `hairStyle` (tufts/long/bun/wild/bald), `beard`, `glasses` and `hatStyle` (pointy/tall/cap/none). NPC `look` is a `StudentLook` plus `scale`.
+
 ## Milestones
 
 | Milestone | Status | Contents |
@@ -167,6 +175,7 @@ Levels place objects with `b.add({ type: ..., ... })`. Objects talk to each othe
 | M2 Hub | done | Level pipeline, Lantern Hall / Crooked Corridor / Hollyhock Court / Cupboard, secrets, cards & album, save, house sorting & points |
 | M3 Lesson | done | Gorse's lesson, the Thwackwort Trial dungeon (~5 min), Thistle Star, a post-lesson hub secret |
 | M4 Slice complete | done | Shop and upgrades, all 10 cards, 4 secrets, title/pause/options, music, visual pass, perf |
+| Polish 1 | done | Sectioned music, wall caps against climbing out, P screenshots, painted portraits and gilt frames, detailed characters, set dressing in every room |
 
 Spell roster (data comes in M1+):
 - Thwackwort (knockback)

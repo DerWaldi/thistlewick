@@ -1,3 +1,4 @@
+import type { StudentLook } from '../player/model';
 import type { Object3D, Vector3 } from 'three';
 import type { SpeakerId } from '../data/characters';
 import type { SpellId } from '../data/spells';
@@ -23,11 +24,7 @@ interface SpecBase {
   unless?: SpellId;
 }
 
-export interface NpcLook {
-  robe?: string;
-  scarf?: string;
-  trim?: string;
-  hat?: string;
+export interface NpcLook extends StudentLook {
   /** Uniform scale (teachers are a bit taller than first-years). */
   scale?: number;
 }

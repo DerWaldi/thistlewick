@@ -288,7 +288,7 @@ export class Npc implements Entity, Interactable {
     private ctx: WorldContext,
   ) {
     const l = spec.look ?? {};
-    this.rig = buildStudent({ robe: l.robe, scarf: l.scarf, trim: l.trim, hat: l.hat });
+    this.rig = buildStudent(l);
     this.pos = new Vector3(...spec.pos);
     this.yaw = spec.yaw;
     this.rig.root.position.copy(this.pos);

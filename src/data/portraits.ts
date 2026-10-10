@@ -15,4 +15,10 @@ export interface PortraitSpec {
   glasses?: boolean;
   /** Small object held or floating beside them. */
   prop?: 'cauldron' | 'scroll' | 'key' | 'wand' | 'book' | 'thistle' | 'pocket' | 'none';
+  hairStyle?: 'short' | 'long' | 'bun' | 'wild' | 'bald';
+  collar?: 'ruff' | 'plain' | 'scarf';
+  expression?: 'smile' | 'stern' | 'smirk' | 'kind';
+  /** Brooch / jewel colour. */
+  jewel?: string;
+  eyes?: string;
 }

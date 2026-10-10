@@ -1,8 +1,8 @@
 import { BoxGeometry, CylinderGeometry } from 'three';
-import type { LevelBuilder } from '../../world/builder';
+import type { LevelBuilder, V3 } from '../../world/builder';
 import type { LevelDef } from '../../world/level';
 import { COLORS } from '../../world/materials';
-import { column, crate, deco, grass, hollyhock, signboard, slab, tree, wall } from '../../world/props';
+import { banner, barrel, bush, cobweb, column, crate, deco, Glow, grass, hollyhock, ivy, mushrooms, rubble, rug, signboard, slab, tree, urn, wall, wallTorch } from '../../world/props';
 
 /**
  * The Thwackwort Trial, under Gorse's classroom. Five rooms, south to north (+Z):
@@ -38,8 +38,24 @@ const FLOOR = '#7d6a5e';
 /** Gate openings: the gate entity builds its own posts at ±(w/2 + 0.3). */
 const gateHole = (x: number) => ({ from: x - 2.1, to: x + 2.1, top: 3.6 });
 
+/** Cobwebs in the top corners of a rectangular room (inner faces x0..x1, z0..z1). */
+function webs(b: LevelBuilder, x0: number, x1: number, z0: number, z1: number, y: number, s = 1): void {
+  for (const [x, dx] of [
+    [x0, 1],
+    [x1, -1],
+  ]) {
+    for (const [z, dz] of [
+      [z0, 1],
+      [z1, -1],
+    ]) {
+      cobweb(b, [x, y, z] as V3, [dx, 0], [0, dz], s);
+    }
+  }
+}
+
 function build(b: LevelBuilder): void {
   b.killY = -20;
+  const flames = new Glow();
   b.floor(-10.5, 10.5, -0.5, 78.5, {
     color: FLOOR,
     holes: [
@@ -64,6 +80,13 @@ function build(b: LevelBuilder): void {
     { type: 'sweetLine', kind: 'fizzwort', from: [0, 0.6, 3.5], to: [0, 0.6, 8.5], count: 4 },
   );
   for (const x of [-4, 4]) column(b, x, 6, 6);
+  wallTorch(b, flames, [-5.98, 2.4, 7.5], Math.PI / 2);
+  wallTorch(b, flames, [5.98, 2.4, 7.5], -Math.PI / 2);
+  barrel(b, [5.4, 0, 0.6]);
+  crate(b, [4.4, 0, 0.6], 0.8);
+  urn(b, [-5.4, 0, 9]);
+  rubble(b, 5.2, 9, 6, 1);
+  webs(b, -6, 6, 0, 9.5, 5.9, 1.1);
   b.lantern([0, 4.6, 5], 9, 12);
 
   // ================================================================ shoving room (z 10..26)
@@ -94,6 +117,9 @@ function build(b: LevelBuilder): void {
   );
   b.lantern([0, 5.6, 14], 10, 16);
   signboard(b, 'Ring to reset the blocks', [-7.95, 3.9, 11.2], Math.PI / 2);
+  for (const x of [-7.98, 7.98]) wallTorch(b, flames, [x, 3.2, 15.5], x < 0 ? Math.PI / 2 : -Math.PI / 2);
+  for (const x of [-5.5, 5.5]) wallTorch(b, flames, [x, 3.2, 25.48], Math.PI);
+  webs(b, -8, 8, 10.5, 25.5, 6.9, 1.4);
   b.lantern([-7.9, 3.5, 20], 0, 0, false);
   b.lantern([7.9, 3.5, 20], 0, 0, false);
 
@@ -105,7 +131,7 @@ function build(b: LevelBuilder): void {
   b.box([0, 0.45, 31], [8, 0.9, 0.5], { color: COLORS.stoneLight }); // hurdle
   b.box([0, 0.6, 41.5], [8, 1.2, 3], { color: COLORS.stone }); // step up and over
   b.box([0, 0.45, 45.8], [8, 0.9, 0.5], { color: COLORS.stoneLight }); // hurdle
-  wall(b, 'x', 48, -10.5, 10.5, 7.5, { color: STONE, holes: [gateHole(0)] });
+  wall(b, 'x', 48, -10.5, 10.5, 7.5, { color: STONE, holes: [gateHole(0)], cap: 8 });
   b.add(
     { type: 'checkpoint', pos: [-2.9, 0, 27.6], yaw: Math.PI / 2, zone: { min: [-4, -1, 26.2], max: [4, 4, 29.5] } },
     { type: 'knockSwitch', id: 'r3-timed', pos: [4.0, 2, 28.6], yaw: -Math.PI / 2, timed: 9 },
@@ -114,12 +140,18 @@ function build(b: LevelBuilder): void {
     { type: 'sweetLine', kind: 'fizzwort', from: [0, 1.6, 34], to: [0, 1.6, 39], count: 4 },
     { type: 'sweet', kind: 'bramble', pos: [-3, 1.8, 41.5] },
   );
+  for (const z of [33, 44]) {
+    wallTorch(b, flames, [-3.98, 2.8, z], Math.PI / 2);
+    wallTorch(b, flames, [3.98, 2.8, z], -Math.PI / 2);
+  }
+  webs(b, -4, 4, 26.5, 47.5, 6.9, 1.2);
+  rubble(b, -3.4, 47, 5, 4, 0, 0.4);
   b.lantern([0, 5.6, 37], 10, 16);
 
   // ================================================================ overgrown garden (z 48..72, open sky)
-  wall(b, 'z', -10.5, 48, 72, 6, { color: STONE });
-  wall(b, 'z', 10.5, 48, 72, 6, { color: STONE });
-  wall(b, 'x', 72, -10.5, 10.5, 6, { color: STONE, holes: [gateHole(0)] });
+  wall(b, 'z', -10.5, 48, 72, 6, { color: STONE, cap: 8 });
+  wall(b, 'z', 10.5, 48, 72, 6, { color: STONE, cap: 8 });
+  wall(b, 'x', 72, -10.5, 10.5, 6, { color: STONE, holes: [gateHole(0)], cap: 8 });
   deco(b, new BoxGeometry(20, 0.05, 23.5), [0, 0.025, 60], '#6e8a44');
   grass(b, -9.8, 9.8, 48.6, 71.4, 0.05, 1.6);
   // Hedges (jumpable), beds and an old tree.
@@ -163,6 +195,28 @@ function build(b: LevelBuilder): void {
     b.cylinder([x, h / 2, z], 0.45, h, COLORS.stoneLight, undefined, 8);
   }
   crate(b, [8.6, 0, 50], 1);
+  // Ivy and moss over the old walls, toadstools in the shade, fallen stones by the pillars.
+  ivy(b, 'z', -10, 49, 71, 0.2, 5.5, 1, 11);
+  ivy(b, 'z', 10, 49, 71, 0.2, 5, -1, 12);
+  ivy(b, 'x', 48.5, -10, -2.5, 0.2, 5, 1, 13);
+  ivy(b, 'x', 48.5, 2.5, 10, 0.2, 4.5, 1, 14);
+  ivy(b, 'x', 71.5, -10, -2.5, 0.2, 4, -1, 15);
+  ivy(b, 'x', 71.5, 2.5, 10, 0.2, 4.5, -1, 16);
+  for (const [x, z, h] of [
+    [-6, 64, 2.6],
+    [6, 65, 1.6],
+    [-5, 70, 3.2],
+  ]) {
+    rubble(b, x + 0.6, z + 0.4, 6, x * z, 0.05, 0.7);
+    deco(b, new CylinderGeometry(0.5, 0.5, 0.08, 8), [x, h + 0.04, z], COLORS.moss);
+  }
+  mushrooms(b, 6.6, 66.2, 5, 3, 0.05);
+  mushrooms(b, -8.6, 52, 4, 5, 0.05);
+  mushrooms(b, -0.5, 58.6, 3, 8, 0.05);
+  mushrooms(b, 9.2, 57, 4, 13, 0.05);
+  bush(b, -9.3, 69.8, 1.1, 2, 0.05);
+  bush(b, 9.2, 70.2, 1, 6, 0.05);
+  bush(b, -9.4, 50.4, 0.9, 9, 0.05);
 
   // ================================================================ star chamber (z 72..78)
   wall(b, 'z', -3.5, 72, 78.5, 6, { color: STONE });
@@ -171,10 +225,16 @@ function build(b: LevelBuilder): void {
   slab(b, -3.5, 3.5, 72, 78.5, 6.5, 0.5, COLORS.stoneDark);
   b.cylinder([0, 0.5, 75.2], 0.7, 1, COLORS.stoneLight, undefined, 8);
   deco(b, new CylinderGeometry(0.85, 0.85, 0.12, 8), [0, 1.06, 75.2], '#c99a3e');
+  rug(b, [0, 0, 75.2], 3.6, 4.6, '#5d4470', '#c99a3e');
+  for (const x of [-2.98, 2.98]) wallTorch(b, flames, [x, 2.6, 73.6], x < 0 ? Math.PI / 2 : -Math.PI / 2);
+  banner(b, [-2.96, 3.9, 76.4], Math.PI / 2, '#8a2a3a', '#e8c25a', 1.2, 2.4);
+  banner(b, [2.96, 3.9, 76.4], -Math.PI / 2, '#2f5a6a', '#e8c25a', 1.2, 2.4);
+  webs(b, -3, 3, 72.5, 78, 5.9, 0.8);
   b.add(
     { type: 'star', id: 'trial-star', pos: [0, 1.9, 75.2], script: 'trialComplete' },
     { type: 'door', pos: [0, 0, 77.95], yaw: Math.PI, width: 2.4, height: 3.4, to: { level: 'classroom', spawn: 'fromTrial' }, label: 'Up to class' },
   );
 
+  flames.finish(b, '#ffb060');
   b.finish();
 }

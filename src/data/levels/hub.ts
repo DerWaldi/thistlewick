@@ -1,8 +1,22 @@
 import { BoxGeometry, ConeGeometry, CylinderGeometry, Group, Mesh, MeshStandardMaterial, PointLight, TorusGeometry } from 'three';
-import type { LevelBuilder } from '../../world/builder';
+import type { LevelBuilder, V3 } from '../../world/builder';
 import type { LevelDef } from '../../world/level';
 import { COLORS } from '../../world/materials';
 import {
+  armour,
+  barrel,
+  bench,
+  bookStack,
+  bush,
+  candlestick,
+  cauldron,
+  cobweb,
+  ivy,
+  mushrooms,
+  pottedPlant,
+  rug,
+  table,
+  urn,
   banner,
   chandelier,
   column,
@@ -108,7 +122,7 @@ function buildHub(b: LevelBuilder): void {
   b.add(
     { type: 'hourglasses', pos: [-10, 0, 13], yaw: Math.PI / 2 },
     { type: 'sortingLantern', pos: [-6.5, 0, 9], yaw: Math.PI / 2 },
-    { type: 'npc', speaker: 'wendlebury', pos: [3, 0, 7], yaw: -Math.PI / 2 - 0.4, look: { robe: '#5d4470', scarf: '#c99a3e', trim: '#f3e4c4', hat: '#3b2c55', scale: 1.25 }, talk: 'wendlebury' },
+    { type: 'npc', speaker: 'wendlebury', pos: [3, 0, 7], yaw: -Math.PI / 2 - 0.4, look: { robe: '#5d4470', scarf: '#c99a3e', trim: '#f3e4c4', hat: '#3b2c55', hair: '#e8e8e8', hairStyle: 'bun', glasses: true, scale: 1.25 }, talk: 'wendlebury' },
     { type: 'door', pos: [0, 0, 0.05], yaw: 0, width: 4, height: 5.5, talk: 'frontDoors' },
   );
 
@@ -142,7 +156,7 @@ function buildHub(b: LevelBuilder): void {
   b.add({ type: 'card', card: 'pellam-fogg', pos: [-11.45, 9.75, 27.6] });
 
   // Gallery decor: shelves along the north wall, the door onto the cloister roof.
-  for (const x of [-6, -2.5, 1, 4.5]) shelf(b, [x, 5, 29.6], 0, 3, 3.2);
+  for (const x of [-6, -2.5, 1, 4.5]) shelf(b, [x, 5, 29.6], Math.PI, 3, 3.2);
   b.add({ type: 'sweetLine', kind: 'fizzwort', from: [-6, 5.6, 24], to: [6, 5.6, 24], count: 7 });
 
   // Secret 1: the swaying tapestry in the west wall hides an alcove.
@@ -160,6 +174,39 @@ function buildHub(b: LevelBuilder): void {
   );
   b.lantern([-14.5, 2.7, 23.5], 0, 0, false);
 
+  // Hall furnishings: a long table with benches, rugs, plants by the doors, urns at the
+  // stair foot, armour under the gallery, a reading desk upstairs and cobwebs up high.
+  table(b, candle, [8.6, 0, 8.5], Math.PI / 2, 7.5, 1.4, 4);
+  bench(b, [7.3, 0, 8.5], Math.PI / 2, 6.5);
+  bench(b, [9.9, 0, 8.5], Math.PI / 2, 6.5);
+  rug(b, [-7.6, 0, 11], 5, 3.6, '#2f5a6a', '#c99a3e');
+  rug(b, [0, 0, 25.5], 6, 3.6, '#5d4470', '#c99a3e');
+  for (const x of [-3.3, 3.3]) pottedPlant(b, [x, 0, 1.1], 1.2, x > 0 ? 2 : 3);
+  for (const [x, z] of [
+    [-11.2, 0.9],
+    [11.2, 0.9],
+    [11.2, 29.2],
+  ]) {
+    pottedPlant(b, [x, 0, z], 1.4, x * z);
+  }
+  for (const x of [-3.9, 3.9]) urn(b, [x, 0, 13.6], true, x > 0 ? 5 : 6);
+  armour(b, [-4.6, 0, 29.3], Math.PI, '#8a2a3a');
+  armour(b, [4.6, 0, 29.3], Math.PI, '#2f5a6a');
+  b.box([-1.5, 5.8, 27.6], [1.8, 0.08, 0.8], { color: COLORS.wood, pattern: 'planks' });
+  for (const x of [-2.25, -0.75]) deco(b, new BoxGeometry(0.1, 0.76, 0.6), [x, 5.38, 27.6], COLORS.woodDark);
+  b.box([-1.5, 5.4, 27.6], [1.4, 0.8, 0.5], { invisible: true });
+  bookStack(b, [-2.1, 5.84, 27.5], 5, 3);
+  bookStack(b, [-1.1, 5.84, 27.7], 3, 8);
+  candlestick(b, candle, [-1.6, 5.84, 27.85], 0.2);
+  for (const [c, d1, d2] of [
+    [[-12, HH - 0.6, 0], [1, 0], [0, 1]],
+    [[12, HH - 0.6, 0], [-1, 0], [0, 1]],
+    [[12, HH - 0.6, 30], [-1, 0], [0, -1]],
+    [[-12, HH - 0.6, 30], [1, 0], [0, -1]],
+  ] as [V3, [number, number], [number, number]][]) {
+    cobweb(b, c, d1, d2, 1.6);
+  }
+
   // ================================================================ CRUMBLETON'S CUPBOARD (x -18..-12, z 4..12)
   wall(b, 'x', 3.5, -18.5, -12.5, 3.5);
   wall(b, 'x', 12.5, -18.5, -12.5, 3.5);
@@ -173,9 +220,18 @@ function buildHub(b: LevelBuilder): void {
     deco(b, new CylinderGeometry(0.13, 0.13, 0.3, 8), [-15.6 + ((i % 3) - 1) * 0.2, 1.25, 5.6 + i * 0.6], colors[i % 3]);
   }
   b.add(
-    { type: 'npc', speaker: 'tansy', pos: [-16.8, 0, 6.6], yaw: Math.PI / 2, look: { robe: '#46395f', scarf: HOUSES.yarrowdown.color, trim: HOUSES.yarrowdown.trim, hat: '#c8642e' }, talk: 'tansy' },
-    { type: 'npc', speaker: 'moss', pos: [-16.8, 0, 9.4], yaw: Math.PI / 2, look: { robe: '#46395f', scarf: HOUSES.nettleby.color, trim: HOUSES.nettleby.trim, hat: '#6b3f4f' }, talk: 'moss' },
+    { type: 'npc', speaker: 'tansy', pos: [-16.8, 0, 6.6], yaw: Math.PI / 2, look: { robe: '#46395f', scarf: HOUSES.yarrowdown.color, trim: HOUSES.yarrowdown.trim, hat: '#c8642e', hatStyle: 'none', hair: '#c8642e', hairStyle: 'long', skin: '#f3d2b4' }, talk: 'tansy' },
+    { type: 'npc', speaker: 'moss', pos: [-16.8, 0, 9.4], yaw: Math.PI / 2, look: { robe: '#46395f', scarf: HOUSES.nettleby.color, trim: HOUSES.nettleby.trim, hat: '#6b3f4f', hatStyle: 'cap', hair: '#c8642e', hairStyle: 'wild', skin: '#f3d2b4' }, talk: 'moss' },
   );
+  barrel(b, [-13.5, 0, 4.5]);
+  barrel(b, [-14.35, 0, 4.42], 0.32, 0.8);
+  crate(b, [-13.5, 0, 11.5], 0.8);
+  crate(b, [-13.55, 0.8, 11.55], 0.5);
+  cauldron(b, [-17.6, 0, 8], 0.4);
+  bookStack(b, [-15.5, 1.1, 10.6], 4, 11);
+  bookStack(b, [-15.7, 1.1, 4.9], 3, 12);
+  cobweb(b, [-18, 3.6, 4], [1, 0], [0, 1], 0.9);
+  cobweb(b, [-13, 3.6, 12], [-1, 0], [0, -1], 0.7);
   const shopLight = new PointLight('#ffc070', 8, 9, 1.6);
   shopLight.position.set(-14.5, 3, 8);
   b.prop(shopLight);
@@ -220,8 +276,24 @@ function buildHub(b: LevelBuilder): void {
     { type: 'card', card: 'barnaby-gorse', pos: [20, 1.2, 12.2] },
     { type: 'secret', id: 'hub-bookshelf', area: 'corridor', min: [19, -1, 10.8], max: [21, 3, 13.2] },
   );
-  portrait(b, { bg: ['#f2c49a', '#a0522d'], kind: 'person', skin: '#e2a982', robe: '#a0522d', hair: '#e8e2d0', hat: 'none', beard: true, prop: 'wand' }, [25.95, 2.6, 13], -Math.PI / 2, 1.1, 1.4, -0.08);
+  portrait(b, CARD_BY_ID.get('barnaby-gorse')!.portrait, [25.95, 2.6, 13], -Math.PI / 2, 1.1, 1.4, -0.08);
   portrait(b, CARD_BY_ID.get('hester-quillfeather')!.portrait, [32, 4.6, 22.95], Math.PI, 1.1, 1.4, 0.07);
+  rug(b, [21.6, 0, 8], 7, 1.7, '#8a2a3a', '#3a2617');
+  rug(b, [24, 0, 16.5], 1.7, 2.4, '#3f7a4a', '#c99a3e');
+  barrel(b, [22.4, 0, 22.6]);
+  crate(b, [23.3, 0, 22.55], 0.8);
+  pottedPlant(b, [25.6, 0, 17.2], 1.1, 7);
+  bench(b, [37.4, 3, 22.75], 0, 2.4);
+  pottedPlant(b, [41.55, 3, 22.55], 1.2, 9);
+  armour(b, [35, 3, 18.5], 0, '#c99a3e');
+  for (const [c, d1, d2] of [
+    [[13, CH - 0.2, 6], [1, 0], [0, 1]],
+    [[26, CH - 0.2, 6], [-1, 0], [0, 1]],
+    [[42, 8.6, 23], [-1, 0], [0, -1]],
+    [[22, 8.6, 23], [1, 0], [0, -1]],
+  ] as [V3, [number, number], [number, number]][]) {
+    cobweb(b, c, d1, d2, 1);
+  }
   b.lantern([13.2, 3.4, 8], 6, 10);
   b.lantern([25.6, 3.6, 13.5], 0, 0, false);
   b.lantern([36, 6.4, 18.2], 7, 12);
@@ -247,10 +319,12 @@ function buildHub(b: LevelBuilder): void {
   const W = 8;
   // Side walls are too tall to climb from the cloister roof; the north wall's top is a
   // walkway (with a parapet) that leads behind the clock tower.
-  wall(b, 'z', -16.5, 30, 64, 10.5);
-  wall(b, 'z', 16.5, 30, 64, 10.5, { holes: [{ from: 44.5, to: 47.5, top: 3.5 }] });
+  wall(b, 'z', -16.5, 30, 64, 10.5, { cap: 8 });
+  wall(b, 'z', 16.5, 30, 64, 10.5, { holes: [{ from: 44.5, to: 47.5, top: 3.5 }], cap: 8 });
   wall(b, 'x', 63, -16, 16, W, { thick: 2 });
   b.box([0, W + 0.55, 63.85], [32, 1.1, 0.3], { color: COLORS.stoneLight });
+  // Keep people on the walkway: an invisible screen above the parapet.
+  b.box([0, W + 5, 63.85], [32, 8, 0.3], { invisible: true, info: { noGrab: true, cameraIgnore: true } });
   for (let x = -15; x <= 15; x += 2) deco(b, new BoxGeometry(0.8, 0.4, 0.32), [x, W + 1.3, 63.85], COLORS.stoneLight);
   // Grass beds and paths.
   for (const [x0, x1, z0, z1] of [
@@ -355,6 +429,33 @@ function buildHub(b: LevelBuilder): void {
     deco(b, new BoxGeometry(0.2, 0.45, 0.6), [x - 1, 0.22, z], COLORS.woodDark, [0, r, 0]);
     deco(b, new BoxGeometry(0.2, 0.45, 0.6), [x + 1, 0.22, z], COLORS.woodDark, [0, r, 0]);
   }
+  // Pots under the cloister, bushes and toadstools in the beds, ivy up the walls.
+  for (const [x, z] of [
+    [-14.6, 34.6],
+    [14.6, 34.6],
+    [14.6, 60.4],
+  ]) {
+    pottedPlant(b, [x, 0, z], 1.3, x + z);
+  }
+  for (const [x, z] of [
+    [-7, 42],
+    [-10.6, 46.5],
+    [7.2, 50.5],
+    [10.6, 41],
+    [-4, 55],
+    [4, 37],
+  ]) {
+    bush(b, x, z, 1, x * 3 + z, 0.06);
+  }
+  mushrooms(b, -9.4, 38.6, 5, 2, 0.06);
+  mushrooms(b, 9.2, 54.2, 4, 7, 0.06);
+  mushrooms(b, -7.2, 49, 3, 9, 0.06);
+  ivy(b, 'z', -16, 34, 44, 0.2, 7, 1, 1);
+  ivy(b, 'z', -16, 54, 61, 0.2, 5, 1, 2);
+  ivy(b, 'z', 16, 34, 43, 0.2, 6, -1, 3);
+  ivy(b, 'z', 16, 49, 61, 0.2, 7.5, -1, 4);
+  ivy(b, 'x', 62, -12, -4, 0.2, 4.5, -1, 5);
+  ivy(b, 'x', 62, 4, 12, 0.2, 4.5, -1, 6);
   b.add(
     { type: 'gnarling', pos: [-9, 0, 50], wander: 3, requires: 'thwackwort' },
     { type: 'gnarling', pos: [9, 0, 44], wander: 3, requires: 'thwackwort' },

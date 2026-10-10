@@ -104,6 +104,10 @@ async function boot(): Promise<void> {
     if (playing && !testMode) lock();
   };
 
+  window.addEventListener('keydown', (e) => {
+    if (e.code === 'KeyP' && playing && !e.repeat) game.screenshot();
+  });
+
   let panel: { toggle(): void } | null = null;
   window.addEventListener('keydown', async (e) => {
     if (e.code !== 'Backquote') return;

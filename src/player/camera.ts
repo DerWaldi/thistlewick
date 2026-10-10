@@ -34,6 +34,10 @@ export class OrbitCamera {
     this.armLength = tuning.camera.distance;
   }
 
+  private blocksCamera(col: import('@dimforge/rapier3d-compat').Collider): boolean {
+    return col !== this.player.collider && !this.physics.getInfo(col)?.cameraIgnore;
+  }
+
   /** Snap behind the player (after teleports/respawns). */
   snap(): void {
     this.initialised = false;
@@ -102,7 +106,7 @@ export class OrbitCamera {
 
     // The pivot itself must not be inside geometry (e.g. hanging under a low ceiling).
     const safePivot = new Vector3(fx, fy + FOOT_OFFSET + 0.3, fz);
-    const pivotFree = this.physics.sphereSweep(safePivot, shoulderPivot, CAM_RADIUS, (col) => col !== p.collider);
+    const pivotFree = this.physics.sphereSweep(safePivot, shoulderPivot, CAM_RADIUS, (col) => this.blocksCamera(col));
     const pivot = new Vector3().lerpVectors(safePivot, shoulderPivot, Math.max(0, pivotFree - 0.02));
 
     // Spring arm. Looking up pulls the camera in so it doesn't dig into the floor.
@@ -111,7 +115,7 @@ export class OrbitCamera {
     const upLook = Math.max(0, this.pitch) / Math.max(0.01, c.maxPitch);
     const wanted = c.distance * (1 - 0.35 * upLook);
     const desired = pivot.clone().addScaledVector(dir, wanted);
-    const free = this.physics.sphereSweep(pivot, desired, CAM_RADIUS, (col) => col !== p.collider);
+    const free = this.physics.sphereSweep(pivot, desired, CAM_RADIUS, (col) => this.blocksCamera(col));
     const allowed = Math.max(0.4, wanted * free - 0.05);
     if (allowed < this.armLength) this.armLength = allowed;
     else this.armLength = MathUtils.damp(this.armLength, allowed, 3, dt);

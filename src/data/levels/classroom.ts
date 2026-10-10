@@ -1,8 +1,8 @@
-import { BoxGeometry, CanvasTexture, Mesh, MeshBasicMaterial, PlaneGeometry, SRGBColorSpace } from 'three';
-import type { LevelBuilder } from '../../world/builder';
+import { BoxGeometry, CanvasTexture, CylinderGeometry, Mesh, MeshBasicMaterial, PlaneGeometry, SRGBColorSpace } from 'three';
+import type { LevelBuilder, V3 } from '../../world/builder';
 import type { LevelDef } from '../../world/level';
 import { COLORS } from '../../world/materials';
-import { deco, dustMotes, Glow, lightShaft, portrait, shelf, slab, wall, windowPane } from '../../world/props';
+import { bookStack, candlestick, cauldron, cobweb, deco, dustMotes, Glow, lightShaft, portrait, pottedPlant, rug, shelf, slab, wall, windowPane } from '../../world/props';
 import { CARD_BY_ID } from '../cards';
 
 /**
@@ -102,7 +102,7 @@ function build(b: LevelBuilder): void {
     speaker: 'gorse',
     pos: [0, 0, 11.6],
     yaw: Math.PI,
-    look: { robe: '#a0522d', scarf: '#c99a3e', trim: '#f3e4c4', hat: '#5e3b22', scale: 1.3 },
+    look: { robe: '#a0522d', scarf: '#c99a3e', trim: '#f3e4c4', hat: '#5e3b22', hatStyle: 'none', hair: '#e8e2d0', hairStyle: 'bald', beard: true, skin: '#e2a982', scale: 1.3 },
     talk: 'gorse',
   });
 
@@ -123,6 +123,29 @@ function build(b: LevelBuilder): void {
     lightShaft(b, [-7.95, 5.3, z], [0.85, -0.65, 0.2], 8, 1.3, 0.18);
   }
   dustMotes(b, [-7.5, 0.5, 1], [7.5, 6.5, 13.5], 90);
+  // Clutter: books and inkpots on the desks, a runner up the aisle, a cauldron, plants, cobwebs.
+  rug(b, [0, 0, 5.2], 2.2, 7.6, '#5d4470', '#c99a3e');
+  let seed = 20;
+  for (const x of [-3.6, 3.6]) {
+    for (const z of [4, 7.2]) {
+      bookStack(b, [x - 0.7, 0.85, z + 0.15], 2 + (seed % 3), seed++);
+      deco(b, new BoxGeometry(0.5, 0.01, 0.36), [x + 0.5, 0.855, z], '#f3ead8', [0, 0.2, 0]);
+      deco(b, new CylinderGeometry(0.05, 0.06, 0.08, 6), [x + 0.95, 0.89, z - 0.2], '#1b1b22');
+      deco(b, new CylinderGeometry(0.006, 0.01, 0.3, 4), [x + 0.98, 1.0, z - 0.2], '#f3ead8', [0.3, 0, -0.3]);
+    }
+  }
+  bookStack(b, [0.7, 1.1, 9.5], 4, 31);
+  candlestick(b, glow, [1.2, 1.1, 9.8], 0.22);
+  cauldron(b, [-6.8, 0, 12.8], 0.55);
+  for (const x of [-7.3, 7.3]) pottedPlant(b, [x, 0, 0.8], 1.3, x);
+  for (const [c, d1, d2] of [
+    [[-8, H - 0.5, 0], [1, 0], [0, 1]],
+    [[8, H - 0.5, 0], [-1, 0], [0, 1]],
+    [[-8, H - 0.5, 14], [1, 0], [0, -1]],
+    [[8, H - 0.5, 14], [-1, 0], [0, -1]],
+  ] as [V3, [number, number], [number, number]][]) {
+    cobweb(b, c, d1, d2, 1.1);
+  }
   portrait(b, CARD_BY_ID.get('barnaby-gorse')!.portrait, [7.95, 3.6, 7], -Math.PI / 2, 1.2, 1.5, 0.05);
   b.lantern([-4, 5.6, 6], 10, 14);
   b.lantern([4, 5.6, 9], 10, 14);
