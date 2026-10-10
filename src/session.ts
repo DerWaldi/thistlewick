@@ -87,6 +87,7 @@ export class LevelSession {
       sweets,
       glimmer: new GlimmerField(),
       heat: new HeatField(),
+      creatures: new Set(),
       dialogue: game.dialogue,
       interactables: this.interactables,
       talk: (id) => game.runScript(id),

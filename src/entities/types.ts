@@ -17,6 +17,7 @@ import type { Signals } from '../world/signals';
 import type { SweetField } from './sweets';
 import type { GlimmerField } from '../world/glimmer';
 import type { HeatField } from '../world/heat';
+import type { Creature } from './creatures';
 
 /** Fields any entity spec may carry. */
 interface SpecBase {
@@ -291,6 +292,30 @@ export type EntitySpec = SpecBase &
         /** Bob radius (default 0.7). */
         bob?: number;
       }
+    | {
+        type: 'snapweed';
+        /** Signal turned on once it's burnt. */
+        id?: string;
+        pos: V3;
+        /** Bite reach (default 2.4 m). */
+        radius?: number;
+        /** Stays burnt across visits (flag `down:<id>`), for the castle. */
+        persist?: boolean;
+      }
+    | {
+        type: 'emberCrab';
+        /** Signal turned on once it's shattered. */
+        id?: string;
+        pos: V3;
+        /** Patrol direction (0 = along x) and half-length. */
+        yaw?: number;
+        patrol?: number;
+        /** How far it can see to shoot (default 13), seconds between shots (2.4), fireball speed (7). */
+        range?: number;
+        interval?: number;
+        speed?: number;
+        persist?: boolean;
+      }
   );
 
 export type EntityType = EntitySpec['type'];
@@ -325,6 +350,8 @@ export interface WorldContext {
   glimmer: GlimmerField;
   /** Lit fires, which Gnarlings keep away from. */
   heat: HeatField;
+  /** Creatures a Snapweed can bite (Gnarlings register here). */
+  creatures: Set<Creature>;
   dialogue: Dialogue;
   /** Interactables register here; the session shows the nearest one's prompt. */
   interactables: Set<Interactable>;

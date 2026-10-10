@@ -16,6 +16,7 @@ import { POINTS } from '../data/houses';
 import { angleDiff } from '../player/controller';
 import { RuneMarker } from '../spells/runes';
 import type { SpellHit, SpellTarget } from '../spells/targets';
+import type { Creature } from './creatures';
 import type { Entity, SpecOf, WorldContext } from './types';
 import { mergeChildren } from '../world/merge';
 
@@ -38,13 +39,13 @@ const FEAR_RANGE = 3.6;
  * scurries over, crouches (the tell) and lunges. Thwackwort knocks it head over
  * heels and dazes it; a second hit while it's dazed banishes it in a puff of sweets.
  */
-export class Gnarling implements Entity, SpellTarget {
+export class Gnarling implements Entity, SpellTarget, Creature {
   readonly spell = 'thwackwort' as const;
   readonly marker: RuneMarker;
   readonly radius = 0.55;
   private collider: RAPIER.Collider;
   private kcc: RAPIER.KinematicCharacterController;
-  private readonly pos: Vector3;
+  readonly pos: Vector3;
   private readonly prev: Vector3;
   private readonly home: Vector3;
   private readonly vel = new Vector3();
@@ -86,6 +87,12 @@ export class Gnarling implements Entity, SpellTarget {
     ctx.scene.add(this.root);
     this.marker = new RuneMarker(ctx.scene, 'thwackwort', 0.55);
     ctx.targets.add(this);
+    ctx.creatures.add(this);
+  }
+
+  /** Bitten by a Snapweed: that's the end of it. */
+  bitten(): void {
+    if (this.state !== 'gone') this.banish();
   }
 
   private buildModel(): void {
@@ -187,6 +194,7 @@ export class Gnarling implements Entity, SpellTarget {
   private banish(): void {
     this.state = 'gone';
     this.ctx.targets.remove(this);
+    this.ctx.creatures.delete(this);
     this.root.visible = false;
     this.ctx.physics.world.removeCollider(this.collider, false);
     const at = this.pos.clone();

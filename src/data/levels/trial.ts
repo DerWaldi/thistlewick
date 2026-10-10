@@ -1,4 +1,4 @@
-import { BoxGeometry, CylinderGeometry } from 'three';
+import { BoxGeometry, CylinderGeometry, Vector3 } from 'three';
 import type { LevelBuilder, V3 } from '../../world/builder';
 import type { LevelDef } from '../../world/level';
 import { COLORS } from '../../world/materials';
@@ -15,7 +15,11 @@ import { banner, barrel, bush, cobweb, column, crate, deco, Glow, grass, hollyho
  *                                        step (40..43, 1.2 m) and hurdle (45.8) to the gate
  *   Overgrown Garden x -10..10, z 48..72 Gnarlings; a push block helps you up a ruined wall to a
  *                                        hidden card; the Rattlecoat guards the Star gate
- *   Star Chamber     x -3..3,  z 72..78  the Thistle Star and the way back up
+ *   Clockwork Moat   x -8..8,  z 72..96  a pit (z 75..91) crossed on three moving platforms:
+ *                                        M1 sweeps side to side, M2 rides back and forth, M3 bobs
+ *                                        up and down; Gnarlings wait on the far landing, and a
+ *                                        knock switch there opens the Star gate
+ *   Star Chamber     x -3..3,  z 96..102 the Thistle Star and the way back up
  */
 export const TRIAL: LevelDef = {
   id: 'trial',
@@ -26,7 +30,8 @@ export const TRIAL: LevelDef = {
     { id: 'blocks', name: 'The Shoving Room', min: [-8.5, -3, 10], max: [8.5, 8, 26] },
     { id: 'run', name: 'The Gauntlet of Gates', min: [-4.5, -3, 26], max: [4.5, 8, 48] },
     { id: 'garden', name: 'The Overgrown Garden', min: [-10.5, -3, 48], max: [10.5, 20, 72] },
-    { id: 'star', name: 'The Star Chamber', min: [-3.5, -3, 72], max: [3.5, 8, 78.5] },
+    { id: 'moat', name: 'The Clockwork Moat', min: [-8.5, -25, 72], max: [8.5, 9, 96] },
+    { id: 'star', name: 'The Star Chamber', min: [-3.5, -3, 96], max: [3.5, 8, 102.5] },
   ],
   intro: { script: 'trialIntro', unlessFlag: 'trial-entered' },
   music: 'dungeon',
@@ -56,7 +61,7 @@ function webs(b: LevelBuilder, x0: number, x1: number, z0: number, z1: number, y
 function build(b: LevelBuilder): void {
   b.killY = -20;
   const flames = new Glow();
-  b.floor(-10.5, 10.5, -0.5, 78.5, {
+  b.floor(-10.5, 10.5, -0.5, 72, {
     color: FLOOR,
     holes: [
       [-8, 8, 17, 21.5], // the flooded pit
@@ -220,23 +225,71 @@ function build(b: LevelBuilder): void {
   bush(b, 9.2, 70.2, 1, 6, 0.05);
   bush(b, -9.4, 50.4, 0.9, 9, 0.05);
 
-  // ================================================================ star chamber (z 72..78)
-  wall(b, 'z', -3.5, 72, 78.5, 6, { color: STONE });
-  wall(b, 'z', 3.5, 72, 78.5, 6, { color: STONE });
-  wall(b, 'x', 78.5, -3.5, 3.5, 6, { color: STONE });
-  slab(b, -3.5, 3.5, 72, 78.5, 6.5, 0.5, COLORS.stoneDark);
-  b.cylinder([0, 0.5, 75.2], 0.7, 1, COLORS.stoneLight, undefined, 8);
-  deco(b, new CylinderGeometry(0.85, 0.85, 0.12, 8), [0, 1.06, 75.2], '#c99a3e');
-  rug(b, [0, 0, 75.2], 3.6, 4.6, '#5d4470', '#c99a3e');
-  for (const x of [-2.98, 2.98]) wallTorch(b, flames, [x, 2.6, 73.6], x < 0 ? Math.PI / 2 : -Math.PI / 2);
-  banner(b, [-2.96, 3.9, 76.4], Math.PI / 2, '#8a2a3a', '#e8c25a', 1.2, 2.4);
-  banner(b, [2.96, 3.9, 76.4], -Math.PI / 2, '#2f5a6a', '#e8c25a', 1.2, 2.4);
-  webs(b, -3, 3, 72.5, 78, 5.9, 0.8);
+  // ================================================================ star chamber (z 96..102)
+  wall(b, 'z', -3.5, 96, 102.5, 6, { color: STONE });
+  wall(b, 'z', 3.5, 96, 102.5, 6, { color: STONE });
+  wall(b, 'x', 102.5, -3.5, 3.5, 6, { color: STONE });
+  slab(b, -3.5, 3.5, 96, 102.5, 6.5, 0.5, COLORS.stoneDark);
+  b.cylinder([0, 0.5, 99.2], 0.7, 1, COLORS.stoneLight, undefined, 8);
+  deco(b, new CylinderGeometry(0.85, 0.85, 0.12, 8), [0, 1.06, 99.2], '#c99a3e');
+  rug(b, [0, 0, 99.2], 3.6, 4.6, '#5d4470', '#c99a3e');
+  for (const x of [-2.98, 2.98]) wallTorch(b, flames, [x, 2.6, 97.6], x < 0 ? Math.PI / 2 : -Math.PI / 2);
+  banner(b, [-2.96, 3.9, 100.4], Math.PI / 2, '#8a2a3a', '#e8c25a', 1.2, 2.4);
+  banner(b, [2.96, 3.9, 100.4], -Math.PI / 2, '#2f5a6a', '#e8c25a', 1.2, 2.4);
+  webs(b, -3, 3, 96.5, 102, 5.9, 0.8);
   b.add(
-    { type: 'star', id: 'trial-star', pos: [0, 1.9, 75.2], script: 'trialComplete' },
-    { type: 'door', pos: [0, 0, 77.95], yaw: Math.PI, width: 2.4, height: 3.4, to: { level: 'classroom', spawn: 'fromTrial' }, label: 'Up to class' },
+    { type: 'star', id: 'trial-star', pos: [0, 1.9, 99.2], script: 'trialComplete' },
+    { type: 'door', pos: [0, 0, 101.95], yaw: Math.PI, width: 2.4, height: 3.4, to: { level: 'classroom', spawn: 'fromTrial' }, label: 'Up to class' },
   );
+
+  clockworkMoat(b, flames);
 
   flames.finish(b, '#ffb060');
   b.finish();
+}
+
+/**
+ * The Clockwork Moat (z 72..96): a pit between the garden and the Star, crossed on three
+ * platforms that move by themselves. Gnarlings wait on the far landing; the knock switch
+ * there opens the Star gate. Built last so the earlier rooms' sweets keep their ids.
+ */
+function clockworkMoat(b: LevelBuilder, flames: Glow): void {
+  b.floor(-8.5, 8.5, 72, 102.5, { color: FLOOR, holes: [[-8, 8, 75, 91]] });
+  wall(b, 'z', -8.5, 72, 96, 8, { color: STONE });
+  wall(b, 'z', 8.5, 72, 96, 8, { color: STONE });
+  wall(b, 'x', 96, -8.5, 8.5, 8, { color: STONE, holes: [gateHole(0)] });
+  slab(b, -8.5, 8.5, 72, 96, 8.5, 0.5, COLORS.stoneDark);
+  // A long way down to a dark floor you never reach (falling resets you first).
+  b.box([0, -16, 83], [16, 0.5, 16], { color: '#1e1816', noCollide: true });
+  for (const x of [-8.1, 8.1]) b.box([x, -8, 83], [0.4, 16, 16], { color: STONE, noCollide: true });
+  for (const z of [74.9, 91.1]) b.box([0, -10, z], [16, 12, 0.2], { color: STONE, noCollide: true });
+  const TAU = Math.PI * 2;
+  // M1 sweeps side to side, M2 rides back and forth, M3 bobs down below the rim and up.
+  b.mover([2.4, 0.4, 2.4], COLORS.stoneLight, (t) => new Vector3(5 * Math.sin((t * TAU) / 6), -0.2, 77));
+  b.mover([2.4, 0.4, 2.4], COLORS.stoneLight, (t) => new Vector3(0, -0.2, 83 + 2.5 * Math.sin((t * TAU) / 5)));
+  b.mover([2.4, 0.4, 2.4], COLORS.stoneLight, (t) => new Vector3(2.5, -1.1 + 0.9 * Math.sin((t * TAU) / 4), 88.4));
+  b.add(
+    { type: 'checkpoint', pos: [-6.5, 0, 73.4], yaw: Math.PI / 2, zone: { min: [-8, -1, 72], max: [8, 4, 75] } },
+    { type: 'trigger', flag: 'trial-hint-moat', script: 'trialMoat', min: [-8, -1, 72], max: [8, 4, 74.5] },
+    { type: 'checkpoint', pos: [6.5, 0, 93.5], yaw: -Math.PI / 2, zone: { min: [-8, -1, 91], max: [8, 4, 96] } },
+    { type: 'gnarling', pos: [-3, 0, 93.5], wander: 2.5 },
+    { type: 'gnarling', pos: [4, 0, 93.5], wander: 2.5 },
+    { type: 'knockSwitch', id: 'moat-switch', pos: [-7.95, 1.6, 93.5], yaw: Math.PI / 2, style: 'target', latch: true },
+    { type: 'gate', pos: [0, 0, 96], yaw: 0, width: 3, height: 3, when: ['moat-switch'] },
+    { type: 'sweetLine', kind: 'fizzwort', from: [-4, 0.6, 77], to: [4, 0.6, 77], count: 3 },
+    { type: 'sweet', kind: 'bramble', pos: [0, 1, 85.5] },
+  );
+  // Gears and chains in the walls, to say what drives the platforms.
+  for (const [x, z] of [
+    [-8.4, 80],
+    [8.4, 86],
+  ]) {
+    deco(b, new CylinderGeometry(2, 2, 0.25, 16), [x, 3.6, z], '#8a6a2a', [0, 0, Math.PI / 2]);
+    deco(b, new CylinderGeometry(0.5, 0.5, 0.4, 8), [x, 3.6, z], '#5a4a2a', [0, 0, Math.PI / 2]);
+  }
+  for (const z of [73.5, 94]) {
+    wallTorch(b, flames, [-7.98, 2.6, z], Math.PI / 2);
+    wallTorch(b, flames, [7.98, 2.6, z], -Math.PI / 2);
+  }
+  webs(b, -8, 8, 72.5, 95.5, 7.9, 1);
 }

@@ -367,7 +367,7 @@ test('the Palm House: braziers I to IV in order and in time open the gate; out o
   expect(await lit()).toEqual([true, true, true, true]);
   await page.evaluate(() => window.__tw.advance(1.5));
   const through = await walk(page, [0, 0, 66.5], 0, 1.2);
-  expect(through.area).toBe('heart');
+  expect(through.area).toBe('beds');
   await shot(page, 'm9-heart', browserName);
   // ...and once they burn out, the gate shuts again.
   await page.evaluate(() => window.__tw.advance(10));
@@ -378,21 +378,26 @@ test('the Palm House: braziers I to IV in order and in time open the gate; out o
 
 test('the Bramble Heart: briars too green to burn until both braziers dry them; the Star; the reward', async ({ page, browserName }) => {
   await prepared(page, 'glasshouse', { cinder: true, flags: ['glasshouse-hint-heart'] });
-  const tryRing = () => burn(page, [0, 0, 70.5], [0, 1.6, 73.1], 2);
+  // The Snapweed Beds' Gnarlings (tested on their own) out of the way.
+  await page.evaluate(() => {
+    const g = window.__tw.game as unknown as G;
+    for (const e of g.world.entities as unknown as { constructor: { name: string }; bitten?: () => void }[]) if (e.constructor.name === 'Gnarling') e.bitten?.();
+  });
+  const tryRing = () => burn(page, [0, 0, 90.5], [0, 1.6, 93.1], 2);
   expect(await tryRing()).toBeNull();
-  await burn(page, [-2, 0, 70], [-5, 1.3, 71.5], 0.2);
+  await burn(page, [-2, 0, 90], [-5, 1.3, 91.5], 0.2);
   expect(await tryRing()).toBeNull();
-  await burn(page, [2, 0, 70], [5, 1.3, 71.5], 1.5);
+  await burn(page, [2, 0, 90], [5, 1.3, 91.5], 1.5);
   expect(await tryRing()).toBe('cindersnap');
   const r = await page.evaluate(async () => {
     const tw = window.__tw;
-    tw.teleport(0, 0, 74.4, 0);
+    tw.teleport(0, 0, 94.4, 0);
     tw.advance(1);
     await tw.idle();
     tw.advance(0.5);
     const g = tw.game as unknown as G;
     const done = g.state.lessons.has('cindersnap');
-    tw.teleport(0, 0, 79.3, 0);
+    tw.teleport(0, 0, 99.3, 0);
     tw.advance(0.2);
     tw.interact();
     await tw.idle();

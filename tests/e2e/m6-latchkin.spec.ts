@@ -290,7 +290,7 @@ test('the Shutter Run: locks seen through open shutters, relocking, and the draw
 });
 
 test('the Great Vault: four riding padlocks open the door, and the Star ends the lesson', async ({ page, browserName }) => {
-  await prepared(page, 'vault', { latchkin: true, flags: ['vault-hint-great'] });
+  await prepared(page, 'vault', { latchkin: true, flags: ['vault-hint-great', 'vault-hint-strongroom'] });
   const r = await page.evaluate(async () => {
     const tw = window.__tw;
     const g = tw.game as unknown as G;
@@ -310,18 +310,25 @@ test('the Great Vault: four riding padlocks open the door, and the Star ends the
     }
     const allOpen = locks.every((l) => (l as unknown as { open: boolean }).open);
     tw.advance(4);
+    // Through the vault door; the Strongroom beyond has its own test.
     tw.teleport(0, 0, 90, 0);
     tw.setCamera(0, -0.2);
     tw.input({ y: 1 });
-    tw.advance(2.5);
+    tw.advance(1.2);
+    tw.input(null);
+    const through = tw.state().feet.z > 93;
+    tw.teleport(0, 0, 116, 0);
+    tw.input({ y: 1 });
+    tw.advance(1.2);
     tw.input(null);
     await tw.idle();
     tw.advance(0.5);
-    return { hits, allOpen, lessons: [...g.state.lessons], z: tw.state().feet.z };
+    return { hits, allOpen, lessons: [...g.state.lessons], z: tw.state().feet.z, through };
   });
   expect(r.allOpen).toBe(true);
   expect(r.hits.length).toBeLessThanOrEqual(6);
-  expect(r.z).toBeGreaterThan(93);
+  expect(r.through).toBe(true);
+  expect(r.z).toBeGreaterThan(116.5);
   expect(r.lessons).toContain('latchkin');
   await shot(page, 'm6-star-chamber', browserName);
 });

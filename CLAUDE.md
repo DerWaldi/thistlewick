@@ -70,6 +70,11 @@ src/entities/          level objects: pushBlock (resetOn), mechanisms (knockSwit
                        air (skyLift: a platform/basket/crate Thistledown floats between `from` and `to`
                        by casting at its feather-stone post; carries riders, `startAt`, `returnAfter`;
                        pendulum: a swinging bob that knocks you back),
+                       creatures (snapweed: rooted, rears back then bites everything in `radius`, the
+                       player and Gnarlings (anything in `ctx.creatures`); Cindersnap burns it.
+                       emberCrab: patrols, lobs fireballs when it can see you; Thwackwort flips it
+                       for a moment, Rimewhistle freezes it into a standable ice block, Thwackwort
+                       then shatters it; its target spell switches with state and what you know),
                        teasers (targets for spells not yet learned), hubObjects (cards, secrets, tapestry,
                        bookshelf, npc, sorting lantern, doors, hourglasses, spring pad), lessonObjects
                        (trigger, Thistle Star), sweets (instanced SweetField); types.ts holds the
@@ -218,6 +223,7 @@ Levels place objects with `b.add({ type: ..., ... })`. Objects talk to each othe
 | M3 Lesson | done | Gorse's lesson, the Thwackwort Trial dungeon (~5 min), Thistle Star, a post-lesson hub secret |
 | M4 Slice complete | done | Shop and upgrades, all 10 cards, 4 secrets, title/pause/options, music, visual pass, perf |
 | Polish 1 | done | Sectioned music, wall caps against climbing out, P screenshots, painted portraits and gilt frames, detailed characters, set dressing in every room |
+| M11 Enemies & longer trials | done | Snapweed and Ember Crab; a fifth/sixth room in five trials: the Clockwork Moat (moving platforms, Thwackwort Trial), the Strongroom (pendulums and relocking gates, Vaults), the Ember Crypt (glimmer stones under crab fire, Catacombs), the Snapweed Beds (Glasshouse), the Boiler Hall (frozen crabs as stepping stones, Cisterns) |
 | M10 Thistledown | done | The Clock Tower (a new castle section off the court: seven flights round the clock's shaft, a floating-crate nook with a card); Underbough's rooftop (float a crate, ferry over the light-well, call a basket down); the Great Clockworks (pendulum gallery, a shaft of lifts incl. one you call from afar and a timed ferry under a pendulum, the Great Wheel, the Bell Chamber); 3 new cards (30 total); all seven spells taught |
 | M9 Rimewhistle | done | The great doors open onto the Castle Grounds (a new outdoor level: terrace, lawn, lake, boathouse, island folly, balcony climb, hills); Coldharbour's boathouse (freeze the pool, climb frozen falls, charged ice for the dock); the Flooded Cisterns (ice patches over a canal, frozen-falls cliff, a floe-sliding ferry with a freeze-round step, a secret behind a waterfall, fire melts the ice wall and the frozen Star); the Well Yard thaws open; 3 new cards (27 total) |
 | M8 Cindersnap | done | The Kitchen Yard (a new walled yard west of the castle, closing an edge you could fall off), Ashcombe's kitchen (cobweb, rope-and-crate, braziers in order), the Overgrown Glasshouse (briar maze with Gnarlings scared by fire, rope bridge and dropped crates, a timed four-brazier sequence round a planter, the Bramble Heart dried by braziers), the Kitchen Orchard behind the court's east arch, the Well Yard gated for later; 3 new cards (24 total); NPC prompts name the speaker |

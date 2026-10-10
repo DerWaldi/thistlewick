@@ -218,6 +218,12 @@ export const DIALOGUES: Record<string, Script> = {
     await say([{ speaker: 'gorse', text: "(echoing) Knock the switch, then RUN! The gate won't wait. Neither will I. I have a lunch." }]);
   },
 
+  trialMoat: async ({ say }) => {
+    await say([
+      { speaker: 'gorse', text: "(echoing) The Clockwork Moat! The platforms move by themselves. Watch them, hop on as one comes by, and don't dawdle. The Gnarlings on the far side? You know what to do." },
+    ]);
+  },
+
   trialGarden: async ({ say }) => {
     await say([
       { speaker: 'gorse', text: "(echoing) The old garden. Gnarlings, I'm afraid, and the Rattlecoat that guards the Star. Plain shoves just bounce off armour. CHARGE it!" },
@@ -321,6 +327,12 @@ export const DIALOGUES: Record<string, Script> = {
   vaultShutters: async ({ say }) => {
     await say([
       { speaker: 'quince', text: "(echoing) The shutters lock themselves again. Open one, look through it for the next lock, and don't dawdle." },
+    ]);
+  },
+
+  vaultStrongroom: async ({ say }) => {
+    await say([
+      { speaker: 'quince', text: "(echoing) The Strongroom. Pendulums, and gates whose padlocks snap shut again after six seconds. Unlock, watch the swing, and go. Hesitation is a habit. Break it." },
     ]);
   },
 
@@ -536,6 +548,12 @@ export const DIALOGUES: Record<string, Script> = {
     ]);
   },
 
+  catacombCrypt: async ({ say }) => {
+    await say([
+      { speaker: 'lamplough', text: "(echoing) The Ember Crypt. Crabs that glow and spit fire, nasty things. A good Thwackwort flips them on their backs for a moment. Light the lamps and cross while they're upside down." },
+    ]);
+  },
+
   catacombComplete: async ({ say, state }) => {
     if (state.lessons.has('glimmerwick')) return;
     state.lessons.add('glimmerwick');
@@ -660,6 +678,12 @@ export const DIALOGUES: Record<string, Script> = {
     ]);
   },
 
+  glasshouseWeeds: async ({ say }) => {
+    await say([
+      { speaker: 'ashcombe', text: "(distant) Snapweed beds! A Snapweed bites anything that comes near it, Gnarlings included. Watch it rear back before it snaps. Burn it from further off than it can reach." },
+    ]);
+  },
+
   glasshouseHeart: async ({ say }) => {
     await say([
       { speaker: 'ashcombe', text: "(distant) The Bramble Heart. Those briars are green and wet through; they won't catch. Light both braziers and let the heat dry them out first." },
@@ -764,6 +788,12 @@ export const DIALOGUES: Record<string, Script> = {
   cisternFerry: async ({ say }) => {
     await say([
       { speaker: 'coldharbour', text: "(echoing) The Floe Ferry. Thwackwort a floe and it slides until it bumps into something. Push from behind: stand on the side you want it to leave. The far floe? You'll need ice to get round to it. If they jam, ring the bell." },
+    ]);
+  },
+
+  cisternCrabs: async ({ say }) => {
+    await say([
+      { speaker: 'coldharbour', text: "(echoing) Ember Crabs! They spit fire. Freeze one and it is a block of ice: you may stand on it, for a while. Thwack a frozen crab and it shatters. Those in the water are your stepping stones." },
     ]);
   },
 

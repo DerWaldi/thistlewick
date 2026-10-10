@@ -20,7 +20,11 @@ import { cobweb, column, deco, Glow, rubble, signboard, slab, wall, wallTorch } 
  *                                             stand east of B and shove it west into gap 2.
  *                                             The bell resets the floes. Secret: walk through
  *                                             the waterfall on the east wall (card)
- *   Frost Hall     x -7..7,  z 56..76, y 3.2  an ice wall across the door (Cindersnap melts
+ *   Boiler Hall    x -8..8,  z 59..79, y 3.2  a steaming pool (z 61..77.5) with five Ember Crabs
+ *                                             standing in it: freeze one and it's a block of ice
+ *                                             to stand on (8 s); hop across them to the far bank,
+ *                                             where two more patrol (freeze, then Thwackwort them)
+ *   Frost Hall     x -7..7,  z 79..96, y 3.2  an ice wall across the door (Cindersnap melts
  *                                             it); a channel z 62..69 with two patches that
  *                                             last 1.2 s (5 charged); the Star frozen in a block
  *                                             of ice on the dais
@@ -33,7 +37,8 @@ export const CISTERNS: LevelDef = {
     { id: 'sluice', name: 'The Flooded Cisterns', min: [-5, -4, 0], max: [5, 8, 8] },
     { id: 'canal', name: 'The Long Canal', min: [-8, -4, 8], max: [8, 9, 34] },
     { id: 'ferry', name: 'The Floe Ferry', min: [-10, 0, 34], max: [14, 12, 59] },
-    { id: 'frost', name: 'The Frost Hall', min: [-7, 0, 59], max: [7, 12, 76] },
+    { id: 'boiler', name: 'The Boiler Hall', min: [-9, 0, 59], max: [9, 12, 79] },
+    { id: 'frost', name: 'The Frost Hall', min: [-7, 0, 79], max: [7, 12, 96] },
   ],
   intro: { script: 'cisternIntro', unlessFlag: 'cisterns-entered' },
   ambience: 'dark',
@@ -170,34 +175,34 @@ function build(b: LevelBuilder): void {
   }
   b.lantern([0, UP + 6, 45], 7, 18);
 
-  // ================================================================ the frost hall (z 59..76, y 3.2)
-  b.floor(-7.5, 7.5, 59, 76.5, { top: UP, color: FLOOR, holes: [[-7, 7, 62, 69]] });
-  b.pool(-7, 7, 62, 69, UP - 0.5, 0.4);
-  wall(b, 'z', -7.5, 59, 76.5, 7, { base: UP, color: STONE });
-  wall(b, 'z', 7.5, 59, 76.5, 7, { base: UP, color: STONE });
-  wall(b, 'x', 76.5, -7.5, 7.5, 7, { base: UP, color: STONE, holes: [{ from: -1.2, to: 1.2, top: 3.4 }] });
-  slab(b, -7.5, 7.5, 59, 76.5, UP + 7.5, 0.5, COLORS.stoneDark);
+  // ================================================================ the frost hall (z 79..96, y 3.2)
+  b.floor(-7.5, 7.5, 79, 96.5, { top: UP, color: FLOOR, holes: [[-7, 7, 82, 89]] });
+  b.pool(-7, 7, 82, 89, UP - 0.5, 0.4);
+  wall(b, 'z', -7.5, 79, 96.5, 7, { base: UP, color: STONE });
+  wall(b, 'z', 7.5, 79, 96.5, 7, { base: UP, color: STONE });
+  wall(b, 'x', 96.5, -7.5, 7.5, 7, { base: UP, color: STONE, holes: [{ from: -1.2, to: 1.2, top: 3.4 }] });
+  slab(b, -7.5, 7.5, 79, 96.5, UP + 7.5, 0.5, COLORS.stoneDark);
   b.add(
-    { type: 'burnable', style: 'ice', pos: [0, UP + 1.7, 59], size: [2.4, 3.4, 0.9] },
-    { type: 'checkpoint', pos: [-5, UP, 60.8], yaw: Math.PI / 2, zone: { min: [-7, UP - 1, 59.6], max: [7, UP + 3, 62] } },
-    { type: 'trigger', flag: 'cistern-hint-frost', script: 'cisternFrost', min: [-1.2, UP - 1, 56.5], max: [1.2, UP + 3, 58.2] },
-    { type: 'iceSheet', min: [-1.5, 62], max: [1.5, 65.2], y: UP - 0.5, duration: 1.2, chargedDuration: 5 },
-    { type: 'iceSheet', min: [-1.5, 66.2], max: [1.5, 69], y: UP - 0.5, duration: 1.2, chargedDuration: 5 },
-    { type: 'trigger', flag: 'cistern-hint-charge', script: 'cisternCharge', min: [-7, UP - 1, 59.6], max: [7, UP + 3, 62], delay: 30, perVisit: true },
+    { type: 'burnable', style: 'ice', pos: [0, UP + 1.7, 79], size: [2.4, 3.4, 0.9] },
+    { type: 'checkpoint', pos: [-5, UP, 80.8], yaw: Math.PI / 2, zone: { min: [-7, UP - 1, 79.6], max: [7, UP + 3, 82] } },
+    { type: 'trigger', flag: 'cistern-hint-frost', script: 'cisternFrost', min: [-1.2, UP - 1, 76.5], max: [1.2, UP + 3, 78.2] },
+    { type: 'iceSheet', min: [-1.5, 82], max: [1.5, 85.2], y: UP - 0.5, duration: 1.2, chargedDuration: 5 },
+    { type: 'iceSheet', min: [-1.5, 86.2], max: [1.5, 89], y: UP - 0.5, duration: 1.2, chargedDuration: 5 },
+    { type: 'trigger', flag: 'cistern-hint-charge', script: 'cisternCharge', min: [-7, UP - 1, 79.6], max: [7, UP + 3, 82], delay: 30, perVisit: true },
     // The Star, frozen into a block of ice on the dais.
-    { type: 'star', id: 'cistern-star', pos: [0, UP + 1.9, 73], script: 'cisternComplete' },
-    { type: 'burnable', style: 'ice', pos: [0, UP + 1.9, 73], size: [1.8, 1.8, 1.8] },
-    { type: 'door', pos: [0, UP, 75.95], yaw: Math.PI, width: 2.4, height: 3.4, to: { level: 'coldharbour', spawn: 'fromCisterns' }, label: 'Up to class' },
+    { type: 'star', id: 'cistern-star', pos: [0, UP + 1.9, 93], script: 'cisternComplete' },
+    { type: 'burnable', style: 'ice', pos: [0, UP + 1.9, 93], size: [1.8, 1.8, 1.8] },
+    { type: 'door', pos: [0, UP, 95.95], yaw: Math.PI, width: 2.4, height: 3.4, to: { level: 'coldharbour', spawn: 'fromCisterns' }, label: 'Up to class' },
   );
-  b.cylinder([0, UP + 0.5, 73], 0.9, 1, COLORS.stoneLight, undefined, 8);
-  for (let i = 0; i < 10; i++) deco(b, new ConeGeometry(0.08, 0.5 + (i % 3) * 0.3, 4), [-6.5 + i * 1.45, UP + 6.6, 64 + (i % 2) * 6], '#d8f2fc', [Math.PI, 0, 0]);
-  for (let i = 0; i < 6; i++) deco(b, new IcosahedronGeometry(0.3 + (i % 3) * 0.15, 0), [-6 + (i % 2) * 12, UP + 0.2, 71 + i], '#cfeefa');
-  for (const z of [61, 72]) {
+  b.cylinder([0, UP + 0.5, 93], 0.9, 1, COLORS.stoneLight, undefined, 8);
+  for (let i = 0; i < 10; i++) deco(b, new ConeGeometry(0.08, 0.5 + (i % 3) * 0.3, 4), [-6.5 + i * 1.45, UP + 6.6, 84 + (i % 2) * 6], '#d8f2fc', [Math.PI, 0, 0]);
+  for (let i = 0; i < 6; i++) deco(b, new IcosahedronGeometry(0.3 + (i % 3) * 0.15, 0), [-6 + (i % 2) * 12, UP + 0.2, 91 + i], '#cfeefa');
+  for (const z of [81, 92]) {
     wallTorch(b, flames, [-7.48, UP + 2.6, z], Math.PI / 2);
     wallTorch(b, flames, [7.48, UP + 2.6, z], -Math.PI / 2);
   }
-  b.lantern([0, UP + 5.5, 71], 7, 14);
-  rubble(b, 6, 74, 5, 9, UP);
+  b.lantern([0, UP + 5.5, 91], 7, 14);
+  rubble(b, 6, 94, 5, 9, UP);
   for (const [c, d1, d2] of [
     [[-5, 5.9, 0], [1, 0], [0, 1]],
     [[5, 5.9, 0], [-1, 0], [0, 1]],
@@ -206,6 +211,57 @@ function build(b: LevelBuilder): void {
     cobweb(b, c, d1, d2, 1.2);
   }
 
+  boilerHall(b, flames);
+
   flames.finish(b, '#ffb060');
   b.finish();
+}
+
+/**
+ * The Boiler Hall (z 59..79, y 3.2), between the Floe Ferry and the Frost Hall. Built last
+ * so the earlier rooms' sweets keep their ids.
+ */
+function boilerHall(b: LevelBuilder, flames: Glow): void {
+  const W = UP - 0.5;
+  b.floor(-9, 9, 59.5, 79, { top: UP, color: FLOOR, holes: [[-8.5, 8.5, 61, 77.5]] });
+  b.pool(-8.5, 8.5, 61, 77.5, W, 0.4);
+  wall(b, 'z', -9, 59, 79, 8, { base: UP, color: STONE });
+  wall(b, 'z', 9, 59, 79, 8, { base: UP, color: STONE });
+  wall(b, 'x', 79, -9.5, 9.5, 8, { base: UP, color: STONE, holes: [{ from: -1.2, to: 1.2, top: 3.4 }] });
+  slab(b, -9.5, 9.5, 59, 79, UP + 8.5, 0.5, COLORS.stoneDark);
+  // Five crabs stand in the water on sunken ledges (you can't stand on those: they're under
+  // water). Frozen, each is a block of ice just level with the banks.
+  const stones: [number, number][] = [
+    [-2, 63],
+    [0, 66.2],
+    [2, 69.4],
+    [0, 72.6],
+    [-2, 75.8],
+  ];
+  for (const [x, z] of stones) b.box([x, (0.4 + W - 0.4) / 2, z], [1.6, W - 0.4 - 0.4, 1.4], { color: COLORS.stoneDark });
+  b.add(
+    { type: 'checkpoint', pos: [-6.5, UP, 60.2], yaw: Math.PI / 2, zone: { min: [-8.5, UP - 1, 59.5], max: [8.5, UP + 3, 61] } },
+    { type: 'trigger', flag: 'cistern-hint-crabs', script: 'cisternCrabs', min: [-8.5, UP - 1, 59.5], max: [8.5, UP + 3, 61] },
+    ...stones.map(([x, z]) => ({ type: 'emberCrab' as const, pos: [x, W - 0.8, z] as V3, patrol: 0, range: 9, interval: 4 })),
+    { type: 'checkpoint', pos: [6.5, UP, 78.3], yaw: -Math.PI / 2, zone: { min: [-8.5, UP - 1, 77.5], max: [8.5, UP + 3, 79] } },
+    { type: 'emberCrab', pos: [-5, UP, 78.2], patrol: 2.5, interval: 3 },
+    { type: 'emberCrab', pos: [5, UP, 78.2], patrol: 2.5, interval: 3 },
+    { type: 'sweetLine', kind: 'fizzwort', from: [-4, UP + 0.6, 60.2], to: [4, UP + 0.6, 60.2], count: 4 },
+    { type: 'sweet', kind: 'bramble', pos: [8, UP + 0.6, 78.2] },
+  );
+  // Steam vents and boiler pipes.
+  for (const [x, z] of [
+    [-7, 66],
+    [6, 71],
+    [-5, 74],
+  ]) {
+    deco(b, new CylinderGeometry(0.3, 0.4, 0.3, 8), [x, W + 0.1, z], '#5a5a66');
+  }
+  for (const z of [62, 70, 76]) deco(b, new CylinderGeometry(0.25, 0.25, 17.5, 8), [0, UP + 6.5, z], '#8a6a4a', [0, 0, Math.PI / 2]);
+  for (const z of [60.5, 77.5]) {
+    wallTorch(b, flames, [-8.48, UP + 2.6, z], Math.PI / 2);
+    wallTorch(b, flames, [8.48, UP + 2.6, z], -Math.PI / 2);
+  }
+  b.lantern([-4, UP + 6, 64], 8, 16);
+  b.lantern([4, UP + 6, 74], 8, 16);
 }

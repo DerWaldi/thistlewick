@@ -26,7 +26,11 @@ import { barrel, bush, cobweb, crate, deco, Glow, grass, ivy, mushrooms, pottedP
  *                                        I (SW), II (NE), III (SE), IV (NW), 10 s each; the
  *                                        north gate opens only while all four burn, and lighting
  *                                        one out of turn puts them all out. Two Gnarlings
- *   Bramble Heart  x -6..6,  z 68.5..80.5 the Star inside a ring of briars too green to burn
+ *   Snapweed Beds  x -9..9,  z 68.5..88.5 hedges zig-zag the way north through four lanes, a
+ *                                        Snapweed at every corner (it bites anything in reach,
+ *                                        Gnarlings too; burn it from further off); two Gnarlings
+ *                                        in the last lane
+ *   Bramble Heart  x -6..6,  z 88.5..100.5 the Star inside a ring of briars too green to burn
  *                                        until both braziers by the door are lit
  */
 export const GLASSHOUSE: LevelDef = {
@@ -38,7 +42,8 @@ export const GLASSHOUSE: LevelDef = {
     { id: 'maze', name: 'The Briar Maze', min: [-9.5, -2, 8.5], max: [9.5, 9, 28.5] },
     { id: 'pond', name: 'The Lily Pond', min: [-12.5, -4, 28.5], max: [9.5, 9, 48.5] },
     { id: 'palm', name: 'The Palm House', min: [-9.5, -2, 48.5], max: [9.5, 9, 68.5] },
-    { id: 'heart', name: 'The Bramble Heart', min: [-6.5, -2, 68.5], max: [6.5, 9, 80.5] },
+    { id: 'beds', name: 'The Snapweed Beds', min: [-9.5, -2, 68.5], max: [9.5, 9, 88.5] },
+    { id: 'heart', name: 'The Bramble Heart', min: [-6.5, -2, 88.5], max: [6.5, 9, 100.5] },
   ],
   intro: { script: 'glasshouseIntro', unlessFlag: 'glasshouse-entered' },
   music: 'dungeon',
@@ -112,7 +117,7 @@ function palm(b: LevelBuilder, x: number, y: number, z: number, h: number): void
 function build(b: LevelBuilder): void {
   b.killY = -15;
   const flames = new Glow();
-  b.floor(-12.5, 9.5, -0.5, 80.5, { color: FLOOR, holes: [[-9, 9, 31.5, 44.3]] });
+  b.floor(-12.5, 9.5, -0.5, 100.5, { color: FLOOR, holes: [[-9, 9, 31.5, 44.3]] });
 
   // ================================================================ potting shed (z 0..8.5)
   wall(b, 'x', -0.5, -5.5, 5.5, 5, { color: BRICK, holes: [{ from: -1.25, to: 1.25, top: 3.5 }] });
@@ -291,39 +296,86 @@ function build(b: LevelBuilder): void {
   }
   glassWall(b, 'x', 68.5, -9.5, 9.5, [{ from: -1.5, to: 1.5, top: 3.4 }]);
 
-  // ================================================================ the Bramble Heart (z 68.5..80.5)
-  wall(b, 'z', -6.5, 68.5, 80.5, H, { color: BRICK, cap: 3 });
-  wall(b, 'z', 6.5, 68.5, 80.5, H, { color: BRICK, cap: 3 });
-  wall(b, 'x', 80.5, -6.5, 6.5, H, { color: BRICK, holes: [{ from: -1.2, to: 1.2, top: 3.4 }], cap: 3 });
-  for (let z = 70; z < 80; z += 3) deco(b, new BoxGeometry(13, 0.25, 0.25), [0, H, z], IRON);
-  b.cylinder([0, 0.5, 75], 0.7, 1, COLORS.stoneLight, undefined, 8);
-  deco(b, new CylinderGeometry(0.85, 0.85, 0.12, 8), [0, 1.06, 75], '#c99a3e');
+  // ================================================================ the Bramble Heart (z 88.5..100.5)
+  wall(b, 'z', -6.5, 88.5, 100.5, H, { color: BRICK, cap: 3 });
+  wall(b, 'z', 6.5, 88.5, 100.5, H, { color: BRICK, cap: 3 });
+  wall(b, 'x', 100.5, -6.5, 6.5, H, { color: BRICK, holes: [{ from: -1.2, to: 1.2, top: 3.4 }], cap: 3 });
+  for (let z = 90; z < 100; z += 3) deco(b, new BoxGeometry(13, 0.25, 0.25), [0, H, z], IRON);
+  b.cylinder([0, 0.5, 95], 0.7, 1, COLORS.stoneLight, undefined, 8);
+  deco(b, new CylinderGeometry(0.85, 0.85, 0.12, 8), [0, 1.06, 95], '#c99a3e');
   const ring: { pos: V3; size: V3; yaw?: number }[] = [
-    { pos: [0, 1.6, 73.1], size: [4.2, 3.2, 0.6] },
-    { pos: [0, 1.6, 76.9], size: [4.2, 3.2, 0.6] },
-    { pos: [-1.9, 1.6, 75], size: [3.2, 3.2, 0.6], yaw: Math.PI / 2 },
-    { pos: [1.9, 1.6, 75], size: [3.2, 3.2, 0.6], yaw: Math.PI / 2 },
+    { pos: [0, 1.6, 93.1], size: [4.2, 3.2, 0.6] },
+    { pos: [0, 1.6, 96.9], size: [4.2, 3.2, 0.6] },
+    { pos: [-1.9, 1.6, 95], size: [3.2, 3.2, 0.6], yaw: Math.PI / 2 },
+    { pos: [1.9, 1.6, 95], size: [3.2, 3.2, 0.6], yaw: Math.PI / 2 },
   ];
   b.add(
-    { type: 'checkpoint', pos: [-4, 0, 69.6], yaw: Math.PI / 2, zone: { min: [-6, -1, 68.5], max: [6, 4, 71] } },
-    { type: 'trigger', flag: 'glasshouse-hint-heart', script: 'glasshouseHeart', min: [-6, -1, 68.5], max: [6, 5, 70.5] },
-    { type: 'brazier', id: 's1', pos: [-5, 0, 71.5], light: true },
-    { type: 'brazier', id: 's2', pos: [5, 0, 71.5], light: true },
+    { type: 'checkpoint', pos: [-4, 0, 89.6], yaw: Math.PI / 2, zone: { min: [-6, -1, 88.5], max: [6, 4, 91] } },
+    { type: 'trigger', flag: 'glasshouse-hint-heart', script: 'glasshouseHeart', min: [-6, -1, 88.5], max: [6, 5, 90.5] },
+    { type: 'brazier', id: 's1', pos: [-5, 0, 91.5], light: true },
+    { type: 'brazier', id: 's2', pos: [5, 0, 91.5], light: true },
     ...ring.map((r) => ({ type: 'burnable' as const, style: 'briar' as const, ...r, fireproofUntil: ['s1', 's2'] })),
-    { type: 'star', id: 'glasshouse-star', pos: [0, 1.9, 75], script: 'glasshouseComplete' },
-    { type: 'door', pos: [0, 0, 79.95], yaw: Math.PI, width: 2.4, height: 3.4, to: { level: 'ashcombe', spawn: 'fromGlasshouse' }, label: 'Back to class' },
+    { type: 'star', id: 'glasshouse-star', pos: [0, 1.9, 95], script: 'glasshouseComplete' },
+    { type: 'door', pos: [0, 0, 99.95], yaw: Math.PI, width: 2.4, height: 3.4, to: { level: 'ashcombe', spawn: 'fromGlasshouse' }, label: 'Back to class' },
   );
   for (let i = 0; i < 8; i++) {
     const a = (i / 8) * Math.PI * 2;
-    deco(b, new ConeGeometry(0.25, 0.9, 5), [Math.cos(a) * 3.2, 0.45, 75 + Math.sin(a) * 3.2], '#5a3a2a', [0.2 * Math.sin(a), 0, -0.2 * Math.cos(a)]);
+    deco(b, new ConeGeometry(0.25, 0.9, 5), [Math.cos(a) * 3.2, 0.45, 95 + Math.sin(a) * 3.2], '#5a3a2a', [0.2 * Math.sin(a), 0, -0.2 * Math.cos(a)]);
   }
   for (const [x, z] of [
-    [-5.5, 79.5],
-    [5.5, 79.5],
+    [-5.5, 99.5],
+    [5.5, 99.5],
   ]) {
     deco(b, new SphereGeometry(0.5, 7, 5), [x, 0.4, z], '#4f7a34');
   }
 
+  snapweedBeds(b);
+
   flames.finish(b, '#ffb060');
   b.finish();
+}
+
+/**
+ * The Snapweed Beds (z 68.5..88.5), between the Palm House and the Bramble Heart. Built
+ * last so the earlier rooms' sweets keep their ids.
+ */
+function snapweedBeds(b: LevelBuilder): void {
+  glassWall(b, 'z', -9.5, 68.5, 88.5);
+  glassWall(b, 'z', 9.5, 68.5, 88.5);
+  glassWall(b, 'x', 88.5, -9.5, 9.5, [{ from: -1.2, to: 1.2, top: 3.2 }]);
+  for (let z = 70.5; z < 88; z += 4) {
+    deco(b, new BoxGeometry(19, 0.25, 0.25), [0, H, z], IRON);
+    for (const side of [-1, 1]) deco(b, new BoxGeometry(9.6, 0.2, 0.2), [side * 4.6, H + 1.1, z], IRON, [0, 0, side * -0.23]);
+  }
+  // Four lanes, the gaps alternating east and west.
+  hedgeRow(b, 73.5, [[5, 9]]);
+  hedgeRow(b, 78.5, [[-9, -5]]);
+  hedgeRow(b, 83.5, [[5, 9]]);
+  b.add(
+    { type: 'checkpoint', pos: [-7.6, 0, 70.6], yaw: Math.PI / 2, zone: { min: [-9, -1, 69], max: [9, 4, 73] } },
+    { type: 'trigger', flag: 'glasshouse-hint-weeds', script: 'glasshouseWeeds', min: [-9, -1, 68.5], max: [9, 5, 70.5] },
+    { type: 'snapweed', pos: [7, 0, 71.2] },
+    { type: 'snapweed', pos: [6.8, 0, 76.2] },
+    { type: 'snapweed', pos: [-7, 0, 75.9] },
+    { type: 'snapweed', pos: [-0.5, 0, 80.8] },
+    { type: 'snapweed', pos: [7, 0, 81.2] },
+    { type: 'checkpoint', pos: [-8, 0, 81], yaw: Math.PI / 2, zone: { min: [-9, -1, 79], max: [-4, 4, 83] } },
+    { type: 'snapweed', pos: [6.8, 0, 86.2] },
+    { type: 'snapweed', pos: [-3, 0, 86.3] },
+    { type: 'gnarling', pos: [2, 0, 86], wander: 2.5 },
+    { type: 'gnarling', pos: [-6, 0, 86], wander: 2 },
+    { type: 'sweetLine', kind: 'fizzwort', from: [-4, 0.6, 71], to: [3, 0.6, 71], count: 4 },
+    { type: 'sweetLine', kind: 'fizzwort', from: [3, 0.6, 76], to: [-3, 0.6, 76], count: 3 },
+    { type: 'sweet', kind: 'bramble', pos: [-8.3, 0.6, 76] },
+    { type: 'sweetLine', kind: 'fizzwort', from: [-3, 0.6, 81], to: [4, 0.6, 81], count: 4 },
+  );
+  signboard(b, 'Snapweed!\nDo not feed.', [0, 2.2, 73.08], Math.PI);
+  grass(b, -9, 9, 69, 88, 0, 2);
+  for (const [x, z, sd] of [
+    [-8.3, 72, 3],
+    [3, 87.4, 5],
+    [8.3, 79.5, 7],
+  ] as [number, number, number][]) {
+    mushrooms(b, x, z, 4, sd);
+  }
 }

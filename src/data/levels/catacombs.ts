@@ -22,7 +22,11 @@ import { cobweb, column, deco, Glow, rubble, slab, urn, wall, wallTorch } from '
  *   Lamplough's      x -9..9,  z 51..70   a divider (x 0, z 54..67) splits the room; four wall
  *   Lantern                               lamps (two per half) open the north gate only while
  *                                         ALL are lit (9 s each). Snapcaskets in both halves
- *   Star chamber     x -3..3,  z 71..78
+ *   Ember Crypt      x -7..7,  z 71..90   a chasm (z 73.5..86.5) crossed on glimmer stones: lamp
+ *                                         C1 on the landing lights the first two, C2 on the island
+ *                                         halfway lights the rest; two Ember Crabs on the far ledge
+ *                                         spit fire as you cross (Thwackwort flips them a while)
+ *   Star chamber     x -3..3,  z 91..98
  */
 export const CATACOMBS: LevelDef = {
   id: 'catacombs',
@@ -32,7 +36,9 @@ export const CATACOMBS: LevelDef = {
     { id: 'antechamber', name: 'The Lamplit Catacombs', min: [-5, -20, 0], max: [5, 8, 9.5] },
     { id: 'bridge', name: 'The Glimmer Bridge', min: [-5, -20, 9.5], max: [5, 9, 30.5] },
     { id: 'walls', name: 'The Hall of False Walls', min: [-11, -3, 30.5], max: [8, 9, 50.5] },
-    { id: 'lantern', name: "Lamplough's Lantern", min: [-9, -3, 50.5], max: [9, 9, 78.5] },
+    { id: 'lantern', name: "Lamplough's Lantern", min: [-9, -3, 50.5], max: [9, 9, 70.5] },
+    { id: 'crypt', name: 'The Ember Crypt', min: [-7.5, -20, 70.5], max: [7.5, 9, 90.5] },
+    { id: 'lantern', name: "Lamplough's Lantern", min: [-3.5, -3, 90.5], max: [3.5, 9, 98.5] },
   ],
   intro: { script: 'catacombIntro', unlessFlag: 'catacombs-entered' },
   ambience: 'dark',
@@ -46,7 +52,7 @@ const FLOOR = '#4a4450';
 function build(b: LevelBuilder): void {
   b.killY = -15;
   const flames = new Glow();
-  b.floor(-11, 9.5, -0.5, 78.5, { color: FLOOR, holes: [[-5, 5, 11, 29.2]] });
+  b.floor(-11, 9.5, -0.5, 98.5, { color: FLOOR, holes: [[-5, 5, 11, 29.2], [-7, 7, 73.5, 86.5]] });
 
   // ================================================================ antechamber (z 0..9.5)
   wall(b, 'x', -0.5, -5.5, 5.5, 6, { color: STONE, holes: [{ from: -1.25, to: 1.25, top: 3.5 }] });
@@ -176,18 +182,18 @@ function build(b: LevelBuilder): void {
   }
 
   // Star chamber.
-  wall(b, 'z', -3.5, 70.5, 78.5, 6, { color: STONE });
-  wall(b, 'z', 3.5, 70.5, 78.5, 6, { color: STONE });
-  wall(b, 'x', 78.5, -3.5, 3.5, 6, { color: STONE });
-  slab(b, -3.5, 3.5, 70.5, 78.5, 6.5, 0.5, COLORS.stoneDark);
-  b.cylinder([0, 0.5, 75], 0.7, 1, COLORS.stoneLight, undefined, 8);
-  deco(b, new CylinderGeometry(0.85, 0.85, 0.12, 8), [0, 1.06, 75], '#c99a3e');
-  for (let i = 0; i < 6; i++) deco(b, new IcosahedronGeometry(0.12, 0), [-2 + i * 0.8, 0.12, 77.6], '#bfe8ff');
+  wall(b, 'z', -3.5, 90.5, 98.5, 6, { color: STONE });
+  wall(b, 'z', 3.5, 90.5, 98.5, 6, { color: STONE });
+  wall(b, 'x', 98.5, -3.5, 3.5, 6, { color: STONE });
+  slab(b, -3.5, 3.5, 90.5, 98.5, 6.5, 0.5, COLORS.stoneDark);
+  b.cylinder([0, 0.5, 95], 0.7, 1, COLORS.stoneLight, undefined, 8);
+  deco(b, new CylinderGeometry(0.85, 0.85, 0.12, 8), [0, 1.06, 95], '#c99a3e');
+  for (let i = 0; i < 6; i++) deco(b, new IcosahedronGeometry(0.12, 0), [-2 + i * 0.8, 0.12, 97.6], '#bfe8ff');
   b.add(
-    { type: 'star', id: 'catacomb-star', pos: [0, 1.9, 75], script: 'catacombComplete' },
-    { type: 'door', pos: [0, 0, 77.95], yaw: Math.PI, width: 2.4, height: 3.4, to: { level: 'lamplough', spawn: 'fromCatacombs' }, label: 'Up to class' },
-    { type: 'wickLamp', pos: [-2.2, 0, 72.5], radius: 2, duration: 0, lit: true },
-    { type: 'wickLamp', pos: [2.2, 0, 72.5], radius: 2, duration: 0, lit: true },
+    { type: 'star', id: 'catacomb-star', pos: [0, 1.9, 95], script: 'catacombComplete' },
+    { type: 'door', pos: [0, 0, 97.95], yaw: Math.PI, width: 2.4, height: 3.4, to: { level: 'lamplough', spawn: 'fromCatacombs' }, label: 'Up to class' },
+    { type: 'wickLamp', pos: [-2.2, 0, 92.5], radius: 2, duration: 0, lit: true },
+    { type: 'wickLamp', pos: [2.2, 0, 92.5], radius: 2, duration: 0, lit: true },
   );
   for (const [c, d1, d2] of [
     [[-5, 6.9, 0], [1, 0], [0, 1]],
@@ -200,6 +206,52 @@ function build(b: LevelBuilder): void {
     cobweb(b, c, d1, d2, 1.3);
   }
 
+  emberCrypt(b, flames);
+
   flames.finish(b, '#ffb060');
   b.finish();
+}
+
+/**
+ * The Ember Crypt (z 70.5..90.5), between Lamplough's Lantern and the Star. Built last so
+ * the earlier rooms' sweets keep their ids.
+ */
+function emberCrypt(b: LevelBuilder, flames: Glow): void {
+  wall(b, 'z', -7.5, 70.5, 90.5, 7, { color: STONE });
+  wall(b, 'z', 7.5, 70.5, 90.5, 7, { color: STONE });
+  wall(b, 'x', 90.5, -7.5, 7.5, 7, { color: STONE, holes: [{ from: -1.2, to: 1.2, top: 3.4 }] });
+  slab(b, -7.5, 7.5, 70.5, 90.5, 7.5, 0.5, COLORS.stoneDark);
+  b.box([0, -12, 80], [14, 0.5, 13], { color: '#141016', noCollide: true });
+  // The island halfway across.
+  b.box([-3, -6, 80], [2.2, 12, 2.2], { color: COLORS.stoneLight });
+  deco(b, new BoxGeometry(2.4, 0.15, 2.4), [-3, 0.03, 80], COLORS.stoneDark);
+  const stones: [number, number][] = [
+    [0.6, 75],
+    [-0.4, 77.4],
+    [-0.6, 82.6],
+    [0.5, 85],
+  ];
+  b.add(
+    { type: 'checkpoint', pos: [-5.5, 0, 72], yaw: Math.PI / 2, zone: { min: [-7, -1, 70.5], max: [7, 4, 73.5] } },
+    { type: 'trigger', flag: 'catacomb-hint-crypt', script: 'catacombCrypt', min: [-7, -1, 70.5], max: [7, 5, 72.5] },
+    { type: 'wickLamp', pos: [3, 0, 72.4], radius: 6.5, duration: 8, light: true },
+    { type: 'wickLamp', pos: [-3.4, 0, 80.3], radius: 6.5, duration: 8, light: true },
+    ...stones.map(([x, z]) => ({ type: 'glimmerBlock' as const, pos: [x, -0.15, z] as V3, size: [1.6, 0.3, 1.6] as V3 })),
+    { type: 'checkpoint', pos: [5.5, 0, 88.5], yaw: -Math.PI / 2, zone: { min: [-7, -1, 86.5], max: [7, 4, 90.5] } },
+    { type: 'emberCrab', pos: [-3.5, 0, 88.2], patrol: 2, interval: 2.8 },
+    { type: 'emberCrab', pos: [3.5, 0, 88.6], patrol: 2, interval: 2.8 },
+    { type: 'sweetLine', kind: 'fizzwort', from: [-3.5, 0.6, 79.5], to: [-2.5, 0.6, 80.5], count: 2 },
+    { type: 'sweet', kind: 'bramble', pos: [-6.2, 0.6, 89.5] },
+  );
+  for (const z of [72, 89]) {
+    wallTorch(b, flames, [-6.98, 3, z], Math.PI / 2);
+    wallTorch(b, flames, [6.98, 3, z], -Math.PI / 2);
+  }
+  for (const [x, z] of [
+    [-6, 74],
+    [6, 87],
+  ]) {
+    column(b, x, z, 7);
+  }
+  for (const z of [73.5, 86.5]) deco(b, new BoxGeometry(2, 0.3, 0.8), [0, -0.16, z], COLORS.stoneDark);
 }

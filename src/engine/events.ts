@@ -51,6 +51,11 @@ export interface GameEvents {
   floeSlide: { pos: Vector3 };
   levitate: { pos: Vector3 };
   levitateStop: { pos: Vector3 };
+  weedNotice: { pos: Vector3 };
+  weedBite: { pos: Vector3 };
+  crabShoot: { pos: Vector3 };
+  crabHit: { pos: Vector3 };
+  crabShatter: { pos: Vector3 };
   snapNotice: { pos: Vector3 };
   snapBite: { pos: Vector3 };
   snapLocked: { pos: Vector3 };

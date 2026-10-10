@@ -328,27 +328,32 @@ test('the Floe Ferry: shove floe A into the first gap, freeze round to push B in
 
 test('the Frost Hall: fire melts the ice wall, charged patches cross the channel, the Star thaws out', async ({ page, browserName }) => {
   await prepared(page, 'cisterns', { rime: true, flags: ['cistern-hint-frost', 'cistern-hint-charge'] });
-  const blocked = await walk(page, [0, 3.2, 56.5], 0, 1.5);
-  expect(blocked.z).toBeLessThan(58.6);
-  expect(await castAt(page, [0, 3.2, 56], [0, 4.9, 59], 0, 2.5)).toBe('cindersnap');
-  const through = await walk(page, [0, 3.2, 56.5], 0, 1.2);
-  expect(through.z).toBeGreaterThan(59.5);
+  // The Boiler Hall's crabs (tested on their own) out of the way.
+  await page.evaluate(() => {
+    const g = window.__tw.game as unknown as { world: { entities: { constructor: { name: string }; home?: { y: number }; pos?: { y: number } }[] } };
+    for (const e of g.world.entities) if (e.constructor.name === 'EmberCrab' && e.home && e.pos) e.home.y = e.pos.y = -100;
+  });
+  const blocked = await walk(page, [0, 3.2, 77.9], 0, 1.5);
+  expect(blocked.z).toBeLessThan(78.6);
+  expect(await castAt(page, [0, 3.2, 77.9], [0, 4.9, 79], 0, 2.5)).toBe('cindersnap');
+  const through = await walk(page, [0, 3.2, 77.9], 0, 1.2);
+  expect(through.z).toBeGreaterThan(79.5);
   // Plain patches melt before you're over; charged ones hold.
-  expect(await castAt(page, [0, 3.2, 61], [0, 2.7, 63.6], 1.2)).toBe('rimewhistle');
-  expect(await castAt(page, [0, 3.2, 61], [0, 2.7, 67.6], 1.2)).toBe('rimewhistle');
-  expect(await standOn(page, [0, 2.9, 63.6])).toBeGreaterThan(2.8);
-  expect(await standOn(page, [0, 2.9, 67.6])).toBeGreaterThan(2.8);
-  expect(await standOn(page, [0, 3.2, 70])).toBeGreaterThan(3.1);
+  expect(await castAt(page, [0, 3.2, 81], [0, 2.7, 83.6], 1.2)).toBe('rimewhistle');
+  expect(await castAt(page, [0, 3.2, 81], [0, 2.7, 87.6], 1.2)).toBe('rimewhistle');
+  expect(await standOn(page, [0, 2.9, 83.6])).toBeGreaterThan(2.8);
+  expect(await standOn(page, [0, 2.9, 87.6])).toBeGreaterThan(2.8);
+  expect(await standOn(page, [0, 3.2, 90])).toBeGreaterThan(3.1);
   // The Star is frozen in; melt it out.
-  expect(await castAt(page, [0, 3.2, 70], [0, 5.1, 73], 0, 2.5)).toBe('cindersnap');
+  expect(await castAt(page, [0, 3.2, 90], [0, 5.1, 93], 0, 2.5)).toBe('cindersnap');
   const r = await page.evaluate(async () => {
     const tw = window.__tw;
-    tw.teleport(0, 4.2, 72.5, 0);
+    tw.teleport(0, 4.2, 92.5, 0);
     tw.advance(1);
     await tw.idle();
     const g = tw.game as unknown as G;
     const done = g.state.lessons.has('rimewhistle');
-    tw.teleport(0, 3.2, 75.2, 0);
+    tw.teleport(0, 3.2, 95.2, 0);
     tw.advance(0.2);
     tw.interact();
     await tw.idle();

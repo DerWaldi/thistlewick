@@ -296,7 +296,7 @@ test('the Hall of False Walls: only light shows which walls lie', async ({ page 
 test("Lamplough's Lantern: all four lamps at once open the gate; the Star ends the lesson", async ({ page, browserName }) => {
   await prepared(page, 'catacombs', {
     glimmer: true,
-    flags: ['catacomb-hint-lantern'],
+    flags: ['catacomb-hint-lantern', 'catacomb-hint-crypt'],
   });
   const r = await page.evaluate(async () => {
     const tw = window.__tw;
@@ -335,15 +335,22 @@ test("Lamplough's Lantern: all four lamps at once open the gate; the Star ends t
     tw.teleport(0, 0, 69, 0);
     tw.setCamera(0, -0.2);
     tw.input({ y: 1 });
-    tw.advance(2.2);
+    tw.advance(0.8);
+    tw.input(null);
+    const through = tw.state().feet.z > 71;
+    // The Ember Crypt beyond has its own test; on to the Star.
+    tw.teleport(0, 0, 91.5, 0);
+    tw.input({ y: 1 });
+    tw.advance(1.5);
     tw.input(null);
     await tw.idle();
     tw.advance(0.5);
     const g = tw.game as unknown as G;
-    return { halfway, z: tw.state().feet.z, lessons: [...g.state.lessons] };
+    return { halfway, through, z: tw.state().feet.z, lessons: [...g.state.lessons] };
   });
   expect(r.halfway).toBe(true);
-  expect(r.z).toBeGreaterThan(73);
+  expect(r.through).toBe(true);
+  expect(r.z).toBeGreaterThan(93);
   expect(r.lessons).toContain('glimmerwick');
   await shot(page, 'm8-star', browserName);
 });

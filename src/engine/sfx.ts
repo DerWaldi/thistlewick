@@ -124,6 +124,22 @@ export class Sfx {
       [784, 1175, 1568].forEach((f, i) => setTimeout(() => this.tone(f, f * 1.03, 0.5, 'sine', 0.04), i * 70));
     });
     events.on('levitateStop', () => this.tone(330, 300, 0.12, 'triangle', 0.05));
+    // Snapweed: a leafy rustle as it rears back, then a wet snap.
+    events.on('weedNotice', () => this.hiss(0.4, 1800, 0.08));
+    events.on('weedBite', () => {
+      this.thud(0.5, 200);
+      this.tone(1200, 300, 0.1, 'square', 0.08);
+    });
+    // Ember Crab: a spitting whoosh for a fireball, a pop where it lands, glassy shattering.
+    events.on('crabShoot', () => {
+      this.hiss(0.35, 900, 0.12);
+      this.tone(300, 600, 0.2, 'sawtooth', 0.04);
+    });
+    events.on('crabHit', () => this.hiss(0.25, 600, 0.1));
+    events.on('crabShatter', () => {
+      for (let i = 0; i < 6; i++) setTimeout(() => this.tone(2000 + Math.random() * 1500, 1500, 0.15, 'triangle', 0.05), i * 30);
+      this.hiss(0.4, 5000, 0.12);
+    });
     events.on('floeSlide', () => this.hiss(0.7, 1200, 0.16));
     events.on('gnarlingScared', () => this.tone(1600, 2200, 0.1, 'square', 0.05));
     events.on('snapNotice', () => this.tone(300, 520, 0.12, 'square', 0.06));

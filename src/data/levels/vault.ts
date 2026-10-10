@@ -36,7 +36,11 @@ import {
  *                                       seen through the shutter before it. Then a pit, and a
  *                                       winch padlock that drops the drawbridge
  *   Great Vault    x -9..9,   z 75..92  four padlocks ride a wheel above the round vault door;
- *                                       two Snapcaskets prowl. Star chamber behind (z 93..99)
+ *                                       two Snapcaskets prowl
+ *   Strongroom     x -4..4,   z 93..115 behind the vault door: three pendulums swing across the
+ *                                       corridor, and two gates whose padlocks relock after 6 s;
+ *                                       unlock, then time your dash between the swings.
+ *                                       Star chamber beyond (z 115..121)
  */
 export const VAULT: LevelDef = {
   id: 'vault',
@@ -47,7 +51,9 @@ export const VAULT: LevelDef = {
     { id: 'locks', name: 'The Lockwork Hall', min: [-9.5, -3, 9], max: [14, 12, 30] },
     { id: 'pantry', name: 'The Snapcasket Pantry', min: [-11.5, -3, 30], max: [8.5, 8, 48] },
     { id: 'shutters', name: 'The Shutter Run', min: [-4.5, -3, 48], max: [4.5, 8, 74.5] },
-    { id: 'great', name: 'The Great Vault', min: [-9.5, -3, 74.5], max: [9.5, 12, 99.5] },
+    { id: 'great', name: 'The Great Vault', min: [-9.5, -3, 74.5], max: [9.5, 12, 93] },
+    { id: 'strongroom', name: 'The Strongroom', min: [-4.5, -3, 93], max: [4.5, 12, 115] },
+    { id: 'great', name: 'The Great Vault', min: [-3.5, -3, 115], max: [3.5, 12, 121.5] },
   ],
   intro: { script: 'vaultIntro', unlessFlag: 'vault-entered' },
   music: 'dungeon',
@@ -89,7 +95,7 @@ function treasure(b: LevelBuilder, x: number, z: number, n: number, seed: number
 function build(b: LevelBuilder): void {
   b.killY = -20;
   const flames = new Glow();
-  b.floor(-13, 14, -0.5, 100, {
+  b.floor(-13, 14, -0.5, 122, {
     color: FLOOR,
     holes: [[-4, 4, 68.5, 72.5]], // the drawbridge pit
   });
@@ -295,22 +301,60 @@ function build(b: LevelBuilder): void {
   b.lantern([0, 8.5, 82], 10, 18);
 
   // Star chamber.
-  wall(b, 'z', -3.5, 93, 99.5, 6, { color: STONE });
-  wall(b, 'z', 3.5, 93, 99.5, 6, { color: STONE });
-  wall(b, 'x', 99.5, -3.5, 3.5, 6, { color: STONE });
-  slab(b, -3.5, 3.5, 93, 99.5, 6.5, 0.5, COLORS.stoneDark);
-  b.cylinder([0, 0.5, 96], 0.7, 1, COLORS.stoneLight, undefined, 8);
-  deco(b, new CylinderGeometry(0.85, 0.85, 0.12, 8), [0, 1.06, 96], '#c99a3e');
-  treasure(b, -2.3, 97.8, 12, 13);
-  treasure(b, 2.3, 97.6, 12, 17);
-  bookStack(b, [2.4, 0, 94.2], 5, 21);
+  wall(b, 'z', -3.5, 115, 121.5, 6, { color: STONE });
+  wall(b, 'z', 3.5, 115, 121.5, 6, { color: STONE });
+  wall(b, 'x', 121.5, -3.5, 3.5, 6, { color: STONE });
+  slab(b, -3.5, 3.5, 115, 121.5, 6.5, 0.5, COLORS.stoneDark);
+  b.cylinder([0, 0.5, 118], 0.7, 1, COLORS.stoneLight, undefined, 8);
+  deco(b, new CylinderGeometry(0.85, 0.85, 0.12, 8), [0, 1.06, 118], '#c99a3e');
+  treasure(b, -2.3, 119.8, 12, 13);
+  treasure(b, 2.3, 119.6, 12, 17);
+  bookStack(b, [2.4, 0, 116.2], 5, 21);
   b.add(
-    { type: 'star', id: 'vault-star', pos: [0, 1.9, 96], script: 'vaultComplete' },
-    { type: 'door', pos: [0, 0, 98.95], yaw: Math.PI, width: 2.4, height: 3.4, to: { level: 'quince', spawn: 'fromVault' }, label: 'Up to class' },
+    { type: 'star', id: 'vault-star', pos: [0, 1.9, 118], script: 'vaultComplete' },
+    { type: 'door', pos: [0, 0, 120.95], yaw: Math.PI, width: 2.4, height: 3.4, to: { level: 'quince', spawn: 'fromVault' }, label: 'Up to class' },
   );
-  wallTorch(b, flames, [-2.98, 2.6, 95], Math.PI / 2);
-  wallTorch(b, flames, [2.98, 2.6, 95], -Math.PI / 2);
+  wallTorch(b, flames, [-2.98, 2.6, 117], Math.PI / 2);
+  wallTorch(b, flames, [2.98, 2.6, 117], -Math.PI / 2);
+
+  strongroom(b, flames);
 
   flames.finish(b, '#ffb060');
   b.finish();
+}
+
+/**
+ * The Strongroom (z 93..115), behind the vault door: pendulums and relocking gates. Built
+ * last so the earlier rooms' sweets keep their ids.
+ */
+function strongroom(b: LevelBuilder, flames: Glow): void {
+  wall(b, 'z', -4.5, 93, 115, 10, { color: STONE });
+  wall(b, 'z', 4.5, 93, 115, 10, { color: STONE });
+  wall(b, 'x', 115, -4.5, 4.5, 10, { color: STONE, holes: [{ from: -1.2, to: 1.2, top: 3.4 }] });
+  slab(b, -4.5, 4.5, 93, 115, 10.5, 0.5, COLORS.stoneDark);
+  for (const z of [100.5, 111]) {
+    wall(b, 'x', z, -4.5, 4.5, 10, { color: STONE, holes: [{ from: -2.1, to: 2.1, top: 3.6 }], thick: 0.6 });
+  }
+  b.add(
+    { type: 'checkpoint', pos: [-3, 0, 94.2], yaw: Math.PI / 2, zone: { min: [-4, -1, 93], max: [4, 4, 95.5] } },
+    { type: 'trigger', flag: 'vault-hint-strongroom', script: 'vaultStrongroom', min: [-4, -1, 93], max: [4, 5, 95] },
+    { type: 'pendulum', pos: [0, 9.8, 97], length: 8.8, swing: 0.36, period: 2.6, phase: 0, bob: 0.7 },
+    { type: 'gate', pos: [0, 0, 100.5], yaw: 0, width: 3, height: 3, when: ['v-g1'] },
+    { type: 'padlock', id: 'v-g1', pos: [-3.3, 1.8, 100.1], yaw: Math.PI, relock: 6 },
+    { type: 'checkpoint', pos: [-3, 0, 101.8], yaw: Math.PI / 2, zone: { min: [-4, -1, 101], max: [4, 4, 102.6] } },
+    { type: 'pendulum', pos: [0, 9.8, 104.5], length: 8.8, swing: 0.36, period: 2.6, phase: 0.5, bob: 0.7 },
+    { type: 'pendulum', pos: [0, 9.8, 107.8], length: 8.8, swing: 0.36, period: 2.2, phase: 0.2, bob: 0.7 },
+    { type: 'gate', pos: [0, 0, 111], yaw: 0, width: 3, height: 3, when: ['v-g2'] },
+    { type: 'padlock', id: 'v-g2', pos: [3.3, 1.8, 110.6], yaw: Math.PI, relock: 6 },
+    { type: 'sweetLine', kind: 'fizzwort', from: [0, 0.6, 95.5], to: [0, 0.6, 99], count: 3 },
+    { type: 'sweetLine', kind: 'fizzwort', from: [0, 0.6, 103], to: [0, 0.6, 109.5], count: 4 },
+    { type: 'sweet', kind: 'bramble', pos: [3, 0.6, 113.5] },
+  );
+  for (const z of [97, 104.5, 107.8]) deco(b, new BoxGeometry(9, 0.4, 0.4), [0, 9.8, z], '#3a3340');
+  for (const z of [95, 106]) {
+    wallTorch(b, flames, [-3.98, 3, z], Math.PI / 2);
+    wallTorch(b, flames, [3.98, 3, z], -Math.PI / 2);
+  }
+  treasure(b, -3.2, 113.6, 10, 31);
+  b.lantern([0, 8.5, 103], 8, 14);
 }
