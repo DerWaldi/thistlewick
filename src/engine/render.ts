@@ -17,6 +17,7 @@ import {
   DirectionalLight,
   Fog,
   HemisphereLight,
+  MathUtils,
   Mesh,
   PCFShadowMap,
   PerspectiveCamera,
@@ -100,18 +101,37 @@ export class Renderer {
    * Daylight for the castle, or the dark for places underground: a dim cold fill and
    * close black fog, so lamps and torches do the lighting.
    */
-  setAmbience(kind: 'day' | 'dark'): void {
-    const dark = kind === 'dark';
-    this.hemi.color.set(dark ? '#6a7aa8' : PALETTE.hemiSky);
-    this.hemi.groundColor.set(dark ? '#1a1420' : PALETTE.hemiGround);
-    this.hemi.intensity = dark ? 0.85 : 1.3;
-    this.sun.intensity = dark ? 0 : 2.4;
+  setAmbience(kind: 'day' | 'dark', instant = true): void {
+    const target = kind === 'dark' ? 1 : 0;
+    if (!instant && target === this.darkTarget) return;
+    this.darkTarget = target;
+    if (instant) this.dark = this.darkTarget;
+    this.applyAmbience();
+  }
+
+  /** Ease towards the target ambience (walking down into the Undercroft, say). */
+  updateAmbience(dt: number): void {
+    if (this.dark === this.darkTarget) return;
+    this.dark = MathUtils.damp(this.dark, this.darkTarget, 2.5, dt);
+    if (Math.abs(this.dark - this.darkTarget) < 0.01) this.dark = this.darkTarget;
+    this.applyAmbience();
+  }
+
+  private dark = 0;
+  private darkTarget = 0;
+  private applyAmbience(): void {
+    const k = this.dark;
+    const mix = (a: string, b: string) => new Color(a).lerp(new Color(b), k);
+    this.hemi.color.copy(mix(PALETTE.hemiSky, '#6a7aa8'));
+    this.hemi.groundColor.copy(mix(PALETTE.hemiGround, '#1a1420'));
+    this.hemi.intensity = MathUtils.lerp(1.3, 1.05, k);
+    this.sun.intensity = MathUtils.lerp(2.4, 0, k);
     const fog = this.scene.fog as Fog;
-    fog.color.set(dark ? '#0c0a12' : PALETTE.fog);
-    fog.near = dark ? 6 : 45;
-    fog.far = dark ? 34 : 150;
-    this.sky.visible = !dark;
-    this.hills.visible = !dark;
+    fog.color.copy(mix(PALETTE.fog, '#0c0a12'));
+    fog.near = MathUtils.lerp(45, 6, k);
+    fog.far = MathUtils.lerp(150, 34, k);
+    this.sky.visible = k < 0.6;
+    this.hills.visible = k < 0.6;
   }
 
   private skyTime = 0;

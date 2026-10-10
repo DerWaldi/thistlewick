@@ -221,6 +221,16 @@ export const CARDS: CardDef[] = [
     hint: 'Behind a wall that is not there, in the Lamplit Catacombs.',
     portrait: { bg: ['#2a3a5a', '#0e1220'], kind: 'wisp' },
   },
+  {
+    id: 'stair-sprite',
+    number: 21,
+    name: 'The Stair Sprite',
+    title: 'Counter of Steps',
+    set: 'Creatures',
+    text: 'Lives under spiral staircases and counts the steps, all day, every day. It has never once got the same number twice, and it is beginning to take this personally.',
+    hint: 'Tucked away under the Undercroft stair.',
+    portrait: { bg: ['#5a4a3a', '#1e1610'], kind: 'sprite' },
+  },
 ];
 
 export const CARD_BY_ID = new Map(CARDS.map((c) => [c.id, c]));

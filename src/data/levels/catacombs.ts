@@ -15,9 +15,10 @@ import { cobweb, column, deco, Glow, rubble, slab, urn, wall, wallTorch } from '
  *                                         last two only show in a CHARGED G2, and the gap
  *                                         without them is too wide to jump
  *   False Walls      x -8..8,  z 31..50   three walls across, each with one false 2 m section
- *                                         (x -5, 3, -1); the hanging lamp H (0, 6.8, 41) shows
- *                                         the middle and far ones, the near one only when
- *                                         charged. A false bit of the west wall hides the card
+ *                                         (x -5, 3, -1), and a lamp on a post at the start of
+ *                                         each section: the first only shows its wall when
+ *                                         CHARGED; the second also (charged) unmasks a false bit
+ *                                         of the west wall with the card behind it
  *   Lamplough's      x -9..9,  z 51..70   a divider (x 0, z 54..67) splits the room; four wall
  *   Lantern                               lamps (two per half) open the north gate only while
  *                                         ALL are lit (9 s each). Snapcaskets in both halves
@@ -117,7 +118,13 @@ function build(b: LevelBuilder): void {
   b.add(
     { type: 'checkpoint', pos: [-6.5, 0, 32], yaw: Math.PI / 2, zone: { min: [-8, -1, 31], max: [8, 4, 33.5] } },
     { type: 'trigger', flag: 'catacomb-hint-walls', script: 'catacombWalls', min: [-8, -1, 31], max: [8, 5, 33.5] },
-    { type: 'wickLamp', id: 'cH', pos: [0, 6.8, 41], style: 'hanging', radius: 6.5, duration: 10, light: true },
+    // Eye-level lamps, one per section, easy to spot and aim at. The first stays lit and
+    // lights the hall; only a charged cast makes it reach the first false wall.
+    { type: 'wickLamp', id: 'cW1', pos: [0, 0, 33.5], radius: 4, duration: 0, light: true, lightRange: 16 },
+    { type: 'wickLamp', id: 'cW2', pos: [-1, 0, 38.5], radius: 4.5, duration: 10 },
+    { type: 'wickLamp', id: 'cW3', pos: [2, 0, 43.5], radius: 4, duration: 10 },
+    // Inside the alcove, so the false wall can always be lit from this side too.
+    { type: 'wickLamp', pos: [-10.6, 0, 39.6], radius: 2.5, duration: 10 },
     { type: 'illusionWall', pos: [-8.5, 1.5, 39], size: [1, 3, 2], color: STONE },
     { type: 'card', card: 'gloomwisp', pos: [-10, 1.2, 39] },
     { type: 'secret', id: 'catacomb-alcove', area: 'walls', min: [-11, -1, 38], max: [-9, 3, 40] },

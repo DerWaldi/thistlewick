@@ -12,6 +12,7 @@ import { loadOptions, saveOptions, type Options } from './state/options';
 import { LevelSession } from './session';
 import { GameState } from './state/gameState';
 import { apply, clearSave, loadSave, writeSave } from './state/save';
+import { LESSONS, resetTrial, spellsBy } from './data/lessons';
 import { Album } from './ui/album';
 import { Dialogue } from './ui/dialogue';
 import { Hud } from './ui/hud';
@@ -135,11 +136,31 @@ export class Game {
 
   // ---------------------------------------------------------------- starting
 
-  /** A sandbox level: fresh state, no saving (the gym, isolated tests). */
+  /**
+   * A sandbox level: fresh state, no saving (the gym, isolated tests). You know every
+   * spell taught up to and including that level's lesson, as you would in a real game.
+   */
   startSandbox(level: string): void {
     this.sandbox = true;
     this.state = new GameState(this.events);
+    for (const s of spellsBy(level)) this.state.known.add(s);
     this.loadLevel(level, 'default');
+  }
+
+  /** Dev: undo a finished trial in the save, so it can be played again. */
+  resetTrialInSave(spell: string): boolean {
+    const data = loadSave();
+    if (!data) return false;
+    const s = new GameState(this.events);
+    apply(s, data);
+    if (!resetTrial(s, spell)) return false;
+    // If the save left you standing in that trial, start back at its classroom.
+    const l = LESSONS.find((x) => x.spell === spell)!;
+    if (s.level === l.trial) {
+      s.level = l.classroom;
+      s.checkpoint = null;
+    }
+    return writeSave(s);
   }
 
   newGame(): void {
@@ -357,6 +378,8 @@ export class Game {
     }
     // Halted frames draw the latest state: interpolating between two frozen steps makes everything shake.
     s.frameUpdate(dt, this.isHalted ? 1 : alpha);
+    if (!this.titleMode) this.renderer.setAmbience(s.currentArea?.ambience ?? s.def.ambience ?? 'day', false);
+    this.renderer.updateAmbience(dt);
     if (this.titleMode) s.rig.root.visible = false;
     s.shadow.hidden = this.titleMode;
     this.dialogue.update(dt);

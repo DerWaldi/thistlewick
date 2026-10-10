@@ -489,7 +489,7 @@ export class PlayerController {
   private trackSafeGround(dt: number): void {
     const info = this.groundInfo;
     const stable =
-      this.grounded && this.centerOverGround && !info?.mover && !info?.bounce && this.groundNormal.y > 0.85;
+      this.grounded && this.centerOverGround && !info?.mover && !info?.bounce && !info?.temporary && this.groundNormal.y > 0.85;
     if (!stable) {
       this.safeTimer = 0;
       return;
@@ -505,14 +505,24 @@ export class PlayerController {
     }
   }
 
-  /** Most recent safe spot that's a little way back from the edge we fell off. */
+  /**
+   * Most recent safe spot that's a little way back from the edge we fell off, and that
+   * still has solid ground under it (whatever was there may have gone since).
+   */
   private pickRespawn(): Vector3 {
     const edge = this.safeHistory[this.safeHistory.length - 1] ?? this.lastSafe;
     for (let i = this.safeHistory.length - 1; i >= 0; i--) {
       const p = this.safeHistory[i];
-      if (Math.hypot(p.x - edge.x, p.z - edge.z) >= 1.5) return p.clone();
+      if (Math.hypot(p.x - edge.x, p.z - edge.z) >= 1.5 && this.supported(p)) return p.clone();
     }
+    for (let i = this.safeHistory.length - 1; i >= 0; i--) if (this.supported(this.safeHistory[i])) return this.safeHistory[i].clone();
     return (this.safeHistory[0] ?? this.lastSafe).clone();
+  }
+
+  /** Is there lasting ground right under this capsule position? */
+  private supported(p: Vector3): boolean {
+    const hit = this.physics.raycast(p, new Vector3(0, -1, 0), FOOT_OFFSET + 0.6, this.collider);
+    return !!hit && !this.physics.getInfo(hit.collider)?.temporary && !this.physics.getInfo(hit.collider)?.bounce;
   }
   private safeHistory: Vector3[] = [];
 

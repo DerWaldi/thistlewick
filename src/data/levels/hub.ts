@@ -14,9 +14,11 @@ import {
   ivy,
   mushrooms,
   pottedPlant,
+  rubble,
   rug,
   table,
   urn,
+  wallTorch,
   banner,
   chandelier,
   column,
@@ -66,7 +68,7 @@ export const HUB: LevelDef = {
     fromClassroom: { pos: [38.5, 3, 20], yaw: -Math.PI / 2 },
     fromQuince: { pos: [38.5, 3, 50.3], yaw: Math.PI },
     fromHopgood: { pos: [-14.4, 0, 40], yaw: Math.PI / 2 },
-    fromUndercroft: { pos: [10.6, 0, 2.5], yaw: -Math.PI / 2 },
+    fromUndercroft: { pos: [31.9, -8.5, 2.5], yaw: -Math.PI / 2 },
   },
   areas: [
     { id: 'hall', name: 'The Lantern Hall', min: [-12, -2, 0], max: [12, 14, 30] },
@@ -76,6 +78,7 @@ export const HUB: LevelDef = {
     { id: 'corridor', name: 'The Crooked Corridor', min: [18.5, -2, 10], max: [21.5, 4, 13.5] },
     { id: 'court', name: 'Hollyhock Court', min: [-17, -3, 30], max: [17, 30, 66] },
     { id: 'gallery', name: 'The Long Gallery', min: [34.5, 2, 23.5], max: [47.5, 11, 52.5] },
+    { id: 'undercroft', name: 'The Undercroft', min: [12.6, -10, -1.2], max: [34, -1.5, 6.2], ambience: 'dark' },
   ],
   intro: { script: 'intro', unlessFlag: 'greeted' },
   build: buildHub,
@@ -89,7 +92,7 @@ function buildHub(b: LevelBuilder): void {
   const candle = new Glow();
 
   // ================================================================ floors
-  b.floor(-18.5, 42, 0, 30, { color: '#b8a088' }); // hall, cupboard, corridor ground
+  b.floor(-18.5, 42, 0, 30, { color: '#b8a088', holes: [[13, 19.4, 0, 5.7]] }); // hall, cupboard, corridor ground (and the Undercroft stairwell)
   b.floor(-16.5, 16.5, 30, 64.5, { color: '#a99476', holes: [[-5, 5, 41, 51]] });
 
   // ================================================================ LANTERN HALL (x -12..12, z 0..30)
@@ -604,6 +607,90 @@ function buildHub(b: LevelBuilder): void {
     { type: 'sweetLine', kind: 'bramble', from: [-15, 9.8, 50.6], to: [-15, 9.8, 51.6], count: 2 },
   );
 
+  // ================================================================ THE UNDERCROFT (under the hall's south-east corner)
+  // A round stairwell (centre 16.2, 2.5) spiralling down from the hall to y -7.5, then a
+  // corridor east to Lamplough's door.
+  {
+    const cx = 16.2;
+    const cz = 2.5;
+    const BOT = -7.5;
+    const TOP = 4.4;
+    const ring = 16;
+    for (let k = 0; k < ring; k++) {
+      const a = (k / ring) * Math.PI * 2;
+      const len = 3.4 * ((Math.PI * 2) / ring) * 1.06;
+      // Openings: west at the top only (from the hall: solid below it, or you'd walk out
+      // under the hall from the bottom), east at the bottom (to the corridor).
+      const spans: [number, number][] = k === ring / 2 ? [[BOT, -0.3], [3, TOP]] : k === 0 ? [[-4.5, TOP]] : [[BOT, TOP]];
+      for (const [lo, hi] of spans) {
+        b.box([cx + Math.cos(a) * 3.4, (lo + hi) / 2, cz + Math.sin(a) * 3.4], [0.4, hi - lo, len], { color: COLORS.stone, rot: [0, -a, 0], info: { noGrab: true } });
+      }
+    }
+    b.cylinder([cx, (BOT + TOP) / 2, cz], 0.7, TOP - BOT, COLORS.stoneLight, { noGrab: true }, 12);
+    slab(b, 12.8, 19.6, -0.9, 5.9, TOP + 0.4, 0.4, '#5e4a3e', 'planks');
+    b.box([cx, BOT - 0.25, cz], [6.8, 0.5, 6.8], { color: '#5a5262' });
+    // The spiral: a landing step at the top (west), then 24 steps of 0.3 m round to the east.
+    // The steps are for looks; you walk on a smooth invisible helical ramp under their
+    // nosings (individual step edges snag the capsule, worst near the column).
+    const step = (a: number, top: number, solid: boolean) =>
+      b.box([cx + Math.cos(a) * 1.8, top - 0.15, cz + Math.sin(a) * 1.8], [2.2, 0.3, 1.25], {
+        color: COLORS.stoneLight,
+        rot: [0, -a, 0],
+        info: { noGrab: true },
+        noCollide: !solid,
+      });
+    step(Math.PI, 0, true);
+    const da = Math.PI / 8;
+    for (let i = 0; i < 24; i++) step(Math.PI + (i + 1) * da, -0.3 * (i + 1), false);
+    const chord = 2 * 1.8 * Math.sin(da / 2);
+    const pitch = Math.atan2(0.3, chord);
+    for (let i = 0; i <= 24; i++) {
+      // From step i-1 (the landing for i = 0) down to step i (the floor after the last).
+      const am = Math.PI + (i + 0.5) * da;
+      const ym = -0.3 * (i + 0.5);
+      b.box([cx + Math.cos(am) * 1.8, ym - 0.1, cz + Math.sin(am) * 1.8], [2.2, 0.2, chord / Math.cos(pitch) + 0.08], {
+        invisible: true,
+        rot: [pitch, -am, 0],
+        info: { noGrab: true },
+      });
+    }
+    b.box([13.4, -0.15, cz], [0.9, 0.3, 1.4], { color: COLORS.stoneLight }); // across the wall to the landing
+    for (let i = 0; i < 4; i++) {
+      const a = Math.PI + 0.5 + i * 1.6;
+      deco(b, new BoxGeometry(0.16, 0.3, 0.04), [cx + Math.cos(a) * 3.18, -1 - i * 1.7, cz + Math.sin(a) * 3.18], '#2a2230', [0, -a + Math.PI / 2, 0]);
+      candle.add(new ConeGeometry(0.07, 0.24, 5), [cx + Math.cos(a) * 3.05, -0.72 - i * 1.7, cz + Math.sin(a) * 3.05]);
+    }
+    b.lantern([cx, 1.5, cz], 0, 0, false);
+    // The corridor (x 19.6..33.1, z 1.1..3.9, floor -7.5), stepping down a metre at the
+    // end (x 29..31) so Lamplough's door has room for its name over it.
+    const LOW = BOT - 1;
+    b.box([24.2, BOT - 0.25, 2.5], [9.6, 0.5, 3.8], { color: '#5a5262' });
+    b.box([30, LOW - 0.25, 2.5], [2, 0.5, 3.8], { color: '#5a5262' });
+    b.ramp([31, LOW, 2.5], Math.hypot(2, 1), 2.8, (Math.atan2(1, 2) * 180) / Math.PI, -Math.PI / 2, '#5a5262');
+    b.box([32.3, LOW - 0.25, 2.5], [2.6, 0.5, 3.8], { color: '#5a5262' });
+    wall(b, 'x', 0.6, 19.4, 33.6, 4.6, { base: LOW, color: '#6a6272' });
+    wall(b, 'x', 4.4, 19.4, 33.6, 4.6, { base: LOW, color: '#6a6272' });
+    wall(b, 'z', 33.6, 0.6, 4.4, 4.6, { base: LOW, color: '#6a6272' });
+    slab(b, 19.4, 33.6, 0.6, 4.4, BOT + 3.6, 0.3, '#3a3242', 'planks');
+    for (const x of [22, 26, 30]) {
+      wallTorch(b, candle, [x, BOT + 2.3, 1.12], 0);
+      wallTorch(b, candle, [x + 2, BOT + 2.3, 3.88], Math.PI);
+    }
+    b.lantern([27, BOT + 2.8, 2.5], 6, 10);
+    rubble(b, 20.5, 1.6, 5, 11, BOT);
+    barrel(b, [32.4, LOW, 1.6]);
+    bookStack(b, [32.5, LOW, 3.5], 6, 17);
+    cobweb(b, [33.1, BOT + 3.25, 1.1], [-1, 0], [0, 1], 0.9);
+    cobweb(b, [19.6, BOT + 3.5, 3.9], [1, 0], [0, -1], 0.8);
+    signboard(b, 'Undercroft', [11.97, 3.95, cz], -Math.PI / 2);
+    // The nook under the stair: a few candles and a bench round the column.
+    for (let i = 0; i < 5; i++) {
+      const a = Math.PI * (0.45 + i * 0.12);
+      candlestick(b, candle, [cx + Math.cos(a) * 2.9, BOT, cz + Math.sin(a) * 2.9], 0.15 + (i % 2) * 0.1);
+    }
+    rug(b, [cx - 0.8, BOT, cz + 1.9], 1.6, 1.2, '#5a2a3a', '#c99a3e', -0.5);
+  }
+
   // ================================================================ after Glimmerwick (appended: ids follow build order)
   // Glimmer steps from the gallery up to a ledge high on the hall's east wall; the top
   // step only shows in a charged lamp's glow.
@@ -617,8 +704,10 @@ function buildHub(b: LevelBuilder): void {
   b.box([33.25, G - 0.5, 50.5], [1.5, 1, 2.4], { color: '#8a6a4a', pattern: 'planks' });
   b.add(
     {
+      // At the bottom of the Undercroft stair (this entry was once a door in the hall wall:
+      // replaced in place so later ids don't shift).
       type: 'door',
-      pos: [12, 0, 2.5],
+      pos: [33.1, -8.5, 2.5],
       yaw: -Math.PI / 2,
       width: 2.4,
       height: 3.4,
@@ -634,10 +723,17 @@ function buildHub(b: LevelBuilder): void {
     { type: 'card', card: 'ambrose-wick', pos: [11.4, 11, 18.5] },
     { type: 'secret', id: 'hub-wick-ledge', area: 'hall', min: [10.8, 9.8, 17.4], max: [12, 12.5, 19.6] },
     { type: 'wickLamp', pos: [37, G, 48.6], radius: 4, duration: 8 },
+    { type: 'wickLamp', pos: [33, G, 51.1], radius: 2.5, duration: 8 }, // inside the alcove: no getting shut in
     { type: 'illusionWall', pos: [34.5, G + 1.5, 50.5], size: [1, 3, 2], color: COLORS.stoneLight },
     { type: 'secret', id: 'hub-gallery-niche', area: 'gallery', min: [32.5, G - 1, 49.5], max: [34, G + 3, 51.5] },
     { type: 'sweet', kind: 'humbug', pos: [33.2, G + 0.6, 50.5] },
     { type: 'sweetLine', kind: 'bramble', from: [33.2, G + 0.6, 49.8], to: [33.2, G + 0.6, 51.2], count: 2 },
+  );
+
+  // ================================================================ the Undercroft (appended)
+  b.add(
+    { type: 'card', card: 'stair-sprite', pos: [15.3, -6.4, 4.3] },
+    { type: 'secret', id: 'hub-under-stair', area: 'undercroft', min: [13.4, -8, 3.2], max: [17.2, -5.5, 5.6] },
   );
 
   glow.finish(b, '#ffc68a');

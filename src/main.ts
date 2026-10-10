@@ -64,6 +64,14 @@ async function boot(): Promise<void> {
     }
   };
 
+  // Dev: `?resetTrial=glimmerwick` makes a finished trial playable again in your save.
+  const reset = params.get('resetTrial');
+  if (reset) {
+    const ok = game.resetTrialInSave(reset);
+    history.replaceState(null, '', location.pathname);
+    game.events.emit('toast', { text: ok ? `The ${reset} trial is ready to play again.` : `Couldn't reset "${reset}".`, kind: 'info' });
+  }
+
   if (sandboxLevel) {
     game.startSandbox(sandboxLevel);
     game.beginPlay();

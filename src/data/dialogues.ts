@@ -2,6 +2,7 @@ import type { EventBus } from '../engine/events';
 import type { GameState } from '../state/gameState';
 import type { DialogueLine } from '../ui/dialogue';
 import { HOUSE_ORDER, HOUSES, POINTS, SORTING_QUESTIONS, type HouseId } from './houses';
+import { LOST_AND_FOUND } from './shop';
 
 export interface ScriptContext {
   say(lines: DialogueLine[]): Promise<number | null>;
@@ -495,7 +496,7 @@ export const DIALOGUES: Record<string, Script> = {
 
   catacombWalls: async ({ say }) => {
     await say([
-      { speaker: 'lamplough', text: "(echoing) The Hall of False Walls. Some of these walls are lying. The lamp overhead tells the truth, but only as far as it reaches. A charged cast reaches further." },
+      { speaker: 'lamplough', text: "(echoing) The Hall of False Walls. Some of these walls are lying. Light the lamp by the door first, so you can see. Then each little lamp tells the truth, as far as it reaches. A charged cast reaches further." },
     ]);
   },
 
@@ -525,6 +526,13 @@ export const DIALOGUES: Record<string, Script> = {
             ]
           : [{ speaker: 'tansy', text: 'Back for more? Excellent. Moss, look busy.' }],
       );
+      // Cards left behind in a finished trial turn up here.
+      const lost = LOST_AND_FOUND.filter((l) => state.lessons.has(l.lesson) && !state.cards.has(l.card));
+      const told = `told-lost:${lost.map((l) => l.card).join(',')}`;
+      if (lost.length && !state.flags.has(told)) {
+        state.flags.add(told);
+        await say([{ speaker: 'moss', text: 'Oh! Lost & Found. Found some cards lying about down in the trials. Finders keepers. Well, finders sellers.' }]);
+      }
       const before = state.sweets;
       await openShop();
       await say([

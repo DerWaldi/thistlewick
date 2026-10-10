@@ -16,6 +16,8 @@ export interface ColliderInfo {
   noGrab?: boolean;
   /** Spells see (and fly) through it: grilles and bars that block bodies but not sight. */
   seeThrough?: boolean;
+  /** Ground that can vanish (glimmerstone): never remembered as a safe respawn spot. */
+  temporary?: boolean;
 }
 
 export class Physics {

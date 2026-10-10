@@ -104,9 +104,9 @@ Each render frame then runs the camera, animator, level and entity visuals, cast
 - A `door` entity with `to: { level, spawn }` switches levels; the game fades out and in.
 - Everything level-specific is created by `LevelSession` and torn down by its `dispose()`. Event listeners go on the session's scoped bus, so they're removed too.
 - Every level file starts with a map comment. Keep it current.
-- Levels: `hub`, then `classroom` (Gorse's lesson) and `trial` (the Thwackwort Trial); then the hub's Long Gallery leads to `quince` (Locks & Latches) and `vault` (the Latchkin Vaults), a padlocked door in Hollyhock Court's west cloister to `hopgood` (Leaps & Bounds) and `tower` (the Tumbledown Tower), and a door by the Lantern Hall's front doors down to `lamplough` (Illumination, the Undercroft) and `catacombs` (the Lamplit Catacombs). Plus the `gym` sandbox.
+- Levels: `hub`, then `classroom` (Gorse's lesson) and `trial` (the Thwackwort Trial); then the hub's Long Gallery leads to `quince` (Locks & Latches) and `vault` (the Latchkin Vaults), a padlocked door in Hollyhock Court's west cloister to `hopgood` (Leaps & Bounds) and `tower` (the Tumbledown Tower), and a spiral stair from the Lantern Hall (by the front doors) down to the Undercroft corridor, whose end door leads to `lamplough` (Illumination) and `catacombs` (the Lamplit Catacombs). Plus the `gym` sandbox.
 - Spread classroom entrances round the castle (the user asked for this): each new teacher gets a new corner, not another door off the same corridor. Later teachers' doors use `afterLesson: '<previous spell>'`.
-- `ambience: 'dark'` (underground levels) drops to a dim cold fill and close black fog; lamps with `light: true` and torches do the lighting. Keep real point lights to ~8 (checkpoints and the Star have one each).
+- `ambience: 'dark'` on a level or an area (the Undercroft area in the hub) drops to a dim cold fill and close black fog; lamps with `light: true` and torches do the lighting. Keep real point lights to ~8 (checkpoints and the Star have one each).
 
 ### Lessons (the core loop)
 Each lesson is content, not engine work:
@@ -161,6 +161,13 @@ Doors enforce the flow: the classroom exit has `lockedDuring: '<spell>'` (no lea
 
 Levels place objects with `b.add({ type: ..., ... })`. Objects talk to each other through `Signals` by id; for example, a switch sets `'yard-a'` and a gate opens `when: ['yard-a']`.
 
+### Dev conveniences
+- `?level=<id>` sandboxes know every spell taught up to that level's lesson (`spellsBy` in `src/data/lessons.ts`); the hub gets them all.
+- `?resetTrial=<spell>` undoes a finished trial in the save (Star, sweets, chests, pests, hints come back; cards, secrets and teacher rewards stay). The lesson table in `src/data/lessons.ts` says what each trial leaves in a save; add new trials there.
+- Trials run once, so cards missed inside one turn up at the Cupboard's Lost & Found (`LOST_AND_FOUND` in `src/data/shop.ts`) once its lesson is done.
+- Ground that can vanish (glimmerstone) is `ColliderInfo.temporary`: never remembered as a safe respawn spot, and a respawn spot must still have ground under it.
+- Spiral stairs: walk on an invisible helical ramp under visual-only steps.
+
 ## Conventions
 
 - **Units:** metres and seconds. +Y is up. Yaw follows `forward = (sin yaw, 0, cos yaw)`; models face +Z.
@@ -193,7 +200,7 @@ Levels place objects with `b.add({ type: ..., ... })`. Objects talk to each othe
 | M3 Lesson | done | Gorse's lesson, the Thwackwort Trial dungeon (~5 min), Thistle Star, a post-lesson hub secret |
 | M4 Slice complete | done | Shop and upgrades, all 10 cards, 4 secrets, title/pause/options, music, visual pass, perf |
 | Polish 1 | done | Sectioned music, wall caps against climbing out, P screenshots, painted portraits and gilt frames, detailed characters, set dressing in every room |
-| M7 Glimmerwick | done | Hopgood's door moved to the court; the Undercroft door in the Lantern Hall; Lamplough's dark study; the Lamplit Catacombs (glimmer bridge with charged-only stones, false walls, four lamps at once); glimmer steps in the hall, a false wall in the Long Gallery; 3 new cards (20 total) |
+| M7 Glimmerwick | done | Hopgood's door moved to the court; a spiral stair from the Lantern Hall down to the Undercroft (dark area ambience, a nook with a card); Lamplough's dark study; the Lamplit Catacombs (glimmer bridge with charged-only stones, false walls, four lamps at once); glimmer steps in the hall, a false wall in the Long Gallery; 4 new cards (21 total); Lost & Found; `?resetTrial`; sandbox spells |
 | M6 Springwell | done | Hopgood's gym (padlocked off the Long Gallery), the Tumbledown Tower (toadstool stair, Bellfry with a timed gate and charged bounces, rooftop turret run to the spire), spring pads with fling, latching plates, the court balcony, 3 new cards (17 total) |
 | M5 Latchkin | done | Long Gallery wing (portcullis, portraits, padlocked store-room), Madam Quince's class, the Latchkin Vaults (line-of-sight locks, Snapcaskets, relocking shutters, drawbridge, orbiting vault locks), castle payoffs, 4 new cards (14 total) |
 

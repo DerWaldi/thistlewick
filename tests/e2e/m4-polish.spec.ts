@@ -32,7 +32,8 @@ test('the Cupboard opens after the lesson and sells cards and upgrades', async (
   });
   expect(before.openedEarly).toBe(false);
   expect(before.open).toBe(true);
-  await expect(page.locator('.shop-item')).toHaveCount(7);
+  // Seven on the shelves, plus the Trial's Gnarling card in the Lost & Found (it wasn't picked up).
+  await expect(page.locator('.shop-item')).toHaveCount(8);
   await shot(page, 'm4-shop', browserName);
 
   const r = await page.evaluate(async () => {

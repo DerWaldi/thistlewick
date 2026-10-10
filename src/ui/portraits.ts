@@ -57,6 +57,9 @@ export function paintPortrait(g: CanvasRenderingContext2D, s: PortraitSpec, w: n
     case 'wisp':
       wisp(g, cx, w, h);
       break;
+    case 'sprite':
+      sprite(g, cx, w, h);
+      break;
   }
   if (s.kind !== 'lantern') varnish(g, w, h, rnd);
 }
@@ -994,4 +997,36 @@ function wisp(g: CanvasRenderingContext2D, cx: number, w: number, h: number): vo
   ]) {
     blob(g, cx + w * x, h * y, 2 * u, 2 * u, '#ffffff');
   }
+}
+
+function sprite(g: CanvasRenderingContext2D, cx: number, w: number, h: number): void {
+  const u = w / 160;
+  // A spiral of steps winding up behind it.
+  for (let i = 0; i < 9; i++) {
+    const a = i * 0.7 - 1;
+    const x = cx + Math.cos(a) * w * 0.32;
+    const y = h * (0.86 - i * 0.075);
+    g.fillStyle = i % 2 ? '#8a7a68' : '#a08c78';
+    g.beginPath();
+    g.ellipse(x, y, w * 0.12, h * 0.025, a * 0.3, 0, Math.PI * 2);
+    g.fill();
+  }
+  // A small round body with long ears, peering out, a candle stub for a hat.
+  orb(g, cx, h * 0.66, w * 0.16, h * 0.13, '#7a8a5a');
+  for (const side of [-1, 1]) {
+    g.fillStyle = '#6a7a4a';
+    g.beginPath();
+    g.moveTo(cx + side * w * 0.1, h * 0.58);
+    g.lineTo(cx + side * w * 0.3, h * 0.46);
+    g.lineTo(cx + side * w * 0.14, h * 0.64);
+    g.fill();
+  }
+  for (const side of [-1, 1]) eye(g, cx + side * 9 * u, h * 0.64, 6 * u, '#3a2a10', '#fff6d8');
+  g.fillStyle = '#efe0c0';
+  g.fillRect(cx - 4 * u, h * 0.45, 8 * u, h * 0.08);
+  blob(g, cx, h * 0.43, 3 * u, 6 * u, '#ffd27a');
+  // Counting on its fingers.
+  g.fillStyle = '#f3ead8';
+  g.font = `${Math.round(13 * u)}px Georgia, serif`;
+  g.fillText('…47? 48?', cx - w * 0.22, h * 0.9);
 }

@@ -5,7 +5,7 @@
 export interface PortraitSpec {
   /** Background gradient (top, bottom). */
   bg: [string, string];
-  kind: 'person' | 'ghost' | 'gnarling' | 'puddlewump' | 'moth' | 'lantern' | 'snapcasket' | 'mouse' | 'mushroom' | 'wisp';
+  kind: 'person' | 'ghost' | 'gnarling' | 'puddlewump' | 'moth' | 'lantern' | 'snapcasket' | 'mouse' | 'mushroom' | 'wisp' | 'sprite';
   skin?: string;
   robe?: string;
   hair?: string;

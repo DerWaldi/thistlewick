@@ -3,6 +3,9 @@
  * Humbug 25). The slice has roughly 200 sweets' worth to find, enough for a
  * thorough player to buy everything (185).
  */
+import { CARD_BY_ID } from './cards';
+import type { SpellId } from './spells';
+
 export type UpgradeId = 'stout-heart' | 'quick-wand' | 'sweet-tooth' | 'snoops-map';
 
 export interface ShopItem {
@@ -26,6 +29,25 @@ export const SHOP_ITEMS: ShopItem[] = [
   { id: 'up-tooth', kind: 'upgrade', ref: 'sweet-tooth', name: 'Sweet Tooth Charm', price: 25, blurb: 'Sweets fly to you from twice as far away.' },
   { id: 'up-map', kind: 'upgrade', ref: 'snoops-map', name: "Snoop's Map", price: 60, blurb: 'Shows where secrets hide. Moss is still drawing it.', soon: true },
 ];
+
+/**
+ * Cards hidden inside a trial. Trials run once, so a card missed there turns up at
+ * the Cupboard afterwards ("found lying about"), at a premium.
+ */
+export const LOST_AND_FOUND: { card: string; lesson: SpellId; blurb: string }[] = [
+  { card: 'gnarling', lesson: 'thwackwort', blurb: 'Found it in the Trial garden. The Gnarling wanted it back. We said no.' },
+  { card: 'snapcasket', lesson: 'latchkin', blurb: 'Came out of a chest in the Vaults. The chest is still annoyed.' },
+  { card: 'bouncewort', lesson: 'springwell', blurb: 'Fell off the great bell in the Tower. Bounced twice.' },
+  { card: 'gloomwisp', lesson: 'glimmerwick', blurb: 'Was hiding behind a wall in the Catacombs. Very nervous. Handle gently.' },
+];
+
+/** What's on the shelves for this player: the usual stock plus anything they missed in a finished trial. */
+export function shopStock(state: { lessons: Set<string>; cards: Set<string> }): ShopItem[] {
+  const lost = LOST_AND_FOUND.filter((l) => state.lessons.has(l.lesson) && !state.cards.has(l.card)).map(
+    (l): ShopItem => ({ id: `lost-${l.card}`, kind: 'card', ref: l.card, name: `Lost & Found: ${CARD_BY_ID.get(l.card)?.name ?? l.card}`, price: 40, blurb: l.blurb }),
+  );
+  return [...lost, ...SHOP_ITEMS];
+}
 
 /** Effects of upgrades on play. */
 export const UPGRADE_EFFECTS = {

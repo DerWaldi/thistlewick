@@ -1,5 +1,5 @@
 import { CARD_BY_ID } from '../data/cards';
-import { SHOP_ITEMS, type ShopItem } from '../data/shop';
+import { shopStock, type ShopItem } from '../data/shop';
 import type { GameState } from '../state/gameState';
 import { drawCardFace } from './cardArt';
 
@@ -19,6 +19,9 @@ export class Shop {
   private balance = $('shop-balance');
   private quip = $('shop-quip');
   private icons = new Map<string, string>();
+  /** Lost & Found items seen this visit, and the ones bought (shown as Owned until you leave). */
+  private lostSeen = new Map<string, ShopItem>();
+  private boughtLost = new Set<string>();
   private resolve: (() => void) | null = null;
   isOpen = false;
   /** Called after closing (re-lock the mouse). */
@@ -42,6 +45,7 @@ export class Shop {
 
   open(): Promise<void> {
     this.isOpen = true;
+    this.boughtLost.clear();
     this.quip.textContent = '"Everything\'s on sale. Nothing\'s discounted."';
     this.render();
     this.root.classList.remove('hidden');
@@ -59,9 +63,13 @@ export class Shop {
 
   /** Test hook. */
   buy(id: string): boolean {
-    const item = SHOP_ITEMS.find((i) => i.id === id);
+    const item = shopStock(this.getState()).find((i) => i.id === id);
     if (!item) return false;
     const ok = this.getState().buy(item);
+    if (ok && item.id.startsWith('lost-')) {
+      this.lostSeen.set(item.id, item);
+      this.boughtLost.add(item.id);
+    }
     if (ok) this.quip.textContent = `"${QUIPS[Math.floor(Math.random() * QUIPS.length)]}"`;
     this.render();
     return ok;
@@ -87,7 +95,14 @@ export class Shop {
     const s = this.getState();
     this.balance.textContent = String(s.sweets);
     this.grid.innerHTML = '';
-    for (const item of SHOP_ITEMS) {
+    // Lost & Found cards stay on the shelf (marked Owned) for the visit they were bought in.
+    const stock = shopStock(s);
+    for (const id of this.boughtLost) {
+      const seen = this.lostSeen.get(id);
+      if (seen && !stock.some((i) => i.id === id)) stock.unshift(seen);
+    }
+    for (const item of stock) {
+      if (item.id.startsWith('lost-')) this.lostSeen.set(item.id, item);
       const owned = s.owns(item);
       const afford = s.sweets >= item.price;
       const el = document.createElement('div');

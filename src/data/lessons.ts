@@ -1,0 +1,79 @@
+import type { SpellId } from './spells';
+
+/**
+ * The lessons in the order they're taught: where each one is, and what its trial
+ * leaves behind in a save (so a trial can be reset for testing, and a sandbox run
+ * in a level knows which spells you'd have by then).
+ */
+export interface LessonDef {
+  spell: SpellId;
+  classroom: string;
+  trial: string;
+  /** The Thistle Star's id (remembered in `collected`). */
+  star: string;
+  /** Flags the trial sets, exactly or by prefix. */
+  flags: string[];
+  flagPrefixes: string[];
+  /** Ids remembered in `collected` (sweets are `<trial>/...`; chests use their own ids). */
+  collectedPrefixes: string[];
+}
+
+export const LESSONS: LessonDef[] = [
+  {
+    spell: 'thwackwort',
+    classroom: 'classroom',
+    trial: 'trial',
+    star: 'trial-star',
+    flags: ['trial-entered'],
+    flagPrefixes: ['trial-hint-', 'hint-bell-', 'down:rattle', 'looted:trial/'],
+    collectedPrefixes: ['trial/'],
+  },
+  {
+    spell: 'latchkin',
+    classroom: 'quince',
+    trial: 'vault',
+    star: 'vault-star',
+    flags: ['vault-entered'],
+    flagPrefixes: ['vault-hint-', 'down:v-snap', 'looted:vault/'],
+    collectedPrefixes: ['vault/', 'v-'],
+  },
+  {
+    spell: 'springwell',
+    classroom: 'hopgood',
+    trial: 'tower',
+    star: 'tower-star',
+    flags: ['tower-entered'],
+    flagPrefixes: ['tower-hint-', 'down:t-snap', 'looted:tower/'],
+    collectedPrefixes: ['tower/'],
+  },
+  {
+    spell: 'glimmerwick',
+    classroom: 'lamplough',
+    trial: 'catacombs',
+    star: 'catacomb-star',
+    flags: ['catacombs-entered'],
+    flagPrefixes: ['catacomb-hint-', 'down:c-snap', 'looted:catacombs/'],
+    collectedPrefixes: ['catacombs/'],
+  },
+];
+
+/** Spells you'd know by the time you reach this level (for sandbox runs). The hub gets them all. */
+export function spellsBy(level: string): SpellId[] {
+  if (level === 'hub') return LESSONS.map((l) => l.spell);
+  const i = LESSONS.findIndex((l) => l.classroom === level || l.trial === level);
+  return i < 0 ? [] : LESSONS.slice(0, i + 1).map((l) => l.spell);
+}
+
+/**
+ * Make a finished trial playable again (a dev convenience): the lesson is undone, its
+ * Star, sweets, chests and pests come back, its hints replay. Cards and secrets you
+ * found stay found, and the teacher's reward isn't given twice.
+ */
+export function resetTrial(state: { lessons: Set<string>; flags: Set<string>; collected: Set<string> }, spell: string): boolean {
+  const l = LESSONS.find((x) => x.spell === spell);
+  if (!l) return false;
+  state.lessons.delete(l.spell);
+  for (const f of [...state.flags]) if (l.flags.includes(f) || l.flagPrefixes.some((p) => f.startsWith(p))) state.flags.delete(f);
+  for (const c of [...state.collected]) if (c === l.star || l.collectedPrefixes.some((p) => c.startsWith(p))) state.collected.delete(c);
+  return true;
+}

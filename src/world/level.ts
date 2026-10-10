@@ -7,6 +7,8 @@ export interface AreaDef {
   name: string;
   min: V3;
   max: V3;
+  /** Overrides the level's ambience while you're in here (the lights dim as you go underground). */
+  ambience?: 'day' | 'dark';
 }
 
 export interface SpawnPoint {

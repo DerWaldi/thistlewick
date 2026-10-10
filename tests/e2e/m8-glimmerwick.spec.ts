@@ -9,15 +9,43 @@ test.beforeEach(async ({ page }) => {
   await page.evaluate(() => window.__tw.idle());
 });
 
-type G = { state: { house: string | null; flags: Set<string>; lessons: Set<string>; cards: Set<string> } };
+type G = {
+  state: {
+    house: string | null;
+    flags: Set<string>;
+    lessons: Set<string>;
+    cards: Set<string>;
+  };
+};
 
-async function prepared(page: Page, level: string, opts: { glimmer?: boolean; flags?: string[]; spawn?: string; springwellDone?: boolean } = {}): Promise<void> {
+async function prepared(
+  page: Page,
+  level: string,
+  opts: {
+    glimmer?: boolean;
+    flags?: string[];
+    spawn?: string;
+    springwellDone?: boolean;
+  } = {},
+): Promise<void> {
   await page.evaluate(
     async ({ level, opts }) => {
       const tw = window.__tw;
       const g = tw.game as unknown as G;
       g.state.house = 'yarrowdown';
-      const flags = ['sorted', 'greeted', 'lesson-started', 'practice-done', 'gorse-reward', 'quince-lesson-started', 'practice-latchkin', 'quince-reward', 'hopgood-lesson-started', 'practice-springwell', 'hopgood-reward'];
+      const flags = [
+        'sorted',
+        'greeted',
+        'lesson-started',
+        'practice-done',
+        'gorse-reward',
+        'quince-lesson-started',
+        'practice-latchkin',
+        'quince-reward',
+        'hopgood-lesson-started',
+        'practice-springwell',
+        'hopgood-reward',
+      ];
       for (const f of [...flags, 'lamplough-lesson-started', 'catacombs-entered', ...(opts.flags ?? [])]) g.state.flags.add(f);
       for (const s of ['thwackwort', 'latchkin', 'springwell'] as const) {
         tw.learn(s);
@@ -59,12 +87,12 @@ const standOn = (page: Page, at: [number, number, number]) =>
     return tw.state().feet.y;
   }, at);
 
-test('the Undercroft door opens once Springwell is passed', async ({ page }) => {
+test('the Undercroft door, down the stair, opens once Springwell is passed', async ({ page }) => {
   await prepared(page, 'hub', { springwellDone: false });
   const tryDoor = () =>
     page.evaluate(async () => {
       const tw = window.__tw;
-      tw.teleport(10.6, 0, 2.5, Math.PI / 2);
+      tw.teleport(31.9, -8.5, 2.5, Math.PI / 2);
       tw.advance(0.2);
       tw.interact();
       await tw.idle();
@@ -127,7 +155,10 @@ test('Lamplough teaches Glimmerwick; light reveals steps, bridges and (charged) 
 });
 
 test('the Glimmer Bridge: lamp by lamp across the dark, the last stone only in a charged glow', async ({ page, browserName }) => {
-  await prepared(page, 'catacombs', { glimmer: true, flags: ['catacomb-hint-bridge'] });
+  await prepared(page, 'catacombs', {
+    glimmer: true,
+    flags: ['catacomb-hint-bridge'],
+  });
   // In the dark, the first stone isn't there: you fall (and come back to the checkpoint).
   expect(await standOn(page, [0.6, 0, 12.2])).toBeLessThan(-1);
   await page.evaluate(() => window.__tw.advance(4));
@@ -180,11 +211,28 @@ test('the Glimmer Bridge: lamp by lamp across the dark, the last stone only in a
 });
 
 test('the Hall of False Walls: only light shows which walls lie', async ({ page }) => {
-  await prepared(page, 'catacombs', { glimmer: true, flags: ['catacomb-hint-walls'] });
+  await prepared(page, 'catacombs', {
+    glimmer: true,
+    flags: ['catacomb-hint-walls'],
+  });
   // The Gnarlings wander at random; out of the way, so walking into walls is all that's tested.
   await page.evaluate(() => {
-    const g = window.__tw.game as unknown as { session: { world: { entities: { constructor: { name: string }; state?: string; root?: { visible: boolean } }[] } } };
-    for (const e of g.session.world.entities) if (e.constructor.name === 'Gnarling') ((e.state = 'gone'), (e.root!.visible = false));
+    const g = window.__tw.game as unknown as {
+      session: {
+        world: {
+          entities: {
+            constructor: { name: string };
+            state?: string;
+            root?: { visible: boolean };
+          }[];
+        };
+      };
+    };
+    for (const e of g.session.world.entities)
+      if (e.constructor.name === 'Gnarling') {
+        e.state = 'gone';
+        e.root!.visible = false;
+      }
   });
   const walk = (from: [number, number, number], secs: number) =>
     page.evaluate(
@@ -201,16 +249,22 @@ test('the Hall of False Walls: only light shows which walls lie', async ({ page 
       { from, secs },
     );
   // Dark: the false section of the near wall is as solid as the rest.
-  expect(await walk([-5, 0, 33], 1.2)).toBeLessThan(35.8);
-  // A plain light shows the middle and far walls but not the near one.
-  expect(await light(page, [0, 0, 33], [0, 6.8, 41])).toBe('glimmerwick');
-  expect(await walk([-5, 0, 33], 1.2)).toBeLessThan(35.8);
+  expect(await walk([-5, 0, 34.5], 1.2)).toBeLessThan(35.8);
+  // The section's lamp, plain, lights the hall but doesn't reach it; charged, it does.
+  expect(await light(page, [-2, 0, 32], [0, 2.1, 33.5])).toBe('glimmerwick');
+  expect(await walk([-5, 0, 34.5], 1.2)).toBeLessThan(35.8);
+  await light(page, [-2, 0, 32], [0, 2.1, 33.5], 1);
+  expect(await walk([-5, 0, 34.5], 1.2)).toBeGreaterThan(36.5);
+  // Middle and far walls: their lamps show them with a plain cast.
+  await light(page, [-3, 0, 37.2], [-1, 2.1, 38.5]);
   expect(await walk([3, 0, 38.5], 1)).toBeGreaterThan(41.5);
-  await page.evaluate(() => window.__tw.advance(11));
-  await light(page, [0, 0, 33], [0, 6.8, 41], 1);
-  expect(await walk([-5, 0, 33], 1.2)).toBeGreaterThan(36.5);
+  await light(page, [0, 0, 42.2], [2, 2.1, 43.5]);
   expect(await walk([-1, 0, 43.5], 1)).toBeGreaterThan(46.5);
-  // ...and the west wall's false bit, with the card behind it.
+  // The middle lamp, charged, also unmasks the west wall.
+  await page.evaluate(() => window.__tw.advance(11));
+  await light(page, [-3, 0, 37.2], [-1, 2.1, 38.5], 1);
+  // ...and the west wall's false bit, with the card behind it. Then wait in there till the
+  // lamp outside goes out: the alcove has its own lamp, so you can always get back out.
   const r = await page.evaluate(() => {
     const tw = window.__tw;
     tw.teleport(-6.5, 0, 39, -Math.PI / 2);
@@ -219,20 +273,50 @@ test('the Hall of False Walls: only light shows which walls lie', async ({ page 
     tw.advance(1.6);
     tw.input(null);
     tw.advance(0.4);
-    return { x: tw.state().feet.x, cards: tw.state().cards, secrets: tw.state().secrets };
+    const deep = tw.state().feet.x;
+    tw.advance(12);
+    tw.aimAt(-10.6, 2.1, 39.6);
+    tw.advance(0.05);
+    const inside = tw.state().target;
+    tw.cast(0);
+    tw.advance(0.6);
+    tw.setCamera(Math.PI / 2, -0.2);
+    tw.input({ y: 1 });
+    tw.advance(1.4);
+    tw.input(null);
+    return { deep, inside, out: tw.state().feet.x, cards: tw.state().cards, secrets: tw.state().secrets };
   });
-  expect(r.x).toBeLessThan(-9);
+  expect(r.deep).toBeLessThan(-9);
   expect(r.cards).toContain('gloomwisp');
   expect(r.secrets).toContain('catacomb-alcove');
+  expect(r.inside).toBe('glimmerwick');
+  expect(r.out).toBeGreaterThan(-8);
 });
 
 test("Lamplough's Lantern: all four lamps at once open the gate; the Star ends the lesson", async ({ page, browserName }) => {
-  await prepared(page, 'catacombs', { glimmer: true, flags: ['catacomb-hint-lantern'] });
+  await prepared(page, 'catacombs', {
+    glimmer: true,
+    flags: ['catacomb-hint-lantern'],
+  });
   const r = await page.evaluate(async () => {
     const tw = window.__tw;
     // Snapcaskets aside (they're tested elsewhere): this is about the timing.
-    const g0 = tw.game as unknown as { session: { world: { entities: { constructor: { name: string }; state?: string; root?: { visible: boolean } }[] } } };
-    for (const e of g0.session.world.entities) if (e.constructor.name === 'Snapcasket') ((e.state = 'gone'), (e.root!.visible = false));
+    const g0 = tw.game as unknown as {
+      session: {
+        world: {
+          entities: {
+            constructor: { name: string };
+            state?: string;
+            root?: { visible: boolean };
+          }[];
+        };
+      };
+    };
+    for (const e of g0.session.world.entities)
+      if (e.constructor.name === 'Snapcasket') {
+        e.state = 'gone';
+        e.root!.visible = false;
+      }
     const lampAt = (from: [number, number, number], lamp: [number, number, number]) => {
       tw.teleport(...from, 0);
       tw.advance(0.15);
@@ -276,7 +360,11 @@ test('light in the castle: glimmer steps to a hall ledge (charged), and a false 
     const tw = window.__tw;
     tw.teleport(11.4, 10.3, 18.6, Math.PI);
     tw.advance(0.6);
-    return { y: tw.state().feet.y, cards: tw.state().cards, secrets: tw.state().secrets };
+    return {
+      y: tw.state().feet.y,
+      cards: tw.state().cards,
+      secrets: tw.state().secrets,
+    };
   });
   expect(ledge.y).toBeGreaterThan(10.1);
   expect(ledge.cards).toContain('ambrose-wick');
@@ -298,7 +386,10 @@ test('light in the castle: glimmer steps to a hall ledge (charged), and a false 
 });
 
 test('Lamplough gives his card after the Catacombs, and the Catacomb door stays shut', async ({ page }) => {
-  await prepared(page, 'lamplough', { glimmer: true, flags: ['practice-glimmerwick'] });
+  await prepared(page, 'lamplough', {
+    glimmer: true,
+    flags: ['practice-glimmerwick'],
+  });
   const r = await page.evaluate(async () => {
     const tw = window.__tw;
     const g = tw.game as unknown as G;
@@ -316,4 +407,193 @@ test('Lamplough gives his card after the Catacombs, and the Catacomb door stays 
   });
   expect(r.cards).toContain('fennick-lamplough');
   expect(r.level).toBe('lamplough');
+});
+
+test('a glimmer bridge going out under you drops you in the water once, then back on solid ground', async ({ page }) => {
+  await prepared(page, 'lamplough', { glimmer: true, flags: ['practice-glimmerwick-trigger'] });
+  await light(page, [0, 0, 6], [1, 2.1, 3.5]);
+  const r = await page.evaluate(() => {
+    const tw = window.__tw;
+    // Walk out onto the bridge and wait there until the lamp burns out.
+    tw.teleport(0.5, 0, 7, Math.PI / 2);
+    tw.advance(0.6);
+    tw.setCamera(Math.PI / 2, -0.2);
+    // Dawdle along it, as you do, almost to the island.
+    for (let i = 0; i < 8; i++) {
+      tw.input({ y: 1 });
+      tw.advance(0.1);
+      tw.input(null);
+      tw.advance(0.4);
+    }
+    const onBridge = tw.state().feet.x;
+    const resets: string[] = [];
+    for (let i = 0; i < 150; i++) {
+      tw.advance(0.1);
+      const m = tw.state().mode;
+      if (m === 'reset' && resets[resets.length - 1] !== 'reset') resets.push(m);
+      if (m !== 'reset' && resets[resets.length - 1] === 'reset') resets.push('back');
+    }
+    return { onBridge, resets, feet: tw.state().feet, mode: tw.state().mode };
+  });
+  expect(r.onBridge).toBeGreaterThan(4.5);
+  expect(r.onBridge).toBeLessThan(6.4);
+  expect(r.resets.filter((x) => x === 'reset').length).toBe(1);
+  expect(r.mode).toBe('ground');
+  expect(r.feet.y).toBeGreaterThan(-0.1);
+  expect(r.feet.x).toBeLessThan(2);
+});
+
+test('a card missed in a finished trial turns up in the Lost & Found', async ({ page }) => {
+  await prepared(page, 'hub', { glimmer: true });
+  const r = await page.evaluate(() => {
+    const tw = window.__tw;
+    const g = tw.game as unknown as G & { state: { sweets: number }; shop: { buy(id: string): boolean } };
+    g.state.lessons.add('glimmerwick');
+    g.state.sweets = 100;
+    const bought = g.shop.buy('lost-gloomwisp');
+    const again = g.shop.buy('lost-gloomwisp');
+    return { bought, again, cards: [...g.state.cards], sweets: g.state.sweets };
+  });
+  expect(r.bought).toBe(true);
+  expect(r.again).toBe(false);
+  expect(r.cards).toContain('gloomwisp');
+  expect(r.sweets).toBe(60);
+});
+
+test('sandbox runs know every spell taught up to that level', async ({ page }) => {
+  await boot(page, '?test&level=catacombs');
+  expect((await page.evaluate(() => window.__tw.state().known)).sort()).toEqual(['glimmerwick', 'latchkin', 'springwell', 'thwackwort']);
+  await boot(page, '?test&level=vault');
+  expect((await page.evaluate(() => window.__tw.state().known)).sort()).toEqual(['latchkin', 'thwackwort']);
+});
+
+test('?resetTrial makes a finished trial playable again in the save', async ({ page }) => {
+  await prepared(page, 'lamplough', { glimmer: true, flags: ['practice-glimmerwick', 'catacomb-hint-walls', 'down:c-snap1'] });
+  await page.evaluate(() => {
+    const g = window.__tw.game as unknown as G & { state: { collected: Set<string> } };
+    g.state.lessons.add('glimmerwick');
+    g.state.collected.add('catacomb-star');
+    g.state.collected.add('catacombs/sweetLine3.1');
+    g.state.cards.add('gloomwisp');
+    window.__tw.save();
+  });
+  await boot(page, '?test&resetTrial=glimmerwick');
+  const r = await page.evaluate(async () => {
+    const tw = window.__tw;
+    await tw.idle();
+    const g = tw.game as unknown as G & { state: { collected: Set<string> } };
+    tw.teleport(7.4, 0, 15, Math.PI / 2);
+    tw.advance(0.2);
+    tw.interact();
+    await tw.idle();
+    tw.advance(1.5);
+    return {
+      lessons: [...g.state.lessons],
+      flags: [...g.state.flags],
+      collected: [...g.state.collected],
+      cards: [...g.state.cards],
+      level: tw.state().level,
+    };
+  });
+  expect(r.lessons).not.toContain('glimmerwick');
+  expect(r.flags).not.toContain('catacomb-hint-walls');
+  expect(r.flags).not.toContain('down:c-snap1');
+  expect(r.collected).not.toContain('catacomb-star');
+  expect(r.collected).not.toContain('catacombs/sweetLine3.1');
+  expect(r.cards).toContain('gloomwisp');
+  expect(r.level).toBe('catacombs');
+});
+
+test('the Undercroft stair spirals down from the Lantern Hall to Lamplough\'s door, and it gets dark', async ({ page, browserName }) => {
+  await prepared(page, 'hub', { glimmer: true });
+  const r = await page.evaluate(() => {
+    const tw = window.__tw;
+    tw.teleport(10.5, 0, 2.5, Math.PI / 2);
+    tw.advance(0.4);
+    const cx = 16.2;
+    const cz = 2.5;
+    const way: [number, number][] = [
+      [13.4, 2.5],
+      [cx - 1.8, cz],
+    ];
+    for (let i = 0; i < 24; i++) {
+      const a = Math.PI + ((i + 1) * Math.PI) / 8;
+      way.push([cx + Math.cos(a) * 1.9, cz + Math.sin(a) * 1.9]);
+    }
+    way.push([19, 2.5], [25, 2.5], [31, 2.5]);
+    for (const [x, z] of way) {
+      for (let k = 0; k < 30; k++) {
+        const f = tw.state().feet;
+        if (Math.hypot(x - f.x, z - f.z) < 0.45) break;
+        tw.setCamera(Math.atan2(x - f.x, z - f.z), -0.2);
+        tw.input({ y: 0.8 });
+        tw.advance(0.05);
+      }
+    }
+    tw.input(null);
+    tw.advance(2);
+    const g = tw.game as unknown as { renderer: { dark: number } };
+    const down = { feet: tw.state().feet, area: tw.state().area, dark: g.renderer.dark };
+    // ...and back up again, without snagging on a step.
+    let stuck = 0;
+    for (const [x, z] of [...way].reverse().concat([[10.5, 2.5]])) {
+      for (let k = 0; k < 30; k++) {
+        const f = tw.state().feet;
+        if (Math.hypot(x - f.x, z - f.z) < 0.45) break;
+        tw.setCamera(Math.atan2(x - f.x, z - f.z), -0.2);
+        tw.input({ y: 0.8 });
+        tw.advance(0.05);
+        if (k === 29) stuck++;
+      }
+    }
+    tw.input(null);
+    tw.advance(0.5);
+    return { ...down, up: tw.state().feet, stuck };
+  });
+  expect(r.stuck).toBe(0);
+  expect(r.up.x).toBeLessThan(11);
+  expect(r.up.y).toBeGreaterThan(-0.1);
+  expect(r.feet.x).toBeGreaterThan(30);
+  expect(r.feet.y).toBeLessThan(-7.3);
+  expect(r.area).toBe('undercroft');
+  expect(r.dark).toBeGreaterThan(0.9);
+  await shot(page, 'm8-undercroft', browserName);
+});
+
+test('the nook under the Undercroft stair has a card, and no way out of the world', async ({ page }) => {
+  await prepared(page, 'hub', { glimmer: true });
+  const r = await page.evaluate(() => {
+    const tw = window.__tw;
+    // From the foot of the stair, round under it to the nook...
+    tw.teleport(18.6, -7.5, 2.5, 0);
+    tw.advance(0.4);
+    for (const [x, z] of [
+      [17.5, 4.6],
+      [15.3, 4.3],
+    ]) {
+      for (let k = 0; k < 40; k++) {
+        const f = tw.state().feet;
+        if (Math.hypot(x - f.x, z - f.z) < 0.4) break;
+        tw.setCamera(Math.atan2(x - f.x, z - f.z), -0.2);
+        tw.input({ y: 0.8 });
+        tw.advance(0.05);
+      }
+    }
+    tw.input(null);
+    tw.advance(0.5);
+    const cards = tw.state().cards;
+    const secrets = tw.state().secrets;
+    // ...then push hard west, where the stairwell wall must hold.
+    tw.teleport(14, -7.5, 2.5, -Math.PI / 2);
+    tw.setCamera(-Math.PI / 2, -0.2);
+    tw.input({ y: 1 });
+    tw.advance(2);
+    tw.input(null);
+    tw.advance(0.5);
+    return { cards, secrets, west: tw.state().feet };
+  });
+  expect(r.cards).toContain('stair-sprite');
+  expect(r.secrets).toContain('hub-under-stair');
+  expect(r.west.x).toBeGreaterThan(13.2);
+  expect(r.west.y).toBeGreaterThan(-7.6);
 });

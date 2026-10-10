@@ -193,7 +193,8 @@ export class WickLamp implements Entity, SpellTarget, GlimmerLight {
     const dying = lit && Number.isFinite(this.litFor) && this.litFor < 2.5;
     const flicker = dying ? (Math.sin(this.time * 22) > -0.2 ? 1 : 0.35) : 1 + Math.sin(this.time * 9) * 0.06;
     this.shown = MathUtils.damp(this.shown, lit ? this.litReach : 0, 8, dt);
-    this.glass.emissive.copy(GOLD).multiplyScalar(lit ? 1.6 * flicker : 0);
+    // Unlit lamps keep a faint ember so they read as lamps in the dark.
+    this.glass.emissive.copy(GOLD).multiplyScalar(lit ? 1.6 * flicker : 0.12 + Math.sin(this.time * 1.5) * 0.04);
     if (this.light) this.light.intensity = lit ? 7 * flicker : 0;
     // Lamps that are simply always on don't need their reach shown.
     this.bubble.visible = this.shown > 0.05 && this.spec.duration !== 0;
@@ -231,7 +232,7 @@ export class GlimmerBlock implements Entity {
     outline.position.copy(this.center);
     ctx.scene.add(box, outline);
     this.collider = ctx.physics.addStaticBox(this.center, new Vector3(w / 2, h / 2, d / 2));
-    ctx.physics.setInfo(this.collider, { noGrab: !spec.grabbable });
+    ctx.physics.setInfo(this.collider, { noGrab: !spec.grabbable, temporary: true });
     this.collider.setEnabled(false);
   }
 
@@ -263,6 +264,7 @@ export class IllusionWall implements Entity {
   private open = false;
   private fade = 0;
   private time = 0;
+  private readonly half: Vector3;
 
   constructor(
     spec: SpecOf<'illusionWall'>,
@@ -270,6 +272,7 @@ export class IllusionWall implements Entity {
   ) {
     const [w, h, d] = spec.size;
     this.center = new Vector3(...spec.pos);
+    this.half = new Vector3(w / 2, h / 2, d / 2);
     this.slack = Math.max(w, d) / 2;
     this.mat = worldMaterial();
     this.mat.transparent = true;
@@ -285,12 +288,19 @@ export class IllusionWall implements Entity {
 
   fixedUpdate(dt: number): void {
     this.time += dt;
-    const lit = this.ctx.glimmer.covers(this.center, this.slack);
+    // Never turn solid round someone standing in the gap.
+    const lit = this.ctx.glimmer.covers(this.center, this.slack) || (this.open && this.playerInside());
     if (lit !== this.open) {
       this.open = lit;
       this.collider.setEnabled(!lit);
       if (lit) this.ctx.events.emit('wallFade', { pos: this.center.clone() });
     }
+  }
+
+  private playerInside(): boolean {
+    const p = this.ctx.player.pos;
+    const h = this.half;
+    return Math.abs(p.x - this.center.x) < h.x + 0.4 && Math.abs(p.z - this.center.z) < h.z + 0.4 && Math.abs(p.y - this.center.y) < h.y + 1;
   }
 
   frameUpdate(dt: number): void {
