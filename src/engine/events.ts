@@ -64,6 +64,16 @@ export interface GameEvents {
   gnarlingStunned: { pos: Vector3 };
   gnarlingBanished: { pos: Vector3 };
   rattleClang: { pos: Vector3 };
+  hexCast: { pos: Vector3 };
+  hexHit: { pos: Vector3 };
+  bombThrow: { pos: Vector3 };
+  bombLand: { pos: Vector3 };
+  bombKick: { pos: Vector3 };
+  bombBlast: { pos: Vector3 };
+  foeBanished: { pos: Vector3 };
+  bossRoar: { pos: Vector3 };
+  bossHit: { pos: Vector3 };
+  bossDown: { pos: Vector3 };
   rattleTopple: { pos: Vector3 };
   rattleCollapse: { pos: Vector3 };
   // progress

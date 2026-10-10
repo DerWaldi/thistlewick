@@ -333,6 +333,35 @@ export type EntitySpec = SpecBase &
         persist?: boolean;
       }
     | {
+        type: 'hexling';
+        /** Signal turned on once she's banished. */
+        id?: string;
+        /** The middle of her patch (on the ground); she flies `height` above it. */
+        pos: V3;
+        height?: number;
+        /** How far she ranges from the middle. */
+        radius?: number;
+        /** Sight (default 15), seconds between orbs (2.6), orb speed (6.5). */
+        range?: number;
+        interval?: number;
+        speed?: number;
+        persist?: boolean;
+      }
+    | {
+        type: 'sootling';
+        id?: string;
+        pos: V3;
+        yaw?: number;
+        /** How far he shuffles about (default 1.2). */
+        wander?: number;
+        /** Sight (16), seconds between throws (3), fuse after landing (1.6), blast radius (2.4). */
+        range?: number;
+        interval?: number;
+        fuse?: number;
+        blastRadius?: number;
+        persist?: boolean;
+      }
+    | {
         type: 'houseSeal';
         /** Turns on signal `house-door-<house>` if the player belongs to this house (common-room doors). */
         house: HouseId;

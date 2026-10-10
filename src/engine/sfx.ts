@@ -145,6 +145,44 @@ export class Sfx {
       this.hiss(0.4, 5000, 0.12);
     });
     events.on('floeSlide', () => this.hiss(0.7, 1200, 0.16));
+    // Hexling: a wicked little rising whine as she throws; a fizzing pop where it lands.
+    events.on('hexCast', () => {
+      this.tone(500, 1400, 0.3, 'sawtooth', 0.04);
+      this.tone(760, 1900, 0.3, 'triangle', 0.05);
+    });
+    events.on('hexHit', () => {
+      this.hiss(0.2, 2400, 0.08);
+      this.tone(900, 300, 0.18, 'square', 0.04);
+    });
+    // Sootling: a grunt and a whoosh; a clunk where the bomb lands; a kick; the bang.
+    events.on('bombThrow', () => {
+      this.tone(180, 120, 0.12, 'square', 0.05);
+      this.hiss(0.3, 700, 0.08);
+    });
+    events.on('bombLand', () => {
+      this.thud(0.4, 220);
+      this.hiss(0.9, 3200, 0.05);
+    });
+    events.on('bombKick', () => this.thud(0.5, 300));
+    events.on('bombBlast', () => {
+      this.thud(1.4, 70);
+      this.hiss(0.8, 400, 0.3);
+      this.tone(120, 40, 0.5, 'sawtooth', 0.08);
+    });
+    events.on('foeBanished', () => [880, 660, 440].forEach((f, i) => setTimeout(() => this.tone(f, f * 0.7, 0.18, 'triangle', 0.06), i * 60)));
+    events.on('bossRoar', () => {
+      this.tone(110, 70, 1.1, 'sawtooth', 0.12);
+      this.tone(165, 90, 1.1, 'square', 0.05);
+      this.hiss(1, 300, 0.12);
+    });
+    events.on('bossHit', () => {
+      this.thud(1.1, 120);
+      this.tone(400, 200, 0.3, 'square', 0.06);
+    });
+    events.on('bossDown', () => {
+      this.thud(1.6, 60);
+      [523, 659, 784, 1047, 1319].forEach((f, i) => setTimeout(() => this.tone(f, f, 0.5, 'triangle', 0.08), 300 + i * 110));
+    });
     events.on('gnarlingScared', () => this.tone(1600, 2200, 0.1, 'square', 0.05));
     events.on('snapNotice', () => this.tone(300, 520, 0.12, 'square', 0.06));
     events.on('snapBite', () => {
