@@ -1,6 +1,6 @@
 import type { PortraitSpec } from './portraits';
 
-export type SpeakerId = 'wendlebury' | 'lantern' | 'tansy' | 'moss' | 'gorse' | 'quince' | 'hopgood' | 'lamplough' | 'sign';
+export type SpeakerId = 'wendlebury' | 'lantern' | 'tansy' | 'moss' | 'gorse' | 'quince' | 'hopgood' | 'lamplough' | 'ashcombe' | 'sign';
 
 export interface SpeakerDef {
   id: SpeakerId;
@@ -58,6 +58,12 @@ export const SPEAKERS: Record<SpeakerId, SpeakerDef> = {
     name: 'Mr. Lamplough',
     voice: 340,
     portrait: { bg: ['#2a3a5a', '#0e1220'], kind: 'person', skin: '#e8c8a8', robe: '#2a3a5a', hair: '#e8e2d0', hat: 'tall', hatColor: '#1e2638', glasses: true, beard: true, prop: 'wand', hairStyle: 'long', collar: 'plain', expression: 'kind', jewel: '#bfe8ff', eyes: '#5a7aa8' },
+  },
+  ashcombe: {
+    id: 'ashcombe',
+    name: 'Professor Ashcombe',
+    voice: 400,
+    portrait: { bg: ['#f2b07a', '#7a2a1a'], kind: 'person', skin: '#e2a982', robe: '#8a2a1a', hair: '#b8b0a8', hat: 'pointy', hatColor: '#3a1a12', prop: 'cauldron', hairStyle: 'bun', collar: 'scarf', expression: 'stern', jewel: '#ff8a3c', eyes: '#6a4a2a' },
   },
   sign: {
     id: 'sign',

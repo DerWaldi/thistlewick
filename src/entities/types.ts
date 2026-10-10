@@ -16,6 +16,7 @@ import type { V3 } from '../world/builder';
 import type { Signals } from '../world/signals';
 import type { SweetField } from './sweets';
 import type { GlimmerField } from '../world/glimmer';
+import type { HeatField } from '../world/heat';
 
 /** Fields any entity spec may carry. */
 interface SpecBase {
@@ -179,6 +180,41 @@ export type EntitySpec = SpecBase &
       }
     | { type: 'glimmerBlock'; pos: V3; size: V3; grabbable?: boolean }
     | { type: 'illusionWall'; pos: V3; size: V3; color?: string }
+    | {
+        type: 'burnable';
+        /** Signal turned on once it has burnt away. */
+        id?: string;
+        style: 'vines' | 'briar' | 'cobweb' | 'hay' | 'rope';
+        /** Centre of the box it fills. */
+        pos: V3;
+        size: V3;
+        yaw?: number;
+        /** Stays burnt across visits (flag `burnt:<id>`), for the castle. */
+        persist?: boolean;
+        /** Won't catch until these signals are on (e.g. briars dried out by braziers). */
+        fireproofUntil?: string[];
+      }
+    | {
+        type: 'brazier';
+        id: string;
+        pos: V3;
+        /** Seconds it burns (0 or unset = for the rest of the visit). */
+        duration?: number;
+        lit?: boolean;
+        /** Casts real light (counts towards the level's ~8 point lights). */
+        light?: boolean;
+        /** Braziers sharing a group must be lit in `order` (1, 2, 3...: notches on the bowl). */
+        group?: string;
+        order?: number;
+      }
+    | {
+        type: 'dropper';
+        /** A crate hanging on a rope: drops to floorY once all these signals are on, and stays as a step. */
+        pos: V3;
+        size: V3;
+        floorY: number;
+        when: string[];
+      }
   );
 
 export type EntityType = EntitySpec['type'];
@@ -211,6 +247,8 @@ export interface WorldContext {
   sweets: SweetField;
   /** Where Glimmerwick's lamps are lit (hidden platforms, false walls). */
   glimmer: GlimmerField;
+  /** Lit fires, which Gnarlings keep away from. */
+  heat: HeatField;
   dialogue: Dialogue;
   /** Interactables register here; the session shows the nearest one's prompt. */
   interactables: Set<Interactable>;

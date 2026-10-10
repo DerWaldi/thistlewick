@@ -60,6 +60,9 @@ export function paintPortrait(g: CanvasRenderingContext2D, s: PortraitSpec, w: n
     case 'sprite':
       sprite(g, cx, w, h);
       break;
+    case 'newt':
+      newt(g, cx, w, h);
+      break;
   }
   if (s.kind !== 'lantern') varnish(g, w, h, rnd);
 }
@@ -1029,4 +1032,41 @@ function sprite(g: CanvasRenderingContext2D, cx: number, w: number, h: number): 
   g.fillStyle = '#f3ead8';
   g.font = `${Math.round(13 * u)}px Georgia, serif`;
   g.fillText('…47? 48?', cx - w * 0.22, h * 0.9);
+}
+
+function newt(g: CanvasRenderingContext2D, cx: number, w: number, h: number): void {
+  const u = w / 160;
+  // Embers drifting up from a bed of coals.
+  for (let i = 0; i < 14; i++) {
+    const x = cx + Math.sin(i * 2.3) * w * 0.4;
+    const y = h * (0.9 - ((i * 37) % 60) / 100);
+    blob(g, x, y, 1.5 * u, 1.5 * u, i % 3 ? '#ffb347' : '#ff7a1a');
+  }
+  for (let i = 0; i < 7; i++) orb(g, cx + (i - 3) * w * 0.12, h * 0.9, w * 0.08, h * 0.04, i % 2 ? '#5a2a1a' : '#8a3a1a');
+  // A curled newt, glowing orange along its back.
+  g.strokeStyle = '#c8461e';
+  g.lineWidth = 10 * u;
+  g.lineCap = 'round';
+  g.beginPath();
+  g.arc(cx + w * 0.04, h * 0.72, w * 0.2, Math.PI * 0.1, Math.PI * 1.3);
+  g.stroke();
+  g.strokeStyle = '#ffb347';
+  g.lineWidth = 3 * u;
+  g.beginPath();
+  g.arc(cx + w * 0.04, h * 0.72, w * 0.2, Math.PI * 0.2, Math.PI * 1.2);
+  g.stroke();
+  orb(g, cx + w * 0.2, h * 0.6, w * 0.13, h * 0.08, '#d8562a');
+  for (const [dx, dy] of [
+    [-0.12, 0.84],
+    [0.08, 0.88],
+    [0.26, 0.7],
+  ]) {
+    blob(g, cx + w * dx, h * dy, 4 * u, 3 * u, '#a83a1a');
+  }
+  for (const side of [-1, 1]) eye(g, cx + w * 0.2 + side * 7 * u, h * 0.57, 5 * u, '#2a1a10', '#ffe6a0');
+  g.strokeStyle = '#5a1a0a';
+  g.lineWidth = 1.5 * u;
+  g.beginPath();
+  g.arc(cx + w * 0.2, h * 0.62, 5 * u, 0.2, Math.PI - 0.2);
+  g.stroke();
 }

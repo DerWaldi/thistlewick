@@ -94,6 +94,17 @@ export class Sfx {
     });
     events.on('lampOut', () => this.tone(700, 260, 0.45, 'triangle', 0.05));
     events.on('wallFade', () => [1046, 1319, 1568].forEach((f, i) => setTimeout(() => this.tone(f, f * 0.98, 0.35, 'sine', 0.04), i * 50)));
+    // Cindersnap: a crackling whoosh as something catches; a sooty puff when braziers gutter out.
+    events.on('burn', () => {
+      this.hiss(0.9, 700, 0.22);
+      this.tone(160, 90, 0.6, 'sawtooth', 0.04);
+      for (let i = 0; i < 6; i++) setTimeout(() => this.hiss(0.05, 2500 + Math.random() * 2000, 0.12), 80 + i * 90 + Math.random() * 60);
+    });
+    events.on('brazierFail', () => {
+      this.hiss(0.6, 400, 0.18);
+      this.tone(420, 140, 0.5, 'triangle', 0.08);
+    });
+    events.on('gnarlingScared', () => this.tone(1600, 2200, 0.1, 'square', 0.05));
     events.on('snapNotice', () => this.tone(300, 520, 0.12, 'square', 0.06));
     events.on('snapBite', () => {
       this.thud(0.5, 160);

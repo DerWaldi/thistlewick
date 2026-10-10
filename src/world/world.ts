@@ -1,4 +1,5 @@
 import { Vector3 } from 'three';
+import { Brazier, Burnable, Dropper } from '../entities/fire';
 import { Gnarling } from '../entities/gnarling';
 import { GlimmerBlock, IllusionWall, WickLamp } from '../entities/glimmer';
 import { Chest, Drawbridge, Padlock, VaultDoor } from '../entities/locks';
@@ -65,6 +66,15 @@ const FACTORIES: { [T in EntityType]: Factory<T> } = {
   wickLamp: (s, c) => new WickLamp(s, c),
   glimmerBlock: (s, c) => new GlimmerBlock(s, c),
   illusionWall: (s, c) => new IllusionWall(s, c),
+  burnable: (s, c) => {
+    if (s.persist && s.id && c.state.flags.has(`burnt:${s.id}`)) {
+      c.signals.set(s.id, true);
+      return null;
+    }
+    return new Burnable(s, c);
+  },
+  brazier: (s, c) => new Brazier(s, c),
+  dropper: (s, c) => new Dropper(s, c),
   sweet: (s, c, id) => {
     if (!c.state.collected.has(id)) c.sweets.add(s.kind, new Vector3(...s.pos), id);
     return null;

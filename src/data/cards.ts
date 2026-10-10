@@ -231,6 +231,36 @@ export const CARDS: CardDef[] = [
     hint: 'Tucked away under the Undercroft stair.',
     portrait: { bg: ['#5a4a3a', '#1e1610'], kind: 'sprite' },
   },
+  {
+    id: 'wilhelmina-ashcombe',
+    number: 22,
+    name: 'Wilhelmina Ashcombe',
+    title: 'Has Never Once Burnt the Toast',
+    set: 'Oddballs',
+    text: 'Taught the castle kitchens to cook without a single scorch mark, then moved her classroom into them so she could keep an eye on the ovens. Her eyebrows are original.',
+    hint: 'A reward for a Hearth & Flame trial well done.',
+    portrait: { bg: ODDBALL_BG, kind: 'person', skin: '#e2a982', robe: '#8a2a1a', hair: '#b8b0a8', hat: 'pointy', hatColor: '#3a1a12', prop: 'cauldron', hairStyle: 'bun', collar: 'scarf', expression: 'stern', jewel: '#ff8a3c', eyes: '#6a4a2a' },
+  },
+  {
+    id: 'ember-newt',
+    number: 23,
+    name: 'The Ember Newt',
+    title: 'Warm-Blooded, Very',
+    set: 'Creatures',
+    text: 'Curls up in braziers for the winter and complains loudly when anyone lights them. Leaves little scorched footprints on the windowsills of the Glasshouse.',
+    hint: 'Behind the cobwebs of the Overgrown Glasshouse.',
+    portrait: { bg: ['#5a2a1a', '#1e0c08'], kind: 'newt' },
+  },
+  {
+    id: 'silas-applegarth',
+    number: 24,
+    name: 'Silas Applegarth',
+    title: 'Planted the Orchard Indoors (By Accident)',
+    set: 'Founders',
+    text: 'Dropped a pip in the old kitchen garden and said a growing charm over his lunch. The castle had to move a wall. The apples are still faintly cheese-flavoured.',
+    hint: 'In the forgotten orchard behind the vines of Hollyhock Court.',
+    portrait: { bg: FOUNDER_BG, kind: 'person', skin: '#f0c9a0', robe: '#4f7a34', hair: '#6a4a2a', hat: 'cap', hatColor: '#3a5a2a', beard: true, prop: 'thistle', hairStyle: 'short', collar: 'plain', expression: 'smile', eyes: '#4a6a3a' },
+  },
 ];
 
 export const CARD_BY_ID = new Map(CARDS.map((c) => [c.id, c]));

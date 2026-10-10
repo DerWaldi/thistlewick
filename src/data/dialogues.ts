@@ -62,10 +62,18 @@ export const DIALOGUES: Record<string, Script> = {
   },
 
   wendlebury: async ({ say, state }) => {
+    if (state.lessons.has('cindersnap')) {
+      await say([
+        { speaker: 'wendlebury', text: "Five Stars! Professor Ashcombe says you didn't singe a single eyebrow. Hers, I mean. Yours are your own business." },
+        { speaker: 'wendlebury', text: 'Those vines over the east arch in Hollyhock Court have been there since before my time. I always wondered what they were hiding.' },
+      ]);
+      return;
+    }
     if (state.lessons.has('glimmerwick')) {
       await say([
         { speaker: 'wendlebury', text: "Four Stars! And Mr. Lamplough came UPSTAIRS to tell me. He blinked a great deal, but he came." },
         { speaker: 'wendlebury', text: 'Light shows what wants to stay hidden, dear. I would look again at any wall you think you know.' },
+        { speaker: 'wendlebury', text: 'Professor Ashcombe is expecting you in the kitchens. Through the Kitchen Yard: the little corner of Hollyhock Court behind the cloister, west side. Follow your nose.' },
       ]);
       return;
     }
@@ -449,7 +457,10 @@ export const DIALOGUES: Record<string, Script> = {
         { speaker: 'lamplough', text: 'Have this. A picture of me, from when I was still going outside. Look how squinty I am.' },
       ]);
       state.collectCard('fennick-lamplough');
-      await say([{ speaker: 'lamplough', text: 'There are glimmer steps in the Lantern Hall, you know. Up by the gallery. And the Long Gallery has a wall that is not entirely honest.' }]);
+      await say([
+        { speaker: 'lamplough', text: 'There are glimmer steps in the Lantern Hall, you know. Up by the gallery. And the Long Gallery has a wall that is not entirely honest.' },
+        { speaker: 'lamplough', text: 'Professor Ashcombe wants you next. Hearth & Flame, in the kitchens, through the Kitchen Yard off Hollyhock Court. Too bright for me. Far too warm.' },
+      ]);
       return;
     }
     await say([{ speaker: 'lamplough', text: 'Darkness is just light that has not arrived yet. Be patient with it. Then hit it with a lamp.' }]);
@@ -512,6 +523,133 @@ export const DIALOGUES: Record<string, Script> = {
     state.award(POINTS.star, 'the Thistle Star');
     state.award(POINTS.lesson, 'passing Illumination');
     await say([{ speaker: 'lamplough', text: '(echoing) Oh, well done! Well done! Come back up and see me. Mind the dark on the way.' }]);
+  },
+
+  // ---------------------------------------------------------------- the fifth lesson
+
+  kitchenDoor: async ({ say, state }) => {
+    const text = state.lessons.has('glimmerwick')
+      ? '"HEARTH & FLAME — Prof. W. Ashcombe. Kitchens. Wipe your feet. Mind the ovens. Mind EVERYTHING."'
+      : '"HEARTH & FLAME — Prof. W. Ashcombe. Fifth-term pupils only. Absolutely no toasting forks." It smells wonderfully of bread.';
+    await say([{ speaker: 'sign', text }]);
+  },
+
+  ashcombeLesson: async (ctx) => {
+    await teachCindersnap(ctx);
+  },
+
+  ashcombe: async (ctx) => {
+    const { say, state } = ctx;
+    if (!state.knows('cindersnap')) {
+      await teachCindersnap(ctx);
+      return;
+    }
+    if (!state.flags.has('practice-cindersnap') && !state.lessons.has('cindersnap')) {
+      await say([
+        { speaker: 'ashcombe', text: 'The pantry cobweb, the crate on its rope, and my three braziers. In ORDER, mind: count the notches on each bowl. One, two, three.' },
+      ]);
+      return;
+    }
+    if (!state.lessons.has('cindersnap')) {
+      await say([{ speaker: 'ashcombe', text: 'The Glasshouse, through the iron door. Burn what is in your way and nothing else. And stay out of the briars, they bite.' }]);
+      return;
+    }
+    if (!state.flags.has('ashcombe-reward')) {
+      state.flags.add('ashcombe-reward');
+      await say([
+        { speaker: 'ashcombe', text: 'The Bramble Heart, burnt clean, and the Glasshouse still standing. Most first-years manage one or the other.' },
+        { speaker: 'ashcombe', text: 'Here. My card. The eyebrows were drawn back on afterwards, whatever Moss Crumbleton tells you.' },
+      ]);
+      state.collectCard('wilhelmina-ashcombe');
+      await say([{ speaker: 'ashcombe', text: 'There are vines over an arch in Hollyhock Court, on the east side. Nobody has been through there in years. Now somebody can.' }]);
+      return;
+    }
+    await say([{ speaker: 'ashcombe', text: 'A good cook knows what to burn and what not to. So does a good witch. Same thing, really, with more soup.' }]);
+  },
+
+  ashcombeOrderHint: async ({ say }) => {
+    await say([
+      { speaker: 'ashcombe', text: 'Out of turn, and out they all go! Look at the bowls: the gold notches. One notch first, then two, then three. Not left to right. Count.' },
+    ]);
+  },
+
+  ashcombeRopeHint: async ({ say }) => {
+    await say([
+      { speaker: 'ashcombe', text: "That shelf is too high to jump, dear. See the crate hanging beside it? Burn its rope and it comes down. Then it's a step." },
+    ]);
+  },
+
+  cinderPracticeDone: async ({ say, state }) => {
+    state.flags.add('practice-cindersnap');
+    await say([
+      { speaker: 'ashcombe', text: 'Cobweb gone, crate down, braziers lit in order. And the kitchen still standing. Good.' },
+      { speaker: 'ashcombe', text: 'The Overgrown Glasshouse, through the iron door. Briars, ropes, braziers, Gnarlings. Bring me the Thistle Star from the Bramble Heart.' },
+    ]);
+  },
+
+  lockedGlasshouseDoor: async ({ say, state }) => {
+    if (state.lessons.has('cindersnap')) {
+      await say([{ speaker: 'ashcombe', text: 'The Glasshouse is growing back. Give it a year. It will be just as rude.' }]);
+      return;
+    }
+    await say([{ speaker: 'ashcombe', text: 'Practice first. The cobweb, the crate, the braziers. Then the Glasshouse.' }]);
+  },
+
+  classNotOverAshcombe: async ({ say, state }) => {
+    const text = state.flags.has('practice-cindersnap')
+      ? 'The Glasshouse is the iron door, not that one. Off you go. Wipe your feet when you come back.'
+      : 'And where do you think you are going? Practice first. Cobweb, crate, braziers.';
+    await say([{ speaker: 'ashcombe', text }]);
+  },
+
+  glasshouseIntro: async ({ say }) => {
+    await say([
+      { speaker: 'ashcombe', text: '(from back in the kitchen) The Overgrown Glasshouse. Burn the vines, burn the briars, never touch them. Anything on a rope is holding something up.' },
+    ]);
+  },
+
+  glasshouseMaze: async ({ say }) => {
+    await say([
+      { speaker: 'ashcombe', text: '(distant) The Briar Maze. Each hedge has one way through, choked with briars. Burn it, then walk. Brush against a briar and it bites.' },
+    ]);
+  },
+
+  glasshouseGnarlings: async ({ say }) => {
+    await say([
+      { speaker: 'ashcombe', text: "(distant) Gnarlings! They can't abide fire. Light that brazier and they'll keep well away from it. Stand close to it and you're safe." },
+    ]);
+  },
+
+  glasshousePond: async ({ say }) => {
+    await say([
+      { speaker: 'ashcombe', text: "(distant) The Lily Pond. The bridge is tied up with a rope, and those crates are hanging over the water for a reason. Burn the ropes from the bank: they're too high to aim at from underneath." },
+    ]);
+  },
+
+  glasshousePalm: async ({ say }) => {
+    await say([
+      { speaker: 'ashcombe', text: "(distant) The Palm House. Four braziers, I to IV: count the notches. All four at once opens the gate, and they don't burn for long. Plan your route before you light the first." },
+    ]);
+  },
+
+  glasshousePalmFail: async ({ say }) => {
+    await say([
+      { speaker: 'ashcombe', text: "(distant) Wrong one! They've all gone out. One notch, two, three, four. You'll need to see round that planter: move as you go." },
+    ]);
+  },
+
+  glasshouseHeart: async ({ say }) => {
+    await say([
+      { speaker: 'ashcombe', text: "(distant) The Bramble Heart. Those briars are green and wet through; they won't catch. Light both braziers and let the heat dry them out first." },
+    ]);
+  },
+
+  glasshouseComplete: async ({ say, state }) => {
+    if (state.lessons.has('cindersnap')) return;
+    state.lessons.add('cindersnap');
+    state.award(POINTS.star, 'the Thistle Star');
+    state.award(POINTS.lesson, 'passing Hearth & Flame');
+    await say([{ speaker: 'ashcombe', text: "(distant) There's the Star! Bring it back to the kitchen. And close the door, you're letting the heat out." }]);
   },
 
   tansy: async ({ say, state, openShop }) => {
@@ -579,6 +717,19 @@ async function teachGlimmerwick({ say, state, events }: ScriptContext): Promise<
     events.emit('toast', { text: 'You learned Glimmerwick!', kind: 'info' });
   }
   await say([{ speaker: 'lamplough', text: 'Three plates. Up the hidden steps, over the trench, and the far one: hold the cast to reach it. Off you go.' }]);
+}
+
+async function teachCindersnap({ say, state, events }: ScriptContext): Promise<void> {
+  await say([
+    { speaker: 'ashcombe', text: "In you come, wipe your feet. Wilhelmina Ashcombe, Hearth & Flame. Don't touch the ovens. Don't touch anything, actually, until I've explained." },
+    { speaker: 'ashcombe', text: 'CINDERSNAP. A spark, no more. Cast it at rope, vine, cobweb or hay and it burns away. Cast it at a brazier and it lights.' },
+    { speaker: 'ashcombe', text: "Mind what you burn. A rope that's holding something up will let it DROP. Gnarlings hate fire: they won't go near a lit brazier. And when braziers have notches, you light them in order." },
+  ]);
+  if (!state.knows('cindersnap')) {
+    state.learn('cindersnap');
+    events.emit('toast', { text: 'You learned Cindersnap!', kind: 'info' });
+  }
+  await say([{ speaker: 'ashcombe', text: 'Three tasks. The pantry is full of cobwebs. That shelf is too high to jump: use the crate. And my braziers, in ORDER: one notch, two, three.' }]);
 }
 
 async function teachSpringwell({ say, state, events }: ScriptContext): Promise<void> {

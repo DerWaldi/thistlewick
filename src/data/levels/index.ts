@@ -1,5 +1,7 @@
 import type { LevelDef } from '../../world/level';
+import { ASHCOMBE } from './ashcombe';
 import { CLASSROOM } from './classroom';
+import { GLASSHOUSE } from './glasshouse';
 import { GYM } from './gym';
 import { HOPGOOD } from './hopgood';
 import { CATACOMBS } from './catacombs';
@@ -22,4 +24,6 @@ export const LEVELS: Record<string, LevelDef> = {
   tower: TOWER,
   lamplough: LAMPLOUGH,
   catacombs: CATACOMBS,
+  ashcombe: ASHCOMBE,
+  glasshouse: GLASSHOUSE,
 };

@@ -30,7 +30,7 @@ import type { PortraitSpec } from '../data/portraits';
 import { buildShelfMesh } from '../entities/hubObjects';
 import { paintPortrait } from '../ui/portraits';
 import type { LevelBuilder, V3 } from './builder';
-import { COLORS } from './materials';
+import { COLORS, type Pattern } from './materials';
 
 /*
  * Reusable level-building pieces: walls with openings, slabs, windows, shelves,
@@ -56,7 +56,7 @@ export function wall(
   a: number,
   bEnd: number,
   height: number,
-  opts: { base?: number; thick?: number; color?: string; holes?: Hole[]; cap?: number } = {},
+  opts: { base?: number; thick?: number; color?: string; holes?: Hole[]; cap?: number; pattern?: Pattern } = {},
 ): void {
   const base = opts.base ?? 0;
   const t = opts.thick ?? 1;
@@ -74,7 +74,7 @@ export function wall(
     const mid = (from + to) / 2;
     const center: V3 = axis === 'x' ? [mid, (y0 + y1) / 2, at] : [at, (y0 + y1) / 2, mid];
     const size: V3 = axis === 'x' ? [to - from, y1 - y0, t] : [t, y1 - y0, to - from];
-    b.box(center, size, { color });
+    b.box(center, size, { color, pattern: opts.pattern });
   };
   const holes = [...(opts.holes ?? [])].sort((p, q) => p.from - q.from);
   let cursor = a;
@@ -276,24 +276,30 @@ export function crate(b: LevelBuilder, pos: V3, s = 1): void {
 }
 
 
+/** A painted board; '\n' splits lines, and long lines make the board wider rather than spill off it. */
 export function signboard(b: LevelBuilder, text: string, pos: V3, rotY: number): void {
   const c = document.createElement('canvas');
-  c.width = 512;
-  c.height = 110;
   const g = c.getContext('2d')!;
+  const font = 'italic bold 46px Palatino, Georgia, serif';
+  const lines = text.split('\n');
+  g.font = font;
+  const w = Math.max(512, Math.ceil(Math.max(...lines.map((l) => g.measureText(l).width))) + 60);
+  const h = 110 + (lines.length - 1) * 54;
+  c.width = w;
+  c.height = h;
   g.fillStyle = '#5e3b22';
-  g.fillRect(0, 0, 512, 110);
+  g.fillRect(0, 0, w, h);
   g.strokeStyle = '#c99a3e';
   g.lineWidth = 6;
-  g.strokeRect(6, 6, 500, 98);
+  g.strokeRect(6, 6, w - 12, h - 12);
   g.fillStyle = '#f2d48a';
-  g.font = 'italic bold 46px Palatino, Georgia, serif';
+  g.font = font;
   g.textAlign = 'center';
   g.textBaseline = 'middle';
-  g.fillText(text, 256, 58);
+  lines.forEach((l, i) => g.fillText(l, w / 2, 58 + i * 54));
   const tex = new CanvasTexture(c);
   tex.colorSpace = SRGBColorSpace;
-  const m = new Mesh(new PlaneGeometry(2.6, 0.56), new MeshBasicMaterial({ map: tex, fog: true }));
+  const m = new Mesh(new PlaneGeometry((2.6 * w) / 512, (0.56 * h) / 110), new MeshBasicMaterial({ map: tex, fog: true }));
   m.position.set(...pos);
   m.rotation.y = rotY;
   b.prop(m);

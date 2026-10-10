@@ -18,6 +18,7 @@ import {
   Vector3,
 } from 'three';
 import { CARD_BY_ID } from '../data/cards';
+import { SPEAKERS } from '../data/characters';
 import { HOUSE_ORDER, HOUSES } from '../data/houses';
 import { buildStudent, type StudentRig } from '../player/model';
 import { drawCardBack, drawCardFace } from '../ui/cardArt';
@@ -301,7 +302,7 @@ export class Npc implements Entity, Interactable {
     return out.copy(this.pos).add(new Vector3(0, 1.2, 0));
   }
   prompt(): string {
-    return `Talk to ${this.spec.speaker === 'tansy' ? 'Tansy' : this.spec.speaker === 'moss' ? 'Moss' : 'them'}`;
+    return `Talk to ${SPEAKERS[this.spec.speaker].name}`;
   }
   interact(): void {
     void this.ctx.talk(this.spec.talk);

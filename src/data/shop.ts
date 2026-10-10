@@ -39,6 +39,7 @@ export const LOST_AND_FOUND: { card: string; lesson: SpellId; blurb: string }[] 
   { card: 'snapcasket', lesson: 'latchkin', blurb: 'Came out of a chest in the Vaults. The chest is still annoyed.' },
   { card: 'bouncewort', lesson: 'springwell', blurb: 'Fell off the great bell in the Tower. Bounced twice.' },
   { card: 'gloomwisp', lesson: 'glimmerwick', blurb: 'Was hiding behind a wall in the Catacombs. Very nervous. Handle gently.' },
+  { card: 'ember-newt', lesson: 'cindersnap', blurb: 'Crawled out of the Glasshouse and into our kettle. Still warm. So is the kettle.' },
 ];
 
 /** What's on the shelves for this player: the usual stock plus anything they missed in a finished trial. */

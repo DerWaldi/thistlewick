@@ -55,6 +55,15 @@ export const LESSONS: LessonDef[] = [
     flagPrefixes: ['catacomb-hint-', 'down:c-snap', 'looted:catacombs/'],
     collectedPrefixes: ['catacombs/'],
   },
+  {
+    spell: 'cindersnap',
+    classroom: 'ashcombe',
+    trial: 'glasshouse',
+    star: 'glasshouse-star',
+    flags: ['glasshouse-entered'],
+    flagPrefixes: ['glasshouse-hint-', 'looted:glasshouse/'],
+    collectedPrefixes: ['glasshouse/'],
+  },
 ];
 
 /** Spells you'd know by the time you reach this level (for sandbox runs). The hub gets them all. */

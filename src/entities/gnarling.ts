@@ -30,6 +30,8 @@ const CHASE_SPEED = 3.3;
 const WANDER_SPEED = 1.1;
 const LUNGE_SPEED = 8.5;
 const ATTACK_RANGE = 2.1;
+/** Gnarlings won't come closer than this to a lit fire, so standing by one keeps you safe. */
+const FEAR_RANGE = 3.6;
 
 /**
  * Gnarling: a mischievous root-goblin from the castle gardens. It notices you,
@@ -54,6 +56,7 @@ export class Gnarling implements Entity, SpellTarget {
   private hitThisLunge = false;
   private spinVis = 0;
   private time = Math.random() * 10;
+  private scared = false;
 
   // visuals
   private root = new Group();
@@ -289,6 +292,16 @@ export class Gnarling implements Entity, SpellTarget {
         }
         break;
     }
+
+    // Fire: back away from it, whatever else they had in mind.
+    const fire = this.state === 'stunned' || this.state === 'lunge' ? null : this.ctx.heat.near(this.pos, FEAR_RANGE);
+    if (fire) {
+      if (!this.scared) this.ctx.events.emit('gnarlingScared', { pos: this.pos.clone() });
+      wishYaw = Math.atan2(this.pos.x - fire.pos.x, this.pos.z - fire.pos.z);
+      wish = CHASE_SPEED;
+      if (this.state === 'windup') this.state = 'chase';
+    }
+    this.scared = !!fire;
 
     // Turn & move.
     if (this.state !== 'stunned' && this.state !== 'lunge') {

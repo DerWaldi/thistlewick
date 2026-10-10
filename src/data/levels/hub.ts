@@ -1,4 +1,4 @@
-import { BoxGeometry, CanvasTexture, CircleGeometry, ConeGeometry, CylinderGeometry, Group, Mesh, MeshStandardMaterial, PointLight, SRGBColorSpace, TorusGeometry } from 'three';
+import { BoxGeometry, CanvasTexture, CircleGeometry, ConeGeometry, CylinderGeometry, Group, IcosahedronGeometry, Mesh, MeshStandardMaterial, PointLight, SphereGeometry, SRGBColorSpace, TorusGeometry } from 'three';
 import type { LevelBuilder, V3 } from '../../world/builder';
 import type { LevelDef } from '../../world/level';
 import { COLORS } from '../../world/materials';
@@ -69,6 +69,7 @@ export const HUB: LevelDef = {
     fromQuince: { pos: [38.5, 3, 50.3], yaw: Math.PI },
     fromHopgood: { pos: [-14.4, 0, 40], yaw: Math.PI / 2 },
     fromUndercroft: { pos: [31.9, -8.5, 2.5], yaw: -Math.PI / 2 },
+    fromAshcombe: { pos: [-30.6, 0, 25], yaw: Math.PI / 2 },
   },
   areas: [
     { id: 'hall', name: 'The Lantern Hall', min: [-12, -2, 0], max: [12, 14, 30] },
@@ -78,6 +79,8 @@ export const HUB: LevelDef = {
     { id: 'corridor', name: 'The Crooked Corridor', min: [18.5, -2, 10], max: [21.5, 4, 13.5] },
     { id: 'court', name: 'Hollyhock Court', min: [-17, -3, 30], max: [17, 30, 66] },
     { id: 'gallery', name: 'The Long Gallery', min: [34.5, 2, 23.5], max: [47.5, 11, 52.5] },
+    { id: 'yard', name: 'The Kitchen Yard', min: [-32.5, -2, 13.5], max: [-18.5, 12, 36.5] },
+    { id: 'orchard', name: 'The Kitchen Orchard', min: [17, -2, 38.5], max: [27.5, 12, 53.5] },
     { id: 'undercroft', name: 'The Undercroft', min: [12.6, -10, -1.2], max: [34, -1.5, 6.2], ambience: 'dark' },
   ],
   intro: { script: 'intro', unlessFlag: 'greeted' },
@@ -401,7 +404,8 @@ function buildHub(b: LevelBuilder): void {
   // Vine-choked arch in the east wall (Cindersnap), a mossy pad on the west roof under an
   // unreachable balcony (Springwell), and a locked chest (Latchkin).
   b.add(
-    { type: 'teaser', spell: 'cindersnap', prop: 'vines', pos: [16, 0, 46], yaw: -Math.PI / 2 },
+    // Burns away for good (Cindersnap), opening the Kitchen Orchard.
+    { type: 'burnable', id: 'hub-arch-vines', style: 'vines', persist: true, pos: [16.5, 1.75, 46], size: [3, 3.5, 0.6], yaw: Math.PI / 2 },
     { type: 'springPad', pos: [-14.2, R, 47], radius: 1.1, style: 'moss', duration: 0 },
     { type: 'chest', id: 'hub-court-chest', pos: [-14.2, 0, 60], yaw: Math.PI / 2, card: 'lumley-lockjaw', sweets: [['bramble', 2]] },
   );
@@ -736,9 +740,186 @@ function buildHub(b: LevelBuilder): void {
     { type: 'secret', id: 'hub-under-stair', area: 'undercroft', min: [13.4, -8, 3.2], max: [17.2, -5.5, 5.6] },
   );
 
+  kitchenYard(b, glow);
+  wellYard(b);
+  orchard(b);
+
   glow.finish(b, '#ffc68a');
   candle.finish(b, '#ffe2a0');
   b.finish();
+}
+
+/**
+ * The Kitchen Yard (x -32..-19, z 14..36), west of the castle: reached from Hollyhock
+ * Court through the corner behind the cloister (x -18.5..-12.5, z 26.5..30) and an arch.
+ * The kitchens (Ashcombe's door, Hearth & Flame) are in its west wall, in a bakehouse
+ * front with a chimney; herb beds, a woodpile, a cart and a hay stack fill the rest.
+ */
+function kitchenYard(b: LevelBuilder, glow: Glow): void {
+  const BRICK = '#9a5a44';
+  b.floor(-32.5, -18.5, 13.5, 36.5, { color: '#a89878' });
+  // The arch from the corner into the yard; its wall also closes the castle's west edge.
+  wall(b, 'z', -18.5, 12.5, 36.5, 7, { cap: 4, color: COLORS.stone, holes: [{ from: 26.9, to: 29.6, top: 3.8 }] });
+  deco(b, new BoxGeometry(1.2, 0.5, 3.3), [-18.5, 4, 28.25], COLORS.stoneLight);
+  wall(b, 'x', 30.5, -18.5, -16.5, 10.5, { cap: 8 });
+  wall(b, 'z', -32.5, 13.5, 36.5, 7, { cap: 4, color: BRICK, holes: [{ from: 23.9, to: 26.1, top: 3.4 }] });
+  wall(b, 'x', 13.5, -33, -18, 7, { cap: 4 });
+  wall(b, 'x', 36.5, -33, -18, 7, { cap: 4 });
+  // Nobody climbs onto the tapestry alcove's roof from the corner.
+  b.box([-14.5, 5.5, 26], [4, 4, 1], { invisible: true, info: { noGrab: true, cameraIgnore: true } });
+  signboard(b, 'The Kitchen Yard', [-18.5, 4.6, 29.06], Math.PI);
+  b.add({
+    type: 'door',
+    pos: [-32, 0, 25],
+    yaw: Math.PI / 2,
+    width: 2.2,
+    height: 3.2,
+    to: { level: 'ashcombe', spawn: 'default' },
+    afterLesson: 'glimmerwick',
+    talk: 'kitchenDoor',
+    label: 'Hearth & Flame',
+  });
+  // The bakehouse front: a brick gable, the chimney, and a bread oven's glowing mouth.
+  signboard(b, 'Hearth & Flame', [-31.95, 3.85, 25], Math.PI / 2);
+  // A tiled eave along the top of the wall, and the chimney.
+  deco(b, new BoxGeometry(1.6, 0.25, 23.2), [-31.9, 7.05, 25], COLORS.roof, [0, 0, -0.35]);
+  b.box([-31.6, 8.5, 20], [1.4, 3, 1.6], { color: BRICK, noCollide: true });
+  deco(b, new BoxGeometry(1.6, 0.2, 1.8), [-31.6, 10.1, 20], COLORS.stoneDark);
+  // The bread oven: a brick hump with embers in its mouth.
+  b.box([-31.3, 0.9, 20.5], [1.6, 1.8, 2.4], { color: BRICK });
+  deco(b, new BoxGeometry(0.06, 0.6, 1), [-30.48, 0.75, 20.5], '#1e1410');
+  for (let i = 0; i < 5; i++) glow.add(new SphereGeometry(0.07, 5, 4), [-30.47, 0.52 + (i % 2) * 0.06, 20.1 + i * 0.2]);
+  b.lantern([-31.7, 3, 23.4], 0, 0, false);
+  b.lantern([-31.7, 3, 26.6], 0, 0, false);
+  // Herb beds.
+  for (const [x, z] of [
+    [-27, 18],
+    [-22.5, 18],
+    [-27, 32.5],
+  ]) {
+    b.box([x, 0.25, z], [3.4, 0.5, 2], { color: COLORS.woodDark, pattern: 'planks' });
+    deco(b, new BoxGeometry(3.2, 0.06, 1.8), [x, 0.52, z], '#5a4030');
+    for (let i = 0; i < 6; i++) bush(b, x - 1.3 + (i % 3) * 1.3, z - 0.45 + Math.floor(i / 3) * 0.9, 0.45, i + Math.round(x), 0.5);
+  }
+  // A woodpile against the north wall, kept low.
+  for (let row = 0; row < 3; row++) {
+    for (let i = 0; i < 8 - row; i++) {
+      deco(b, new CylinderGeometry(0.14, 0.14, 1.2, 6), [-25 + i * 0.29 + row * 0.14, 0.14 + row * 0.24, 35.6], i % 2 ? COLORS.wood : '#a0703e', [Math.PI / 2, 0, 0]);
+    }
+  }
+  b.box([-24, 0.4, 35.6], [2.6, 0.8, 1.2], { invisible: true });
+  // A cart and some barrels by the arch.
+  b.box([-21.2, 0.8, 20.5], [1.6, 0.3, 2.8], { color: COLORS.wood, pattern: 'planks' });
+  for (const z of [19.4, 21.6]) deco(b, new CylinderGeometry(0.55, 0.55, 0.12, 10), [-20.3, 0.55, z], COLORS.woodDark, [0, 0, Math.PI / 2]);
+  deco(b, new BoxGeometry(0.1, 0.1, 2), [-21.2, 0.6, 23.4], COLORS.woodDark, [0.3, 0, 0]);
+  for (let i = 0; i < 4; i++) deco(b, new SphereGeometry(0.22, 6, 4), [-21.6 + (i % 2) * 0.6, 1.15, 19.8 + i * 0.5], i % 2 ? '#c9883e' : '#8a6a3a');
+  barrel(b, [-19.7, 0, 31.2], 0.4, 1);
+  barrel(b, [-19.7, 0, 32.2], 0.4, 1);
+  crate(b, [-20, 0, 35.3], 0.9);
+  // Washing on a line.
+  deco(b, new CylinderGeometry(0.05, 0.05, 2.6, 5), [-29, 1.3, 15], COLORS.woodDark);
+  deco(b, new CylinderGeometry(0.05, 0.05, 2.6, 5), [-22, 1.3, 15], COLORS.woodDark);
+  deco(b, new BoxGeometry(7, 0.02, 0.02), [-25.5, 2.5, 15], '#d8d0c0');
+  for (const [x, c] of [
+    [-28, '#b0362f'],
+    [-26.6, '#e8e2d0'],
+    [-25.2, '#3f7a4a'],
+    [-23.6, '#5d4470'],
+  ] as [number, string][]) {
+    deco(b, new BoxGeometry(0.9, 1, 0.03), [x, 1.95, 15], c);
+  }
+  // The hay stack in the north-west corner has something tucked behind it.
+  b.add(
+    { type: 'burnable', id: 'hub-yard-hay', style: 'hay', persist: true, pos: [-30.4, 0.7, 33.2], size: [1.8, 1.4, 1.4] },
+    { type: 'burnable', id: 'hub-yard-hay2', style: 'hay', persist: true, pos: [-29, 0.7, 34.8], size: [1.4, 1.4, 1.8] },
+    { type: 'sweet', kind: 'humbug', pos: [-31.4, 0.6, 35.4] },
+    { type: 'sweetLine', kind: 'fizzwort', from: [-22, 0.6, 28.2], to: [-29, 0.6, 28.2], count: 5 },
+  );
+  b.box([-30.8, 0.7, 35.6], [0.3, 1.4, 1.6], { color: COLORS.stoneDark });
+  grass(b, -32.5, -18.5, 13.5, 16.5, 0, 2);
+  grass(b, -32.5, -29, 28, 36.5, 0, 2);
+  tree(b, -21.5, 33);
+}
+
+/**
+ * The Well Yard (the alley east of the hall, x 13..34, z 11..30): Frosts & Waters, for
+ * later. Gated off for now, with the frost already creeping out under the bars.
+ */
+function wellYard(b: LevelBuilder): void {
+  b.add(
+    { type: 'gate', pos: [14.5, 0, 30], yaw: 0, width: 3.2, height: 3.4, when: ['well-yard-thaw'] },
+    { type: 'teaser', spell: 'rimewhistle', prop: 'marker', pos: [14.5, 1.4, 30.35], yaw: 0 },
+  );
+  signboard(b, 'Well Yard\nClosed until the thaw', [14.5, 3.9, 30.3], 0);
+  // A frozen padlock on the bars.
+  deco(b, new IcosahedronGeometry(0.28, 0), [14.5, 1.2, 30.25], '#cfeefa');
+  // The well, frosted over, with icicles on its little roof.
+  b.cylinder([15, 0.45, 25], 1, 0.9, COLORS.stoneLight, undefined, 10);
+  deco(b, new CylinderGeometry(0.92, 0.92, 0.04, 10), [15, 0.86, 25], '#e8f6fc');
+  for (const dx of [-0.9, 0.9]) deco(b, new BoxGeometry(0.15, 1.8, 0.15), [15 + dx, 1.8, 25], COLORS.woodDark);
+  deco(b, new ConeGeometry(1.4, 0.8, 4), [15, 3, 25], COLORS.roof, [0, Math.PI / 4, 0]);
+  deco(b, new ConeGeometry(1.45, 0.3, 4), [15, 3.3, 25], '#f4fbff', [0, Math.PI / 4, 0]);
+  for (let i = 0; i < 6; i++) deco(b, new ConeGeometry(0.05, 0.4, 4), [14.1 + i * 0.36, 2.45, 25.95], '#d8f2fc', [Math.PI, 0, 0]);
+  deco(b, new BoxGeometry(2, 0.6, 0.8), [19, 0.3, 27.5], COLORS.stoneDark);
+  deco(b, new BoxGeometry(1.8, 0.04, 0.6), [19, 0.6, 27.5], COLORS.ice);
+  // Snow drifts, thickest by the walls.
+  for (const [x, z, w, d] of [
+    [13.8, 27, 1.4, 5],
+    [16.2, 20, 3, 2],
+    [21, 28.4, 6, 1.4],
+    [14.2, 14, 1.6, 4],
+  ]) {
+    deco(b, new BoxGeometry(w, 0.06, d), [x, 0.03, z], '#f2f8fb');
+  }
+  for (const z of [12.5, 17]) crate(b, [13.6, 0, z], 0.9);
+}
+
+/**
+ * The Kitchen Orchard (x 17..27.5, z 38.5..53.5), behind the vines over the court's
+ * east arch: apple trees, long grass, and a cobwebbed potting shed with a card.
+ */
+function orchard(b: LevelBuilder): void {
+  b.floor(17, 27.5, 38.5, 53.5, { color: '#8a9a5a' });
+  wall(b, 'z', 28, 38.5, 53.5, 6, { cap: 4 });
+  wall(b, 'x', 38, 17, 28.5, 6, { cap: 4 });
+  wall(b, 'x', 54, 17, 28.5, 6, { cap: 4 });
+  ivy(b, 'z', 27.5, 39, 53, 0, 5, -1, 11);
+  grass(b, 17, 27.5, 38.5, 53.5, 0, 3);
+  for (const [x, z] of [
+    [20.5, 41.5],
+    [24.5, 45.5],
+    [20, 50.5],
+  ]) {
+    tree(b, x, z);
+    for (let i = 0; i < 6; i++) {
+      const a = i * 1.1;
+      deco(b, new SphereGeometry(0.16, 6, 4), [x + Math.cos(a) * 1.9, 5.2 + (i % 3) * 0.5, z + Math.sin(a) * 1.9], i % 2 ? '#c8382a' : '#d9a03a');
+    }
+    // Windfalls.
+    for (let i = 0; i < 3; i++) deco(b, new SphereGeometry(0.13, 6, 4), [x + 1 + i * 0.4, 0.12, z - 1.2 + i * 0.5], '#b8382a');
+  }
+  signboard(b, 'The Kitchen Orchard', [17.05, 3.4, 41], Math.PI / 2);
+  // The potting shed, its doorway (west) thick with cobwebs.
+  const SHED = '#7a5a3a';
+  b.box([25.5, 1.4, 49.2], [3.6, 2.8, 0.3], { color: SHED, pattern: 'planks' });
+  b.box([25.5, 1.4, 52.8], [3.6, 2.8, 0.3], { color: SHED, pattern: 'planks' });
+  b.box([23.85, 1.4, 49.8], [0.3, 2.8, 0.9], { color: SHED, pattern: 'planks' });
+  b.box([23.85, 1.4, 52.2], [0.3, 2.8, 0.9], { color: SHED, pattern: 'planks' });
+  b.box([23.85, 2.6, 51], [0.3, 0.4, 1.5], { color: SHED, pattern: 'planks' });
+  slab(b, 23.6, 27.5, 48.9, 53.1, 3.1, 0.3, COLORS.roof, 'planks');
+  b.add(
+    { type: 'burnable', id: 'hub-orchard-web', style: 'cobweb', persist: true, pos: [23.85, 1.2, 51], size: [1.5, 2.4, 0.2], yaw: Math.PI / 2 },
+    { type: 'card', card: 'silas-applegarth', pos: [26.3, 1.2, 51] },
+    { type: 'secret', id: 'hub-orchard-shed', area: 'orchard', min: [24, -1, 49.4], max: [27.5, 3, 52.6] },
+    { type: 'sweetLine', kind: 'fizzwort', from: [18.5, 0.6, 44], to: [22.5, 0.6, 48], count: 4 },
+    { type: 'sweet', kind: 'bramble', pos: [26.5, 0.6, 39.5] },
+  );
+  b.box([26.6, 0.4, 51], [1.2, 0.8, 2.6], { color: COLORS.wood, pattern: 'planks' });
+  pottedPlant(b, [26.6, 0.8, 49.9], 0.6, 3);
+  pottedPlant(b, [26.6, 0.8, 52.1], 0.6, 8);
+  barrel(b, [22.8, 0, 52.8], 0.35, 0.9);
+  bush(b, 26.5, 42, 1.3, 9);
+  bush(b, 18, 52.6, 1.1, 12);
 }
 
 /** A painted clock dial: Roman numerals, minute ticks and a gilt ring. */
