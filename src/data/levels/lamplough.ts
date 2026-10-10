@@ -123,7 +123,8 @@ function build(b: LevelBuilder): void {
   deco(b, new CylinderGeometry(0.4, 0.5, 0.9, 8), [-6, 0.45, 1.5], COLORS.stoneDark);
   wallTorch(b, flames, [-2.2, 2.5, 0.02], 0);
   wallTorch(b, flames, [2.2, 2.5, 0.02], 0);
-  portrait(b, CARD_BY_ID.get('ambrose-wick')!.portrait, [-9, 3.3, 9.5], Math.PI / 2, 1.1, 1.4, 0.03);
+  // Between the west ledge (z 6..10) and the shelves (from z 13.7).
+  portrait(b, CARD_BY_ID.get('ambrose-wick')!.portrait, [-9, 3, 11.9], Math.PI / 2, 1.1, 1.4, 0.03);
   for (const [c, d1, d2] of [
     [[-9, H - 0.5, 0], [1, 0], [0, 1]],
     [[9, H - 0.5, 20], [-1, 0], [0, -1]],

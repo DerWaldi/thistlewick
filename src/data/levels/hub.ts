@@ -535,7 +535,8 @@ function buildHub(b: LevelBuilder): void {
     CARD_BY_ID.get('grey-lady')!.portrait,
     { bg: ['#f2d48a', '#9a6a2e'], kind: 'person', skin: '#f0c9a0', robe: '#7a2f3a', hair: '#5a3a1e', hat: 'bonnet', hatColor: '#e8d8c0', hairStyle: 'bun', collar: 'plain', expression: 'smile', prop: 'cauldron' },
   ] as PortraitSpec[];
-  [33, 41, 49].forEach((z, i) => portrait(b, gallerySitters[i], [35.05, G + 2.6, z], Math.PI / 2, 1.2, 1.5, (i % 2 ? -1 : 1) * 0.04));
+  // West wall: between the windows (29, 37, 45), clear of the false wall's alcove (z 49.5..51.5).
+  [33, 41, 47.4].forEach((z, i) => portrait(b, gallerySitters[i], [35.05, G + 2.6, z], Math.PI / 2, 1.2, 1.5, (i % 2 ? -1 : 1) * 0.04));
   [27, 31, 40, 44, 48].forEach((z, i) => portrait(b, gallerySitters[3 + i], [41.95, G + 2.6, z], -Math.PI / 2, i % 2 ? 1.1 : 1.3, i % 2 ? 1.4 : 1.7, (i % 2 ? 1 : -1) * 0.05));
   armour(b, [41.3, G, 29], -Math.PI / 2, '#2f5a6a');
   armour(b, [41.3, G, 42], -Math.PI / 2, '#8a2a3a');
