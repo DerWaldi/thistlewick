@@ -40,6 +40,7 @@ export class LevelSession {
   private area: AreaDef | null = null;
   /** The interactable whose prompt is showing. */
   focus: Interactable | null = null;
+  private tooClose = false;
 
   constructor(
     private game: Game,
@@ -60,7 +61,7 @@ export class LevelSession {
     const hc = game.state.houseColor();
     this.rig = buildStudent({ scarf: hc.color, trim: hc.trim });
     this.root.add(this.rig.root);
-    this.health.onBlink = (visible) => (this.rig.root.visible = visible);
+    this.health.onBlink = (visible) => (this.rig.root.visible = visible && !this.tooClose);
     this.animator = new StudentAnimator(this.rig, this.player, this.events);
     this.camera = new OrbitCamera(game.renderer.camera, game.input, this.physics, game.tuning, this.player);
     this.camera.yaw = spawn.yaw;
@@ -134,6 +135,12 @@ export class LevelSession {
     this.caster.update(dt);
     this.puffs.update(dt);
     this.shadow.update(alpha);
+    // When walls push the camera right up against the student, hide them rather than
+    // filling the screen with robe. (Blinking after damage also drives `visible`.)
+    const head = this.rig.root.position.clone().add(new Vector3(0, 1.2, 0));
+    this.tooClose = this.game.renderer.camera.position.distanceTo(head) < 0.95;
+    if (this.tooClose) this.rig.root.visible = false;
+    else if (!this.health.blinking) this.rig.root.visible = true;
     this.updateFocus();
   }
 

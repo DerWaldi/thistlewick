@@ -35,8 +35,8 @@ export interface NpcLook {
 /** Level data: everything placed in a level that isn't static geometry. */
 export type EntitySpec = SpecBase &
   (
-    | { type: 'pushBlock'; pos: V3; size?: number }
-    | { type: 'knockSwitch'; id: string; pos: V3; yaw: number; timed?: number; style?: 'plate' | 'book' }
+    | { type: 'pushBlock'; pos: V3; size?: number; resetOn?: string }
+    | { type: 'knockSwitch'; id: string; pos: V3; yaw: number; timed?: number; style?: 'plate' | 'book' | 'target' | 'bell'; latch?: boolean }
     | { type: 'plate'; id: string; pos: V3 }
     | { type: 'gate'; pos: V3; yaw: number; width: number; height: number; when: string[] }
     | { type: 'sweet'; kind: SweetKind; pos: V3 }
@@ -50,9 +50,36 @@ export type EntitySpec = SpecBase &
     | { type: 'bookshelf'; pos: V3; yaw: number; width: number; height: number; slide?: number; when?: string[] }
     | { type: 'npc'; speaker: SpeakerId; pos: V3; yaw: number; look?: NpcLook; talk: string }
     | { type: 'sortingLantern'; pos: V3; yaw: number }
-    | { type: 'door'; pos: V3; yaw: number; width: number; height: number; to?: { level: string; spawn: string }; locked?: string; talk?: string; label?: string }
+    | {
+        type: 'door';
+        pos: V3;
+        yaw: number;
+        width: number;
+        height: number;
+        to?: { level: string; spawn: string };
+        /** Message when locked (or permanently locked if there's no `to`). */
+        locked?: string;
+        /** Locked until this progress flag is set. */
+        lockedUnless?: string;
+        /** Dialogue script to run instead of the `locked` toast. */
+        talk?: string;
+        label?: string;
+      }
     | { type: 'hourglasses'; pos: V3; yaw: number }
     | { type: 'springPad'; pos: V3; radius: number }
+    | {
+        type: 'trigger';
+        /** Progress flag set when this fires; a trigger fires once per save. */
+        flag: string;
+        script: string;
+        /** Fire when the player is inside this box... */
+        min?: V3;
+        max?: V3;
+        /** ...and/or when all these signals are on. */
+        when?: string[];
+      }
+    | { type: 'star'; id: string; pos: V3; script?: string }
+    | { type: 'rattlecoat'; id: string; pos: V3; yaw: number; arena: { min: V3; max: V3 } }
   );
 
 export type EntityType = EntitySpec['type'];

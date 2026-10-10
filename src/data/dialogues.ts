@@ -1,7 +1,7 @@
 import type { EventBus } from '../engine/events';
 import type { GameState } from '../state/gameState';
 import type { DialogueLine } from '../ui/dialogue';
-import { HOUSE_ORDER, HOUSES, SORTING_QUESTIONS, type HouseId } from './houses';
+import { HOUSE_ORDER, HOUSES, POINTS, SORTING_QUESTIONS, type HouseId } from './houses';
 
 export interface ScriptContext {
   say(lines: DialogueLine[]): Promise<number | null>;
@@ -59,6 +59,13 @@ export const DIALOGUES: Record<string, Script> = {
   },
 
   wendlebury: async ({ say, state }) => {
+    if (state.lessons.has('thwackwort')) {
+      await say([
+        { speaker: 'wendlebury', text: "A Thistle Star already! Professor Gorse hasn't stopped talking about it. Well, he never stops talking, but now it's about you." },
+        { speaker: 'wendlebury', text: 'I hear the Crumbleton twins are opening their Cupboard. Mind your sweets.' },
+      ]);
+      return;
+    }
     if (!state.house) {
       await say([{ speaker: 'wendlebury', text: 'The Sorting Lantern first, dear. By the hourglasses. It gets sulky if it is kept waiting.' }]);
       return;
@@ -73,15 +80,93 @@ export const DIALOGUES: Record<string, Script> = {
     await say([{ speaker: 'sign', text: 'The great doors are barred from outside. A note is pinned to them: "FIRST-YEARS STAY IN. — W."' }]);
   },
 
-  classroomDoor: async ({ say, state }) => {
-    if (!state.house) {
-      await say([{ speaker: 'sign', text: '"PRACTICAL CHARMS — Prof. B. Gorse." The door is locked. Perhaps get sorted first.' }]);
+  classroomDoor: async ({ say }) => {
+    await say([{ speaker: 'sign', text: '"PRACTICAL CHARMS — Prof. B. Gorse. First-years must be SORTED before class." The door is locked.' }]);
+  },
+
+  // ---------------------------------------------------------------- the first lesson
+
+  gorseLesson: async (ctx) => {
+    await teachThwackwort(ctx);
+  },
+
+  gorse: async (ctx) => {
+    const { say, state, events } = ctx;
+    if (!state.knows('thwackwort')) {
+      await teachThwackwort(ctx);
       return;
     }
-    await say([{ speaker: 'sign', text: '"PRACTICAL CHARMS — Prof. B. Gorse. Back in a jiffy." The door is locked, and the jiffy seems to be a long one.' }]);
+    if (!state.flags.has('practice-done')) {
+      await say([{ speaker: 'gorse', text: 'Three targets, three good thwacks! Aim, and flick. Hold it if you like a bit of oomph.' }]);
+      return;
+    }
+    if (!state.lessons.has('thwackwort')) {
+      await say([{ speaker: 'gorse', text: 'The Trial is through the iron door, there. Push, knock, run, and mind the armour. It sulks.' }]);
+      return;
+    }
+    if (!state.flags.has('gorse-reward')) {
+      state.flags.add('gorse-reward');
+      await say([
+        { speaker: 'gorse', text: "HA! A Thistle Star, first time! I haven't seen a shove like that since my Wand-Toss days." },
+        { speaker: 'gorse', text: "Here. Old Agnes Thistlewick, founder of us all. I've had a spare for years. Don't tell the Crumbletons." },
+      ]);
+      state.collectCard('agnes-thistlewick');
+      events.emit('toast', { text: 'Thwackwort now works on the castle, too. Look for things to knock.', kind: 'hint' });
+      return;
+    }
+    await say([{ speaker: 'gorse', text: 'Keep practising! A good Thwackwort opens more doors than a key. Not literally. Well, sometimes literally.' }]);
+  },
+
+  practiceDone: async ({ say, state }) => {
+    state.flags.add('practice-done');
+    await say([
+      { speaker: 'gorse', text: 'Splendid! Three for three! You have a natural shove, you know.' },
+      { speaker: 'gorse', text: "Now, the Thwackwort Trial. Through the iron door. Push blocks, knock switches, and DON'T dawdle on the timed gates. Bring me back the Thistle Star!" },
+    ]);
+  },
+
+  lockedTrialDoor: async ({ say }) => {
+    await say([{ speaker: 'gorse', text: 'Ah-ah! Practice targets first. All three. I am counting.' }]);
+  },
+
+  trialIntro: async ({ say }) => {
+    await say([
+      { speaker: 'gorse', text: "(Gorse's voice echoes from somewhere above.) Welcome to the Trial! Every room wants a shove of some sort. Knock that switch to begin!" },
+    ]);
+  },
+
+  trialBlocks: async ({ say }) => {
+    await say([
+      { speaker: 'gorse', text: "(echoing) The Shoving Room! One block makes a bridge, the other holds the gate. Get it wrong? Ring the bell and they'll come home." },
+    ]);
+  },
+
+  trialRun: async ({ say }) => {
+    await say([{ speaker: 'gorse', text: "(echoing) Knock the switch, then RUN! The gate won't wait. Neither will I. I have a lunch." }]);
+  },
+
+  trialGarden: async ({ say }) => {
+    await say([
+      { speaker: 'gorse', text: "(echoing) The old garden. Gnarlings, I'm afraid, and the Rattlecoat that guards the Star. Plain shoves just bounce off armour. CHARGE it!" },
+    ]);
+  },
+
+  trialComplete: async ({ say, state }) => {
+    if (state.lessons.has('thwackwort')) return;
+    state.lessons.add('thwackwort');
+    state.award(POINTS.star, 'the Thistle Star');
+    state.award(POINTS.lesson, 'passing Practical Charms');
+    await say([{ speaker: 'gorse', text: '(echoing) BRAVO! The Thistle Star! Come back up and see me, there is something in it for you.' }]);
   },
 
   tansy: async ({ say, state }) => {
+    if (state.lessons.has('thwackwort')) {
+      await say([
+        { speaker: 'tansy', text: 'A Thistle Star! Gorse was shouting about it all the way down the corridor.' },
+        { speaker: 'moss', text: "Cupboard opens properly tomorrow. Cards, charms, the lot. Bring sweets. All of them." },
+      ]);
+      return;
+    }
     if (!state.knows('thwackwort')) {
       await say([
         { speaker: 'tansy', text: "Crumbleton's Cupboard! Cards, curios, clever charms. Shut, though." },
@@ -105,3 +190,16 @@ export const DIALOGUES: Record<string, Script> = {
     await say([{ speaker: 'sign', text: `HOUSE POINTS — ${lines}` }]);
   },
 };
+
+async function teachThwackwort({ say, state, events }: ScriptContext): Promise<void> {
+  await say([
+    { speaker: 'gorse', text: 'Ah! A first-year! Come in, come in. Barnaby Gorse, Practical Charms. Mind the desks, they kick.' },
+    { speaker: 'gorse', text: "Today: THWACKWORT. A good firm shove. Point your wand, give it a flick, and things move. Blocks, switches, pests. Not people. Mostly." },
+    { speaker: 'gorse', text: "When you aim, you'll see a glowing rune. That's the spell asking to be cast. Click, and off it goes. Hold the click to charge it, for a bigger shove." },
+  ]);
+  if (!state.knows('thwackwort')) {
+    state.learn('thwackwort');
+    events.emit('toast', { text: 'You learned Thwackwort!', kind: 'info' });
+  }
+  await say([{ speaker: 'gorse', text: 'Now then: three targets. Knock all three and I shall be impressed. Go on!' }]);
+}

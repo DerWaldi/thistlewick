@@ -54,6 +54,7 @@ export const POINTS = {
   secret: 10,
   card: 5,
   stunMidAir: 5,
+  rattlecoat: 10,
 };
 
 /** The Sorting Lantern's questions. Each answer leans towards one house. */

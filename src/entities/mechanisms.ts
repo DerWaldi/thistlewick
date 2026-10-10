@@ -9,6 +9,7 @@ import {
   MeshStandardMaterial,
   PointLight,
   Quaternion,
+  SphereGeometry,
   TorusGeometry,
   Vector3,
 } from 'three';
@@ -38,6 +39,7 @@ export class KnockSwitch implements Entity, SpellTarget {
   private timer = 0;
   private lastTick = 0;
   private spin = 0;
+  private wobble = 0;
   private readonly center: Vector3;
 
   constructor(
@@ -52,6 +54,46 @@ export class KnockSwitch implements Entity, SpellTarget {
     group.rotation.y = spec.yaw;
 
     this.disc = new Group();
+    if (spec.style === 'target' || spec.style === 'bell') {
+      // Free-standing: a painted bullseye (practice target) or a brass bell, on a post.
+      const stand = new Group();
+      const postH = y;
+      const post = new Mesh(paint(new CylinderGeometry(0.06, 0.08, postH, 6).toNonIndexed(), COLORS.wood, true), worldMaterial());
+      post.position.y = -postH / 2;
+      const foot = new Mesh(paint(new CylinderGeometry(0.35, 0.4, 0.1, 8).toNonIndexed(), COLORS.woodDark, true), worldMaterial());
+      foot.position.y = -postH + 0.05;
+      stand.add(post, foot);
+      mergeChildren(stand);
+      group.add(stand);
+      if (spec.style === 'target') {
+        this.glow = new MeshStandardMaterial({ color: '#f3e4c4', roughness: 0.7, flatShading: true });
+        const rings = ['#b0362f', '#f3e4c4', '#b0362f', '#f2c14e'];
+        rings.forEach((c, i) => {
+          const r = 0.42 - i * 0.1;
+          const m = new Mesh(new CylinderGeometry(r, r, 0.04, 20), i === 3 ? this.glow : new MeshStandardMaterial({ color: c, roughness: 0.8 }));
+          m.rotation.x = Math.PI / 2;
+          m.position.z = 0.02 + i * 0.012;
+          this.disc.add(m);
+        });
+      } else {
+        this.glow = brass();
+        const bell = new Mesh(new CylinderGeometry(0.12, 0.3, 0.45, 10, 1, true), this.glow);
+        bell.position.y = -0.2;
+        const cap = new Mesh(new SphereGeometry(0.13, 8, 4, 0, Math.PI * 2, 0, Math.PI / 2), this.glow);
+        const yoke = new Mesh(new BoxGeometry(0.7, 0.08, 0.08), iron());
+        yoke.position.y = 0.16;
+        this.disc.add(bell, cap, yoke);
+      }
+      group.add(this.disc);
+      ctx.scene.add(group);
+      const q = new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), spec.yaw);
+      this.collider = ctx.physics.addStaticBox(new Vector3(x, y, z), new Vector3(0.4, 0.4, 0.15), q);
+      ctx.physics.addStaticCylinder(new Vector3(x, y / 2, z), y / 2, 0.12);
+      this.marker = new RuneMarker(ctx.scene, 'thwackwort', 0.55);
+      this.marker.sprite.position.set(x, y + 0.75, z);
+      ctx.targets.add(this);
+      return;
+    }
     if (spec.style === 'book') {
       // A single fat book sticking out of a shelf, with a faint rune on its spine.
       this.revealRange = 6;
@@ -108,13 +150,19 @@ export class KnockSwitch implements Entity, SpellTarget {
     return out.copy(this.center);
   }
   enabled(): boolean {
-    return true;
+    // A latched target that's been hit is done.
+    return !(this.spec.latch && this.on);
   }
   owns(c: RAPIER.Collider): boolean {
     return c.handle === this.collider.handle;
   }
 
   onSpell(_hit: SpellHit): void {
+    this.wobble = 1;
+    if (this.spec.latch) {
+      this.set(true);
+      return;
+    }
     if (this.spec.timed) {
       this.set(true);
       this.timer = this.spec.timed;
@@ -146,6 +194,18 @@ export class KnockSwitch implements Entity, SpellTarget {
     if (this.spec.style === 'book') {
       // The book tips forward like a lever.
       this.disc.rotation.x = this.spin * 0.5;
+      return;
+    }
+    if (this.spec.style === 'target' || this.spec.style === 'bell') {
+      // Targets spin round once and light their centre; bells swing.
+      this.wobble = Math.max(0, this.wobble - dt * 1.2);
+      if (this.spec.style === 'target') {
+        this.disc.rotation.y = (1 - this.wobble) * Math.PI * 2 * (this.wobble > 0 ? 1 : 0);
+        this.glow.emissive = new Color(this.on ? '#ffd27a' : '#000000');
+        this.glow.emissiveIntensity = this.on ? 1.2 : 0;
+      } else {
+        this.disc.rotation.z = Math.sin(this.wobble * 18) * this.wobble * 0.6;
+      }
       return;
     }
     this.disc.rotation.z = this.spin;

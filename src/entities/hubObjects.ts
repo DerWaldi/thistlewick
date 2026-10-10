@@ -448,10 +448,15 @@ export class Door implements Interactable {
     return out.copy(this.pos).add(new Vector3(0, 1.4, 0));
   }
   prompt(): string {
-    return this.spec.to && !this.spec.locked ? 'Open' : this.spec.talk ? 'Read' : 'Try the door';
+    return this.spec.to && !this.isLocked ? 'Open' : this.spec.talk ? 'Read' : 'Try the door';
   }
+  private get isLocked(): boolean {
+    if (this.spec.lockedUnless) return !this.ctx.state.flags.has(this.spec.lockedUnless);
+    return !!this.spec.locked || !this.spec.to;
+  }
+
   interact(): void {
-    if (this.spec.to && !this.spec.locked) this.ctx.changeLevel(this.spec.to.level, this.spec.to.spawn);
+    if (this.spec.to && !this.isLocked) this.ctx.changeLevel(this.spec.to.level, this.spec.to.spawn);
     else if (this.spec.talk) void this.ctx.talk(this.spec.talk);
     else this.ctx.events.emit('toast', { text: this.spec.locked ?? 'Locked.', kind: 'hint' });
   }

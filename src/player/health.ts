@@ -28,6 +28,10 @@ export class PlayerHealth {
     });
   }
 
+  get blinking(): boolean {
+    return this.invulnerable > 0;
+  }
+
   get fainting(): boolean {
     return this.faintTimer >= 0;
   }

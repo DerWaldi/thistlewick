@@ -4,6 +4,8 @@ import { Bookshelf, CardPickup, Door, Hourglasses, Npc, SecretVolume, SortingLan
 import { Checkpoint, Gate, KnockSwitch, Plate } from '../entities/mechanisms';
 import { PushBlock } from '../entities/pushBlock';
 import { Teaser } from '../entities/teasers';
+import { ThistleStar, Trigger } from '../entities/lessonObjects';
+import { Rattlecoat } from '../entities/rattlecoat';
 import type { Entity, EntitySpec, EntityType, SpecOf, WorldContext } from '../entities/types';
 
 type Factory<T extends EntityType> = (spec: SpecOf<T>, ctx: WorldContext, id: string) => object | null;
@@ -29,6 +31,16 @@ const FACTORIES: { [T in EntityType]: Factory<T> } = {
   door: (s, c) => new Door(s, c),
   hourglasses: (s, c) => new Hourglasses(s, c),
   springPad: (s, c) => new SpringPad(s, c),
+  trigger: (s, c) => new Trigger(s, c),
+  star: (s, c) => (c.state.collected.has(s.id) ? null : new ThistleStar(s, c)),
+  rattlecoat: (s, c) => {
+    // Already beaten on an earlier visit: stays down, and whatever it guarded stays open.
+    if (c.state.flags.has(`down:${s.id}`)) {
+      c.signals.set(s.id, true);
+      return null;
+    }
+    return new Rattlecoat(s, c);
+  },
   sweet: (s, c, id) => {
     if (!c.state.collected.has(id)) c.sweets.add(s.kind, new Vector3(...s.pos), id);
     return null;

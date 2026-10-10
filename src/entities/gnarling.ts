@@ -12,6 +12,7 @@ import {
   SphereGeometry,
   Vector3,
 } from 'three';
+import { POINTS } from '../data/houses';
 import { angleDiff } from '../player/controller';
 import { RuneMarker } from '../spells/runes';
 import type { SpellHit, SpellTarget } from '../spells/targets';
@@ -168,6 +169,8 @@ export class Gnarling implements Entity, SpellTarget {
       this.banish();
       return;
     }
+    // Catching one mid-hop (or mid-lunge) is worth a little extra.
+    if (!this.grounded) this.ctx.state.award(POINTS.stunMidAir, 'a mid-air stun');
     const push = 6 + hit.charge * 6;
     this.vel.set(hit.dir.x * push, 5 + hit.charge * 2, hit.dir.z * push);
     this.grounded = false;

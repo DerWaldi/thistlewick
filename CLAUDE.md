@@ -50,11 +50,16 @@ src/player/            controller (kinematic character), camera (orbit + spring 
                        shadow, puffs), health (stamina, damage, faint → checkpoint)
 src/spells/            caster (soft-lock targeting, tap/charge, bolts), targets (SpellTarget interface +
                        registry), runes (procedural rune glyphs + floating markers)
-src/entities/          level objects: pushBlock, mechanisms (knockSwitch, plate, gate, checkpoint), gnarling,
-                       teasers (targets for spells not yet learned), sweets (instanced SweetField);
-                       types.ts holds the EntitySpec union and WorldContext
+src/entities/          level objects: pushBlock (resetOn), mechanisms (knockSwitch: plate/book/target/bell,
+                       timed/latch; plate; gate; checkpoint), gnarling, rattlecoat (needs charged hits),
+                       teasers (targets for spells not yet learned), hubObjects (cards, secrets, tapestry,
+                       bookshelf, npc, sorting lantern, doors, hourglasses, spring pad), lessonObjects
+                       (trigger, Thistle Star), sweets (instanced SweetField); types.ts holds the
+                       EntitySpec union and WorldContext
 src/world/             builder (level DSL: geometry + entity specs), world (spawns specs via a factory map,
-                       steps entities), signals (named on/off wires), materials, merge (draw-call merging)
+                       steps entities), signals (named on/off wires), level (LevelDef), props (walls with
+                       holes, slabs, windows, shelves, portraits, banners, chandeliers, plants), materials,
+                       merge (draw-call merging)
 src/state/             GameState (stamina, sweets, spells, house + points, cards, secrets, collected ids,
                        flags, checkpoint); save.ts (versioned localStorage save with migrations)
 src/data/              all content: spells, sweets, houses (+ sorting questions, point values), cards,
@@ -85,7 +90,18 @@ Each render frame then runs the camera, animator, level and entity visuals, cast
 - Register new levels in `src/data/levels/index.ts`.
 - A `door` entity with `to: { level, spawn }` switches levels; the game fades out and in.
 - Everything level-specific is created by `LevelSession` and torn down by its `dispose()`. Event listeners go on the session's scoped bus, so they're removed too.
-- The hub (`src/data/levels/hub.ts`) has a map comment at the top. Keep it current.
+- Every level file starts with a map comment. Keep it current.
+- Levels: `hub`, then `classroom` (Gorse's lesson), then `trial` (the Thwackwort Trial), then back. Plus the `gym` sandbox.
+
+### Lessons (the core loop)
+Each lesson is content, not engine work:
+1. A classroom level with the teacher NPC, whose talk script teaches the spell (`state.learn`).
+2. Practice targets (latched knock switches) and a `trigger` on their signals that sets a flag.
+3. A door with `lockedUnless` that flag, leading to the trial level.
+4. The trial level: rooms built around the spell, room `trigger`s with hint scripts, checkpoints, and a `star` whose script records `state.lessons` and awards points.
+5. The teacher's script hands out a reward once the lesson is in `state.lessons`.
+6. Hub content gated with `requires: '<spell>'` appears afterwards.
+Progress lives in flags (`practice-done`, `down:<rattlecoat id>`, `trial-hint-*`...), so revisits are consistent.
 
 ### Progress & saving
 - `GameState` is the single source of progress. Its helpers (`collectCard`, `findSecret`, `award`, `learn`...) emit events, and the HUD, sound and autosave react to those.
@@ -114,6 +130,7 @@ Levels place objects with `b.add({ type: ..., ... })`. Objects talk to each othe
 - **Draw calls:** props built from primitives should call `mergeChildren(group, animatedParts)`. Static decoration in levels goes into the merged level mesh via `b.geo(geometry, color, pattern)`. Lantern glass is batched automatically. Keep hub views under about 60 draws without shadows.
 - **Surface patterns:** stone, planks, plaster and grid are drawn in the shader from world position (`materials.ts`), chosen per box with `pattern`. The builder's `defaultPattern` is 'stone' (the gym uses 'grid').
 - **Lights:** keep point lights to about 8 per level, and never add or remove lights at runtime: that triggers shader recompiles, which hitch. Use `lantern(pos, 0, 0, false)` for unlit decorative lanterns.
+- **Tests and triggers:** room triggers open dialogues, and dialogues freeze the player until the script ends. In tests, `await tw.idle()` after anything that might trigger one, or pre-set the trigger's flag.
 - **Ledges must be flush:** the grab looks for a lip directly above a wall face, plus room to stand (at least about 0.9 m deep). Overhanging sills can't be grabbed.
 - **Events:** communicate through the typed `EventBus`. Add new events to `GameEvents` in `src/engine/events.ts`. SFX, particles and animation subscribe to events and never poll.
 - **Tuning:** all game-feel numbers live in `src/data/tuning.ts`. Edit them live in the panel (`` ` `` key); edits persist in localStorage (`thistlewick.tuning`). Use "Copy tuning JSON" to promote values to defaults.
@@ -128,8 +145,8 @@ Levels place objects with `b.add({ type: ..., ... })`. Objects talk to each othe
 | M0 Feel gym | done | Controller, camera, procedural student, gym, tuning panel, e2e harness |
 | M1 Casting core | done | Spell targeting/aim assist/charge, Thwackwort, push blocks, switches, doors, health, checkpoints, sweets, HUD, Gnarling, SFX |
 | M2 Hub | done | Level pipeline, Lantern Hall / Crooked Corridor / Hollyhock Court / Cupboard, secrets, cards & album, save, house sorting & points |
-| M3 Lesson | next | Gorse's lesson, the Thwackwort Trial dungeon (~5 min), Thistle Star, a post-lesson hub secret |
-| M4 Slice complete | | Shop and upgrades, all 10 cards, 3 secrets, title/pause screens, CC0 music, polish, perf |
+| M3 Lesson | done | Gorse's lesson, the Thwackwort Trial dungeon (~5 min), Thistle Star, a post-lesson hub secret |
+| M4 Slice complete | next | Shop and upgrades, all 10 cards, 3 secrets, title/pause screens, CC0 music, polish, perf |
 
 Spell roster (data comes in M1+):
 - Thwackwort (knockback)

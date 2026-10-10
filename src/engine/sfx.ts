@@ -67,6 +67,17 @@ export class Sfx {
     events.on('gnarlingStunned', () => {
       this.tone(1200, 500, 0.3, 'triangle', 0.1);
     });
+    events.on('rattleClang', () => {
+      this.tone(1800, 1700, 0.25, 'square', 0.06);
+      this.tone(2400, 2300, 0.2, 'triangle', 0.06);
+    });
+    events.on('rattleTopple', () => {
+      this.thud(1, 70);
+      this.hiss(0.6, 1500, 0.2);
+    });
+    events.on('rattleCollapse', () => {
+      for (let i = 0; i < 6; i++) setTimeout(() => this.tone(1200 + Math.random() * 1600, 900, 0.12, 'square', 0.05), i * 70);
+    });
     events.on('gnarlingBanished', () => {
       this.hiss(0.3, 2600, 0.15);
       [784, 988, 1175].forEach((f, i) => setTimeout(() => this.tone(f, f, 0.15, 'sine', 0.08), i * 60));

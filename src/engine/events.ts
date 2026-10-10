@@ -33,6 +33,9 @@ export interface GameEvents {
   gnarlingNotice: { pos: Vector3 };
   gnarlingStunned: { pos: Vector3 };
   gnarlingBanished: { pos: Vector3 };
+  rattleClang: { pos: Vector3 };
+  rattleTopple: { pos: Vector3 };
+  rattleCollapse: { pos: Vector3 };
   // progress
   card: { id: string; isNew: boolean };
   secret: { id: string; area: string; found: number; total: number };

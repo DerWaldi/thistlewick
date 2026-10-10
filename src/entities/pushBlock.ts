@@ -52,6 +52,17 @@ export class PushBlock implements Entity, SpellTarget {
     ctx.scene.add(this.group);
     this.marker = new RuneMarker(ctx.scene, 'thwackwort');
     ctx.targets.add(this);
+    // A reset bell (or any signal) can send the block back home if a puzzle goes wrong.
+    if (spec.resetOn) {
+      const id = spec.resetOn;
+      ctx.signals.onChange([id], () => {
+        if (ctx.signals.get(id) && !this.pos.equals(this.home)) {
+          this.moving = null;
+          this.falling = null;
+          this.reset();
+        }
+      });
+    }
   }
 
   private buildMesh(): Mesh {
