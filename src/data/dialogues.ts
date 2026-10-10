@@ -322,7 +322,7 @@ export const DIALOGUES: Record<string, Script> = {
       return;
     }
     if (!state.flags.has('practice-springwell')) {
-      await say([{ speaker: 'hopgood', text: "Three platforms, three plates! The tall one needs a hop on landing. Hold your jump as you hit the pad. Higher, higher!" }]);
+      await say([{ speaker: 'hopgood', text: "Three platforms, three plates! The tall one needs extra oomph: hold jump as you land on the pad, or hold the cast to charge it. Higher, higher!" }]);
       return;
     }
     if (!state.lessons.has('springwell')) {
@@ -340,6 +340,12 @@ export const DIALOGUES: Record<string, Script> = {
       return;
     }
     await say([{ speaker: 'hopgood', text: 'Up is the best direction. Down is just up, waiting.' }]);
+  },
+
+  hopgoodChargeHint: async ({ say }) => {
+    await say([
+      { speaker: 'hopgood', text: "Stuck under the tall one? HOLD the cast until it glows bright, then let go: a charged Springwell throws you much higher. Or tap jump just as you bounce!" },
+    ]);
   },
 
   springPracticeDone: async ({ say, state }) => {
@@ -454,7 +460,7 @@ async function teachSpringwell({ say, state, events }: ScriptContext): Promise<v
     state.learn('springwell');
     events.emit('toast', { text: 'You learned Springwell!', kind: 'info' });
   }
-  await say([{ speaker: 'hopgood', text: 'Three platforms, a plate on each. Stand on all three! The tall one needs a hop as you land.' }]);
+  await say([{ speaker: 'hopgood', text: 'Three platforms, a plate on each. Stand on all three! The tall one needs extra oomph: hold jump as you land, or charge your cast.' }]);
 }
 
 async function teachLatchkin({ say, state, events }: ScriptContext): Promise<void> {

@@ -37,6 +37,9 @@ interface LedgeHit {
  * jumps with coyote time and buffering, ledge grab/shimmy/climb, bounce pads,
  * slippery surfaces, moving platforms and water/fall resets.
  */
+/** Seconds after a plain bounce in which pressing jump still boosts it. */
+const LATE_BOOST_WINDOW = 0.25;
+
 export class PlayerController {
   readonly body: RAPIER.RigidBody;
   readonly collider: RAPIER.Collider;
@@ -49,6 +52,8 @@ export class PlayerController {
   turnVelocity = 0; // rad/s, for animation lean
   /** Sideways velocity from an angled pad, kept until you land. */
   private flung: Vector3 | null = null;
+  /** A plain bounce that a quick jump press can still turn into a boosted one. */
+  private lateBoost: { time: number; height: number } | null = null;
   mode: PlayerMode = 'air';
   grounded = false;
   groundSurface: Surface = 'default';
@@ -111,6 +116,7 @@ export class PlayerController {
     this.safeHistory.length = 0;
     this.vel.set(0, 0, 0);
     this.flung = null;
+    this.lateBoost = null;
     this.body.setTranslation(this.pos, true);
     this.body.setNextKinematicTranslation(this.pos);
     this.mode = 'air';
@@ -145,6 +151,20 @@ export class PlayerController {
     this.skidCooldown -= dt;
     this.stateTime += dt;
     if (this.input.consumeJump() && !this.frozen) this.buffer = this.tuning.jump.bufferTime;
+    // Pressing jump just after a plain bounce still boosts it: holding jump as you land
+    // is hard to time when you walk onto a pad.
+    if (this.lateBoost) {
+      this.lateBoost.time += dt;
+      if (this.buffer > 0 && this.vel.y > 0) {
+        const g = this.tuning.jump.gravity;
+        this.vel.y = Math.max(this.vel.y, Math.sqrt(2 * g * this.lateBoost.height) - g * this.lateBoost.time);
+        this.buffer = 0;
+        this.lateBoost = null;
+        this.events.emit('bounce', { pos: this.feet.clone(), power: 1 });
+      } else if (this.lateBoost.time > LATE_BOOST_WINDOW || this.grounded) {
+        this.lateBoost = null;
+      }
+    }
     const maxSlope = (this.tuning.move.maxSlope * Math.PI) / 180;
     this.kcc.setMaxSlopeClimbAngle(maxSlope);
     this.kcc.setMinSlopeSlideAngle(maxSlope);
@@ -403,6 +423,7 @@ export class PlayerController {
     if (away.lengthSq() < 1e-4) away.set(-Math.sin(this.facing), 0, -Math.cos(this.facing));
     away.normalize().multiplyScalar(strength);
     this.flung = null;
+    this.lateBoost = null;
     this.vel.x = 0;
     this.vel.z = 0;
     this.launch(0.6, away);
@@ -417,6 +438,7 @@ export class PlayerController {
     if (fling) this.vel.set(0, this.vel.y, 0);
     this.launch(h, fling);
     this.flung = fling ? fling.clone() : null;
+    this.lateBoost = boosted ? null : { time: 0, height: j.bounceHeight * scale * j.bounceBoostScale };
     this.buffer = 0;
     this.events.emit('bounce', { pos: this.feet.clone(), power: boosted ? 1 : 0.7 });
   }

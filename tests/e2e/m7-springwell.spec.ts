@@ -121,12 +121,14 @@ test('Hopgood teaches Springwell; the tall platform needs a held jump', async ({
   expect(await page.evaluate(() => window.__tw.state().known)).toContain('springwell');
   const p1 = await bounce(page, [-5.25, 0, 7.4], [-5.25, 0.3, 9.6], 0, 0.9);
   const p2 = await bounce(page, [0, 0, 7.2], [0, 0.55, 9.4], 0, 0.9);
-  const p3plain = await bounce(page, [5.25, 0, 7.4], [5.25, 0.2, 9.6], 0, 0.9);
-  const p3 = await bounce(page, [5.25, 0, 7.4], [5.25, 0.2, 9.6], 0, 0.9, { jump: true });
+  const p3plain = await bounce(page, [5.25, 0, 7.9], [5.25, 0.2, 10.1], 0, 0.9);
+  const p3 = await bounce(page, [5.25, 0, 7.9], [5.25, 0.2, 10.1], 0, 0.9, { jump: true });
+  const p3charged = await bounce(page, [5.25, 0, 7.9], [5.25, 0.2, 10.1], 0, 0.9, { hold: 1 });
   expect(p1.feet.y).toBeGreaterThan(4.9);
   expect(p2.feet.y).toBeGreaterThan(5.9);
-  expect(p3plain.feet.y).toBeLessThan(8);
-  expect(p3.feet.y).toBeGreaterThan(8.3);
+  expect(p3plain.feet.y).toBeLessThan(7);
+  expect(p3.feet.y).toBeGreaterThan(7.7);
+  expect(p3charged.feet.y).toBeGreaterThan(7.7);
   const r = await page.evaluate(async () => {
     const tw = window.__tw;
     const g = tw.game as unknown as G;

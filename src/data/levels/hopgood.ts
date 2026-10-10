@@ -2,7 +2,7 @@ import { BoxGeometry, CanvasTexture, CylinderGeometry, Mesh, MeshBasicMaterial, 
 import type { LevelBuilder, V3 } from '../../world/builder';
 import type { LevelDef } from '../../world/level';
 import { COLORS } from '../../world/materials';
-import { banner, cobweb, deco, dustMotes, Glow, lightShaft, portrait, pottedPlant, slab, wall, windowPane } from '../../world/props';
+import { banner, cobweb, deco, dustMotes, Glow, lightShaft, portrait, pottedPlant, signboard, slab, wall, windowPane } from '../../world/props';
 import { CARD_BY_ID } from '../cards';
 import { HOUSE_ORDER, HOUSES } from '../houses';
 
@@ -71,7 +71,7 @@ function build(b: LevelBuilder): void {
     // x0, x1, top, pad x
     [-7, -3.5, 5, -5.25],
     [-1.75, 1.75, 6, 0],
-    [3.5, 7, 8.4, 5.25],
+    [3.5, 7, 7.8, 5.25],
   ];
   platforms.forEach(([x0, x1, top], i) => {
     b.box([(x0 + x1) / 2, top / 2, 14], [x1 - x0, top, 4], { color: i === 2 ? '#a07a5a' : '#8a6a4a', pattern: 'planks', info: { noGrab: true } });
@@ -83,12 +83,14 @@ function build(b: LevelBuilder): void {
   b.add(
     { type: 'springPad', pos: [-5.25, 0, 9.6], radius: 1.1, style: 'moss', duration: 10 },
     { type: 'springPad', pos: [0, 0, 9.4], radius: 1.1, style: 'mattress', duration: 10 },
-    { type: 'springPad', pos: [5.25, 0, 9.6], radius: 1.1, style: 'rune', duration: 10 },
+    { type: 'springPad', pos: [5.25, 0, 10.1], radius: 1.1, style: 'rune', duration: 10 },
     // Near the front edges, where you land.
     { type: 'plate', id: 'h1', pos: [-5.25, 5, 13.1], latch: true },
     { type: 'plate', id: 'h2', pos: [0, 6, 13.1], latch: true },
-    { type: 'plate', id: 'h3', pos: [5.25, 8.4, 13.1], latch: true },
+    { type: 'plate', id: 'h3', pos: [5.25, 7.8, 13.1], latch: true },
     { type: 'trigger', flag: 'practice-springwell-trigger', script: 'springPracticeDone', when: ['h1', 'h2', 'h3'] },
+    // Stuck under the tall one? Hopgood shouts a tip.
+    { type: 'trigger', flag: 'hint-hopgood-charge', script: 'hopgoodChargeHint', when: ['h1', 'h2'], unlessSignals: ['h3'], delay: 20, perVisit: true },
     {
       type: 'npc',
       speaker: 'hopgood',
@@ -99,8 +101,10 @@ function build(b: LevelBuilder): void {
     },
     { type: 'sweetLine', kind: 'fizzwort', from: [-5.25, 5.6, 13], to: [-5.25, 5.6, 15], count: 2 },
     { type: 'sweetLine', kind: 'fizzwort', from: [0, 6.6, 13], to: [0, 6.6, 15], count: 2 },
-    { type: 'sweet', kind: 'bramble', pos: [5.25, 9, 14.6] },
+    { type: 'sweet', kind: 'bramble', pos: [5.25, 8.4, 14.6] },
   );
+
+  signboard(b, 'Too high? HOLD the cast!', [5.25, 3.2, 11.97], Math.PI);
 
   // Gym kit: wall bars, mats, a vaulting horse, medicine balls, climbing ropes.
   for (let i = 0; i < 6; i++) {

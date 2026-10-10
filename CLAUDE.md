@@ -85,7 +85,7 @@ Each fixed step runs in this order:
 Each render frame then runs the camera, animator, level and entity visuals, caster (targeting needs the fresh camera), particles, shadow, HUD and draw, all interpolated with `alpha`.
 
 ### Bouncing
-- Bounce height = `jump.bounceHeight` (6.5 m) × the pad's scale (1 + 0.6 × charge for Springwell) × `bounceBoostScale` if jump is held on landing. Air time to a ledge ~1 m below the apex is about 0.85 s; plan horizontal gaps of 2.5–4.5 m for straight bounces.
+- Bounce height = `jump.bounceHeight` (6.5 m) × the pad's scale (1 + 0.6 × charge for Springwell) × `bounceBoostScale` if jump is held on landing. Pressing jump within 0.25 s after a plain bounce also boosts it (walking onto a pad you can't already be holding jump). Teach charging out loud: players don't discover it on their own. Air time to a ledge ~1 m below the apex is about 0.85 s; plan horizontal gaps of 2.5–4.5 m for straight bounces.
 - A `fling` sets your sideways velocity outright; until you land, air control steers around it (55%) instead of braking it. Tune flings by playing them (`__tw` + `pressJump`/`input`), not on paper.
 - Pads that stand proud of the floor must be low enough to step on (≤ 0.36 m) or players have to jump onto them; prefer `rune` tiles where you walk on.
 
