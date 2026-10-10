@@ -12,6 +12,8 @@ export interface HudSources {
   caster(): Caster | null;
   prompt(): string | null;
   secretsIn(area: string): { found: number; total: number };
+  /** The next goal, and where it is relative to the camera (null when there's nothing to point at). */
+  guide(): { title: string; bearing: number | null; dist: number; dy: number } | null;
 }
 
 /**
@@ -32,6 +34,11 @@ export class Hud {
   private hurt = $('hurt-flash');
   private banner = $('area-banner');
   private promptEl = $('interact-prompt');
+  private goal = $('hud-goal');
+  private goalArrow = $('hud-goal-arrow');
+  private goalText = $('hud-goal-text');
+  private goalDist = $('hud-goal-dist');
+  private goalShown = '';
   private shown = { stamina: -1, max: -1, sweets: -1, target: '', house: '', pts: -1, prompt: '' };
   private bannerTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -82,7 +89,26 @@ export class Hud {
     setTimeout(() => el.remove(), 3100);
   }
 
+  /** The goal line under the house chip, with a compass arrow and the distance. */
+  private updateGoal(): void {
+    const g = this.src.guide();
+    this.goal.classList.toggle('hidden', !g);
+    if (!g) return;
+    if (g.title !== this.goalShown) {
+      this.goalText.textContent = g.title;
+      this.goal.classList.remove('fresh');
+      void this.goal.offsetWidth;
+      this.goal.classList.add('fresh');
+      this.goalShown = g.title;
+    }
+    this.goalArrow.style.visibility = g.bearing === null ? 'hidden' : 'visible';
+    if (g.bearing !== null) this.goalArrow.style.transform = `rotate(${(-g.bearing * 180) / Math.PI}deg)`;
+    const v = g.dy > 2.5 ? ' up' : g.dy < -2.5 ? ' down' : '';
+    this.goalDist.textContent = g.bearing === null ? '' : `${Math.round(g.dist)} m${v}`;
+  }
+
   update(): void {
+    this.updateGoal();
     const s = this.src.state();
     const sh = this.shown;
     if (s.stamina !== sh.stamina || s.maxStamina !== sh.max) {

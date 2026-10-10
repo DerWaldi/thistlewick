@@ -7,6 +7,8 @@ export interface Options {
   sfx: number;
   quality: 'high' | 'low';
   showFps: boolean;
+  /** The next-goal line and compass in the HUD. */
+  guide: boolean;
 }
 
 const KEY = 'thistlewick.options';
@@ -18,6 +20,7 @@ export const DEFAULT_OPTIONS: Options = {
   sfx: 0.7,
   quality: 'high',
   showFps: false,
+  guide: true,
 };
 
 export function loadOptions(): Options {

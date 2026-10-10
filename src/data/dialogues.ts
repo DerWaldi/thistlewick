@@ -25,7 +25,16 @@ export const DIALOGUES: Record<string, Script> = {
   intro: async ({ say }) => {
     await say([
       { speaker: 'wendlebury', text: 'Ah! There you are. Welcome to Thistlewick, dear. Mind the third step, it bites.' },
-      { speaker: 'wendlebury', text: "Before anything else, the Sorting Lantern would like a word. It's the one muttering by the hourglasses." },
+      {
+        speaker: 'wendlebury',
+        text: 'Your first year, then. Seven professors will each teach you one spell, and each will set you a trial in some dreadful corner of this castle. Bring me back their Thistle Stars.',
+      },
+      { speaker: 'wendlebury', text: 'Pass all seven and you may sit the Final Examinations. Do well, and your house may yet win the House Cup. No pressure.' },
+      {
+        speaker: 'wendlebury',
+        text: "The castle is large and moves about a bit. If you lose your way, the little gold arrow up in the corner knows where you're meant to be. Esc shows your timetable.",
+      },
+      { speaker: 'wendlebury', text: "But first, the Sorting Lantern would like a word. It's the one muttering by the hourglasses." },
     ]);
   },
 

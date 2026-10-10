@@ -1,5 +1,6 @@
 import { CARDS } from '../data/cards';
 import { SPEAKERS } from '../data/characters';
+import { currentObjective } from '../data/objectives';
 import { QUESTS, questStage } from '../data/quests';
 import { HOUSES, type HouseId } from '../data/houses';
 import type { GameState } from '../state/gameState';
@@ -70,6 +71,9 @@ export class Menu {
 
   private renderProgress(s: GameState): void {
     const house = s.house ? `${HOUSES[s.house].name}: ${s.housePoints[s.house]} points · ` : '';
+    const goal = currentObjective(s);
+    ($('pause-goal').querySelector('b') as HTMLElement).textContent = `Next: ${goal.title}.`;
+    ($('pause-goal').querySelector('span') as HTMLElement).textContent = goal.detail;
     $('pause-progress').textContent = `${house}Cards ${s.cards.size}/${CARDS.length} · Secrets ${s.secrets.size} · Sweets ${s.sweets}`;
     // The errand log: open ones first, with where to look; finished ones ticked off.
     const list = $('pause-quests');
@@ -100,6 +104,10 @@ export class Menu {
       o.invertY = (e.target as HTMLInputElement).checked;
       this.onOptions(o);
     });
+    $('opt-guide').addEventListener('change', (e) => {
+      o.guide = (e.target as HTMLInputElement).checked;
+      this.onOptions(o);
+    });
     $('opt-fps').addEventListener('change', (e) => {
       o.showFps = (e.target as HTMLInputElement).checked;
       this.onOptions(o);
@@ -117,6 +125,7 @@ export class Menu {
     ($('opt-sfx') as HTMLInputElement).value = String(o.sfx);
     ($('opt-invert') as HTMLInputElement).checked = o.invertY;
     ($('opt-fps') as HTMLInputElement).checked = o.showFps;
+    ($('opt-guide') as HTMLInputElement).checked = o.guide;
     ($('opt-quality') as HTMLSelectElement).value = o.quality;
   }
 }

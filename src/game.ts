@@ -16,6 +16,7 @@ import { LESSONS, resetTrial, spellsBy } from './data/lessons';
 import { Album } from './ui/album';
 import { Dialogue } from './ui/dialogue';
 import { Hud } from './ui/hud';
+import { compassTarget, currentObjective, type Objective } from './data/objectives';
 import { Shop } from './ui/shop';
 import type { SpawnPoint } from './world/level';
 
@@ -80,6 +81,7 @@ export class Game {
         caster: () => this.session?.caster ?? null,
         prompt: () => this.session?.focus?.prompt() ?? null,
         secretsIn: (area) => this.session?.world.secretsIn(area) ?? { found: 0, total: 0 },
+        guide: () => this.guide(),
       },
       this.events,
     );
@@ -199,6 +201,30 @@ export class Game {
     this.titleMode = false;
     this.hud.setVisible(true);
     if (this.session) this.music.setMood(this.session.def.music ?? 'hub');
+  }
+
+  private objective: Objective | null = null;
+  private objectiveAge = Infinity;
+
+  /** Where the story wants you next, as a bearing relative to the camera. */
+  private guide(): { title: string; bearing: number | null; dist: number; dy: number } | null {
+    const s = this.session;
+    if (!s || !this.options.guide || this.titleMode || this.sandbox) return null;
+    // Progress only changes in dialogues and on pickups: a few times a second is plenty.
+    if (this.objectiveAge > 0.5 || !this.objective) {
+      const next = currentObjective(this.state);
+      if (this.objective && next.title !== this.objective.title) this.events.emit('toast', { text: `New goal: ${next.title}`, kind: 'hint' });
+      this.objective = next;
+      this.objectiveAge = 0;
+    }
+    const p = s.player.feet;
+    const story = !this.state.flags.has('year-complete');
+    const t = compassTarget(this.objective, s.def.id, p, story);
+    if (!t) return { title: this.objective.title, bearing: null, dist: 0, dy: 0 };
+    const dx = t[0] - p.x;
+    const dz = t[2] - p.z;
+    const bearing = Math.atan2(dx, dz) - s.camera.yaw;
+    return { title: this.objective.title, bearing: Math.atan2(Math.sin(bearing), Math.cos(bearing)), dist: Math.hypot(dx, dz), dy: t[1] - p.y };
   }
 
   applyOptions(): void {
@@ -385,6 +411,7 @@ export class Game {
     this.dialogue.update(dt);
     this.music.update();
     this.renderer.followShadow(s.player.pos);
+    this.objectiveAge += dt;
     this.hud.update();
 
     if (dt > 0) this.fps += (1 / dt - this.fps) * 0.05;

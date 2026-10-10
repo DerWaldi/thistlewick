@@ -17,6 +17,7 @@
         <div id="hud-sweets" class="hud-chip"><span class="sweet-icon"></span><span id="hud-sweets-n">0</span></div>
         <div id="hud-target"></div>
         <div id="hud-house" class="hud-chip hidden"><span class="crest"></span><span id="hud-house-name"></span><b id="hud-house-pts">0</b></div>
+        <div id="hud-goal" class="hidden"><span id="hud-goal-arrow">▲</span><span id="hud-goal-text"></span><span id="hud-goal-dist"></span></div>
         <div id="area-banner"><div class="name"></div><div class="sub"></div></div>
         <div id="interact-prompt"><kbd>E</kbd> <span></span></div>
         <div id="toasts"></div>
@@ -89,6 +90,7 @@
             <li><b>Esc</b> pause</li>
             <li><b>P</b> screenshot (saved to downloads)</li>
           </ul>
+          <div id="pause-goal"><b></b> <span></span></div>
           <div id="pause-progress"></div>
           <ul id="pause-quests"></ul>
         </div>
@@ -101,6 +103,7 @@
             <label for="opt-sfx">Effects volume</label><input id="opt-sfx" type="range" min="0" max="1" step="0.05" />
             <label for="opt-quality">Graphics</label>
             <select id="opt-quality"><option value="high">Fancy</option><option value="low">Fast</option></select>
+            <label for="opt-guide">Show next goal</label><input id="opt-guide" type="checkbox" />
             <label for="opt-fps">Show FPS</label><input id="opt-fps" type="checkbox" />
           </div>
           <div class="menu-buttons"><button class="big-btn" data-action="back">Back</button></div>
