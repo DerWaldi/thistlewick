@@ -65,11 +65,11 @@ const VOID = '#141016';
 
 const LOOKS: Record<string, NpcLook> = {
   gorse: { robe: '#a0522d', scarf: '#c99a3e', trim: '#f3e4c4', hat: '#5e3b22', hatStyle: 'none', hair: '#e8e2d0', hairStyle: 'bald', beard: true, skin: '#e2a982', scale: 1.3 },
-  quince: { robe: '#2f5a6a', scarf: '#c99a3e', trim: '#f3e4c4', hat: '#24323f', hatStyle: 'tall', hair: '#8a3a22', hairStyle: 'bun', glasses: true, scale: 1.2 },
-  hopgood: { robe: '#3f7a4a', scarf: '#e8c25a', trim: '#b0362f', hat: '#b0362f', hatStyle: 'cap', hair: '#d9822e', hairStyle: 'wild', scale: 1.2 },
+  quince: { robe: '#2f5a6a', scarf: '#c99a3e', trim: '#f3e4c4', hat: '#24323f', hatStyle: 'tall', hair: '#8a3a22', hairStyle: 'bun', glasses: true, scale: 1.2, expression: 'stern' },
+  hopgood: { robe: '#3f7a4a', scarf: '#e8c25a', trim: '#b0362f', hat: '#b0362f', hatStyle: 'cap', hair: '#d9822e', hairStyle: 'wild', scale: 1.2, expression: 'cheeky' },
   lamplough: { robe: '#2a3a5a', scarf: '#bfe8ff', trim: '#e8e2d0', hat: '#1e2638', hatStyle: 'tall', hair: '#e8e2d0', hairStyle: 'long', beard: true, glasses: true, scale: 1.2 },
   ashcombe: { robe: '#8a2a1a', scarf: '#ff8a3c', trim: '#e8c25a', hat: '#3a1a12', hatStyle: 'pointy', hair: '#b8b0a8', hairStyle: 'bun', scale: 1.15 },
-  coldharbour: { robe: '#2f4f6a', scarf: '#cfeefa', trim: '#e8f6fc', hat: '#1e3040', hatStyle: 'tall', hair: '#f0f0f0', hairStyle: 'long', glasses: true, scale: 1.15 },
+  coldharbour: { robe: '#2f4f6a', scarf: '#cfeefa', trim: '#e8f6fc', hat: '#1e3040', hatStyle: 'tall', hair: '#f0f0f0', hairStyle: 'long', glasses: true, scale: 1.15, expression: 'stern' },
   underbough: { robe: '#6a7a9a', scarf: '#e8f0ff', trim: '#c8d8f0', hat: '#4a5a7a', hatStyle: 'pointy', hair: '#b86a3a', hairStyle: 'wild', scale: 1.1 },
   wendlebury: { robe: '#5d4470', scarf: '#c99a3e', trim: '#f3e4c4', hat: '#3b2c55', hair: '#e8e8e8', hairStyle: 'bun', glasses: true, scale: 1.25 },
 };

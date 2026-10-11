@@ -122,7 +122,7 @@ function build(b: LevelBuilder): void {
     speaker: 'quince',
     pos: [0, 0, 12.2],
     yaw: Math.PI,
-    look: { robe: '#2f5a6a', scarf: '#c99a3e', trim: '#f3e4c4', hat: '#24323f', hatStyle: 'tall', hair: '#8a3a22', hairStyle: 'bun', glasses: true, scale: 1.2 },
+    look: { robe: '#2f5a6a', scarf: '#c99a3e', trim: '#f3e4c4', hat: '#24323f', hatStyle: 'tall', hair: '#8a3a22', hairStyle: 'bun', glasses: true, scale: 1.2, expression: 'stern' },
     talk: 'quince',
   });
 

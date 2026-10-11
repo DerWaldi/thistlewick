@@ -278,8 +278,8 @@ function buildHub(b: LevelBuilder): void {
     deco(b, new CylinderGeometry(0.13, 0.13, 0.3, 8), [-15.6 + ((i % 3) - 1) * 0.2, 1.25, 5.6 + i * 0.6], colors[i % 3]);
   }
   b.add(
-    { type: 'npc', speaker: 'tansy', pos: [-16.8, 0, 6.6], yaw: Math.PI / 2, look: { robe: '#46395f', scarf: HOUSES.yarrowdown.color, trim: HOUSES.yarrowdown.trim, hat: '#c8642e', hatStyle: 'none', hair: '#c8642e', hairStyle: 'long', skin: '#f3d2b4' }, talk: 'tansy' },
-    { type: 'npc', speaker: 'moss', pos: [-16.8, 0, 9.4], yaw: Math.PI / 2, look: { robe: '#46395f', scarf: HOUSES.nettleby.color, trim: HOUSES.nettleby.trim, hat: '#6b3f4f', hatStyle: 'cap', hair: '#c8642e', hairStyle: 'wild', skin: '#f3d2b4' }, talk: 'moss' },
+    { type: 'npc', speaker: 'tansy', pos: [-16.8, 0, 6.6], yaw: Math.PI / 2, look: { robe: '#46395f', scarf: HOUSES.yarrowdown.color, trim: HOUSES.yarrowdown.trim, hat: '#c8642e', hatStyle: 'none', hair: '#c8642e', hairStyle: 'long', skin: '#f3d2b4', expression: 'cheeky' }, talk: 'tansy' },
+    { type: 'npc', speaker: 'moss', pos: [-16.8, 0, 9.4], yaw: Math.PI / 2, look: { robe: '#46395f', scarf: HOUSES.nettleby.color, trim: HOUSES.nettleby.trim, hat: '#6b3f4f', hatStyle: 'cap', hair: '#c8642e', hairStyle: 'wild', skin: '#f3d2b4', expression: 'cheeky' }, talk: 'moss' },
   );
   barrel(b, [-13.5, 0, 4.5]);
   barrel(b, [-14.35, 0, 4.42], 0.32, 0.8);

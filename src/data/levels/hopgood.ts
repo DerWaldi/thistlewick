@@ -96,7 +96,7 @@ function build(b: LevelBuilder): void {
       speaker: 'hopgood',
       pos: [-3, 0, 4.5],
       yaw: Math.PI * 0.85,
-      look: { robe: '#3f7a4a', scarf: '#e8c25a', trim: '#b0362f', hat: '#b0362f', hatStyle: 'cap', hair: '#d9822e', hairStyle: 'wild', scale: 1.2 },
+      look: { robe: '#3f7a4a', scarf: '#e8c25a', trim: '#b0362f', hat: '#b0362f', hatStyle: 'cap', hair: '#d9822e', hairStyle: 'wild', scale: 1.2, expression: 'cheeky' },
       talk: 'hopgood',
     },
     { type: 'sweetLine', kind: 'fizzwort', from: [-5.25, 5.6, 13], to: [-5.25, 5.6, 15], count: 2 },

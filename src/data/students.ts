@@ -25,7 +25,7 @@ const scarf = (h: keyof typeof HOUSES) => ({ robe, scarf: HOUSES[h].color, trim:
 export const STUDENTS: StudentDef[] = [
   {
     speaker: 'rowan',
-    look: { ...scarf('bramblecote'), hair: '#2a1e18', hairStyle: 'wild', hatStyle: 'none', skin: '#d9a07a' },
+    look: { ...scarf('bramblecote'), hair: '#2a1e18', hairStyle: 'wild', hatStyle: 'none', skin: '#d9a07a', expression: 'cheeky' },
     level: 'hub',
     // Along the Lantern Hall gallery.
     path: [

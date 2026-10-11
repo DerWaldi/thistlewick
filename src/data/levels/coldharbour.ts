@@ -76,7 +76,7 @@ function build(b: LevelBuilder): void {
       speaker: 'coldharbour',
       pos: [0, 0, 8],
       yaw: Math.PI,
-      look: { robe: '#2f4f6a', scarf: '#cfeefa', trim: '#e8f6fc', hat: '#1e3040', hatStyle: 'tall', hair: '#f0f0f0', hairStyle: 'long', glasses: true, scale: 1.15 },
+      look: { robe: '#2f4f6a', scarf: '#cfeefa', trim: '#e8f6fc', hat: '#1e3040', hatStyle: 'tall', hair: '#f0f0f0', hairStyle: 'long', glasses: true, scale: 1.15, expression: 'stern' },
       talk: 'coldharbour',
     },
   );

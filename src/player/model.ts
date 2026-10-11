@@ -45,6 +45,8 @@ export interface StudentLook {
   hairStyle?: 'tufts' | 'long' | 'bun' | 'wild' | 'bald';
   beard?: boolean;
   glasses?: boolean;
+  /** Personality in the face (default friendly). */
+  expression?: 'friendly' | 'stern' | 'cheeky';
 }
 
 const mat = (color: string, extra: Partial<ConstructorParameters<typeof MeshStandardMaterial>[0]> = {}) =>
@@ -186,16 +188,30 @@ export function buildStudent(look: StudentLook = {}): StudentRig {
   const browC = look.hairStyle === 'bald' || look.beard ? '#d8d2c4' : hairC;
   const lidC = new Color(skinC).multiplyScalar(0.82).getStyle();
   add(head, new SphereGeometry(0.1, 8, 5).scale(1, 0.55, 0.7), skinC, 0, -0.17, 0.08);
-  // Almond eyes under heavy lids, level brows, a proper nose and a short mouth.
+  // Almond eyes, brows, a proper nose and a mouth that says who they are: friendly (the
+  // default) with relaxed brows and a gentle smile, stern with level brows and a flat mouth,
+  // or cheeky with one brow up and a lopsided grin.
+  const mood = look.expression ?? 'friendly';
   for (const side of [-1, 1]) {
-    add(head, new SphereGeometry(0.03, 8, 6).scale(1.15, 0.6, 0.45), '#f2ece2', side * 0.075, 0.03, 0.188);
+    add(head, new SphereGeometry(0.03, 8, 6).scale(1.15, 0.62, 0.45), '#f2ece2', side * 0.075, 0.03, 0.188);
     add(head, new SphereGeometry(0.017, 6, 4).scale(1, 1, 0.45), '#1b120c', side * 0.073, 0.028, 0.199);
-    add(head, new BoxGeometry(0.075, 0.018, 0.03), lidC, side * 0.075, 0.048, 0.19, 0.25, 0, side * 0.08);
-    add(head, new BoxGeometry(0.08, 0.022, 0.025), browC, side * 0.078, 0.085, 0.193, 0, 0, side * 0.12);
+    if (mood !== 'stern') add(head, new SphereGeometry(0.005, 4, 3), '#ffffff', side * 0.073 + 0.006, 0.034, 0.207);
+    const lid = mood === 'stern' ? 0.018 : 0.012;
+    add(head, new BoxGeometry(0.075, lid, 0.03), lidC, side * 0.075, 0.047 + (mood === 'stern' ? 0 : 0.003), 0.19, 0.25, 0, side * (mood === 'stern' ? 0.08 : -0.04));
+    const raised = mood === 'cheeky' && side === 1;
+    const browTilt = mood === 'stern' ? 0.12 : mood === 'cheeky' && raised ? -0.25 : -0.1;
+    add(head, new BoxGeometry(0.08, 0.02, 0.025), browC, side * 0.078, 0.088 + (mood === 'stern' ? -0.003 : 0.004) + (raised ? 0.016 : 0), 0.193, 0, 0, side * browTilt);
     add(head, new SphereGeometry(0.05, 6, 4).scale(0.5, 1, 0.8), skinC, side * 0.2, 0.01, 0);
   }
   add(head, new BoxGeometry(0.04, 0.08, 0.06), skinC, 0, -0.02, 0.21, -0.25, 0, 0);
-  add(head, new BoxGeometry(0.06, 0.012, 0.012), '#6a3024', 0, -0.095, 0.192);
+  if (mood === 'stern') {
+    add(head, new BoxGeometry(0.06, 0.012, 0.012), '#6a3024', 0, -0.095, 0.192);
+  } else {
+    // A shallow arc, smiling at the corners (lopsided when cheeky).
+    const arc = 1.7;
+    const smile = add(head, new TorusGeometry(0.04, 0.0065, 4, 10, arc), '#6a3024', mood === 'cheeky' ? 0.012 : 0, -0.056, 0.188, 0, 0, -Math.PI / 2 - arc / 2 + (mood === 'cheeky' ? 0.25 : 0));
+    smile.scale.set(1, 0.85, 1);
+  }
   // Hair: a fringe and tufts poking out under the hat, or long locks, a bun or a beard.
   const style = look.hairStyle ?? 'tufts';
   if (style !== 'bald') {

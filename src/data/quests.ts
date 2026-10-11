@@ -105,7 +105,7 @@ export const QUESTS: QuestDef[] = [
   {
     id: 'hat',
     giver: 'hattie',
-    look: { ...scarf('bramblecote'), hair: '#1e1612', hairStyle: 'bun', hatStyle: 'none', skin: '#8a5a3e' },
+    look: { ...scarf('bramblecote'), hair: '#1e1612', hairStyle: 'bun', hatStyle: 'none', skin: '#8a5a3e', expression: 'cheeky' },
     at: { level: 'hub', spot: 'courtCloisterEast' },
     after: 'cindersnap',
     title: "Hattie's Hat",
