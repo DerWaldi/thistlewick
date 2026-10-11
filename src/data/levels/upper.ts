@@ -97,7 +97,9 @@ function longHall(b: LevelBuilder, glow: Glow, flames: Glow): void {
   wall(b, 'x', -0.5, -5.5, 5.5, H, { color: STONE, holes: [{ from: -1.25, to: 1.25, top: 3.5 }] });
   wall(b, 'z', -5, -0.5, 54.5, 12.5, { color: STONE, holes: [{ from: 22, to: 26, top: 4 }] });
   wall(b, 'z', 5, -0.5, 54.5, H, { color: STONE, holes: [{ from: 23, to: 27, top: 4 }] });
-  slab(b, -5.5, 5.5, -0.5, 44, H + 0.5, 0.5, '#4a3226', 'planks');
+  // The ceilings stop 5 cm inside the walls' outer faces (x ±5.5), which the Library and the
+  // House Wing look at: flush, their ends flickered as a line along those walls.
+  slab(b, -5.45, 5.45, -0.5, 44, H + 0.5, 0.5, '#4a3226', 'planks');
   for (let z = 3; z < 44; z += 4) deco(b, new BoxGeometry(9, 0.4, 0.4), [0, H - 0.2, z], COLORS.woodDark);
   // The carpet runner and the door back down to the Lantern Hall's gallery.
   deco(b, new BoxGeometry(2.6, 0.03, 42), [0, 0.015, 22], COLORS.carpet);
@@ -126,7 +128,7 @@ function longHall(b: LevelBuilder, glow: Glow, flames: Glow): void {
     { type: 'checkpoint', pos: [-3.4, 0, 2], yaw: Math.PI / 2, zone: { min: [-4.5, -1, 0], max: [4.5, 4, 6] } },
   );
   // The stair hall at the north end: up to the roof.
-  slab(b, -5.5, 5.5, 44, 54.5, 11.5, 0.5, '#4a3226', 'planks');
+  slab(b, -5.45, 5.45, 44, 54.5, 11.5, 0.5, '#4a3226', 'planks');
   // The stair hall is taller than the Long Hall: wall up the gap above the Long Hall's ceiling.
   wall(b, 'x', 44, -5.5, 5.5, 4.5, { base: 7, color: STONE });
   // (The doorway's sill sits 2 cm under the Leads' floor: level with it, the two flickered.)
@@ -171,7 +173,9 @@ function library(b: LevelBuilder, glow: Glow, flames: Glow): void {
   rail([-18.7, 0, 37], [-5.5, 0, 37]);
   rail([-33, 0, 11], [-8.4, 0, 11]);
   // Up from the floor: the stair by the door...
-  b.stairs([-7, 0, 21], Math.PI, 10, 0.5, 1, 2.5, COLORS.stoneLight);
+  // Its side sinks 5 cm into the east wall (face at x -5.5): a hand's width off it, the gap
+  // threw a stepped streak of shadow up the wall.
+  b.stairs([-6.7, 0, 21], Math.PI, 10, 0.5, 1, 2.5, COLORS.stoneLight);
   // ...or the book lift (Thistledown) up to the north strip.
   b.add({ type: 'skyLift', style: 'platform', from: [-20, 0, 35.6], to: [-20, 5, 35.6], size: [2.4, 2.4], speed: 2 });
   // Shelves everywhere: under and along the mezzanine, and freestanding rows.
