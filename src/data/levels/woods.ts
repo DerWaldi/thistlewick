@@ -1,4 +1,4 @@
-import { BoxGeometry, ConeGeometry, CylinderGeometry, IcosahedronGeometry, SphereGeometry } from 'three';
+import { BoxGeometry, ConeGeometry, CylinderGeometry, IcosahedronGeometry, RingGeometry, SphereGeometry } from 'three';
 import type { LevelBuilder } from '../../world/builder';
 import type { LevelDef } from '../../world/level';
 import { bush, deco, Glow, grass, mushrooms, rubble, signboard, tree, wall } from '../../world/props';
@@ -364,36 +364,49 @@ function hollow(b: LevelBuilder): void {
   const X1 = 0;
   // A fallen giant, hollow inside: floor with holes, walls, a curved-looking roof.
   b.floor(X0, X1, 80, 94, { top: P, thickness: 0.6, color: '#5a4030', holes: [[X0, X1, 83, 90]] });
-  // The walls and roof you bump into are invisible boxes; what you see is the log itself, a
-  // round shell (only the part above the floor, so the holes don't look like solid wood).
-  for (const x of [X0 - 0.3, X1 + 0.3]) b.box([x, P + 2, 87], [0.6, 4, 14], { invisible: true });
-  b.box([(X0 + X1) / 2, P + 4.2, 87], [X1 - X0 + 1.2, 0.5, 14], { invisible: true });
+  // The walls and roof you bump into are invisible boxes; what you see is the log itself: a
+  // thick round shell (only the part above the floor, so the holes don't look like solid wood),
+  // with its cut ends showing the wood. The inner face stands where the invisible walls are.
   const CY = P + 1.9;
+  const RO = 3.9;
+  const RI = 3.05;
+  const half = Math.sqrt(RI * RI - 1.9 * 1.9); // the inner wall's half-width at floor level
+  for (const side of [-1, 1]) b.box([-3 + side * (half + 0.3), P + 2, 87], [0.6, 4, 14], { invisible: true });
+  b.box([-3, P + 4.2, 87], [X1 - X0 + 1.2, 0.5, 14], { invisible: true });
   const arc = (r: number) => {
     const a0 = Math.acos(Math.min(1, 1.9 / r));
     return [a0, Math.PI * 2 - 2 * a0] as const;
   };
+  const LEN = 14.6;
   {
-    const [a0, al] = arc(3.9);
-    deco(b, new CylinderGeometry(3.9, 3.9, 14.6, 14, 1, true, a0, al).rotateX(Math.PI / 2), [-3, CY, 87], BARK);
+    const [a0, al] = arc(RO);
+    deco(b, new CylinderGeometry(RO, RO, LEN, 16, 1, true, a0, al).rotateX(Math.PI / 2), [-3, CY, 87], BARK);
   }
   {
-    // The inside face (the same shell turned inside out, a little smaller).
-    const [a0, al] = arc(3.55);
-    const inner = new CylinderGeometry(3.55, 3.55, 14.6, 14, 1, true, a0, al).toNonIndexed().scale(-1, 1, 1);
+    // The inside face (a smaller shell turned inside out).
+    const [a0, al] = arc(RI);
+    const inner = new CylinderGeometry(RI, RI, LEN, 16, 1, true, a0, al).toNonIndexed().scale(-1, 1, 1);
     inner.computeVertexNormals();
     deco(b, inner.rotateX(Math.PI / 2).rotateY(Math.PI), [-3, CY, 87], '#5a3a22');
   }
-  // Bark rings round the ends, and a few knots.
-  for (const z of [79.8, 94.2]) {
-    const [a0, al] = arc(4.1);
-    deco(b, new CylinderGeometry(4.1, 4.1, 0.5, 14, 1, true, a0, al).rotateX(Math.PI / 2), [-3, CY, z], '#4a3020');
+  // The cut ends: a ring of pale wood between the two shells, with darker growth rings.
+  const t0 = -Math.asin(1.9 / RO);
+  for (const end of [-1, 1]) {
+    const z = 87 + (end * LEN) / 2;
+    const ring = (r0: number, r1: number, color: string, dz: number) => {
+      const g = new RingGeometry(r0, r1, 18, 1, t0, Math.PI - 2 * t0);
+      if (end < 0) g.rotateY(Math.PI);
+      deco(b, g, [-3, CY, z + end * dz], color);
+    };
+    ring(RI, RO, '#b88a5a', 0);
+    ring(RI + 0.25, RI + 0.32, '#8a6040', 0.005);
+    ring(RI + 0.55, RI + 0.6, '#8a6040', 0.005);
   }
   for (const [ax, z] of [
     [0.9, 83],
     [2.2, 91],
-    [-0.6, 88],
-  ]) deco(b, new IcosahedronGeometry(0.5, 0), [-3 + Math.cos(ax) * 3.9, CY + Math.sin(ax) * 3.9, z], '#4a3020'),
+    [-0.4, 88],
+  ]) deco(b, new IcosahedronGeometry(0.5, 0), [-3 + Math.cos(ax) * RO, CY + Math.sin(ax) * RO, z], '#4a3020');
   b.add(
     { type: 'wickLamp', pos: [-1.2, P, 81.4], radius: 5.2, duration: 9, light: true },
     { type: 'glimmerBlock', pos: [-3.8, P - 0.15, 84.2], size: [1.5, 0.3, 1.5] },
@@ -402,7 +415,7 @@ function hollow(b: LevelBuilder): void {
     { type: 'glimmerBlock', pos: [-3.2, P - 0.15, 88.4], size: [1.5, 0.3, 1.5] },
     { type: 'trigger', flag: 'woods-hint-hollow', script: 'woodsHollow', min: [X0, P - 1, 80], max: [X1, P + 3, 83], delay: 15, perVisit: true },
   );
-  signboard(b, 'Dark ahead.\nA brighter lamp reaches further.', [-5.68, P + 2.2, 81.6], Math.PI / 2);
+  signboard(b, 'Dark ahead.\nA brighter lamp reaches further.', [-5.98, P + 2.2, 81.6], Math.PI / 2);
 }
 
 // ---------------------------------------------------------------- the Brook Shelf (z 94..104, y 8)
