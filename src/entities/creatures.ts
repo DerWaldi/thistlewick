@@ -72,30 +72,69 @@ export class Snapweed implements Entity, SpellTarget {
     this.base = new Vector3(...spec.pos);
     this.reach = spec.radius ?? 2.4;
     const mat = worldMaterial();
-    for (let i = 0; i < 5; i++) {
-      const a = (i / 5) * Math.PI * 2;
-      const leaf = part(new ConeGeometry(0.22, 0.9, 4), '#5f9a3e', mat);
-      leaf.position.set(Math.cos(a) * 0.35, 0.2, Math.sin(a) * 0.35);
-      leaf.rotation.set(Math.sin(a) * 1.2, 0, -Math.cos(a) * 1.2);
+    // A rosette of long spiky leaves, two rings, red-tipped, and roots splaying from the base.
+    for (let i = 0; i < 7; i++) {
+      const a = (i / 7) * Math.PI * 2;
+      const len = 0.8 + (i % 3) * 0.18;
+      const leaf = part(new ConeGeometry(0.16, len, 4).scale(1, 1, 0.45), i % 2 ? '#4f8a34' : '#62a03e', mat);
+      const at = new Vector3(Math.cos(a) * 0.26, 0.2 + len * 0.12, Math.sin(a) * 0.26);
+      const dir = new Vector3(Math.cos(a) * 3, 2.2 + (i % 2) * 0.6, Math.sin(a) * 3).sub(at).normalize();
+      leaf.position.copy(at);
+      leaf.lookAt(at.clone().add(dir));
+      leaf.rotateX(Math.PI / 2);
       this.root.add(leaf);
+      // A red tip just past the leaf's point.
+      const tip = part(new ConeGeometry(0.035, 0.12, 4), '#c8384a', mat);
+      tip.position.copy(at).addScaledVector(dir, len / 2 - 0.02);
+      tip.lookAt(tip.position.clone().add(dir));
+      tip.rotateX(Math.PI / 2);
+      this.root.add(tip);
     }
-    const stalk = part(new CylinderGeometry(0.1, 0.16, 1.3, 6), '#4f7a34', mat);
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2 + 0.3;
+      const root = part(new ConeGeometry(0.06, 0.55, 4), '#6b4a2e', mat);
+      root.position.set(Math.cos(a) * 0.22, 0.05, Math.sin(a) * 0.22);
+      root.lookAt(new Vector3(Math.cos(a) * 2, -0.3, Math.sin(a) * 2));
+      root.rotateX(Math.PI / 2);
+      this.root.add(root);
+    }
+    // A thick stem with thorns, bending a little.
+    const stalk = part(new CylinderGeometry(0.08, 0.13, 1.3, 6), '#4f8a34', mat);
     stalk.position.y = 0.65;
+    stalk.rotation.z = 0.06;
     this.stem.add(stalk);
-    // The head: two jaw halves lined with teeth, hinged at the back.
+    for (let i = 0; i < 6; i++) {
+      const a = i * 2.3;
+      const thorn = part(new ConeGeometry(0.03, 0.14, 4), '#b8384a', mat);
+      thorn.position.set(Math.cos(a) * 0.1, 0.3 + i * 0.18, Math.sin(a) * 0.1);
+      thorn.lookAt(new Vector3(Math.cos(a) * 2, 0.5 + i * 0.18, Math.sin(a) * 2));
+      thorn.rotateX(Math.PI / 2);
+      this.stem.add(thorn);
+    }
+    // The head: two faceted crimson jaw halves (a pod, like a bud when shut), each lined with fangs.
     for (const [jaw, sign] of [
       [this.jawTop, 1],
       [this.jawBottom, -1],
     ] as [Group, number][]) {
-      const shell = part(new SphereGeometry(0.42, 10, 6, 0, Math.PI * 2, sign > 0 ? 0 : Math.PI / 2, Math.PI / 2), '#8a3a5a', mat);
+      const shell = part(new SphereGeometry(0.44, 8, 4, 0, Math.PI * 2, sign > 0 ? 0 : Math.PI / 2, Math.PI / 2).scale(1, sign > 0 ? 1.25 : 0.9, 1.05), sign > 0 ? '#b8243a' : '#a01e30', mat);
       shell.position.z = 0.32;
-      const inner = part(new CylinderGeometry(0.38, 0.38, 0.03, 10), '#c8384a', mat);
-      inner.position.set(0, 0, 0.32);
+      const inner = part(new CylinderGeometry(0.4, 0.4, 0.03, 8), '#5a1020', mat);
+      inner.position.set(0, -sign * 0.005, 0.32);
       jaw.add(shell, inner);
-      for (let t = 0; t < 7; t++) {
-        const a = (t / 7) * Math.PI * 2;
-        const tooth = part(new ConeGeometry(0.05, 0.16, 4), '#f4ecd8', mat);
-        tooth.position.set(Math.cos(a) * 0.32, -sign * 0.06, 0.32 + Math.sin(a) * 0.32);
+      // A ridge of spikes over the top of the pod.
+      if (sign > 0) {
+        for (let i = 0; i < 4; i++) {
+          const ridge = part(new ConeGeometry(0.04, 0.14, 4), '#d84a5a', mat);
+          ridge.position.set(0, 0.5 - i * 0.04, 0.12 + i * 0.13);
+          ridge.rotation.x = -0.6 + i * 0.35;
+          jaw.add(ridge);
+        }
+      }
+      for (let t = 0; t < 10; t++) {
+        const a = (t / 10) * Math.PI * 2;
+        const front = Math.sin(a) > 0.2;
+        const tooth = part(new ConeGeometry(front ? 0.055 : 0.045, front ? 0.2 : 0.14, 4), '#f4ecd8', mat);
+        tooth.position.set(Math.cos(a) * 0.36, -sign * 0.07, 0.32 + Math.sin(a) * 0.36);
         if (sign > 0) tooth.rotation.x = Math.PI;
         jaw.add(tooth);
       }
@@ -214,6 +253,12 @@ export class Snapweed implements Entity, SpellTarget {
     loot(this.ctx, this.id, at, 2);
   }
 
+  /** Something to bite is about: it opens up, the jaws twitching. */
+  private get awake(): boolean {
+    const p = this.ctx.player.pos;
+    return Math.hypot(p.x - this.base.x, p.z - this.base.z) < this.reach * 3;
+  }
+
   frameUpdate(dt: number): void {
     if (this.state === 'gone') return;
     // Face whoever it's after; sway when idle; rear back in the windup, lunge on the snap.
@@ -222,7 +267,8 @@ export class Snapweed implements Entity, SpellTarget {
     const wantLean = this.state === 'windup' ? -0.45 : this.state === 'snap' ? 0.75 : this.state === 'burning' ? 0.9 : Math.sin(this.time * 1.3) * 0.08;
     this.lean = MathUtils.damp(this.lean, wantLean, this.state === 'snap' ? 30 : 10, dt);
     this.stem.rotation.x = this.lean;
-    const open = this.state === 'windup' ? 0.75 : this.state === 'snap' ? 0 : this.state === 'idle' ? 0.12 + Math.abs(Math.sin(this.time * 2)) * 0.1 : 0.15;
+    // Shut like a bud while nothing's near; jaws apart (and twitching) once it's after you.
+    const open = this.state === 'windup' ? 0.85 : this.state === 'snap' ? 0 : this.state === 'idle' ? (this.awake ? 0.35 + Math.abs(Math.sin(this.time * 3)) * 0.12 : 0.02) : 0.25;
     this.jawTop.rotation.x = MathUtils.damp(this.jawTop.rotation.x, -open, 20, dt);
     this.jawBottom.rotation.x = MathUtils.damp(this.jawBottom.rotation.x, open * 0.6, 20, dt);
     if (this.state === 'burning') {
