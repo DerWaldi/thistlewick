@@ -104,7 +104,7 @@ function build(b: LevelBuilder): void {
     { type: 'wickLamp', id: 'cG1', pos: [2.6, 0, 10.2], radius: 6.5, duration: 7, light: true },
     { type: 'wickLamp', id: 'cG2', pos: [0.8, 0, 18.4], radius: 6, duration: 7, light: true },
     ...stones.map(([x, z]) => ({ type: 'glimmerBlock' as const, pos: [x, -0.15, z] as V3, size: [1.6, 0.3, 1.6] as V3 })),
-    { type: 'checkpoint', pos: [3.5, 0, 29.9], yaw: -Math.PI / 2, zone: { min: [-5, -1, 29.2], max: [5, 4, 30.5] } },
+    { type: 'checkpoint', pos: [3.5, 0, 29.65], yaw: -Math.PI / 2, zone: { min: [-5, -1, 29.2], max: [5, 4, 30.5] } },
     { type: 'sweetLine', kind: 'fizzwort', from: [-0.5, 0.6, 17.6], to: [0.5, 0.6, 18.6], count: 2 },
   );
   for (const z of [14, 24]) {

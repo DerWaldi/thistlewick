@@ -302,6 +302,8 @@ export function signboard(b: LevelBuilder, text: string, pos: V3, rotY: number):
   const m = new Mesh(new PlaneGeometry((2.6 * w) / 512, (0.56 * h) / 110), new MeshBasicMaterial({ map: tex, fog: true }));
   m.position.set(...pos);
   m.rotation.y = rotY;
+  // The e2e sweep checks signs don't overlap or sink into walls.
+  m.userData.sign = text;
   b.prop(m);
 }
 
@@ -789,7 +791,8 @@ export function crenels(b: LevelBuilder, x0: number, x1: number, z0: number, z1:
     [false, z0, z1, x0],
     [false, z0, z1, x1],
   ] as [boolean, number, number, number][]) {
-    deco(b, ax ? new BoxGeometry(to - from + 0.6, 0.5, 0.6) : new BoxGeometry(0.6, 0.5, to - from + 0.6), ax ? [(from + to) / 2, y + 0.25, at] : [at, y + 0.25, (from + to) / 2], COLORS.stoneLight);
+    // 0.52 tall: a round half metre lined its top up with walls it runs over.
+    deco(b, ax ? new BoxGeometry(to - from + 0.6, 0.52, 0.6) : new BoxGeometry(0.6, 0.52, to - from + 0.6), ax ? [(from + to) / 2, y + 0.26, at] : [at, y + 0.26, (from + to) / 2], COLORS.stoneLight);
     for (let u = from + 0.6; u < to - 0.3; u += 1.4) deco(b, new BoxGeometry(0.7, 0.55, 0.6), ax ? [u, y + 0.75, at] : [at, y + 0.75, u], COLORS.stoneLight);
   }
 }
@@ -798,7 +801,8 @@ export function crenels(b: LevelBuilder, x0: number, x1: number, z0: number, z1:
 export function turret(b: LevelBuilder, x: number, z: number, r: number, base: number, top: number, roof: number, color: string = COLORS.roof): void {
   deco(b, new CylinderGeometry(r, r * 1.05, top - base, 12), [x, (base + top) / 2, z], COLORS.stoneLight);
   // Perched turrets (not from the ground) sit on a corbel.
-  if (base > 0) deco(b, new ConeGeometry(r * 1.05, 1.8, 12).rotateX(Math.PI), [x, base - 0.9, z], COLORS.stoneDark);
+  // (2 cm down: its top disc level with the roof it stands on flickered.)
+  if (base > 0) deco(b, new ConeGeometry(r * 1.05, 1.8, 12).rotateX(Math.PI), [x, base - 0.92, z], COLORS.stoneDark);
   deco(b, new CylinderGeometry(r + 0.25, r + 0.25, 0.5, 12), [x, top + 0.25, z], COLORS.stoneLight);
   for (let i = 0; i < 8; i++) {
     const a = (i / 8) * Math.PI * 2;

@@ -104,7 +104,8 @@ function section(b: LevelBuilder, flames: Glow, o: SectionOpts): void {
   wall(b, 'z', -11, z0, z1, h, { color: STONE });
   wall(b, 'z', 11, z0, z1, h, { color: STONE });
   wall(b, 'x', z1, -10.5, 10.5, h, { color: STONE, holes: [{ from: -1.8, to: 1.8, top: 3.4 }] });
-  slab(b, -11.5, 11.5, z0, z1 + 0.5, h + 0.5, 0.5, COLORS.stoneDark);
+  // 2 cm in from the walls' outer faces: its overhang met the next room's walls flush and flickered.
+  slab(b, -11.48, 11.48, z0, z1 + 0.5, h + 0.5, 0.5, COLORS.stoneDark);
   if (o.wallUpFrom !== undefined && o.wallUpFrom < h) {
     // From the top of the lower room's roof slab (which overhangs this wall by half a metre).
     wall(b, 'x', z0, -10.5, 10.5, h - o.wallUpFrom - 0.5, { base: o.wallUpFrom + 0.5, color: STONE });
@@ -138,7 +139,7 @@ function build(b: LevelBuilder): void {
   wall(b, 'x', -1, -11.5, 11.5, 9, { color: STONE, holes: [{ from: -1.25, to: 1.25, top: 3.5 }] });
   wall(b, 'z', -11, -0.5, 8, 9, { color: STONE });
   wall(b, 'z', 11, -0.5, 8, 9, { color: STONE });
-  slab(b, -11.5, 11.5, -1.5, 8, 9.5, 0.5, COLORS.stoneDark);
+  slab(b, -11.48, 11.48, -1.5, 8, 9.5, 0.5, COLORS.stoneDark);
   b.add({ type: 'door', pos: [0, 0, -0.45], yaw: 0, width: 2.4, height: 3.4, to: { level: 'hub', spawn: 'fromExams' }, label: 'The Lantern Hall' });
   for (const [i, c] of ['#b0362f', '#4f7fb8', '#3f7a4a', '#d9922e'].entries()) {
     banner(b, [i < 2 ? -10.45 : 10.45, 6, 2.5 + (i % 2) * 3], i < 2 ? Math.PI / 2 : -Math.PI / 2, c, '#e8c25a', 1.4, 3.6);
@@ -383,7 +384,8 @@ function thistleHall(b: LevelBuilder, flames: Glow): void {
   // Pillars on the six corners (they hide the joins) and four inside to duck behind.
   for (let i = 0; i < 6; i++) {
     const [x, z] = corner(i);
-    b.cylinder([x, H / 2, z], 1.2, H, COLORS.stoneLight, { noGrab: true }, 10);
+    // A hair taller than the walls, whose tops they'd otherwise share.
+    b.cylinder([x, H / 2 + 0.01, z], 1.2, H + 0.02, COLORS.stoneLight, { noGrab: true }, 10);
   }
   for (const x of [-9, 9]) for (const z of [199, 217]) column(b, x, z, H);
   deco(b, new BoxGeometry(3, 0.03, 34), [0, 0.015, 208], COLORS.carpet);

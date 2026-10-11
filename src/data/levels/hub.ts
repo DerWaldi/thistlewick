@@ -155,7 +155,8 @@ function buildHub(b: LevelBuilder): void {
   });
   wall(b, 'x', 30.5, -12.5, 12.5, HH, {
     holes: [
-      { from: -2, to: 2, top: 4.5 }, // to the court
+      // 2 cm under the cloister roof's underside (4.5): level with it, the two flickered.
+      { from: -2, to: 2, top: 4.48 }, // to the court
       { from: 8, to: 10, bottom: 4.98, top: 8 }, // gallery door onto the cloister roof (sill just under the roof, no z-fighting)
     ],
   });
@@ -318,9 +319,11 @@ function buildHub(b: LevelBuilder): void {
   wall(b, 'x', 17.5, 26.5, 42.5, 9);
   wall(b, 'z', 21.5, 17.5, 23.5, 9);
   wall(b, 'z', 42.5, 17.5, 23.5, 9);
-  slab(b, 21, 43, 17, 24, 9.4, 0.4, '#5e4a3e', 'planks');
+  // Inset 2 cm from the walls' outer faces (and the gallery's end wall), which it z-fought.
+  slab(b, 21.02, 42.98, 17.02, 23.98, 9.4, 0.4, '#5e4a3e', 'planks');
   // Leg 3 is taller than leg 2: close the gap above leg 2's ceiling where they meet.
-  wall(b, 'x', 17.75, 21.5, 26.5, 4, { base: 5.4, thick: 0.5 });
+  // (Its top 2 cm into leg 3's ceiling rather than level with the top, which flickered.)
+  wall(b, 'x', 17.75, 21.5, 26.5, 3.98, { base: 5.4, thick: 0.5 });
   b.stairs([28, 0, 20.5], Math.PI / 2, 10, 0.3, 0.6, 5, COLORS.stoneLight);
   b.box([38.25, 1.5, 20.5], [8.5, 3, 5], { color: COLORS.stone }); // landing (top at y=3)
   // Crooked touches: a sagging beam, a couple of uneven flagstones (step-up height).
@@ -340,7 +343,8 @@ function buildHub(b: LevelBuilder): void {
   wall(b, 'x', 13.5, 18.5, 21.5, 3.2, { thick: 1 });
   wall(b, 'z', 18.5, 10.5, 13.5, 3.2, { thick: 1 });
   // Ends inside the corridor wall (x 21..22) rather than flush with its face, which z-fought.
-  slab(b, 18, 21.5, 10.5, 14, 3.4, 0.4, COLORS.stoneDark);
+  // Its other edges sit 2 cm in from the walls' outer faces, for the same reason.
+  slab(b, 18.02, 21.5, 10.5, 13.98, 3.4, 0.4, COLORS.stoneDark);
   b.add(
     { type: 'card', card: 'barnaby-gorse', pos: [20, 1.2, 12.2] },
     { type: 'secret', id: 'hub-bookshelf', area: 'corridor', min: [19, -1, 10.8], max: [21, 3, 13.2] },
@@ -407,7 +411,8 @@ function buildHub(b: LevelBuilder): void {
   }
   // Cloister: covered walk on all four sides (roof walkable at y=5).
   const R = 5;
-  slab(b, -16, 16, 30, 33.5, R, 0.5, COLORS.slate); // south (along the hall)
+  // South (along the hall); 2 cm clear of the gallery floor, whose edge it met face to face.
+  slab(b, -16, 16, 30.02, 33.5, R, 0.5, COLORS.slate);
   slab(b, -16, -12.5, 33.5, 62, R, 0.5, COLORS.slate); // east
   slab(b, 12.5, 16, 33.5, 62, R, 0.5, COLORS.slate); // west
   slab(b, -12.5, 12.5, 58.5, 62, R, 0.5, COLORS.slate); // north
@@ -478,7 +483,8 @@ function buildHub(b: LevelBuilder): void {
   const TS = '#b8a48a';
   b.box([0, 15, 72], [16, 30, 16], { color: TS, noCollide: true });
   for (const x of [-8.3, 8.3]) b.box([x, 16, 64.3], [1.4, 32, 1.4], { color: COLORS.stoneLight, noCollide: true });
-  for (const y of [14, 23.8, 29.6]) deco(b, new BoxGeometry(16.8, 0.5, 0.6), [0, y, 63.9], COLORS.stoneLight);
+  // 2 cm proud of the pilasters, whose faces they'd otherwise share.
+  for (const y of [14, 23.8, 29.6]) deco(b, new BoxGeometry(16.8, 0.5, 0.6), [0, y, 63.88], COLORS.stoneLight);
   // The belfry: dark arched openings under the roof.
   for (const x of [-4.5, 0, 4.5]) {
     deco(b, new BoxGeometry(2.4, 3.6, 0.1), [x, 26.8, 63.94], '#2a2026');
@@ -569,7 +575,7 @@ function buildHub(b: LevelBuilder): void {
     { type: 'sweetLine', kind: 'fizzwort', from: [0, 0.6, 32], to: [0, 0.6, 39.5], count: 5 },
     { type: 'sweetLine', kind: 'fizzwort', from: [-8, 0.6, 40], to: [-8, 0.6, 52], count: 6 },
     { type: 'sweetLine', kind: 'fizzwort', from: [8, 0.6, 48], to: [8, 0.6, 56], count: 5 },
-    { type: 'checkpoint', pos: [3.5, 0, 32.5], yaw: 0, zone: { min: [-5, -1, 31], max: [5, 4, 34] } },
+    { type: 'checkpoint', pos: [3, 0, 32.5], yaw: 0, zone: { min: [-5, -1, 31], max: [5, 4, 34] } },
   );
   for (const [x, z] of [
     [-12.5, 35.5],
@@ -594,7 +600,8 @@ function buildHub(b: LevelBuilder): void {
   b.box([38.5, G / 2, 38.25], [7, G, 28.5], { color: '#8a6a4a', pattern: 'planks' });
   slab(b, 34.5, 42.5, 23.5, 52.5, 10.8, 0.4, '#5e4a3e', 'planks');
   // The corridor's north wall (the portcullis wall) stops at 9 m; close the gallery's end up to its ceiling.
-  b.box([38.5, 9.7, 23.5], [8, 1.4, 1], { color: COLORS.stoneLight });
+  // (2 cm proud of the wall below on both sides: flush with it, the two flickered along the joint.)
+  b.box([38.5, 9.7, 23.5], [8, 1.4, 1.04], { color: COLORS.stoneLight });
   for (let z = 26; z < 52; z += 4) deco(b, new BoxGeometry(7.2, 0.35, 0.35), [38.5, 10.42, z], COLORS.woodDark);
   rug(b, [38.5, G, 38], 2.2, 25, '#5d4470', '#c99a3e');
   for (const z of [29, 37, 45]) {
@@ -863,8 +870,9 @@ function kitchenYard(b: LevelBuilder, glow: Glow): void {
   deco(b, new BoxGeometry(1.2, 0.5, 3.3), [-18.5, 4, 28.25], COLORS.stoneLight);
   wall(b, 'x', 30.5, -18.5, -16.5, 10.5, { cap: 8 });
   wall(b, 'z', -32.5, 13.5, 36.5, 7, { cap: 4, color: BRICK, holes: [{ from: 23.9, to: 26.1, top: 3.4 }] });
-  wall(b, 'x', 13.5, -33, -18, 7, { cap: 4 });
-  wall(b, 'x', 36.5, -33, -18, 7, { cap: 4 });
+  // These stop 2 cm short of the brick wall's outer face, which they flickered against.
+  wall(b, 'x', 13.5, -32.98, -18, 7, { cap: 4 });
+  wall(b, 'x', 36.5, -32.98, -18, 7, { cap: 4 });
   // Nobody climbs onto the tapestry alcove's roof from the corner.
   b.box([-14.5, 5.5, 26], [4, 4, 1], { invisible: true, info: { noGrab: true, cameraIgnore: true } });
   signboard(b, 'The Kitchen Yard', [-19.03, 4.75, 28.25], -Math.PI / 2);
@@ -1171,7 +1179,8 @@ function errands(b: LevelBuilder): void {
   wall(b, 'z', 19.5, 4.4, 21, 7.95, { base: -12, color: '#6a6272' });
   wall(b, 'z', 34.5, 4.4, 21, 7.95, { base: -12, color: '#6a6272' });
   wall(b, 'x', 20.5, 19, 35, 3.5, { base: BOT, color: '#6a6272' });
-  slab(b, 19, 35, 4.9, 21, -4.05, 0.3, '#3a3242', 'planks');
+  // 2 cm in from the walls' outer faces, which its edges z-fought.
+  slab(b, 19.02, 34.98, 4.9, 20.98, -4.05, 0.3, '#3a3242', 'planks');
   for (let z = 6; z < 20; z += 3) deco(b, new BoxGeometry(15, 0.25, 0.25), [27, -4.47, z], COLORS.woodDark);
   // Racks of old barrels beyond the sump.
   for (const x of [21, 23.2, 30.6, 32.8]) {

@@ -1,8 +1,8 @@
 # Builds the game on every push to main and publishes dist/ to GitHub Pages
 # (served at thistlewick.sebastian-murgul.com). Pull requests get the same
-# check and build without the deploy. The Chromium e2e run reports alongside
-# but doesn't hold the deploy: headless WebGL is the flakiest part of CI and
-# a red test shouldn't take the site down.
+# check and build without the deploy. The e2e runs (Chromium, Firefox and
+# WebKit, side by side) report alongside but don't hold the deploy: headless
+# WebGL is the flakiest part of CI and a red test shouldn't take the site down.
 name: Build and deploy
 
 on:
@@ -39,6 +39,10 @@ jobs:
 
   e2e:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -46,12 +50,12 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
-      - run: npx playwright test --project=chromium
+      - run: npx playwright install --with-deps ${{ matrix.browser }}
+      - run: npx playwright test --project=${{ matrix.browser }}
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: e2e-results
+          name: e2e-results-${{ matrix.browser }}
           path: |
             test-results
             tests/e2e/__shots__

@@ -116,7 +116,8 @@ function build(b: LevelBuilder): void {
   ] as [V3, V3][]) {
     b.box(c, sz, { color: COLORS.stoneLight, info: { noGrab: true } });
   }
-  b.pool(-1.3, 1.3, 32.4, 34, 0.3, -0.05);
+  // Ends 2 cm short of the floor's edge, whose face its basin shared.
+  b.pool(-1.3, 1.3, 32.4, 33.98, 0.3, -0.05);
   deco(b, new CylinderGeometry(0.25, 0.3, 0.8, 6), [0, UP - 0.1, 33.9], COLORS.stoneDark, [Math.PI / 2, 0, 0]);
   b.add({ type: 'waterfall', pos: [0, 0.3, 34], yaw: Math.PI, width: 1.8, height: UP - 0.3, pillar: 1.9, depth: 1.2 });
   for (const z of [14, 22, 29]) {
@@ -256,7 +257,7 @@ function boilerHall(b: LevelBuilder, flames: Glow): void {
     { type: 'checkpoint', pos: [-6.5, UP, 60.2], yaw: Math.PI / 2, zone: { min: [-8.5, UP - 1, 59.5], max: [8.5, UP + 3, 61] } },
     { type: 'trigger', flag: 'cistern-hint-crabs', script: 'cisternCrabs', min: [-8.5, UP - 1, 59.5], max: [8.5, UP + 3, 61] },
     ...stones.map(([x, z]) => ({ type: 'emberCrab' as const, pos: [x, W - 0.8, z] as V3, patrol: 0, range: 9, interval: 4, reform: 6 })),
-    { type: 'checkpoint', pos: [6.5, UP, 78.3], yaw: -Math.PI / 2, zone: { min: [-8.5, UP - 1, 77.5], max: [8.5, UP + 3, 79] } },
+    { type: 'checkpoint', pos: [6.5, UP, 78], yaw: -Math.PI / 2, zone: { min: [-8.5, UP - 1, 77.5], max: [8.5, UP + 3, 79] } },
     { type: 'emberCrab', pos: [-5, UP, 78.2], patrol: 2.5, interval: 3 },
     { type: 'emberCrab', pos: [5, UP, 78.2], patrol: 2.5, interval: 3 },
     { type: 'sweetLine', kind: 'fizzwort', from: [-4, UP + 0.6, 60.2], to: [4, UP + 0.6, 60.2], count: 4 },

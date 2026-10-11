@@ -203,7 +203,8 @@ function build(b: LevelBuilder): void {
   );
   b.box([-8, 3.4, 50], [2.2, 0.4, 2.4], { color: FLOOR });
   // An ungrabbable sill, so the alcove takes the crate rather than a jump and a grab.
-  b.box([-6.5, 3.5, 50], [1.1, 0.2, 2.4], { color: '#7a6a5a', info: { noGrab: true } });
+  // (2 cm under the alcove floor: level with it, the two flickered.)
+  b.box([-6.5, 3.49, 50], [1.1, 0.18, 2.4], { color: '#7a6a5a', info: { noGrab: true } });
   b.box([-8, 5.1, 48.7], [2.2, 3.4, 0.2], { color: STONE });
   b.box([-8, 5.1, 51.3], [2.2, 3.4, 0.2], { color: STONE });
   b.box([-9.1, 5.1, 50], [0.2, 3.4, 2.8], { color: STONE });
@@ -306,7 +307,8 @@ function mainspring(b: LevelBuilder, flames: Glow): void {
     // The ferry out to the first column: home again after 3 s, under a pendulum.
     { type: 'skyLift', style: 'platform', from: [-3, 16, 81.4], to: [-3, 16, 88.3], size: [2.4, 2.4], returnAfter: 3, speed: 2.6 },
     { type: 'pendulum', pos: [-3, 26.5, 85], length: 9.6, swing: 0.4, period: 2.8, phase: 0.3, yaw: 0, bob: 0.8 },
-    { type: 'checkpoint', pos: [-3.8, 16, 91.8], yaw: 0, zone: { min: [-4.5, 15, 89.5], max: [-1.5, 19, 92.5] } },
+    // Facing the basket, so you come back on the column rather than over its edge.
+    { type: 'checkpoint', pos: [-3.8, 16, 91.8], yaw: Math.PI / 2, zone: { min: [-4.5, 15, 89.5], max: [-1.5, 19, 92.5] } },
     // The basket waits up by the second column: call it down, ride it up.
     { type: 'skyLift', style: 'basket', id: 'cwH', from: [-0.4, 16, 91], to: [3, 22, 98], size: [2, 2], startAt: 'to', speed: 2.4 },
     { type: 'checkpoint', pos: [6.4, 22, 98.8], yaw: -Math.PI / 2, zone: { min: [4, 21, 96.5], max: [7, 25, 99.5] } },

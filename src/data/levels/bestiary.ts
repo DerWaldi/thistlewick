@@ -227,7 +227,8 @@ function examinersHall(b: LevelBuilder): void {
   }
   for (let i = 0; i < 6; i++) {
     const [x, z] = corner(i);
-    b.cylinder([x, H / 2, z], 1.1, H, COLORS.stoneLight, { noGrab: true }, 10);
+    // A little taller than the walls, whose tops otherwise flickered with theirs.
+    b.cylinder([x, (H + 0.04) / 2, z], 1.1, H + 0.04, COLORS.stoneLight, { noGrab: true }, 10);
   }
   b.add(
     { type: 'gate', pos: [0, 0, 70.5], yaw: 0, width: 3, height: 3, when: [], shutWhen: ['b-shut-hall'] },

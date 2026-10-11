@@ -198,7 +198,8 @@ function practiceYard(b: LevelBuilder): void {
     { type: 'gate', pos: [-41.5, 0, 46], yaw: 0, width: 2, height: 2.6, when: ['yard-plate'] },
     { type: 'sweetLine', kind: 'fizzwort', from: [-29, 0.6, 41.5], to: [-21, 0.6, 41.5], count: 5 },
   );
-  b.label('Timed! Run for the gate', [-19.5, 3.4, 42], 0.9);
+  // Far enough from the wall (x -18.3) that its end doesn't sink into it.
+  b.label('Timed! Run for the gate', [-20.2, 3.4, 42], 0.9);
 
   // D: the garden.
   for (const [x, z, w, d] of [

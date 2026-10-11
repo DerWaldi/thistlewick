@@ -160,7 +160,8 @@ function build(b: LevelBuilder): void {
   // The side passage (x 10..13).
   wall(b, 'z', 13.5, 11, 31, 4.5, { color: STONE });
   wall(b, 'x', 11.5, 10, 14, 4.5, { color: STONE });
-  slab(b, 9.5, 14, 11, 31, 4.6, 0.4, COLORS.stoneDark);
+  // Inset 2 cm from the walls' outer faces: flush with them, its edges flickered.
+  slab(b, 9.5, 13.98, 11.02, 30.98, 4.6, 0.4, COLORS.stoneDark);
   b.add(
     { type: 'checkpoint', pos: [-3.5, 0, 11.2], yaw: 0, zone: { min: [-9, -1, 10], max: [9, 4, 12.5] } },
     { type: 'trigger', flag: 'vault-hint-locks', script: 'vaultLocks', min: [-9, -1, 10], max: [9, 5, 13] },
@@ -191,12 +192,14 @@ function build(b: LevelBuilder): void {
   wall(b, 'z', -8.5, 31, 48, 6, { color: STONE, holes: [{ from: 40, to: 42, top: 2.6 }] });
   wall(b, 'z', 8.5, 31, 48, 6, { color: STONE });
   slab(b, -8.5, 8.5, 30.5, 48, 6.5, 0.5, COLORS.stoneDark);
-  wall(b, 'x', 48.5, -8.5, 8.5, 6.5, { color: STONE, holes: [gateHole(0)] });
+  // 2 cm lower than the roofs either side: level with the next one, the two tops flickered.
+  wall(b, 'x', 48.5, -8.5, 8.5, 6.48, { color: STONE, holes: [gateHole(0)] });
   // The secret alcove behind the shelf-door.
   b.box([-10.1, 1.5, 39.7], [2.4, 3, 0.2], { color: STONE });
   b.box([-10.1, 1.5, 42.3], [2.4, 3, 0.2], { color: STONE });
   b.box([-11.3, 1.5, 41], [0.2, 3, 2.8], { color: STONE });
-  b.box([-10.1, 2.75, 41], [2.6, 0.3, 2.8], { color: COLORS.stoneDark });
+  // Its roof stops 2 cm inside the walls' outer faces, which it flickered against.
+  b.box([-10.09, 2.75, 41], [2.58, 0.3, 2.76], { color: COLORS.stoneDark });
   b.add(
     { type: 'checkpoint', pos: [7.2, 0, 32.3], yaw: -Math.PI / 2, zone: { min: [-8, -1, 31], max: [8, 4, 33.5] } },
     { type: 'trigger', flag: 'vault-hint-pantry', script: 'vaultPantry', min: [-8, -1, 31], max: [8, 5, 34] },

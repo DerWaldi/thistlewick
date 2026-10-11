@@ -99,7 +99,9 @@ function longHall(b: LevelBuilder, glow: Glow, flames: Glow): void {
   wall(b, 'z', 5, -0.5, 54.5, H, { color: STONE, holes: [{ from: 23, to: 27, top: 4 }] });
   // The ceilings stop 5 cm inside the walls' outer faces (x ±5.5), which the Library and the
   // House Wing look at: flush, their ends flickered as a line along those walls.
-  slab(b, -5.45, 5.45, -0.5, 44, H + 0.5, 0.5, '#4a3226', 'planks');
+  // It ends at the stair hall's wall (z 43.5) and short of the west wall's end (z -0.5): their
+  // faces in the same planes flickered.
+  slab(b, -5.45, 5.45, -0.45, 43.5, H + 0.5, 0.5, '#4a3226', 'planks');
   for (let z = 3; z < 44; z += 4) deco(b, new BoxGeometry(9, 0.4, 0.4), [0, H - 0.2, z], COLORS.woodDark);
   // The carpet runner and the door back down to the Lantern Hall's gallery.
   deco(b, new BoxGeometry(2.6, 0.03, 42), [0, 0.015, 22], COLORS.carpet);
@@ -128,7 +130,8 @@ function longHall(b: LevelBuilder, glow: Glow, flames: Glow): void {
     { type: 'checkpoint', pos: [-3.4, 0, 2], yaw: Math.PI / 2, zone: { min: [-4.5, -1, 0], max: [4.5, 4, 6] } },
   );
   // The stair hall at the north end: up to the roof.
-  slab(b, -5.45, 5.45, 44, 54.5, 11.5, 0.5, '#4a3226', 'planks');
+  // 2 cm proud of the wall tops it covers, so the roof doesn't flicker with them.
+  slab(b, -5.45, 5.45, 44, 54.5, 11.52, 0.52, '#4a3226', 'planks');
   // The stair hall is taller than the Long Hall: wall up the gap above the Long Hall's ceiling.
   wall(b, 'x', 44, -5.5, 5.5, 4.5, { base: 7, color: STONE });
   // (The doorway's sill sits 2 cm under the Leads' floor: level with it, the two flickered.)
@@ -151,7 +154,8 @@ function library(b: LevelBuilder, glow: Glow, flames: Glow): void {
   wall(b, 'x', 7.5, -37, -5, LH, { color: STONE });
   wall(b, 'x', 40.5, -37, -5, LH, { color: STONE, holes: [{ from: -33, to: -31, top: 2.6 }] }); // the bookshelf's size: it fills it
   wall(b, 'z', -36.5, 7.5, 48.5, LH, { color: STONE });
-  slab(b, -37, -5, 7.5, 40.5, LH + 0.5, 0.5, '#4a3226', 'planks');
+  // Up to the Long Hall's wall, which rises to the same height: over it, the two tops flickered.
+  slab(b, -37, -5.5, 7.5, 40.5, LH + 0.5, 0.5, '#4a3226', 'planks');
   for (let z = 10; z < 40; z += 5) deco(b, new BoxGeometry(31, 0.5, 0.5), [-21, LH - 0.25, z], COLORS.woodDark);
   // The mezzanine (top 5): east, north and south strips, with rails.
   slab(b, -36, -33, 8, 40, 5, 0.4, WOOD, 'planks');
@@ -208,7 +212,8 @@ function library(b: LevelBuilder, glow: Glow, flames: Glow): void {
     { type: 'secret', id: 'upper-stacks', area: 'library', min: [-24, 9, 20], max: [-16, 12, 28] },
     { type: 'sweetLine', kind: 'bramble', from: [-22, 9.6, 22], to: [-18, 9.6, 26], count: 3 },
   );
-  signboard(b, 'Stacks out of reach?\nA brighter lamp shows more.', [-36.43, 8.6, 24], Math.PI / 2);
+  // On the west wall's face (x -36); it used to sit inside the wall, unseen.
+  signboard(b, 'Stacks out of reach?\nA brighter lamp shows more.', [-35.95, 8.6, 24], Math.PI / 2);
   // Reading tables, a globe, the librarian's desk (an NPC spot), candles.
   table(b, flames, [-28, 0, 22], Math.PI / 2, 3.4, 1.3, 2);
   table(b, flames, [-12, 0, 26], Math.PI / 2, 3.4, 1.3, 5);
@@ -231,7 +236,7 @@ function library(b: LevelBuilder, glow: Glow, flames: Glow): void {
   // The Forbidden Section, behind a sliding bookshelf: knock the odd book.
   wall(b, 'x', 48.5, -37, -27.5, 4.5, { color: STONE });
   wall(b, 'z', -28, 40.5, 48.5, 4.5, { color: STONE });
-  slab(b, -37, -27.5, 40.5, 48.5, 4.9, 0.4, COLORS.stoneDark);
+  slab(b, -36.5, -27.5, 40.5, 48.5, 4.9, 0.4, COLORS.stoneDark);
   b.add(
     { type: 'bookshelf', pos: [-32, 0, 40.25], yaw: Math.PI, width: 2, height: 2.6, slide: 2.1, when: ['upper-book'] },
     { type: 'knockSwitch', id: 'upper-book', pos: [-29.4, 1.95, 39.45], yaw: Math.PI, style: 'book' },

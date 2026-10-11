@@ -73,6 +73,20 @@ export interface Animated {
  * Builds level geometry: static pieces are vertex-coloured and merged into a single
  * mesh + many colliders; movers, water and props get their own objects.
  */
+/**
+ * How much a visible piece grows on every side (its collider doesn't). Faces of two pieces
+ * that share a plane (a sill level with the floor, a slab's edge flush with a wall, a stripe
+ * inlaid in a floor) fight over every pixel and flicker. Growing every piece by a hair, thin
+ * and small ones more than big structural ones, parts them by half a millimetre to a few,
+ * enough for the depth buffer to the far end of a hall and far too little to see; and the
+ * piece meant to show on top (the inlay, the trim) is the one that wins.
+ */
+export function grow(size: V3 | [number, number, number]): number {
+  const thin = 1 / (1 + Math.min(...size) * 5);
+  const small = 1 / (1 + Math.cbrt(size[0] * size[1] * size[2]) * 3);
+  return 0.0008 + 0.002 * thin + 0.0012 * small;
+}
+
 export class LevelBuilder implements PlayerEnvironment {
   killY = -15;
   readonly root = new Group();
@@ -106,7 +120,8 @@ export class LevelBuilder implements PlayerEnvironment {
       this.physics.addStaticBox(c, new Vector3(size[0] / 2, size[1] / 2, size[2] / 2), q, opts.info);
     }
     if (opts.invisible) return;
-    const geo = new BoxGeometry(...size).toNonIndexed();
+    const e = 2 * grow(size);
+    const geo = new BoxGeometry(size[0] + e, size[1] + e, size[2] + e).toNonIndexed();
     if (q) geo.applyQuaternion(q);
     geo.translate(...center);
     paint(geo, opts.color ?? COLORS.stone, true, opts.pattern ?? this.defaultPattern);
@@ -164,7 +179,8 @@ export class LevelBuilder implements PlayerEnvironment {
 
   cylinder(center: V3, radius: number, height: number, color: string, info?: ColliderInfo, segments = 10, pattern?: Pattern): void {
     this.physics.addStaticCylinder(new Vector3(...center), height / 2, radius, info);
-    const geo = new CylinderGeometry(radius, radius, height, segments).toNonIndexed();
+    const e = grow([radius * 2, height, radius * 2]);
+    const geo = new CylinderGeometry(radius + e, radius + e, height + 2 * e, segments).toNonIndexed();
     geo.translate(...center);
     paint(geo, color, true, pattern ?? this.defaultPattern);
     this.staticGeos.push(geo);
@@ -176,6 +192,14 @@ export class LevelBuilder implements PlayerEnvironment {
    */
   geo(geometry: BufferGeometry, color: string, pattern: Pattern = 'plain'): void {
     const g = geometry.index ? geometry.toNonIndexed() : geometry;
+    g.computeBoundingBox();
+    const bb = g.boundingBox!;
+    const size = bb.getSize(new Vector3());
+    const e = grow([size.x, size.y, size.z]);
+    const mid = bb.getCenter(new Vector3());
+    // Flat shapes (a plane) keep their flatness; everything else grows by a hair about its middle.
+    const k = (d: number) => (d > 1e-3 ? (d + 2 * e) / d : 1);
+    g.translate(-mid.x, -mid.y, -mid.z).scale(k(size.x), k(size.y), k(size.z)).translate(mid.x, mid.y, mid.z);
     paint(g, color, true, pattern);
     this.staticGeos.push(g);
   }
@@ -401,6 +425,7 @@ export class LevelBuilder implements PlayerEnvironment {
     const sprite = new Sprite(new SpriteMaterial({ map: tex, fog: true }));
     sprite.position.set(...pos);
     sprite.scale.set((w / 72) * 0.55 * scale, 0.55 * scale, 1);
+    sprite.userData.sign = text;
     this.root.add(sprite);
   }
 

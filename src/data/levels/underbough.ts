@@ -35,7 +35,8 @@ function build(b: LevelBuilder): void {
   // Parapets with caps (it's a long way down), and the stair hut over the door.
   wall(b, 'x', 22.5, -10.5, 10.5, 1.2, { color: COLORS.stoneLight, cap: 6 });
   wall(b, 'z', -10.5, 0, 22, 1.2, { color: COLORS.stoneLight, cap: 6 });
-  wall(b, 'z', 10.5, 0, 22, 1.2, { color: COLORS.stoneLight, cap: 6, holes: [{ from: 8.8, to: 11.2, top: 1.2 }] });
+  // The gap is the porch's width: where the two overlapped, their faces flickered.
+  wall(b, 'z', 10.5, 0, 22, 1.2, { color: COLORS.stoneLight, cap: 6, holes: [{ from: 8.3, to: 11.7, top: 1.2 }] });
   wall(b, 'x', -0.5, -10.5, 10.5, 4.2, { color: COLORS.stone, holes: [{ from: -1.25, to: 1.25, top: 3.5 }], cap: 4 });
   deco(b, new ConeGeometry(2.6, 1.6, 4), [0, 5, -1], COLORS.roof, [0, Math.PI / 4, 0]);
   // The iron door's porch (west), so it has a wall to sit in.

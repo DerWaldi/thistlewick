@@ -29,10 +29,11 @@ export const STUDENTS: StudentDef[] = [
     level: 'hub',
     // Along the Lantern Hall gallery.
     path: [
-      [-9, 5, 25.5],
+      // (Clear of the crate at the east end, x -10..-9.)
+      [-8.4, 5, 25.5],
       [6, 5, 25.5],
       [6, 5, 28],
-      [-9, 5, 28],
+      [-8.4, 5, 28],
     ],
     lines: (s) => [
       'Gorse once thwacked a door so hard it opened the room next door as well.',
