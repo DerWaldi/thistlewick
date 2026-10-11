@@ -14,6 +14,7 @@ import {
   MathUtils,
   Mesh,
   MeshStandardMaterial,
+  Object3D,
   PointLight,
   Points,
   PointsMaterial,
@@ -286,6 +287,66 @@ function sparkMap(): CanvasTexture {
 }
 
 /**
+ * Gold magic sparks drifting up through a box (`min`..`max`), each fading in and out as it
+ * rises and wraps. Hidden while `fade` is ~0, so unlit ones cost no draw call.
+ */
+class GoldSparks {
+  private readonly points: Points;
+  private readonly mat: PointsMaterial;
+  private readonly base: Float32Array;
+  private readonly pos: Float32Array;
+  private readonly glow: Float32Array;
+  private readonly seed: Float32Array;
+
+  constructor(
+    scene: Object3D,
+    private readonly min: Vector3,
+    private readonly max: Vector3,
+    count: number,
+    size = 0.16,
+  ) {
+    this.base = new Float32Array(count * 3);
+    this.seed = new Float32Array(count);
+    for (let i = 0; i < count; i++) {
+      this.base[i * 3] = min.x + Math.random() * (max.x - min.x);
+      this.base[i * 3 + 2] = min.z + Math.random() * (max.z - min.z);
+      this.seed[i] = Math.random() * 10;
+    }
+    this.pos = Float32Array.from(this.base);
+    // Additive: a darker vertex colour is a fainter spark.
+    this.glow = new Float32Array(count * 3);
+    const geo = new BufferGeometry();
+    geo.setAttribute('position', new BufferAttribute(this.pos, 3));
+    geo.setAttribute('color', new BufferAttribute(this.glow, 3));
+    this.mat = new PointsMaterial({ size, map: sparkMap(), color: '#ffd27a', vertexColors: true, transparent: true, depthWrite: false, blending: AdditiveBlending, opacity: 0 });
+    this.mat.onBeforeCompile = (shader) => {
+      shader.vertexShader = shader.vertexShader.replace('#include <fog_vertex>', 'gl_PointSize = min(gl_PointSize, 8.0);\n#include <fog_vertex>');
+    };
+    this.points = new Points(geo, this.mat);
+    this.points.frustumCulled = false;
+    this.points.visible = false;
+    scene.add(this.points);
+  }
+
+  update(t: number, fade: number): void {
+    this.points.visible = fade > 0.05;
+    if (!this.points.visible) return;
+    this.mat.opacity = fade * 0.9;
+    const rise = this.max.y - this.min.y;
+    for (let i = 0; i < this.seed.length; i++) {
+      const s = this.seed[i];
+      const k = (t * (0.35 / Math.max(0.6, rise)) * 1.3 + s) % 1;
+      this.pos[i * 3] = this.base[i * 3] + Math.sin(t * 1.7 + s * 5) * 0.08;
+      this.pos[i * 3 + 1] = this.min.y + k * rise;
+      this.pos[i * 3 + 2] = this.base[i * 3 + 2] + Math.cos(t * 1.3 + s * 7) * 0.08;
+      this.glow[i * 3] = this.glow[i * 3 + 1] = this.glow[i * 3 + 2] = Math.sin(k * Math.PI);
+    }
+    this.points.geometry.attributes.position.needsUpdate = true;
+    this.points.geometry.attributes.color.needsUpdate = true;
+  }
+}
+
+/**
  * A glimmerstone platform: only there (solid, and glowing) while it's inside a lit lamp's
  * glow. Solid, it's a slab of golden light with a bright rim, swirling inside, motes
  * twinkling on top and magic sparks drifting up off it. In the dark, a faint gold outline
@@ -300,12 +361,7 @@ export class GlimmerBlock implements Entity {
   private solid = false;
   private fade = 0;
   private t = Math.random() * 20;
-  private sparks: Points;
-  private sparkMat: PointsMaterial;
-  private sparkBase: Float32Array;
-  private sparkPos: Float32Array;
-  private sparkSeed: Float32Array;
-  private sparkFade: Float32Array;
+  private sparks: GoldSparks;
 
   constructor(
     spec: SpecOf<'glimmerBlock'>,
@@ -329,30 +385,10 @@ export class GlimmerBlock implements Entity {
     const outline = new LineSegments(new EdgesGeometry(new BoxGeometry(w, h, d)), this.edges);
     outline.position.copy(this.center);
 
+    ctx.scene.add(box, outline);
     // Sparks rising off the top while it's solid.
-    const n = Math.max(6, Math.min(36, Math.round(w * d * 5)));
-    this.sparkBase = new Float32Array(n * 3);
-    this.sparkSeed = new Float32Array(n);
-    for (let i = 0; i < n; i++) {
-      this.sparkBase[i * 3] = this.center.x + (Math.random() - 0.5) * w;
-      this.sparkBase[i * 3 + 1] = this.center.y + h / 2;
-      this.sparkBase[i * 3 + 2] = this.center.z + (Math.random() - 0.5) * d;
-      this.sparkSeed[i] = Math.random() * 10;
-    }
-    this.sparkPos = Float32Array.from(this.sparkBase);
-    const geo = new BufferGeometry();
-    geo.setAttribute('position', new BufferAttribute(this.sparkPos, 3));
-    // Additive: a darker vertex colour is a fainter spark, so each fades in and out as it rises.
-    this.sparkFade = new Float32Array(n * 3);
-    geo.setAttribute('color', new BufferAttribute(this.sparkFade, 3));
-    this.sparkMat = new PointsMaterial({ size: 0.16, map: sparkMap(), color: '#ffd27a', vertexColors: true, transparent: true, depthWrite: false, blending: AdditiveBlending, opacity: 0 });
-    this.sparkMat.onBeforeCompile = (shader) => {
-      shader.vertexShader = shader.vertexShader.replace('#include <fog_vertex>', 'gl_PointSize = min(gl_PointSize, 8.0);\n#include <fog_vertex>');
-    };
-    this.sparks = new Points(geo, this.sparkMat);
-    this.sparks.frustumCulled = false;
-    this.sparks.visible = false;
-    ctx.scene.add(box, outline, this.sparks);
+    const top = this.center.y + h / 2;
+    this.sparks = new GoldSparks(ctx.scene, new Vector3(this.center.x - w / 2, top, this.center.z - d / 2), new Vector3(this.center.x + w / 2, top + 0.9, this.center.z + d / 2), Math.max(6, Math.min(36, Math.round(w * d * 5))));
 
     this.collider = ctx.physics.addStaticBox(this.center, new Vector3(w / 2, h / 2, d / 2));
     ctx.physics.setInfo(this.collider, { noGrab: !spec.grabbable, temporary: true });
@@ -374,20 +410,7 @@ export class GlimmerBlock implements Entity {
     this.mat.uniforms.uTime.value = this.t;
     this.mat.depthWrite = this.fade > 0.5;
     this.edges.opacity = 0.08 + this.fade * 0.45;
-    this.sparks.visible = this.fade > 0.05;
-    if (!this.sparks.visible) return;
-    this.sparkMat.opacity = this.fade * 0.9;
-    const RISE = 0.9;
-    for (let i = 0; i < this.sparkSeed.length; i++) {
-      const s = this.sparkSeed[i];
-      const k = (this.t * 0.45 + s) % 1;
-      this.sparkPos[i * 3] = this.sparkBase[i * 3] + Math.sin(this.t * 1.7 + s * 5) * 0.08;
-      this.sparkPos[i * 3 + 1] = this.sparkBase[i * 3 + 1] + k * RISE;
-      this.sparkPos[i * 3 + 2] = this.sparkBase[i * 3 + 2] + Math.cos(this.t * 1.3 + s * 7) * 0.08;
-      this.sparkFade[i * 3] = this.sparkFade[i * 3 + 1] = this.sparkFade[i * 3 + 2] = Math.sin(k * Math.PI);
-    }
-    this.sparks.geometry.attributes.position.needsUpdate = true;
-    this.sparks.geometry.attributes.color.needsUpdate = true;
+    this.sparks.update(this.t, this.fade);
   }
 }
 
@@ -404,6 +427,8 @@ export class IllusionWall implements Entity {
   private fade = 0;
   private time = 0;
   private readonly half: Vector3;
+  private edges: LineBasicMaterial;
+  private sparks: GoldSparks;
 
   constructor(
     spec: SpecOf<'illusionWall'>,
@@ -415,13 +440,18 @@ export class IllusionWall implements Entity {
     this.slack = Math.max(w, d) / 2;
     this.mat = worldMaterial();
     this.mat.transparent = true;
-    this.mat.emissive = new Color('#5aa8e0');
+    // Revealed, it goes the way of the glimmerstone: a ghost of golden light with sparks.
+    this.mat.emissive = new Color('#ffc65a');
     this.mat.emissiveIntensity = 0;
     const wall = new Mesh(paint(new BoxGeometry(w, h, d).toNonIndexed(), spec.color ?? COLORS.stone, true, 'stone'), this.mat);
     wall.position.copy(this.center);
     wall.castShadow = true;
     wall.receiveShadow = true;
-    ctx.scene.add(wall);
+    this.edges = new LineBasicMaterial({ color: '#ffd27a', transparent: true, opacity: 0, fog: true });
+    const outline = new LineSegments(new EdgesGeometry(new BoxGeometry(w, h, d)), this.edges);
+    outline.position.copy(this.center);
+    ctx.scene.add(wall, outline);
+    this.sparks = new GoldSparks(ctx.scene, this.center.clone().sub(this.half), this.center.clone().add(this.half), Math.max(10, Math.min(40, Math.round(Math.max(w, d) * h * 3))));
     this.collider = ctx.physics.addStaticBox(this.center, new Vector3(w / 2, h / 2, d / 2));
   }
 
@@ -444,8 +474,10 @@ export class IllusionWall implements Entity {
 
   frameUpdate(dt: number): void {
     this.fade = MathUtils.damp(this.fade, this.open ? 1 : 0, 6, dt);
-    this.mat.opacity = 1 - this.fade * (0.82 + Math.sin(this.time * 5) * 0.06);
+    this.mat.opacity = 1 - this.fade * (0.9 + Math.sin(this.time * 5) * 0.04);
     this.mat.depthWrite = this.fade < 0.5;
-    this.mat.emissiveIntensity = this.fade * 0.6;
+    this.mat.emissiveIntensity = this.fade * (0.7 + Math.sin(this.time * 3) * 0.1);
+    this.edges.opacity = this.fade * 0.6;
+    this.sparks.update(this.time, this.fade);
   }
 }
