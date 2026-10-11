@@ -96,6 +96,8 @@ export class Examiner implements Entity, SpellTarget {
   private readonly armL = new Group();
   private readonly armR = new Group();
   private readonly legs: Group[] = [];
+  /** The model's staff (its own group, so it stays upright in the hand). */
+  private readonly staff = new Group();
   /** Where the body (hips) sits in root space: the model's hips are lower than the built body's. */
   private bodyY = 0.85;
   private readonly crystal = new MeshStandardMaterial({ color: '#ffb060', emissive: new Color('#ff7a10'), emissiveIntensity: 1.8, flatShading: true });
@@ -310,13 +312,20 @@ export class Examiner implements Entity, SpellTarget {
       sl.glyph.scale.setScalar(0.45);
       keep.push(sl.glyph);
     }
+    // The staff hangs from its grip in the right hand and stays upright as the arm moves.
+    this.root.updateMatrixWorld(true);
+    this.staff.position.copy(this.armR.worldToLocal(this.root.localToWorld(new Vector3(-0.88 * k, 1.1 * k, 0.54 * k))));
+    this.armR.add(this.staff);
+    // The pole and its bands below and above the grip, and the lantern up top (not the fingers).
+    const isStaff = (i: Island) => (i.center.z > 0.47 || i.center.y > 3.45) && Math.abs(i.center.x + 0.88) < 0.15 && !(i.center.y > 0.95 && i.center.y < 1.16 && i.max.x - i.min.x < 0.09);
     this.root.updateMatrixWorld(true);
     dressWith(this.root, model, toRoot, (i) => {
       const { x, y, z } = i.center;
       const seal = GEM[i.mat];
       if (seal) return { part: this.body, material: this.seals[SEALS.indexOf(seal)].mat };
       if (i.mat === 'glow_ffb81a') return { part: helm, material: this.visor };
-      if (i.mat === 'glow_ffd060') return { part: this.armR, material: this.crystal };
+      if (i.mat === 'glow_ffd060') return { part: this.staff, material: this.crystal };
+      if (isStaff(i)) return { part: this.staff };
       if (y > 2.88 && Math.abs(x) < 0.3) return { part: helm };
       if (x < -0.6 && z > 0.3) return { part: this.armR };
       if (Math.abs(x) > 0.62 && y > 0.9 && y < 2.86) return { part: x > 0 ? this.armL : this.armR };
@@ -705,6 +714,8 @@ export class Examiner implements Entity, SpellTarget {
     const armX = stuck ? -0.9 : MathUtils.lerp(Math.sin(this.t * 2) * 0.2, -2.9, raise);
     this.armL.rotation.x = MathUtils.damp(this.armL.rotation.x, armX, 12, dt);
     this.armR.rotation.x = MathUtils.damp(this.armR.rotation.x, armX, 12, dt);
+    // Upright in the hand whatever the arm does: raised overhead for the hex rain, planted in a slam.
+    this.staff.rotation.x = -this.armR.rotation.x - this.body.rotation.x;
     // A stomping walk while it moves (a stalk, or the charge at a run); planted otherwise.
     const moving = this.state === 'stalk' || this.state === 'charge';
     const stride = moving ? Math.sin(this.t * (this.state === 'charge' ? 12 : 5)) * (this.state === 'charge' ? 0.7 : 0.45) : 0;
