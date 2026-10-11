@@ -149,7 +149,7 @@ function library(b: LevelBuilder, glow: Glow, flames: Glow): void {
   const LH = 12;
   b.floor(-37, -5, 7.5, 48.5, { color: '#7a5a3e' });
   wall(b, 'x', 7.5, -37, -5, LH, { color: STONE });
-  wall(b, 'x', 40.5, -37, -5, LH, { color: STONE, holes: [{ from: -33, to: -31, top: 2.8 }] });
+  wall(b, 'x', 40.5, -37, -5, LH, { color: STONE, holes: [{ from: -33, to: -31, top: 2.6 }] }); // the bookshelf's size: it fills it
   wall(b, 'z', -36.5, 7.5, 48.5, LH, { color: STONE });
   slab(b, -37, -5, 7.5, 40.5, LH + 0.5, 0.5, '#4a3226', 'planks');
   for (let z = 10; z < 40; z += 5) deco(b, new BoxGeometry(31, 0.5, 0.5), [-21, LH - 0.25, z], COLORS.woodDark);
