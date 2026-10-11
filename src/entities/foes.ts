@@ -1,5 +1,8 @@
 import RAPIER from '@dimforge/rapier3d-compat';
 import {
+  AdditiveBlending,
+  BoxGeometry,
+  CanvasTexture,
   Color,
   ConeGeometry,
   CylinderGeometry,
@@ -10,8 +13,12 @@ import {
   Mesh,
   MeshBasicMaterial,
   MeshStandardMaterial,
-  PlaneGeometry,
+  Shape,
+  ShapeGeometry,
   SphereGeometry,
+  Sprite,
+  SpriteMaterial,
+  SRGBColorSpace,
   Vector3,
   type BufferGeometry,
 } from 'three';
@@ -96,7 +103,7 @@ export class Hexling implements Entity, SpellTarget {
   private collider: RAPIER.Collider;
   private readonly root = new Group();
   private readonly body = new Group();
-  private readonly wings: Mesh[] = [];
+  private readonly wings: { pivot: Group; side: number; lower: boolean }[] = [];
   private readonly glow: MeshStandardMaterial;
   private readonly home: Vector3;
   readonly pos: Vector3;
@@ -118,53 +125,12 @@ export class Hexling implements Entity, SpellTarget {
     this.pos = this.home.clone();
     this.prev = this.pos.clone();
     this.reload = 1.2 + Math.random() * 1.5;
-    const mat = worldMaterial();
     this.glow = new MeshStandardMaterial({ color: '#f0d0ff', emissive: new Color('#b050ff'), emissiveIntensity: 1, flatShading: true });
-    // A thin dark-purple figure in a ragged dress, a pointed cap, pale green skin.
-    const dress = part(new ConeGeometry(0.28, 0.75, 7), '#3a1a4a', mat);
-    dress.position.y = -0.15;
-    const torso = part(new CylinderGeometry(0.1, 0.14, 0.3, 6), '#4a2a5a', mat);
-    torso.position.y = 0.32;
-    const head = part(new SphereGeometry(0.16, 8, 6), '#b8d8a0', mat);
-    head.position.y = 0.58;
-    const cap = part(new ConeGeometry(0.15, 0.42, 6), '#2a1030', mat);
-    cap.position.set(0, 0.86, -0.04);
-    cap.rotation.x = -0.35;
-    const hair = part(new IcosahedronGeometry(0.17, 0), '#5a2a6a', mat);
-    hair.position.set(0, 0.6, -0.06);
-    hair.scale.set(1, 0.8, 0.9);
-    this.body.add(dress, torso, head, cap, hair);
-    for (const side of [-1, 1]) {
-      const arm = part(new CylinderGeometry(0.03, 0.03, 0.34, 4), '#b8d8a0', mat);
-      arm.position.set(side * 0.16, 0.3, 0.06);
-      arm.rotation.z = side * 0.9;
-      this.body.add(arm);
-    }
-    mergeChildren(this.body);
-    // Glowing eyes and a hex glow in her hands (the wind-up tell).
-    for (const side of [-1, 1]) {
-      const eye = new Mesh(new SphereGeometry(0.035, 5, 4), this.glow);
-      eye.position.set(side * 0.06, 0.6, 0.14);
-      this.body.add(eye);
-    }
-    const hand = new Mesh(new IcosahedronGeometry(0.1, 1), this.glow);
-    hand.position.set(0, 0.42, 0.28);
-    hand.name = 'hand';
-    this.body.add(hand);
-    // Moth-like wings, flapping.
-    const wingMat = new MeshBasicMaterial({ color: '#b080d0', transparent: true, opacity: 0.55, side: DoubleSide, depthWrite: false });
-    for (const side of [-1, 1]) {
-      const g = new PlaneGeometry(0.7, 0.55);
-      g.translate(side * 0.38, 0.05, 0);
-      const w = new Mesh(g, wingMat);
-      w.position.set(0, 0.36, -0.1);
-      this.wings.push(w);
-      this.body.add(w);
-    }
+    buildHexling(this.body, this.wings, this.glow);
     this.root.add(this.body);
     // Bigger than a real fairy, so she reads from across a room.
     this.body.scale.setScalar(1.4);
-    this.root.traverse((o) => (o.castShadow = true));
+    this.root.traverse((o) => (o.castShadow = o instanceof Mesh && !(o.material instanceof MeshBasicMaterial)));
     this.root.position.copy(this.pos);
     ctx.scene.add(this.root);
     this.collider = ctx.physics.world.createCollider(RAPIER.ColliderDesc.ball(0.55).setTranslation(this.pos.x, this.pos.y, this.pos.z).setSensor(true));
@@ -303,16 +269,221 @@ export class Hexling implements Entity, SpellTarget {
     const p = this.ctx.player.pos;
     this.root.rotation.y = MathUtils.damp(this.root.rotation.y, Math.atan2(p.x - this.pos.x, p.z - this.pos.z), 5, dt);
     const down = this.state === 'down';
-    const flap = down ? 0.15 : Math.sin(this.t * 26) * 0.7;
-    this.wings[0].rotation.y = 0.3 + flap;
-    this.wings[1].rotation.y = -0.3 - flap;
+    // Quick shallow beats; the lower pair a touch behind the upper. Down, they droop and twitch.
+    for (const w of this.wings) {
+      const beat = down ? Math.sin(this.t * 9) * 0.05 : Math.sin(this.t * 24 - (w.lower ? 0.6 : 0)) * 0.55;
+      w.pivot.rotation.y = w.side * (0.3 + beat);
+      w.pivot.rotation.x = down ? 0.5 : 0;
+    }
+    const legs = this.body.getObjectByName('legs');
+    if (legs) legs.rotation.x = MathUtils.damp(legs.rotation.x, down ? 0 : 0.25 + Math.sin(this.t * 3) * 0.12, 6, dt);
     this.body.rotation.z = MathUtils.damp(this.body.rotation.z, down ? 1.4 : Math.sin(this.t * 1.3) * 0.12, 8, dt);
     this.glow.emissiveIntensity = this.state === 'windup' ? 3 + Math.sin(this.t * 40) : down ? 0.3 : 1;
     const hand = this.body.getObjectByName('hand')!;
-    hand.visible = this.state === 'windup';
-    hand.scale.setScalar(this.state === 'windup' ? 1 + (0.75 - Math.max(0, this.timer)) * 1.6 : 1);
+    hand.scale.setScalar(this.state === 'windup' ? 1 + (0.75 - Math.max(0, this.timer)) * 2.2 : 0.45);
+    const aura = this.body.getObjectByName('aura') as Sprite | undefined;
+    if (aura) (aura.material as SpriteMaterial).opacity = down ? 0.12 : this.state === 'windup' ? 0.55 : 0.3;
     this.marker.sprite.position.copy(this.root.position).add(new Vector3(0, 1.3, 0));
   }
+}
+
+// ---------------------------------------------------------------- Hexling model
+
+let wingTexture: CanvasTexture | null = null;
+
+/** Moth-and-dragonfly wing: violet into teal, dark veins fanning from the root, an eye-spot, a tattered edge. */
+function hexWingTexture(): CanvasTexture {
+  if (wingTexture) return wingTexture;
+  const S = 256;
+  const c = document.createElement('canvas');
+  c.width = c.height = S;
+  const g = c.getContext('2d')!;
+  // UV (0, 0.5) is the root, at the left middle.
+  const grad = g.createRadialGradient(0, S / 2, 4, 0, S / 2, S);
+  grad.addColorStop(0, 'rgba(70,20,90,0.95)');
+  grad.addColorStop(0.35, 'rgba(150,80,210,0.75)');
+  grad.addColorStop(0.75, 'rgba(110,200,220,0.45)');
+  grad.addColorStop(1, 'rgba(200,240,255,0.25)');
+  g.fillStyle = grad;
+  g.fillRect(0, 0, S, S);
+  // Veins.
+  g.strokeStyle = 'rgba(40,10,50,0.9)';
+  g.lineCap = 'round';
+  for (let i = 0; i < 7; i++) {
+    const a = -0.9 + (i / 6) * 1.8;
+    g.lineWidth = 3.5 - i * 0.2;
+    g.beginPath();
+    g.moveTo(0, S / 2);
+    g.quadraticCurveTo(S * 0.45, S / 2 + Math.sin(a) * S * 0.25, S * Math.cos(a * 0.6), S / 2 + Math.sin(a) * S * 0.62);
+    g.stroke();
+  }
+  g.lineWidth = 1.5;
+  g.strokeStyle = 'rgba(40,10,50,0.6)';
+  for (let r = 0.35; r < 1; r += 0.2) {
+    g.beginPath();
+    g.arc(0, S / 2, S * r, -1, 1);
+    g.stroke();
+  }
+  // An eye-spot near the tip: a warning, like a moth's.
+  const ex = S * 0.68;
+  const ey = S * 0.42;
+  g.fillStyle = 'rgba(30,8,40,0.95)';
+  g.beginPath();
+  g.ellipse(ex, ey, 22, 18, 0.3, 0, Math.PI * 2);
+  g.fill();
+  g.fillStyle = 'rgba(255,90,200,0.95)';
+  g.beginPath();
+  g.ellipse(ex, ey, 13, 10, 0.3, 0, Math.PI * 2);
+  g.fill();
+  g.fillStyle = 'rgba(255,240,150,1)';
+  g.beginPath();
+  g.arc(ex + 3, ey - 2, 4, 0, Math.PI * 2);
+  g.fill();
+  // Ragged holes and nicks out of the edge.
+  g.globalCompositeOperation = 'destination-out';
+  for (let i = 0; i < 14; i++) {
+    const a = (i / 14) * Math.PI * 2;
+    g.beginPath();
+    g.arc(S / 2 + Math.cos(a) * S * 0.5, S / 2 + Math.sin(a) * S * 0.5, 7 + ((i * 37) % 9), 0, Math.PI * 2);
+    g.fill();
+  }
+  wingTexture = new CanvasTexture(c);
+  wingTexture.colorSpace = SRGBColorSpace;
+  return wingTexture;
+}
+
+/** A leaf-shaped wing in the XY plane, root at the origin, reaching along +x, UVs over its bounds. */
+function wingGeometry(length: number, width: number, droop: number): BufferGeometry {
+  const sh = new Shape();
+  sh.moveTo(0, 0);
+  sh.bezierCurveTo(length * 0.2, width * 0.9, length * 0.75, width * 1.0 + droop, length, width * 0.35 + droop);
+  sh.bezierCurveTo(length * 1.04, -width * 0.05 + droop, length * 0.6, -width * 0.45, 0, 0);
+  const geo = new ShapeGeometry(sh, 10);
+  geo.computeBoundingBox();
+  const bb = geo.boundingBox!;
+  const pos = geo.getAttribute('position');
+  const uv = geo.getAttribute('uv');
+  const h = Math.max(Math.abs(bb.min.y), Math.abs(bb.max.y));
+  for (let i = 0; i < pos.count; i++) uv.setXY(i, pos.getX(i) / length, 0.5 + pos.getY(i) / (2 * h));
+  return geo;
+}
+
+/**
+ * The bad fairy: slight and spiky. A dark bodice and a skirt of plum petals, thin dangling
+ * legs, ashen-lilac skin, pointed ears, a wild crown of hair, glowing green eyes under a
+ * frown, a crooked wand (its tip is the wind-up glow), four tattered wings and a faint aura.
+ */
+function buildHexling(body: Group, wings: { pivot: Group; side: number; lower: boolean }[], glow: MeshStandardMaterial): void {
+  const mat = worldMaterial();
+  const SKIN = '#cdb9dc';
+  const add = (geo: BufferGeometry, color: string, x: number, y: number, z: number, rx = 0, ry = 0, rz = 0, sx = 1, sy = 1, sz = 1): Mesh => {
+    const m = part(geo, color, mat);
+    m.position.set(x, y, z);
+    m.rotation.set(rx, ry, rz);
+    m.scale.set(sx, sy, sz);
+    body.add(m);
+    return m;
+  };
+  // Bodice and a collar of points.
+  add(new CylinderGeometry(0.075, 0.11, 0.3, 7), '#3b1a4e', 0, 0.3, 0);
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * Math.PI * 2;
+    add(new ConeGeometry(0.035, 0.12, 4), '#7a2f7e', Math.sin(a) * 0.075, 0.46, Math.cos(a) * 0.075, Math.cos(a) * 1.2, 0, -Math.sin(a) * 1.2);
+  }
+  // A skirt of petals, alternating plum and magenta, flaring out and down.
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2;
+    const geo = new ConeGeometry(0.09, 0.4, 4).scale(1, 1, 0.4).rotateX(Math.PI).translate(0, -0.17, 0).rotateX(-0.5 - (i % 2) * 0.12).rotateY(a);
+    add(geo, i % 2 ? '#8a2f86' : '#4c1d60', 0, 0.17, 0);
+  }
+  // Head: long-ish face, pointed chin, pointed ears.
+  add(new SphereGeometry(0.13, 10, 8), SKIN, 0, 0.62, 0.0, 0, 0, 0, 0.92, 1.12, 0.95);
+  add(new ConeGeometry(0.07, 0.12, 6), SKIN, 0, 0.5, 0.02, Math.PI, 0, 0);
+  for (const side of [-1, 1]) {
+    add(new ConeGeometry(0.035, 0.2, 4), SKIN, side * 0.14, 0.67, -0.01, 0, 0, -side * 1.15);
+    // Slanted brows: she's cross.
+    add(new BoxGeometry(0.07, 0.016, 0.02), '#2a1030', side * 0.05, 0.7, 0.115, 0, 0, side * 0.45);
+  }
+  add(new BoxGeometry(0.06, 0.012, 0.01), '#4a1838', 0, 0.55, 0.12, 0, 0, 0.1);
+  // A wild crown of hair: spikes thrown back and up, and a little thorn tiara.
+  for (let i = 0; i < 9; i++) {
+    const a = -1.4 + (i / 8) * 2.8;
+    const len = 0.22 + ((i * 7) % 4) * 0.05;
+    add(new ConeGeometry(0.05, len, 5), i % 3 ? '#2b1236' : '#5a2266', Math.sin(a) * 0.08, 0.72 + Math.cos(a) * 0.03, -0.06, -0.9 + Math.cos(a) * 0.4, 0, -a * 0.75);
+  }
+  add(new SphereGeometry(0.135, 8, 6), '#2b1236', 0, 0.66, -0.035, 0, 0, 0, 1, 1.05, 0.95);
+  for (let i = 0; i < 5; i++) {
+    const a = -0.9 + (i / 4) * 1.8;
+    add(new ConeGeometry(0.018, 0.08, 4), '#1a0c14', Math.sin(a) * 0.11, 0.76, Math.cos(a) * 0.07, 0.2, 0, -a * 0.6);
+  }
+  // Arms: the left on her hip, the right holding the wand out in front.
+  add(new CylinderGeometry(0.022, 0.026, 0.3, 5), SKIN, -0.13, 0.32, 0.02, 0, 0, 0.5);
+  add(new CylinderGeometry(0.022, 0.026, 0.28, 5), SKIN, 0.12, 0.36, 0.1, -1.0, 0, -0.5);
+  add(new CylinderGeometry(0.012, 0.016, 0.36, 4), '#3a2416', 0.19, 0.44, 0.27, -1.2, 0, -0.2);
+  for (const side of [-1, 1]) add(new SphereGeometry(0.03, 5, 4), SKIN, side * (side < 0 ? 0.19 : 0.17), side < 0 ? 0.2 : 0.3, side < 0 ? 0.02 : 0.2);
+  mergeChildren(body);
+
+  // Legs dangle from under the skirt and swing a little as she flies (one group, so they swing together).
+  const legs = new Group();
+  legs.name = 'legs';
+  legs.position.set(0, 0.06, 0);
+  for (const side of [-1, 1]) {
+    const leg = part(new CylinderGeometry(0.02, 0.026, 0.36, 5), '#241226', mat);
+    leg.position.set(side * 0.045, -0.18, side * 0.03);
+    leg.rotation.x = side * 0.15;
+    const shoe = part(new ConeGeometry(0.03, 0.12, 5), '#120a10', mat);
+    shoe.position.set(side * 0.045, -0.37, 0.04 + side * 0.03);
+    shoe.rotation.x = Math.PI / 2 + 0.3;
+    legs.add(leg, shoe);
+  }
+  mergeChildren(legs);
+  body.add(legs);
+
+  // Glowing eyes.
+  const eyeMat = new MeshStandardMaterial({ color: '#e8ffb0', emissive: new Color('#a8f040'), emissiveIntensity: 2.2 });
+  for (const side of [-1, 1]) {
+    const eye = new Mesh(new SphereGeometry(0.026, 6, 4), eyeMat);
+    eye.position.set(side * 0.05, 0.65, 0.115);
+    eye.scale.set(1.4, 0.75, 0.6);
+    eye.rotation.z = side * 0.3;
+    body.add(eye);
+  }
+  // The wand's tip: the wind-up glow.
+  const hand = new Mesh(new IcosahedronGeometry(0.08, 1), glow);
+  hand.position.set(0.215, 0.52, 0.43);
+  hand.name = 'hand';
+  body.add(hand);
+
+  // Four wings: big upper ones angled up, smaller lower ones angled down.
+  const wingMat = new MeshBasicMaterial({ map: hexWingTexture(), transparent: true, side: DoubleSide, depthWrite: false, alphaTest: 0.04 });
+  for (const lower of [false, true]) {
+    for (const side of [-1, 1]) {
+      const geo = lower ? wingGeometry(0.5, 0.26, -0.05) : wingGeometry(0.78, 0.4, 0.06);
+      if (side < 0) geo.scale(-1, 1, 1);
+      const wing = new Mesh(geo, wingMat);
+      wing.rotation.z = side * (lower ? -0.55 : 0.4);
+      const pivot = new Group();
+      pivot.position.set(side * 0.03, lower ? 0.32 : 0.4, -0.08);
+      pivot.add(wing);
+      body.add(pivot);
+      wings.push({ pivot, side, lower });
+    }
+  }
+
+  // A soft violet aura, so she reads against dark stone.
+  const c = document.createElement('canvas');
+  c.width = c.height = 64;
+  const g = c.getContext('2d')!;
+  const grad = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  grad.addColorStop(0, 'rgba(200,120,255,0.7)');
+  grad.addColorStop(1, 'rgba(200,120,255,0)');
+  g.fillStyle = grad;
+  g.fillRect(0, 0, 64, 64);
+  const aura = new Sprite(new SpriteMaterial({ map: new CanvasTexture(c), transparent: true, depthWrite: false, blending: AdditiveBlending, opacity: 0.3 }));
+  aura.name = 'aura';
+  aura.position.set(0, 0.42, -0.05);
+  aura.scale.setScalar(1.5);
+  body.add(aura);
 }
 
 // ================================================================ Sootling
@@ -496,7 +667,7 @@ export class Sootling implements Entity, SpellTarget {
     this.arm.position.set(0.32, 0.6, 0);
     this.body.add(this.arm);
     this.root.add(this.body);
-    this.root.traverse((o) => (o.castShadow = true));
+    this.root.traverse((o) => (o.castShadow = o instanceof Mesh && !(o.material instanceof MeshBasicMaterial)));
     this.root.position.copy(this.pos);
     ctx.scene.add(this.root);
     this.collider = ctx.physics.world.createCollider(RAPIER.ColliderDesc.ball(0.5).setTranslation(this.pos.x, this.pos.y + 0.6, this.pos.z).setSensor(true));

@@ -21,10 +21,11 @@ import { banner, barrel, bush, cobweb, column, crate, deco, Glow, grass, hollyho
  *                                        knock switch there opens the Star gate
  *   Passage          x -3..3,  z 96..102.5 (the old Star Chamber)
  *   Sootling's Leap  x -8..8,  z 102.5..138 a chasm (z 106..132): seven stone pillars zig-zag
- *                                        across with a moving slab in the middle, a Hexling
- *                                        circling overhead, a Sootling on the far ledge (top
- *                                        2.2) lobbing bombs the whole way; banish him to open
- *                                        the Star gate (kick a bomb back, or thwack him twice)
+ *                                        across with a moving slab in the middle, a Sootling
+ *                                        on the far ledge (top 2.2) lobbing bombs the whole way
+ *                                        (the first you meet: no Hexling here, she debuts in the
+ *                                        Vaults), two Gnarlings on the landing; banish him to
+ *                                        open the Star gate (kick a bomb back, or thwack him twice)
  *   Star Chamber     x -3..3,  z 138..144.5 the Thistle Star and the way back up
  */
 export const TRIAL: LevelDef = {
@@ -303,8 +304,8 @@ function clockworkMoat(b: LevelBuilder, flames: Glow): void {
 }
 
 /**
- * The Sootling's Leap (z 102.5..138): pillars over a chasm, a moving slab in the middle, a
- * Hexling overhead and a Sootling lobbing bombs from the far ledge. Then the Star Chamber.
+ * The Sootling's Leap (z 102.5..138): pillars over a chasm, a moving slab in the middle, and a
+ * Sootling lobbing bombs from the far ledge. Then the Star Chamber.
  * Built last so the earlier rooms' sweets keep their ids.
  */
 function sootlingsLeap(b: LevelBuilder, flames: Glow): void {
@@ -347,7 +348,8 @@ function sootlingsLeap(b: LevelBuilder, flames: Glow): void {
   b.add(
     { type: 'checkpoint', pos: [-6.5, 0, 104.2], yaw: Math.PI / 2, zone: { min: [-8, -1, 102.6], max: [8, 4, 106] } },
     { type: 'trigger', flag: 'trial-hint-leap', script: 'trialLeap', min: [-8, -1, 102.6], max: [8, 4, 105.5] },
-    { type: 'hexling', pos: [0, 0, 118], height: 4.5, radius: 4, interval: 3.2 },
+    // (This slot was a Hexling; one new foe per room, so she waits for the Vaults.)
+    { type: 'gnarling', pos: [0, 0, 135.6], wander: 1.5 },
     { type: 'sootling', id: 't-soot', pos: [5.5, 2.2, 135.5], yaw: Math.PI, wander: 0.8, range: 22, interval: 3.4, fuse: 1.5 },
     { type: 'checkpoint', pos: [-6.5, 0, 134], yaw: Math.PI / 2, zone: { min: [-8, -1, 132.2], max: [2.8, 4, 137.8] } },
     { type: 'gnarling', pos: [-4, 0, 135], wander: 2 },

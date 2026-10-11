@@ -46,8 +46,9 @@ import {
  *                                       counting table, one high on the east wall behind a
  *                                       grille, one riding a wheel over the gate. A west
  *                                       walkway (top 3.2, stair at its south end) is the best
- *                                       view. A Sootling on the walkway, a Hexling overhead,
- *                                       two Snapcaskets on the floor
+ *                                       view. The first Hexling overhead (on her own, so
+ *                                       she gets a proper introduction), a Gnarling on the
+ *                                       walkway, two Snapcaskets on the floor
  *   Star Chamber   x -3..3,   z 155..161.5
  */
 export const VAULT: LevelDef = {
@@ -404,7 +405,8 @@ function countingHouse(b: LevelBuilder, flames: Glow): void {
     { type: 'padlock', id: 'v-c2', pos: [10.9, 6, 132], yaw: -Math.PI / 2, relock: 5.5 },
     { type: 'padlock', id: 'v-c3', pos: [0, 0, 0], yaw: Math.PI, relock: 5.5, orbit: { center: [0, 6.2, Z1 - 0.55], radius: 1.7, speed: 0.9, phase: 0 } },
     { type: 'gate', pos: [0, 0, Z1], yaw: 0, width: 3, height: 3, when: ['v-c1', 'v-c2', 'v-c3'] },
-    { type: 'sootling', pos: [-7.4, 3.2, 150.5], yaw: Math.PI / 2, wander: 0.8, range: 20, interval: 3.6 },
+    // (This slot was a Sootling: one new foe per room, and he has the Thwackwort Trial.)
+    { type: 'gnarling', pos: [-7.4, 3.2, 147], wander: 1.2 },
     { type: 'hexling', pos: [2, 0, 136], height: 5.5, radius: 4, interval: 3.4 },
     { type: 'snapcasket', id: 'v-snap-c1', pos: [5, 0, 128], wander: 3 },
     { type: 'snapcasket', id: 'v-snap-c2', pos: [5, 0, 150], wander: 3 },

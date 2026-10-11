@@ -142,6 +142,7 @@ Each render frame then runs the camera, animator, level and entity visuals, cast
 - Aiming: the camera pitches up at most ~0.55 rad, so a target high above must be cast at from further away (the shaft lift in the Clockworks is a puzzle built on that).
 - Gnarlings won't come within 3.6 m of a lit brazier (`ctx.heat`, a `HeatField`), so standing by one keeps you safe.
 - `signboard` text takes `\n` for a second line and widens the board for long lines.
+- Introduce one new foe per room (the user asked for this): the Sootling debuts alone in the Thwackwort Trial's Leap, the Hexling alone in the Vaults' Counting House, each with a hint script that explains how to beat it; later trials may mix them.
 - Spread classroom entrances round the castle (the user asked for this): each new teacher gets a new corner, not another door off the same corridor. Later teachers' doors use `afterLesson: '<previous spell>'`.
 - `ambience: 'dark'` on a level or an area (the Undercroft area in the hub) drops to a dim cold fill and close black fog; lamps with `light: true` and torches do the lighting. Keep real point lights to ~8 (checkpoints and the Star have one each).
 

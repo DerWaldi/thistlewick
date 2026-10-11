@@ -37,7 +37,8 @@ export const STUDENTS: StudentDef[] = [
     lines: (s) => [
       'Gorse once thwacked a door so hard it opened the room next door as well.',
       'Hold the button to charge a spell. Everything is better charged. Except soup.',
-      ...(s.knows('thwackwort') ? ["Sootlings! If one of their bombs lands by you, thwack it back. Right into their laps.", 'Hexlings fly too high to hit? Back off a bit, so you can see them. Then knock them down and thwack them again before they get up.'] : []),
+      ...(s.knows('thwackwort') ? ["Sootlings! If one of their bombs lands by you, thwack it back. Right into their laps."] : []),
+      ...(s.knows('latchkin') ? ['Hexlings fly too high to hit? Back off a bit, so you can see them. Then knock them down and thwack them again before they get up.'] : []),
       ...(s.flags.has('year-complete') ? ['You beat the Brass Examiner? My brother says it chased him round the hall for an hour. He still twitches at the sound of brass.'] : []),
     ],
   },

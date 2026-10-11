@@ -248,7 +248,7 @@ export const DIALOGUES: Record<string, Script> = {
   trialLeap: async ({ say }) => {
     await say([
       { speaker: 'gorse', text: "(his voice booming down a pipe) THE SOOTLING'S LEAP! My little bombardier sits on the far ledge. He lobs, you leap. Don't stand still!" },
-      { speaker: 'gorse', text: "A fizzing bomb on the ground? THWACK it his way and it'll land right in his lap. And knock that fairy out of the sky if she pesters you. Two thwacks banish either of them!" },
+      { speaker: 'gorse', text: "A fizzing bomb on the ground? THWACK it his way and it'll land right in his lap. Or thwack HIM twice: once to daze him, once to send him packing!" },
     ]);
   },
 
@@ -368,6 +368,7 @@ export const DIALOGUES: Record<string, Script> = {
     await say([
       { speaker: 'quince', text: '(from a speaking-tube) The Counting House. Three locks on my last gate, and they will not wait for you: five and a half seconds, then they snap shut again.' },
       { speaker: 'quince', text: 'One on the table, one up behind the grille, one going round and round. Find where you can see them, then be quick. And mind the help. They are not helpful.' },
+      { speaker: 'quince', text: 'Oh, and a Hexling has got in. A bad fairy: she circles high and throws hexes that follow you. Step aside late. Back off so you can see her, Thwackwort her out of the air, and thwack her again while she is down. A charged one does both.' },
     ]);
   },
 
