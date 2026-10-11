@@ -60,7 +60,7 @@ src/entities/          level objects: pushBlock (resetOn), mechanisms (knockSwit
                        springs (springPad: moss/mushroom/mattress/rune; springy for `duration` s after
                        Springwell, a charged cast launches higher, `fling` throws you sideways),
                        glimmer (wickLamp: Glimmerwick lights it for `duration` s, charged = 1.5x reach;
-                       glimmerBlock: solid only inside a lit glow; illusionWall: fades in the glow),
+                       glimmerBlock: a slab of golden light with rising sparks, solid only inside a lit glow; illusionWall: fades in the glow),
                        fire (burnable: vines/briar/cobweb/hay/rope, burns away on Cindersnap, briars hurt,
                        `persist` in the castle, `fireproofUntil` signals; brazier: lit by Cindersnap, `group`
                        + `order` must be lit in turn, a wrong one or a timeout puts the group out and sets

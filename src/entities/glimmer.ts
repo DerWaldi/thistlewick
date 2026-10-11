@@ -2,6 +2,9 @@ import RAPIER from '@dimforge/rapier3d-compat';
 import {
   AdditiveBlending,
   BoxGeometry,
+  BufferAttribute,
+  BufferGeometry,
+  CanvasTexture,
   Color,
   CylinderGeometry,
   EdgesGeometry,
@@ -12,7 +15,11 @@ import {
   Mesh,
   MeshStandardMaterial,
   PointLight,
+  Points,
+  PointsMaterial,
   ShaderMaterial,
+  UniformsLib,
+  UniformsUtils,
   SphereGeometry,
   DoubleSide,
   Vector3,
@@ -203,18 +210,102 @@ export class WickLamp implements Entity, SpellTarget, GlimmerLight {
   }
 }
 
+const LIGHT_VERTEX = /* glsl */ `
+  #include <common>
+  #include <fog_pars_vertex>
+  varying vec3 vLocal;
+  varying vec3 vWorld;
+  varying vec3 vN;
+  void main() {
+    vLocal = position;
+    vN = normal;
+    vec4 world = modelMatrix * vec4(position, 1.0);
+    vWorld = world.xyz;
+    vec4 mvPosition = viewMatrix * world;
+    gl_Position = projectionMatrix * mvPosition;
+    #include <fog_vertex>
+  }
+`;
+
+const LIGHT_FRAGMENT = /* glsl */ `
+  #include <common>
+  #include <fog_pars_fragment>
+  uniform float uTime;
+  uniform float uFade;
+  uniform vec3 uHalf;
+  varying vec3 vLocal;
+  varying vec3 vWorld;
+  varying vec3 vN;
+  float h2(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+  float n2(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    return mix(mix(h2(i), h2(i + vec2(1.0, 0.0)), f.x), mix(h2(i + vec2(0.0, 1.0)), h2(i + vec2(1.0, 1.0)), f.x), f.y);
+  }
+  void main() {
+    // Distance (in metres) to the nearest edge of this face: the rim glows brightest.
+    vec3 d = uHalf - abs(vLocal);
+    float lo = min(d.x, min(d.y, d.z));
+    float hi = max(d.x, max(d.y, d.z));
+    float edge = d.x + d.y + d.z - lo - hi;
+    float rim = 1.0 - smoothstep(0.0, 0.14, edge);
+    // Slow swirling light through the body.
+    vec2 p = (abs(vN.y) > 0.5 ? vWorld.xz : vec2(vWorld.x + vWorld.z, vWorld.y)) * 1.6;
+    float sw = n2(p + vec2(uTime * 0.35, -uTime * 0.2)) * 0.6 + n2(p * 2.3 - vec2(uTime * 0.5, uTime * 0.3)) * 0.4;
+    // Twinkling motes on the top face.
+    vec2 cell = floor(vWorld.xz * 6.0);
+    float tw = step(0.93, h2(cell)) * (0.5 + 0.5 * sin(uTime * 4.0 + h2(cell + 3.1) * 40.0));
+    float top = step(0.5, vN.y);
+    // Kept below 1 except at the rim, so bloom doesn't bleach it white: it should read gold.
+    vec3 col = mix(vec3(0.95, 0.55, 0.1), vec3(1.0, 0.82, 0.35), sw);
+    col *= 0.55 + rim * 0.55 + top * 0.1;
+    col += vec3(1.0, 0.85, 0.45) * tw * top * 0.6;
+    float a = uFade * clamp(0.38 + sw * 0.3 + rim * 0.55 + top * 0.12 + tw * top * 0.4, 0.0, 1.0);
+    gl_FragColor = vec4(col, a);
+    #include <tonemapping_fragment>
+    #include <colorspace_fragment>
+    #include <fog_fragment>
+  }
+`;
+
+let sparkTexture: CanvasTexture | null = null;
+function sparkMap(): CanvasTexture {
+  if (sparkTexture) return sparkTexture;
+  const c = document.createElement('canvas');
+  c.width = c.height = 32;
+  const g = c.getContext('2d')!;
+  const grad = g.createRadialGradient(16, 16, 0, 16, 16, 16);
+  grad.addColorStop(0, 'rgba(255,250,220,1)');
+  grad.addColorStop(0.35, 'rgba(255,200,90,0.6)');
+  grad.addColorStop(1, 'rgba(255,190,80,0)');
+  g.fillStyle = grad;
+  g.fillRect(0, 0, 32, 32);
+  sparkTexture = new CanvasTexture(c);
+  return sparkTexture;
+}
+
 /**
- * A glimmerstone platform: only there (solid, and properly visible) while it's inside
- * a lit lamp's glow. In the dark, a faint outline is all that gives it away.
+ * A glimmerstone platform: only there (solid, and glowing) while it's inside a lit lamp's
+ * glow. Solid, it's a slab of golden light with a bright rim, swirling inside, motes
+ * twinkling on top and magic sparks drifting up off it. In the dark, a faint gold outline
+ * is all that gives it away.
  */
 export class GlimmerBlock implements Entity {
   private collider: RAPIER.Collider;
-  private mat: MeshStandardMaterial;
+  private mat: ShaderMaterial;
   private edges: LineBasicMaterial;
   private readonly center: Vector3;
   private readonly slack: number;
   private solid = false;
   private fade = 0;
+  private t = Math.random() * 20;
+  private sparks: Points;
+  private sparkMat: PointsMaterial;
+  private sparkBase: Float32Array;
+  private sparkPos: Float32Array;
+  private sparkSeed: Float32Array;
+  private sparkFade: Float32Array;
 
   constructor(
     spec: SpecOf<'glimmerBlock'>,
@@ -223,14 +314,46 @@ export class GlimmerBlock implements Entity {
     const [w, h, d] = spec.size;
     this.center = new Vector3(...spec.pos);
     this.slack = Math.min(w, d) / 2;
-    this.mat = new MeshStandardMaterial({ color: '#bfe8ff', emissive: new Color('#5aa8e0'), emissiveIntensity: 0.5, roughness: 0.3, transparent: true, opacity: 0, depthWrite: false });
+    this.mat = new ShaderMaterial({
+      uniforms: UniformsUtils.merge([UniformsLib.fog, { uTime: { value: 0 }, uFade: { value: 0 }, uHalf: { value: new Vector3(w / 2, h / 2, d / 2) } }]),
+      vertexShader: LIGHT_VERTEX,
+      fragmentShader: LIGHT_FRAGMENT,
+      transparent: true,
+      depthWrite: false,
+      fog: true,
+    });
     const box = new Mesh(new BoxGeometry(w, h, d), this.mat);
     box.position.copy(this.center);
-    box.receiveShadow = true;
-    this.edges = new LineBasicMaterial({ color: '#bfe8ff', transparent: true, opacity: 0.07, fog: true });
+    box.renderOrder = 2;
+    this.edges = new LineBasicMaterial({ color: '#ffd27a', transparent: true, opacity: 0.08, fog: true });
     const outline = new LineSegments(new EdgesGeometry(new BoxGeometry(w, h, d)), this.edges);
     outline.position.copy(this.center);
-    ctx.scene.add(box, outline);
+
+    // Sparks rising off the top while it's solid.
+    const n = Math.max(6, Math.min(36, Math.round(w * d * 5)));
+    this.sparkBase = new Float32Array(n * 3);
+    this.sparkSeed = new Float32Array(n);
+    for (let i = 0; i < n; i++) {
+      this.sparkBase[i * 3] = this.center.x + (Math.random() - 0.5) * w;
+      this.sparkBase[i * 3 + 1] = this.center.y + h / 2;
+      this.sparkBase[i * 3 + 2] = this.center.z + (Math.random() - 0.5) * d;
+      this.sparkSeed[i] = Math.random() * 10;
+    }
+    this.sparkPos = Float32Array.from(this.sparkBase);
+    const geo = new BufferGeometry();
+    geo.setAttribute('position', new BufferAttribute(this.sparkPos, 3));
+    // Additive: a darker vertex colour is a fainter spark, so each fades in and out as it rises.
+    this.sparkFade = new Float32Array(n * 3);
+    geo.setAttribute('color', new BufferAttribute(this.sparkFade, 3));
+    this.sparkMat = new PointsMaterial({ size: 0.16, map: sparkMap(), color: '#ffd27a', vertexColors: true, transparent: true, depthWrite: false, blending: AdditiveBlending, opacity: 0 });
+    this.sparkMat.onBeforeCompile = (shader) => {
+      shader.vertexShader = shader.vertexShader.replace('#include <fog_vertex>', 'gl_PointSize = min(gl_PointSize, 8.0);\n#include <fog_vertex>');
+    };
+    this.sparks = new Points(geo, this.sparkMat);
+    this.sparks.frustumCulled = false;
+    this.sparks.visible = false;
+    ctx.scene.add(box, outline, this.sparks);
+
     this.collider = ctx.physics.addStaticBox(this.center, new Vector3(w / 2, h / 2, d / 2));
     ctx.physics.setInfo(this.collider, { noGrab: !spec.grabbable, temporary: true });
     this.collider.setEnabled(false);
@@ -245,10 +368,26 @@ export class GlimmerBlock implements Entity {
   }
 
   frameUpdate(dt: number): void {
+    this.t += dt;
     this.fade = MathUtils.damp(this.fade, this.solid ? 1 : 0, 10, dt);
-    this.mat.opacity = this.fade * 0.92;
+    this.mat.uniforms.uFade.value = this.fade;
+    this.mat.uniforms.uTime.value = this.t;
     this.mat.depthWrite = this.fade > 0.5;
-    this.edges.opacity = 0.07 + this.fade * 0.5;
+    this.edges.opacity = 0.08 + this.fade * 0.45;
+    this.sparks.visible = this.fade > 0.05;
+    if (!this.sparks.visible) return;
+    this.sparkMat.opacity = this.fade * 0.9;
+    const RISE = 0.9;
+    for (let i = 0; i < this.sparkSeed.length; i++) {
+      const s = this.sparkSeed[i];
+      const k = (this.t * 0.45 + s) % 1;
+      this.sparkPos[i * 3] = this.sparkBase[i * 3] + Math.sin(this.t * 1.7 + s * 5) * 0.08;
+      this.sparkPos[i * 3 + 1] = this.sparkBase[i * 3 + 1] + k * RISE;
+      this.sparkPos[i * 3 + 2] = this.sparkBase[i * 3 + 2] + Math.cos(this.t * 1.3 + s * 7) * 0.08;
+      this.sparkFade[i * 3] = this.sparkFade[i * 3 + 1] = this.sparkFade[i * 3 + 2] = Math.sin(k * Math.PI);
+    }
+    this.sparks.geometry.attributes.position.needsUpdate = true;
+    this.sparks.geometry.attributes.color.needsUpdate = true;
   }
 }
 
