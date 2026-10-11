@@ -4,6 +4,10 @@ A browser 3D action-adventure in the spirit of early-2000s wizard-school games. 
 
 ## Play
 
+Play it in the browser at https://thistlewick.sebastian-murgul.com (built from `main` by GitHub Actions).
+
+Or run it locally:
+
 ```bash
 npm install
 npm run dev        # then open http://localhost:5173
