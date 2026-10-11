@@ -398,7 +398,7 @@ export const CARDS: CardDef[] = [
     title: 'The Lost Forester',
     set: 'Oddballs',
     text: 'Went into the Old Woods to count the toadstools and came out forty years later, still counting. He insisted he had only popped in for the afternoon.',
-    hint: 'In the Old Woods, on top of the tallest toadstool in Mushroom Dell.',
+    hint: 'In the Old Woods, in the nook under the Old Oak, behind its padlocked root-gate.',
     portrait: { bg: ['#c8d8a0', '#3f5a2a'], kind: 'person', skin: '#d8a07a', robe: '#5a4a2a', hair: '#8a8a7a', beard: true, hat: 'tall', prop: 'book', hatColor: '#3f5a2a', hairStyle: 'wild', collar: 'scarf', expression: 'kind', eyes: '#5a4a2a' },
   },
 ];

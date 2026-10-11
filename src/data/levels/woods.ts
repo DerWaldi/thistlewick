@@ -12,7 +12,7 @@ import { bush, deco, Glow, grass, mushrooms, rubble, signboard, tree, wall } fro
  *                                     second gap, Gnarlings
  *   Mushroom Dell   z 24..44,  y 0    a toadstool up to the east shelf (4.5), a second that
  *                                     flings you north onto the ridge (8) (Springwell); a
- *                                     hop from the shelf to the tall toadstool's cap (card)
+ *                                     hop from the shelf to the tall toadstool's cap (humbug)
  *   The Canopy      z 44..80,  y 8    tree platforms over a flooded ravine (water -3): rope
  *                                     bridges, a swinging log, a basket you call over a
  *                                     7 m gap (Thistledown)
@@ -21,7 +21,7 @@ import { bush, deco, Glow, grass, mushrooms, rubble, signboard, tree, wall } fro
  *   The Brook Shelf z 94..104, y 8    an Ember Crab; a waterfall down the cliff (top 13) to
  *                                     freeze and climb (Rimewhistle)
  *   The Old Oak     z 104..130, y 13  the great oak; Thimble in a nook under its roots behind
- *                                     a padlocked root-gate (Latchkin); a rune tile that
+ *                                     a padlocked root-gate (Latchkin), a card in there too; a rune tile that
  *                                     needs a charged bounce up to a bough (22: secret, chest);
  *                                     a door back to the grounds
  */
@@ -142,12 +142,14 @@ function bounds(b: LevelBuilder): void {
 
 /**
  * The tall toadstool at the north-east corner of Mushroom Dell (cap 5.4, beside the shelf at
- * 4.5): its cap is firm enough to stand on, and Bartholomew Thornwhistle's card is up there.
- * A short hop from the shelf's north edge, if you notice it.
+ * 4.5): its cap is firm enough to stand on, with a Gilded Humbug for anyone who hops over.
+ * Bartholomew Thornwhistle's card waits in Thimble's nook under the Old Oak, behind the
+ * padlocked root-gate.
  */
 function toadstoolCard(b: LevelBuilder): void {
   b.box([-14, 5.25, 41.5], [2, 0.3, 2], { invisible: true, info: { noGrab: true } });
-  b.add({ type: 'card', card: 'bartholomew-thornwhistle', pos: [-14, 6.6, 41.5] });
+  b.add({ type: 'sweet', kind: 'humbug', pos: [-14, 6.2, 41.5] });
+  b.add({ type: 'card', card: 'bartholomew-thornwhistle', pos: [-0.5, 13 + 1.3, 118.3] });
 }
 
 /**

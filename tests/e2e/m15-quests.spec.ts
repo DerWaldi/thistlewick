@@ -532,16 +532,18 @@ test('pupils wander the castle and chat; Wren and Otto have errands of their own
   expect(watch.flags).toContain('quest:watch:found');
 });
 
-test('the Old Woods card: a held jump from the Dell shelf onto the tall toadstool', async ({ page }) => {
+test('the Old Woods card waits behind the root-gate; the Dell toadstool holds a humbug', async ({ page }) => {
   await boot(page, '?test&level=woods');
-  const cards = await page.evaluate(async () => {
+  const r = await page.evaluate(async () => {
     const tw = window.__tw;
     await tw.idle();
-    const g = tw.game as unknown as { state: { flags: Set<string> } };
-    for (const f of ['woods-entered', 'woods-hint-dell']) g.state.flags.add(f);
+    const g = tw.game as unknown as { state: { flags: Set<string>; sweets: number } };
+    for (const f of ['woods-entered', 'woods-hint-dell', 'woods-hint-oak']) g.state.flags.add(f);
+    // The hop: a held jump from the shelf onto the cap.
     tw.teleport(-14, 4.5, 37.4, 0);
     tw.setCamera(0, 0.2);
     tw.advance(0.3);
+    const before = g.state.sweets;
     tw.input({ x: 0, y: 1, jump: false });
     tw.advance(0.3);
     tw.input({ x: 0, y: 1, jump: true });
@@ -549,8 +551,24 @@ test('the Old Woods card: a held jump from the Dell shelf onto the tall toadstoo
     tw.advance(0.6);
     tw.input(null);
     tw.advance(0.6);
+    const humbug = g.state.sweets - before;
+    // The root-gate: Latchkin its padlock, walk in.
+    tw.teleport(0.5, 13, 113.5, 0);
+    tw.advance(0.3);
+    tw.aimAt(0.75, 14.3, 116.75);
+    tw.advance(0.05);
+    tw.cast(0);
+    tw.advance(2.5);
     await tw.idle();
-    return tw.state().cards;
+    tw.teleport(-0.2, 13, 116, 0);
+    tw.setCamera(0, 0.1);
+    tw.input({ x: 0, y: 1 });
+    tw.advance(1.2);
+    tw.input(null);
+    tw.advance(0.5);
+    await tw.idle();
+    return { humbug, cards: tw.state().cards };
   });
-  expect(cards).toContain('bartholomew-thornwhistle');
+  expect(r.humbug).toBeGreaterThanOrEqual(25);
+  expect(r.cards).toContain('bartholomew-thornwhistle');
 });

@@ -275,11 +275,27 @@ export class Chest implements Entity, SpellTarget {
     } else {
       const s = style === 'box' ? 0.55 : 1;
       half = new Vector3(0.6 * s, 0.45 * s, 0.42 * s);
-      part(new BoxGeometry(1.2 * s, 0.6 * s, 0.84 * s), '#7a4a26', 0, 0.3 * s, 0);
-      const bands = new Mesh(paint(new BoxGeometry(1.24 * s, 0.1 * s, 0.88 * s).toNonIndexed(), '#3a3340', true), mat);
-      bands.position.y = 0.48 * s;
-      this.group.add(bands);
-      for (const side of [-1, 1]) part(new BoxGeometry(0.08 * s, 0.62 * s, 0.88 * s), '#3a3340', side * 0.42 * s, 0.31 * s, 0);
+      // A box with walls, open at the top (dark inside), so an opened chest looks empty, not solid.
+      const T = 0.07 * s;
+      part(new BoxGeometry(1.2 * s, 0.1 * s, 0.84 * s), '#7a4a26', 0, 0.05 * s, 0);
+      for (const side of [-1, 1]) {
+        part(new BoxGeometry(1.2 * s, 0.6 * s, T), '#7a4a26', 0, 0.3 * s, side * (0.42 * s - T / 2));
+        part(new BoxGeometry(T, 0.6 * s, 0.84 * s - 2 * T), '#7a4a26', side * (0.6 * s - T / 2), 0.3 * s, 0);
+      }
+      const inside = new Mesh(paint(new BoxGeometry(1.2 * s - 2 * T, 0.02, 0.84 * s - 2 * T).toNonIndexed(), '#2a1a10', true), mat);
+      inside.position.y = 0.11 * s;
+      this.group.add(inside);
+      // Iron bands round the outside only (a band across the top would lid it again).
+      const iron = (geo: BoxGeometry, x: number, y: number, z: number) => {
+        const m = new Mesh(paint(geo.toNonIndexed(), '#3a3340', true), mat);
+        m.position.set(x, y, z);
+        this.group.add(m);
+      };
+      for (const side of [-1, 1]) {
+        iron(new BoxGeometry(1.24 * s, 0.1 * s, 0.03), 0, 0.48 * s, side * (0.42 * s + 0.015));
+        iron(new BoxGeometry(0.03, 0.1 * s, 0.88 * s), side * (0.6 * s + 0.015), 0.48 * s, 0);
+        for (const end of [-1, 1]) iron(new BoxGeometry(0.08 * s, 0.62 * s, 0.03), side * 0.42 * s, 0.31 * s, end * (0.42 * s + 0.016));
+      }
       this.lid.position.set(0, 0.6 * s, -0.42 * s);
       // (No world-space plank pattern on parts that move: it would slide as they swing.)
       const lidMesh = new Mesh(paint(new CylinderGeometry(0.42 * s, 0.42 * s, 1.2 * s, 8, 1, false, 0, Math.PI).toNonIndexed(), '#8a5a36', true), mat);

@@ -213,7 +213,7 @@ export const ATLAS: AtlasEntry[] = [
       brook: 'The Brook Shelf',
       oak: 'The Old Oak',
     },
-    cards: [{ ref: 'bartholomew-thornwhistle', area: 'dell' }],
+    cards: [{ ref: 'bartholomew-thornwhistle', area: 'oak' }],
     secrets: [{ ref: 'woods-bough', area: 'oak' }],
   },
 ];
