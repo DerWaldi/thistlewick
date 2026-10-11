@@ -169,9 +169,12 @@ export function buildStudent(look: StudentLook = {}): StudentRig {
 
   // Head.
   const head = new Group();
-  head.position.y = 1.18;
+  head.position.y = 1.16;
+  // A smaller head on the same body: young wizards, not toddlers.
+  head.scale.setScalar(0.88);
   torso.add(head);
-  const headMesh = part(tint(new IcosahedronGeometry(0.22, 1), skinC), skin);
+  // A longer face with a chin, so they read as young wizards rather than toddlers.
+  const headMesh = part(tint(new IcosahedronGeometry(0.22, 1).scale(0.92, 1.1, 0.95), skinC), skin);
   head.add(headMesh);
   const add = (parent: Group, geo: BufferGeometry, color: string, x: number, y: number, z: number, rx = 0, ry = 0, rz = 0) => {
     const m = part(tint(geo, color), eye);
@@ -180,17 +183,19 @@ export function buildStudent(look: StudentLook = {}): StudentRig {
     parent.add(m);
     return m;
   };
-  // Eyes with whites and a glint, brows, ears, rosy cheeks and a small smile.
+  const browC = look.hairStyle === 'bald' || look.beard ? '#d8d2c4' : hairC;
+  const lidC = new Color(skinC).multiplyScalar(0.82).getStyle();
+  add(head, new SphereGeometry(0.1, 8, 5).scale(1, 0.55, 0.7), skinC, 0, -0.17, 0.08);
+  // Almond eyes under heavy lids, level brows, a proper nose and a short mouth.
   for (const side of [-1, 1]) {
-    add(head, new SphereGeometry(0.036, 8, 6).scale(1, 1.15, 0.45), '#f7f2ea', side * 0.08, 0.03, 0.188);
-    add(head, new SphereGeometry(0.025, 6, 4).scale(1, 1.15, 0.45), '#1b120c', side * 0.078, 0.026, 0.201);
-    add(head, new SphereGeometry(0.008, 4, 3), '#ffffff', side * 0.078 + 0.01, 0.04, 0.212);
-    add(head, new BoxGeometry(0.07, 0.016, 0.02), look.hairStyle === 'bald' || look.beard ? '#d8d2c4' : hairC, side * 0.08, 0.1, 0.19, 0, 0, side * -0.15);
-    add(head, new SphereGeometry(0.05, 6, 4).scale(0.5, 1, 0.8), skinC, side * 0.215, 0, 0);
-    add(head, new SphereGeometry(0.03, 6, 4).scale(1, 0.55, 0.3), '#eeaa96', side * 0.12, -0.04, 0.185);
+    add(head, new SphereGeometry(0.03, 8, 6).scale(1.15, 0.6, 0.45), '#f2ece2', side * 0.075, 0.03, 0.188);
+    add(head, new SphereGeometry(0.017, 6, 4).scale(1, 1, 0.45), '#1b120c', side * 0.073, 0.028, 0.199);
+    add(head, new BoxGeometry(0.075, 0.018, 0.03), lidC, side * 0.075, 0.048, 0.19, 0.25, 0, side * 0.08);
+    add(head, new BoxGeometry(0.08, 0.022, 0.025), browC, side * 0.078, 0.085, 0.193, 0, 0, side * 0.12);
+    add(head, new SphereGeometry(0.05, 6, 4).scale(0.5, 1, 0.8), skinC, side * 0.2, 0.01, 0);
   }
-  add(head, new SphereGeometry(0.035, 5, 4), skinC, 0, -0.02, 0.22);
-  add(head, new TorusGeometry(0.032, 0.008, 4, 8, Math.PI), '#8a3a2a', 0, -0.08, 0.198, 0, 0, Math.PI);
+  add(head, new BoxGeometry(0.04, 0.08, 0.06), skinC, 0, -0.02, 0.21, -0.25, 0, 0);
+  add(head, new BoxGeometry(0.06, 0.012, 0.012), '#6a3024', 0, -0.095, 0.192);
   // Hair: a fringe and tufts poking out under the hat, or long locks, a bun or a beard.
   const style = look.hairStyle ?? 'tufts';
   if (style !== 'bald') {
