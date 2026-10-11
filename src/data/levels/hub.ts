@@ -1001,7 +1001,8 @@ function wellYard(b: LevelBuilder): void {
     // The lock is frozen into a lump of ice: Cindersnap thaws it, for good.
     { type: 'burnable', id: 'hub-well-ice', style: 'ice', persist: true, pos: [14.5, 1.2, 30.45], size: [0.9, 0.8, 0.5] },
   );
-  signboard(b, 'Well Yard\nFrozen shut', [14.5, 3.9, 30.3], 0);
+  // One line, in front of the gate's lintel and just under the cloister roof (4.5).
+  signboard(b, 'Well Yard', [14.5, 4.2, 30.46], 0);
   // The well, frosted over, with icicles on its little roof.
   b.cylinder([15, 0.45, 25], 1, 0.9, COLORS.stoneLight, undefined, 10);
   deco(b, new CylinderGeometry(0.92, 0.92, 0.04, 10), [15, 0.86, 25], '#e8f6fc');
