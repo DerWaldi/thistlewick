@@ -414,6 +414,10 @@ export type EntitySpec = SpecBase &
         /** A round room: it stays within `radius` of `center` (x, z) as well as inside `arena`. */
         ring?: { center: [number, number]; radius: number };
       }
+    /** The Bestiary (a dev wing): a lever toggling `signal`, a bell restarting the level at `spawn`, a pose lectern. */
+    | { type: 'bestiaryLever'; pos: V3; yaw: number; signal: string }
+    | { type: 'bestiaryBell'; pos: V3; spawn: string }
+    | { type: 'bestiaryPose'; pos: V3; yaw: number; subject: string; at: V3; poses: string[] }
     | {
         type: 'houseSeal';
         /** Turns on signal `house-door-<house>` if the player belongs to this house (common-room doors). */
@@ -465,6 +469,8 @@ export interface WorldContext {
   changeLevel(level: string, spawn: string): void;
   /** Secrets found/total in an area of this level. */
   secretsIn(area: string): { found: number; total: number };
+  /** The level's entities, and those held still (the Bestiary's pose lecterns); set by World. */
+  world?: { entities: Entity[]; held: Set<Entity> };
 }
 
 export interface Entity {

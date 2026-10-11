@@ -18,6 +18,7 @@ import { QuestItem } from '../entities/quests';
 import { Hexling, Sootling } from '../entities/foes';
 import { Examiner } from '../entities/boss';
 import { Wanderer } from '../entities/wanderer';
+import { BestiaryBell, BestiaryLever, BestiaryPose } from '../entities/bestiary';
 import type { Entity, EntitySpec, EntityType, SpecOf, WorldContext } from '../entities/types';
 
 type Factory<T extends EntityType> = (spec: SpecOf<T>, ctx: WorldContext, id: string) => object | null;
@@ -89,6 +90,9 @@ const FACTORIES: { [T in EntityType]: Factory<T> } = {
   pendulum: (s, c) => new Pendulum(s, c),
   questItem: (s, c) => new QuestItem(s, c),
   wanderer: (s, c) => new Wanderer(s, c),
+  bestiaryLever: (s, c) => new BestiaryLever(s, c),
+  bestiaryBell: (s, c) => new BestiaryBell(s, c),
+  bestiaryPose: (s, c) => new BestiaryPose(s, c),
   examiner: (s, c) => {
     if (c.state.flags.has(`down:${s.id}`)) {
       c.signals.set(s.id, true);
@@ -146,9 +150,13 @@ const FACTORIES: { [T in EntityType]: Factory<T> } = {
 /** Owns the live entities of the current level and steps them. */
 export class World {
   readonly entities: Entity[] = [];
+  /** Held in a pose (the Bestiary): their AI doesn't step, only their animation clocks run. */
+  readonly held = new Set<Entity>();
   private secretAreas = new Map<string, string[]>();
 
-  constructor(readonly ctx: WorldContext) {}
+  constructor(readonly ctx: WorldContext) {
+    ctx.world = this;
+  }
 
   spawn(spec: EntitySpec, index: number): Entity | null {
     if (spec.requires && !this.ctx.state.knows(spec.requires)) return null;
@@ -172,7 +180,14 @@ export class World {
   }
 
   fixedUpdate(dt: number): void {
-    for (const e of this.entities) e.fixedUpdate?.(dt);
+    for (const e of this.entities) {
+      if (!this.held.has(e)) e.fixedUpdate?.(dt);
+      else {
+        // Keep its clock going, so a held walk cycle or a flap keeps moving.
+        const c = e as unknown as Record<string, unknown>;
+        for (const k of ['t', 'time']) if (typeof c[k] === 'number') c[k] = (c[k] as number) + dt;
+      }
+    }
     this.ctx.sweets.fixedUpdate(dt);
   }
 

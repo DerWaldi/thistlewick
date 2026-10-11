@@ -4,6 +4,7 @@ import { CLASSROOM } from './classroom';
 import { GLASSHOUSE } from './glasshouse';
 import { GROUNDS } from './grounds';
 import { GYM } from './gym';
+import { BESTIARY } from './bestiary';
 import { HOPGOOD } from './hopgood';
 import { CATACOMBS } from './catacombs';
 import { CISTERNS } from './cisterns';
@@ -24,6 +25,7 @@ import { WOODS } from './woods';
 /** Every level by id. */
 export const LEVELS: Record<string, LevelDef> = {
   gym: GYM,
+  bestiary: BESTIARY,
   hub: HUB,
   classroom: CLASSROOM,
   trial: TRIAL,

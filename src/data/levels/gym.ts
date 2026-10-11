@@ -9,13 +9,14 @@ import { COLORS, worldMaterial } from '../../world/materials';
  *
  *   ramps (-30..-18)   stairs (-10)   ice (-14..-4)   bounce pad (0,22)   gaps (8)   pool (14..26)
  *   corridor & low tunnel in the south-east, ledge walls south of spawn, movers in the west.
+ *   A door at (5, 55) in the north leads into the Bestiary (a room for every foe).
  */
 export const GYM: LevelDef = {
   id: 'gym',
   name: 'Feel Gym',
   sandbox: true,
   grants: ['thwackwort'],
-  spawns: { default: { pos: [0, 0, 0], yaw: 0 } },
+  spawns: { default: { pos: [0, 0, 0], yaw: 0 }, fromBestiary: { pos: [5, 0, 53], yaw: Math.PI } },
   build: buildGym,
 };
 
@@ -220,6 +221,12 @@ function practiceYard(b: LevelBuilder): void {
   );
   b.lantern([-43.4, 3, 49]);
   b.lantern([-18.6, 3, 51.5]);
+
+  // Last (ids follow build order): the door north into the Bestiary, a room for every foe.
+  b.box([0.6, 2.25, 55.5], [5.6, 4.5, 1], { color: COLORS.stone });
+  b.box([9.4, 2.25, 55.5], [5.6, 4.5, 1], { color: COLORS.stone });
+  b.box([5, 4.1, 55.5], [3.2, 0.8, 1], { color: COLORS.stone });
+  b.add({ type: 'door', pos: [5, 0, 54.95], yaw: Math.PI, width: 2.4, height: 3.4, to: { level: 'bestiary', spawn: 'default' }, label: 'The Bestiary' });
 }
 
 /** A leaning castle tower to give the horizon some character. */
