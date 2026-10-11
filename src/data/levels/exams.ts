@@ -364,7 +364,6 @@ function thistleHall(b: LevelBuilder, flames: Glow): void {
   // The way home, behind the plinth: straight down to the Lantern Hall once the year is done
   // (the rooms behind you lock themselves up again).
   b.add({ type: 'door', pos: [0, 0, 206.45], yaw: Math.PI, width: 2.4, height: 3.4, to: { level: 'hub', spawn: 'default' }, lockedUnless: 'year-complete', talk: 'examsHomeDoor', label: 'The Lantern Hall' });
-  signboard(b, 'Home', [0, 4.4, 206.44], Math.PI);
 }
 
 /**

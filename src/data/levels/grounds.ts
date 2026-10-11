@@ -153,7 +153,7 @@ function build(b: LevelBuilder): void {
   deco(b, new BoxGeometry(0.1, 1.6, 0.1), [0.55, LAWN + 2.6, -34.2], '#8a948f', [0, 0, -0.3]);
   // The path to the Old Woods: a door between the gateposts (it replaced a gate in place, so
   // later ids don't shift), open once Mabel has asked you to go in.
-  b.add({ type: 'door', pos: [50.5, LAWN, -27], yaw: -Math.PI / 2, width: 3, height: 3.4, to: { level: 'woods', spawn: 'default' }, lockedUnless: 'quest:hedgehog', talk: 'oldWoodsGate', label: 'The Old Woods' });
+  b.add({ type: 'door', pos: [50.5, LAWN, -27], yaw: -Math.PI / 2, width: 3, height: 3.4, to: { level: 'woods', spawn: 'default' }, lockedUnless: 'quest:hedgehog', talk: 'oldWoodsGate' }); // (no label: the board above names it)
   signboard(b, 'The Old Woods\nNo pupils beyond this gate', [49.9, LAWN + 4, -27], -Math.PI / 2);
   for (const z of [-24, -30]) b.cylinder([49.8, LAWN + 1.9, z], 0.35, 3.8, COLORS.stoneLight, undefined, 8);
   b.add(
