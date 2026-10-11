@@ -10,6 +10,7 @@ import {
   Mesh,
   MeshBasicMaterial,
   MeshStandardMaterial,
+  OctahedronGeometry,
   CircleGeometry,
   PlaneGeometry,
   RingGeometry,
@@ -18,6 +19,7 @@ import {
   type BufferGeometry,
 } from 'three';
 import { SPELLS, type SpellId } from '../data/spells';
+import { mergeChildren } from '../world/merge';
 import { dampAngle } from '../player/controller';
 import { RuneMarker, runeTexture } from '../spells/runes';
 import type { SpellHit, SpellTarget } from '../spells/targets';
@@ -90,6 +92,8 @@ export class Examiner implements Entity, SpellTarget {
   private readonly body = new Group();
   private readonly armL = new Group();
   private readonly armR = new Group();
+  private readonly legs: Group[] = [];
+  private readonly crystal = new MeshStandardMaterial({ color: '#ffb060', emissive: new Color('#ff7a10'), emissiveIntensity: 1.8, flatShading: true });
   private readonly visor: MeshStandardMaterial;
   private readonly seals: { mat: MeshStandardMaterial; disc: Mesh; glyph: Mesh; color: Color }[] = [];
   private readonly waves: Wave[] = [];
@@ -171,8 +175,9 @@ export class Examiner implements Entity, SpellTarget {
   }
 
   private build(): void {
-    const brass = new MeshStandardMaterial({ color: '#c99a3e', metalness: 0.8, roughness: 0.35, flatShading: true });
-    const dark = new MeshStandardMaterial({ color: '#5a4022', metalness: 0.6, roughness: 0.5, flatShading: true });
+    // (Moderate metalness: there's no environment map, and very metallic brass renders brown.)
+    const brass = new MeshStandardMaterial({ color: '#d8a53e', metalness: 0.45, roughness: 0.38, flatShading: true });
+    const dark = new MeshStandardMaterial({ color: '#4a3420', metalness: 0.3, roughness: 0.55, flatShading: true });
     const add = (parent: Group, geo: BufferGeometry, mat: MeshStandardMaterial, p: [number, number, number]) => {
       const m = new Mesh(geo, mat);
       m.position.set(...p);
@@ -180,17 +185,34 @@ export class Examiner implements Entity, SpellTarget {
       parent.add(m);
       return m;
     };
+    // Boxy plated legs: thigh, knee joint, shin, a big flat foot.
     for (const x of [0.24, -0.24]) {
       const leg = new Group();
       leg.position.set(x, 0.85, 0);
-      add(leg, new CylinderGeometry(0.14, 0.16, 0.8, 7), brass, [0, -0.38, 0]);
-      add(leg, new BoxGeometry(0.28, 0.14, 0.42), dark, [0, -0.8, 0.06]);
+      add(leg, new BoxGeometry(0.22, 0.34, 0.24), brass, [0, -0.17, 0]);
+      add(leg, new CylinderGeometry(0.08, 0.08, 0.26, 8).rotateZ(Math.PI / 2), dark, [0, -0.38, 0]);
+      add(leg, new BoxGeometry(0.24, 0.3, 0.26), brass, [0, -0.58, 0]);
+      add(leg, new BoxGeometry(0.3, 0.12, 0.44), dark, [0, -0.8, 0.07]);
+      add(leg, new BoxGeometry(0.26, 0.04, 0.2), brass, [0, -0.72, 0.17]);
+      mergeChildren(leg);
+      this.legs.push(leg);
       this.root.add(leg);
     }
     this.body.position.y = 0.85;
     this.root.add(this.body);
-    add(this.body, new CylinderGeometry(0.4, 0.3, 0.32, 8), dark, [0, 0.1, 0]);
+    add(this.body, new BoxGeometry(0.62, 0.28, 0.4), dark, [0, 0.1, 0]);
     add(this.body, new BoxGeometry(0.8, 0.78, 0.5), brass, [0, 0.62, 0]);
+    // Plate seams and rivets, and a gear set in each side of the chest.
+    add(this.body, new BoxGeometry(0.82, 0.03, 0.52), dark, [0, 0.3, 0]);
+    add(this.body, new BoxGeometry(0.82, 0.03, 0.52), dark, [0, 0.94, 0]);
+    for (const x of [-0.36, 0.36]) for (const y of [0.36, 0.88]) add(this.body, new SphereGeometry(0.025, 4, 3), dark, [x, y, 0.26]);
+    for (const x of [-0.41, 0.41]) {
+      add(this.body, new CylinderGeometry(0.15, 0.15, 0.04, 10).rotateZ(Math.PI / 2), dark, [x, 0.62, 0]);
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * Math.PI * 2;
+        add(this.body, new BoxGeometry(0.04, 0.06, 0.06), dark, [x, 0.62 + Math.sin(a) * 0.17, Math.cos(a) * 0.17]);
+      }
+    }
     // Six seals on its chest, a rune medallion for each spell, in a ring round a brass boss.
     // The one to break next pulses while its fists are stuck; broken ones go dark and crack.
     add(this.body, new CylinderGeometry(0.1, 0.1, 0.05, 10).rotateX(Math.PI / 2), dark, [0, 0.62, 0.27]);
@@ -206,25 +228,41 @@ export class Examiner implements Entity, SpellTarget {
       this.body.add(glyph);
       this.seals.push({ mat, disc, glyph, color });
     });
-    add(this.body, new SphereGeometry(0.24, 8, 6), brass, [0.5, 0.95, 0]);
-    add(this.body, new SphereGeometry(0.24, 8, 6), brass, [-0.5, 0.95, 0]);
+    // Square stacked pauldrons.
+    for (const x of [0.5, -0.5]) {
+      add(this.body, new BoxGeometry(0.34, 0.2, 0.42), brass, [x, 0.98, 0]);
+      add(this.body, new BoxGeometry(0.3, 0.12, 0.38), brass, [x * 1.06, 0.84, 0]);
+    }
     const helm = new Group();
     helm.position.y = 1.28;
     this.body.add(helm);
-    add(helm, new CylinderGeometry(0.24, 0.26, 0.42, 10), brass, [0, 0.12, 0]);
-    add(helm, new SphereGeometry(0.24, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2), brass, [0, 0.33, 0]);
-    add(helm, new BoxGeometry(0.36, 0.06, 0.06), this.visor, [0, 0.16, 0.24]);
-    // A crest of seven little thistles, one per professor.
-    for (let i = 0; i < 7; i++) add(helm, new ConeGeometry(0.035, 0.22, 5), i % 2 ? dark : brass, [(i - 3) * 0.06, 0.6, -0.02]);
+    // A boxy helm with a glowing visor slit and a crest of seven little spikes, one per professor.
+    add(helm, new BoxGeometry(0.42, 0.44, 0.44), brass, [0, 0.14, 0]);
+    add(helm, new BoxGeometry(0.36, 0.08, 0.4), brass, [0, 0.4, 0]);
+    add(helm, new BoxGeometry(0.46, 0.05, 0.48), dark, [0, -0.06, 0]);
+    add(helm, new BoxGeometry(0.34, 0.07, 0.05), this.visor, [0, 0.18, 0.22]);
+    for (const x of [-0.23, 0.23]) add(helm, new BoxGeometry(0.06, 0.2, 0.2), brass, [x, 0.14, 0.04]);
+    for (let i = 0; i < 7; i++) add(helm, new ConeGeometry(0.03, 0.18 + (i === 3 ? 0.08 : 0), 4), brass, [(i - 3) * 0.05, 0.53, -0.02]);
     for (const [arm, x] of [
       [this.armL, 0.58],
       [this.armR, -0.58],
     ] as const) {
       arm.position.set(x, 0.92, 0);
-      add(arm, new CylinderGeometry(0.11, 0.12, 0.66, 7), brass, [0, -0.33, 0]);
-      add(arm, new IcosahedronGeometry(0.2, 0), dark, [0, -0.72, 0]);
+      add(arm, new BoxGeometry(0.18, 0.3, 0.2), brass, [0, -0.17, 0]);
+      add(arm, new CylinderGeometry(0.07, 0.07, 0.22, 8).rotateZ(Math.PI / 2), dark, [0, -0.36, 0]);
+      add(arm, new BoxGeometry(0.2, 0.28, 0.22), brass, [0, -0.52, 0]);
+      add(arm, new BoxGeometry(0.22, 0.18, 0.24), dark, [0, -0.74, 0]);
+      for (let f = 0; f < 3; f++) add(arm, new BoxGeometry(0.05, 0.1, 0.05), dark, [(f - 1) * 0.07, -0.86, 0.06]);
       this.body.add(arm);
     }
+    // A brass staff in the left hand, topped with a glowing orange crystal.
+    add(this.armL, new CylinderGeometry(0.03, 0.035, 1.9, 6), brass, [0.02, -0.74, 0.12]);
+    add(this.armL, new CylinderGeometry(0.06, 0.04, 0.1, 6), dark, [0.02, 0.18, 0.12]);
+    const crystal = new Mesh(new OctahedronGeometry(0.11, 0).scale(1, 1.6, 1), this.crystal);
+    crystal.position.set(0.02, 0.34, 0.12);
+    this.armL.add(crystal);
+    mergeChildren(this.armL, [crystal]);
+    mergeChildren(this.armR);
   }
 
   // ---------------------------------------------------------------- SpellTarget
@@ -607,13 +645,20 @@ export class Examiner implements Entity, SpellTarget {
     const armX = stuck ? -0.9 : MathUtils.lerp(Math.sin(this.t * 2) * 0.2, -2.9, raise);
     this.armL.rotation.x = MathUtils.damp(this.armL.rotation.x, armX, 12, dt);
     this.armR.rotation.x = MathUtils.damp(this.armR.rotation.x, armX, 12, dt);
+    // A stomping walk while it moves (a stalk, or the charge at a run); planted otherwise.
+    const moving = this.state === 'stalk' || this.state === 'charge';
+    const stride = moving ? Math.sin(this.t * (this.state === 'charge' ? 12 : 5)) * (this.state === 'charge' ? 0.7 : 0.45) : 0;
+    this.legs[0].rotation.x = MathUtils.damp(this.legs[0].rotation.x, stride, 14, dt);
+    this.legs[1].rotation.x = MathUtils.damp(this.legs[1].rotation.x, -stride, 14, dt);
+    // The staff's crystal glows for the hex rain and volleys.
+    this.crystal.emissiveIntensity = this.state === 'rain' || this.state === 'volley' ? 4 + Math.sin(this.t * 25) : 1.8;
     const lean = stuck ? 0.45 : this.state === 'stagger' ? -0.3 : this.state === 'brace' || this.state === 'charge' ? 0.5 : 0;
     this.body.rotation.x = MathUtils.damp(this.body.rotation.x, lean, 8, dt);
     this.body.position.y = 0.85 + (this.state === 'stalk' ? Math.abs(Math.sin(this.t * 5)) * 0.04 : 0);
     const flare = this.state === 'windup' || this.state === 'brace' || this.state === 'charge';
     this.visor.emissiveIntensity = flare ? 3 + Math.sin(this.t * 30) : this.state === 'dormant' ? 0.3 : 1.2;
     // The visor reddens as it gets angrier.
-    this.visor.emissive.set(this.hp <= 2 ? '#ff4a20' : this.hp <= 4 ? '#ff8020' : '#ffb020');
+    this.visor.emissive.set(this.hp <= 2 ? '#ff3a18' : this.hp <= 4 ? '#ff6a18' : '#ff9a20');
     const next = SEALS.length - this.hp;
     this.seals.forEach((sl, i) => {
       if (i < next) return;
