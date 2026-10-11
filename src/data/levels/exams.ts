@@ -161,6 +161,7 @@ function gorse(b: LevelBuilder, flames: Glow): void {
   b.box([0, -7, 22], [2, 10, 6], { color: COLORS.stoneDark });
   b.box([0, -2, 25.5], [21, 4, 1], { color: FLOOR, info: { noGrab: true } });
   b.box([0, -14, 22.5], [21, 0.5, 7], { color: VOID, noCollide: true });
+  b.mist(-10.5, 10.5, 19, 26, -5);
   b.add(
     { type: 'pushBlock', pos: [0, 0, 14], resetOn: 'ex-bell', sunkSignal: 'ex-g1' },
     { type: 'pushBlock', pos: [-4, 0, 16], resetOn: 'ex-bell' },
@@ -230,6 +231,7 @@ function hopgood(b: LevelBuilder, flames: Glow): void {
 function lamplough(b: LevelBuilder, flames: Glow): void {
   section(b, flames, { z0: 86, z1: 112, height: 8, who: 'lamplough', numeral: 'IV', title: 'Illumination', gate: ['ex-l3', 'ex-l4'], holes: [[-10.5, 10.5, 92, 104]], floorColor: '#4a4450' });
   b.box([0, -14, 98], [21, 0.5, 12], { color: VOID, noCollide: true });
+  b.mist(-10.5, 10.5, 92, 104, -5);
   // The pillar halfway, with the second lamp on it.
   b.box([4, -7, 98], [2, 14, 2], { color: COLORS.stoneLight });
   const stones: [number, number][] = [
@@ -321,6 +323,7 @@ function coldharbour(b: LevelBuilder, flames: Glow): void {
 function underbough(b: LevelBuilder, flames: Glow): void {
   section(b, flames, { z0: 164, z1: 190, height: 21, who: 'underbough', numeral: 'VII', title: 'Airs & Graces', gate: ['ex-u2'], holes: [[-10.5, 10.5, 170, 184]] });
   b.box([0, -14, 177], [21, 0.5, 14], { color: VOID, noCollide: true });
+  b.mist(-10.5, 10.5, 170, 184, -5);
   // The landing (x -8..-3.5, z 176..179) beyond the ferry, and the seal shelf (top 9).
   b.box([-5.75, -7, 177.5], [4.5, 14, 3], { color: COLORS.stoneLight });
   b.box([8, 4.5, 186.75], [5, 9, 5.5], { color: COLORS.stoneLight, info: { noGrab: true } });

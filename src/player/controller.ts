@@ -10,6 +10,8 @@ export type PlayerMode = 'ground' | 'air' | 'slide' | 'hang' | 'climb' | 'reset'
 /** What the controller needs to know about the level it's in. */
 export interface PlayerEnvironment {
   killY: number;
+  /** Where a fall ends here: killY, or higher over a misty pit (see LevelBuilder.mist). */
+  killYAt(p: Vector3): number;
   /** Water surface height at this xz position, or null if there's no water here. */
   waterSurfaceAt(p: Vector3): number | null;
 }
@@ -533,7 +535,7 @@ export class PlayerController {
     if (surface !== null && this.pos.y < surface + 0.1) {
       this.events.emit('splash', { pos: new Vector3(this.pos.x, surface, this.pos.z) });
       this.beginReset('water');
-    } else if (this.pos.y < this.env.killY) {
+    } else if (this.pos.y < this.env.killYAt(this.pos)) {
       this.beginReset('fall');
     }
   }

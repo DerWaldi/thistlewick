@@ -64,6 +64,7 @@ function build(b: LevelBuilder): void {
   b.killY = -15;
   const flames = new Glow();
   b.floor(-11, 9.5, -0.5, 98.5, { color: FLOOR, holes: [[-5, 5, 11, 29.2], [-7, 7, 73.5, 86.5]] });
+  b.mist(-5, 5, 11, 29.2, -5);
 
   // ================================================================ antechamber (z 0..9.5)
   wall(b, 'x', -0.5, -5.5, 5.5, 6, { color: STONE, holes: [{ from: -1.25, to: 1.25, top: 3.5 }] });
@@ -231,6 +232,7 @@ function emberCrypt(b: LevelBuilder, flames: Glow): void {
   wall(b, 'x', 90.5, -7.5, 7.5, 7, { color: STONE, holes: [{ from: -1.2, to: 1.2, top: 3.4 }] });
   slab(b, -7.5, 7.5, 70.5, 90.5, 7.5, 0.5, COLORS.stoneDark);
   b.box([0, -12, 80], [14, 0.5, 13], { color: '#141016', noCollide: true });
+  b.mist(-7, 7, 73.5, 86.5, -5);
   // The island halfway across.
   b.box([-3, -6, 80], [2.2, 12, 2.2], { color: COLORS.stoneLight });
   deco(b, new BoxGeometry(2.4, 0.15, 2.4), [-3, 0.03, 80], COLORS.stoneDark);
@@ -278,6 +280,7 @@ function mothOssuary(b: LevelBuilder, flames: Glow): void {
   wall(b, 'z', 8.5, Z0, Z1, 9, { color: STONE });
   slab(b, -8.5, 8.5, Z0, Z1, 9.5, 0.5, COLORS.stoneDark);
   b.box([0, -16, 114], [16, 0.5, 24], { color: '#0e0c12', noCollide: true });
+  b.mist(-8, 8, 102, 126, -5);
   // Bones in niches along the walls (an ossuary, after all).
   for (const x of [-8.02, 8.02]) {
     for (let z = 103; z < 126; z += 3) {

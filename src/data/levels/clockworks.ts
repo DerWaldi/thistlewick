@@ -88,6 +88,7 @@ function build(b: LevelBuilder): void {
   for (const z of [4, 22]) deco(b, new BoxGeometry(4.2, 0.2, 0.2), [0, 0.02, z], BRASS);
   // The pits: a long way down to a dark floor you never reach (falling resets you first).
   b.box([0, -9, 13], [13, 0.5, 18], { color: '#1e1816', noCollide: true });
+  b.mist(-6, 6, 4, 22, -4);
   for (const x of [-6.1, 6.1]) b.box([x, -4.5, 13], [0.5, 9, 18], { color: STONE, noCollide: true });
   b.add(
     { type: 'door', pos: [0, 0, 0.05], yaw: 0, width: 2.4, height: 3.4, to: { level: 'underbough', spawn: 'fromClockworks' } },
@@ -247,6 +248,7 @@ function mainspring(b: LevelBuilder, flames: Glow): void {
   wall(b, 'x', Z1, -8.5, 8.5, 33, { color: STONE, holes: [{ from: -2.1, to: 2.1, bottom: TOP, top: TOP + 3.6 }] });
   slab(b, -8.5, 8.5, Z0, Z1, 33.5, 0.5, COLORS.stoneDark);
   b.box([0, -9, 91], [16, 0.5, 29], { color: '#1e1816', noCollide: true });
+  b.mist(-8, 8, 76.5, 106, -1);
   // The landing by the gallery door, two columns, and the top gallery.
   b.box([-3, 15.8, 78.25], [6, 0.4, 3.5], { color: '#7a6a5a', info: { noGrab: true } });
   b.box([-3, 8, 91], [3, 16, 3], { color: STONE, info: { noGrab: true } });

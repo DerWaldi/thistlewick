@@ -194,6 +194,7 @@ Doors enforce the flow: the classroom exit has `lockedDuring: '<spell>'` (no lea
 - `lightShaft(from, dir, length, width)`: window light beams.
 - `dustMotes(min, max, count)`: drifting dust.
 - `grass(x0, x1, z0, z1, y, density)`: instanced swaying tufts.
+- `b.mist(minX, maxX, minZ, maxZ, top)` (builder): glowing magical mist in a bottomless pit (layered noise, haze up the walls, rising sparkles). Sinking 2 m into it counts as a fall, so put it well below anything walkable. Every pit you can fall into should have one; no black holes.
 - Water has animated glints and a lighter rim at grazing angles.
 - The world material darkens vertical faces near y=0, as a cheap contact shadow.
 - Set dressing (all merged into the level mesh, except cobwebs, which share one batched mesh per level): `rug`, `bench`, `table` (with candles into a `Glow`), `candlestick`, `pottedPlant`, `urn`, `bookStack`, `cauldron`, `armour`, `barrel`, `cobweb(corner, d1, d2)`, `rubble`, `wallTorch`, `ivy`, `mushrooms`, `bush`. Furniture gets invisible box colliders. Remember walls are 1 m thick centred on `at`, so faces sit at `at ± 0.5`.

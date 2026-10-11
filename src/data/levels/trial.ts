@@ -268,6 +268,7 @@ function clockworkMoat(b: LevelBuilder, flames: Glow): void {
   slab(b, -8.5, 8.5, 72, 96, 8.5, 0.5, COLORS.stoneDark);
   // A long way down to a dark floor you never reach (falling resets you first).
   b.box([0, -16, 83], [16, 0.5, 16], { color: '#1e1816', noCollide: true });
+  b.mist(-8, 8, 75, 91, -5);
   for (const x of [-8.1, 8.1]) b.box([x, -8, 83], [0.4, 16, 16], { color: STONE, noCollide: true });
   for (const z of [74.9, 91.1]) b.box([0, -10, z], [16, 12, 0.2], { color: STONE, noCollide: true });
   const TAU = Math.PI * 2;
@@ -316,6 +317,7 @@ function sootlingsLeap(b: LevelBuilder, flames: Glow): void {
   wall(b, 'x', Z1, -8.5, 8.5, 9, { color: STONE, holes: [gateHole(0)] });
   slab(b, -8.5, 8.5, Z0, Z1, 9.5, 0.5, COLORS.stoneDark);
   b.box([0, -16, 119], [16, 0.5, 26], { color: '#1e1816', noCollide: true });
+  b.mist(-8, 8, 106, 132, -5);
   for (const x of [-8.1, 8.1]) b.box([x, -8, 119], [0.4, 16, 26], { color: STONE, noCollide: true });
   for (const z of [105.9, 132.1]) b.box([0, -10, z], [16, 12, 0.2], { color: STONE, noCollide: true });
   // Pillars, zig-zagging: running jumps, not steps.

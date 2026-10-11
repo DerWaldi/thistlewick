@@ -28,6 +28,7 @@ import type { ColliderInfo, Physics } from '../engine/physics';
 import type { EntitySpec } from '../entities/types';
 import type { PlayerEnvironment } from '../player/controller';
 import { COLORS, PATTERN, worldMaterial, type Pattern } from './materials';
+import { buildMist } from './mist';
 
 export type V3 = [number, number, number];
 
@@ -80,6 +81,7 @@ export class LevelBuilder implements PlayerEnvironment {
   private glowGeos: BufferGeometry[] = [];
   private water: WaterVolume[] = [];
   private movers: Mover[] = [];
+  private voids: { minX: number; maxX: number; minZ: number; maxZ: number; y: number }[] = [];
   readonly animated: Animated[] = [];
   /** Entities to spawn once the world exists (see World.spawnAll). */
   readonly entities: EntitySpec[] = [];
@@ -277,6 +279,17 @@ export class LevelBuilder implements PlayerEnvironment {
     });
   }
 
+  /**
+   * Glowing magical mist at the bottom of a pit, its top at `top`. Sinking a little way into
+   * it counts as a fall, so nobody drops on through it into the dark.
+   */
+  mist(minX: number, maxX: number, minZ: number, maxZ: number, top: number): void {
+    const m = buildMist(minX, maxX, minZ, maxZ, top);
+    this.root.add(m.object);
+    this.animated.push(m.animated);
+    this.voids.push({ minX, maxX, minZ, maxZ, y: top - 2 });
+  }
+
   /** Moving platform following `path(t)` (t in seconds). */
   mover(size: V3, color: string, path: (t: number) => Vector3): void {
     const p0 = path(0);
@@ -443,6 +456,13 @@ export class LevelBuilder implements PlayerEnvironment {
   frameUpdate(dt: number, alpha: number): void {
     for (const m of this.movers) m.mesh.position.lerpVectors(m.prev, m.cur, alpha);
     for (const a of this.animated) a.update(dt, this.time);
+  }
+
+  killYAt(p: Vector3): number {
+    for (const v of this.voids) {
+      if (p.x > v.minX && p.x < v.maxX && p.z > v.minZ && p.z < v.maxZ) return Math.max(this.killY, v.y);
+    }
+    return this.killY;
   }
 
   waterSurfaceAt(p: Vector3): number | null {
