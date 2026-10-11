@@ -1,5 +1,6 @@
 import {
   BufferAttribute,
+  Group,
   BufferGeometry,
   Color,
   Material,
@@ -171,6 +172,7 @@ export function dressWith(
     const material = p.material ?? isl.material ?? (isl.glow ? glow : solid);
     const geo = isl.geo.clone().applyMatrix4(toRoot);
     // Into the part's own space (as it stands now, at rest).
+    p.part.updateWorldMatrix(true, false);
     const partInRoot = rootInv.clone().multiply(p.part.matrixWorld);
     geo.applyMatrix4(partInRoot.invert());
     if (!isl.material) {
@@ -197,4 +199,35 @@ export function dressWith(
     }
   }
   return solid;
+}
+
+/**
+ * Loose sparks in a model (the Hexling's glitter, the Sootling's embers): each gets its own
+ * little group, so they can drift round the body, bob and twinkle instead of hanging still.
+ */
+export class FloatingMotes {
+  private readonly motes: { g: Group; ang: number; r: number; y: number; speed: number; phase: number }[] = [];
+  /** Island → the group it should be dressed onto. */
+  readonly groups = new Map<Island, Group>();
+
+  /** `at` maps a model-space point to `parent`'s space; `speed` is radians per second. */
+  constructor(parent: Object3D, islands: Island[], at: (p: Vector3) => Vector3, speed = 0.6) {
+    islands.forEach((isl, i) => {
+      const p = at(isl.center.clone());
+      const g = new Group();
+      g.position.copy(p);
+      parent.add(g);
+      this.groups.set(isl, g);
+      this.motes.push({ g, ang: Math.atan2(p.x, p.z), r: Math.hypot(p.x, p.z), y: p.y, speed: speed * (0.6 + ((i * 7) % 5) * 0.2) * (i % 2 ? 1 : -1), phase: i * 1.7 });
+    });
+  }
+
+  update(t: number): void {
+    for (const m of this.motes) {
+      const a = m.ang + t * m.speed;
+      const r = m.r * (1 + Math.sin(t * 0.9 + m.phase) * 0.15);
+      m.g.position.set(Math.sin(a) * r, m.y + Math.sin(t * 1.7 + m.phase) * 0.08, Math.cos(a) * r);
+      m.g.scale.setScalar(0.6 + Math.abs(Math.sin(t * 3 + m.phase)) * 0.7);
+    }
+  }
 }

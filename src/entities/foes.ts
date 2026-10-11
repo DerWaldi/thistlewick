@@ -30,7 +30,7 @@ import type { SpellHit, SpellTarget } from '../spells/targets';
 import { paint } from '../world/builder';
 import { worldMaterial } from '../world/materials';
 import { mergeChildren } from '../world/merge';
-import { dressWith, modelIslands, type Island } from './models';
+import { dressWith, FloatingMotes, modelIslands, type Island } from './models';
 import type { Entity, SpecOf, WorldContext } from './types';
 
 /**
@@ -149,6 +149,7 @@ export class Hexling implements Entity, SpellTarget {
    * to their swing, the wand tip's glow kept as her own (it swells in the wind-up).
    */
   private modelWings = false;
+  private motes: FloatingMotes | null = null;
 
   private wear(model: Island[]): void {
     this.modelWings = true;
@@ -163,8 +164,12 @@ export class Hexling implements Entity, SpellTarget {
     const hand = this.body.getObjectByName('hand')!;
     hand.position.copy(inBody(0.22, 1.1, 0.3));
     this.root.updateMatrixWorld(true);
+    // Her glitter drifts round her.
+    this.motes = new FloatingMotes(this.body, model.filter((i) => i.mat === 'glow_f0c0ff'), (p) => inBody(p.x, p.y, p.z), 0.8);
     dressWith(this.root, model, toRoot, (i) => {
       const { x, y } = i.center;
+      const mote = this.motes?.groups.get(i);
+      if (mote) return { part: mote };
       if (i.mat === 'glow_ffb0f4') return null;
       if (i.mat.startsWith('wing_')) {
         const w = this.wings.find((k) => k.side === (x > 0 ? 1 : -1) && k.lower === y < 1.0)!;
@@ -313,6 +318,7 @@ export class Hexling implements Entity, SpellTarget {
       w.pivot.rotation.y = w.side * ((this.modelWings ? -0.1 : 0.3) + beat * (this.modelWings ? 0.6 : 1));
       w.pivot.rotation.x = down ? 0.5 : 0;
     }
+    this.motes?.update(this.t);
     const legs = this.body.getObjectByName('legs');
     if (legs) legs.rotation.x = MathUtils.damp(legs.rotation.x, down ? 0 : 0.25 + Math.sin(this.t * 3) * 0.12, 6, dt);
     this.body.rotation.z = MathUtils.damp(this.body.rotation.z, down ? 1.4 : Math.sin(this.t * 1.3) * 0.12, 8, dt);
@@ -684,6 +690,7 @@ export class Sootling implements Entity, SpellTarget {
   private readonly smoke: Mesh[] = [];
   /** The model's smoke spire (when it has one), swaying as a whole. */
   private readonly spire = new Group();
+  private motes: FloatingMotes | null = null;
   private readonly smokeMat = new MeshStandardMaterial({ color: '#4a4246', roughness: 1, flatShading: true, transparent: true, opacity: 0.85 });
 
   constructor(
@@ -765,7 +772,12 @@ export class Sootling implements Entity, SpellTarget {
       this.body.add(this.spire);
       const keep: Object3D[] = [];
       this.arm.traverse((o) => keep.push(o));
+      // Embers floating clear of its body drift round it.
+      const loose = model.filter((i) => i.mat === 'glow_ff7a10' && i.center.distanceTo(new Vector3(0, 0.44, 0)) > 0.46);
+      this.motes = new FloatingMotes(this.body, loose, (p) => p, 0.5);
       dressWith(this.root, model, new Matrix4(), (i) => {
+        const mote = this.motes?.groups.get(i);
+        if (mote) return { part: mote };
         if (i.mat === 'glow_ff9a14') return { part: this.body, material: this.eyeMat };
         if (i.center.y > 0.86 && Math.abs(i.center.x) < 0.3) return { part: this.spire };
         return { part: this.body };
@@ -910,6 +922,7 @@ export class Sootling implements Entity, SpellTarget {
       puff.rotation.set(Math.sin(this.t * 1.3 + i) * 0.15, i * 0.9, (i % 2 ? 0.4 : -0.4) + sway * 1.5);
     }
     this.smokeMat.opacity = dazed ? 0.45 : 0.85;
+    this.motes?.update(this.t);
     this.spire.rotation.z = Math.sin(this.t * 2.2) * (dazed ? 0.25 : 0.12);
     this.spire.rotation.x = Math.cos(this.t * 1.7) * 0.08 + (dazed ? 0.3 : 0);
     if (!dazed && Math.random() < dt * 5) {
