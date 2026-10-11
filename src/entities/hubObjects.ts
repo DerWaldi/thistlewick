@@ -18,6 +18,7 @@ import {
   Vector3,
 } from 'three';
 import { CARD_BY_ID } from '../data/cards';
+import { REWARD_FLAG } from '../data/lessons';
 import { SPEAKERS } from '../data/characters';
 import { QUEST_BY_ID } from '../data/quests';
 import { QuestMarker } from './quests';
@@ -508,7 +509,8 @@ export class Door implements Interactable {
     if (this.spec.closedAfter && this.ctx.state.lessons.has(this.spec.closedAfter)) return true;
     if (this.spec.afterLesson && !this.ctx.state.lessons.has(this.spec.afterLesson)) return true;
     const during = this.spec.lockedDuring;
-    if (during && this.ctx.state.knows(during) && !this.ctx.state.lessons.has(during)) return true;
+    // Class runs until you've brought the Star back and told the teacher about it.
+    if (during && this.ctx.state.knows(during) && !this.ctx.state.flags.has(REWARD_FLAG[during])) return true;
     if (this.spec.lockedUnless) return !this.ctx.state.flags.has(this.spec.lockedUnless);
     return !!this.spec.locked || !this.spec.to;
   }

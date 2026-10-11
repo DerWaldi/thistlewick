@@ -204,7 +204,9 @@ export const DIALOGUES: Record<string, Script> = {
   },
 
   classNotOver: async ({ say, state }) => {
-    const text = state.flags.has('practice-done')
+    const text = state.lessons.has('thwackwort')
+      ? "Not so fast! You've got the Star, have you? Then come and tell me all about it first. Front of the class!"
+      : state.flags.has('practice-done')
       ? "Not so fast! Class isn't over until you bring me that Thistle Star. The Trial's through the iron door."
       : "Not so fast! Class isn't over. Three practice targets first, then the Trial.";
     await say([{ speaker: 'gorse', text }]);
@@ -321,7 +323,9 @@ export const DIALOGUES: Record<string, Script> = {
   },
 
   classNotOverQuince: async ({ say, state }) => {
-    const text = state.flags.has('practice-latchkin')
+    const text = state.lessons.has('latchkin')
+      ? 'A Star, and you were going to leave without a word? Come here and report, please. Properly.'
+      : state.flags.has('practice-latchkin')
       ? 'Class is not over until the Great Vault is open. The iron door, if you please.'
       : 'Class is not over. Three practice boxes, then the Vaults.';
     await say([{ speaker: 'quince', text }]);
@@ -452,7 +456,9 @@ export const DIALOGUES: Record<string, Script> = {
   },
 
   classNotOverHopgood: async ({ say, state }) => {
-    const text = state.flags.has('practice-springwell')
+    const text = state.lessons.has('springwell')
+      ? 'Whoa, whoa! You got the Star? Come and tell me how high you went first!'
+      : state.flags.has('practice-springwell')
       ? "Not yet! The Tower first. The Star is right up on the Weathercock, you can't miss it. Well, you can, but don't."
       : 'Not yet! Three plates, then the Tower.';
     await say([{ speaker: 'hopgood', text }]);
@@ -560,7 +566,9 @@ export const DIALOGUES: Record<string, Script> = {
   },
 
   classNotOverLamplough: async ({ say, state }) => {
-    const text = state.flags.has('practice-glimmerwick')
+    const text = state.lessons.has('glimmerwick')
+      ? 'Back already? Come and tell me what you saw down there, first. Over here, by the lamp.'
+      : state.flags.has('practice-glimmerwick')
       ? "Not yet, not yet. The Catacombs. The iron door. I'll keep a lamp lit for you."
       : 'Not yet. Three plates first. Light the way.';
     await say([{ speaker: 'lamplough', text }]);
@@ -685,7 +693,9 @@ export const DIALOGUES: Record<string, Script> = {
   },
 
   classNotOverAshcombe: async ({ say, state }) => {
-    const text = state.flags.has('practice-cindersnap')
+    const text = state.lessons.has('cindersnap')
+      ? 'Not one step until you have told me how my Glasshouse fared. Over here.'
+      : state.flags.has('practice-cindersnap')
       ? 'The Glasshouse is the iron door, not that one. Off you go. Wipe your feet when you come back.'
       : 'And where do you think you are going? Practice first. Cobweb, crate, braziers.';
     await say([{ speaker: 'ashcombe', text }]);
@@ -822,7 +832,9 @@ export const DIALOGUES: Record<string, Script> = {
   },
 
   classNotOverColdharbour: async ({ say, state }) => {
-    const text = state.flags.has('practice-rimewhistle')
+    const text = state.lessons.has('rimewhistle')
+      ? 'You have the Star. Then you will report to me before you go anywhere, child.'
+      : state.flags.has('practice-rimewhistle')
       ? 'The iron door, child. The Cisterns. The lake will still be there afterwards.'
       : 'You have not finished. Three plates.';
     await say([{ speaker: 'coldharbour', text }]);
@@ -951,7 +963,9 @@ export const DIALOGUES: Record<string, Script> = {
   },
 
   classNotOverUnderbough: async ({ say, state }) => {
-    const text = state.flags.has('practice-thistledown')
+    const text = state.lessons.has('thistledown')
+      ? 'You made it to the top! Come and tell me about it before you dash off!'
+      : state.flags.has('practice-thistledown')
       ? 'Not the stairs! The iron door. The Clockworks. Go on!'
       : 'Three plates first! Then you may go anywhere you like. Down, mostly.';
     await say([{ speaker: 'underbough', text }]);

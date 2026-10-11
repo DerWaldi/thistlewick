@@ -1,5 +1,16 @@
 import type { SpellId } from './spells';
 
+/** Set when the teacher hears about the Star and hands out the reward: the lesson is really over then. */
+export const REWARD_FLAG: Record<SpellId, string> = {
+  thwackwort: 'gorse-reward',
+  latchkin: 'quince-reward',
+  springwell: 'hopgood-reward',
+  glimmerwick: 'lamplough-reward',
+  cindersnap: 'ashcombe-reward',
+  rimewhistle: 'coldharbour-reward',
+  thistledown: 'underbough-reward',
+};
+
 /**
  * The lessons in the order they're taught: where each one is, and what its trial
  * leaves behind in a save (so a trial can be reset for testing, and a sandbox run

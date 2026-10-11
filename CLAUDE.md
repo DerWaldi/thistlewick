@@ -168,7 +168,7 @@ Each lesson is content, not engine work:
 6. Hub content gated with `requires: '<spell>'` appears afterwards.
 Progress lives in flags (`practice-done`, `practice-latchkin`, `down:<rattlecoat/snapcasket id>`, `trial-hint-*`, `vault-hint-*`...), so revisits are consistent.
 Each lesson's later payoffs sit in the hub: Thwackwort raises the Long Gallery portcullis (a `persist` knock switch, flag `on:<id>`); Latchkin opens the court chest, the hall cabinet and the gallery store-room (a `persist` padlock, flag `unlocked:<id>`; chests are remembered in `collected`).
-Doors enforce the flow: the classroom exit has `lockedDuring: '<spell>'` (no leaving mid-lesson) and the trial door `closedAfter: '<spell>'` (each trial runs once; `?level=trial` sandboxes still work for debugging). Nothing in a level may be farmable: placed sweets are remembered, and respawning Gnarlings only drop sweets the first time (`looted:<id>` flags).
+Doors enforce the flow: the classroom exit has `lockedDuring: '<spell>'` (no leaving mid-lesson, and that lasts until you've reported back: the teacher's `REWARD_FLAG` in `lessons.ts`) and the trial door `closedAfter: '<spell>'` (each trial runs once; `?level=trial` sandboxes still work for debugging). Nothing in a level may be farmable: placed sweets are remembered, and respawning Gnarlings only drop sweets the first time (`looted:<id>` flags).
 
 ### Progress & saving
 - `GameState` is the single source of progress. Its helpers (`collectCard`, `findSecret`, `award`, `learn`...) emit events, and the HUD, sound and autosave react to those.
