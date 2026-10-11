@@ -438,3 +438,26 @@ test('the Golden Thistle ends the year: points, the House Cup, the ending', asyn
   });
   expect(home.level).toBe('hub');
 });
+
+test('a saved checkpoint that no longer matches a lectern resumes at the nearest one', async ({ page }) => {
+  await boot(page, '?test&new');
+  const at = await page.evaluate(async () => {
+    const tw = window.__tw;
+    await tw.idle();
+    const g = tw.game as unknown as { state: { flags: Set<string> } };
+    for (const f of ['sorted', 'greeted', 'exams-entered', 'exam-boss-woken']) g.state.flags.add(f);
+    tw.save();
+    // A save from before the Thistle Hall was rebuilt: its lectern stood where the wall is now.
+    const raw = JSON.parse(localStorage.getItem('thistlewick.save.v1')!);
+    raw.level = 'exams';
+    raw.checkpoint = { level: 'exams', pos: [14.3, 0, 191.8], yaw: -Math.PI / 2 };
+    localStorage.setItem('thistlewick.save.v1', JSON.stringify(raw));
+    tw.continueGame();
+    await tw.idle();
+    tw.advance(0.3);
+    return tw.state().feet;
+  });
+  // The Thistle Hall's own lectern by the door (its respawn spot, 1.3 m in front of it).
+  expect(at.x).toBeCloseTo(7.3, 0);
+  expect(at.z).toBeCloseTo(192.4, 0);
+});

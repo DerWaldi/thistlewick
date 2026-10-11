@@ -175,6 +175,7 @@ Doors enforce the flow: the classroom exit has `lockedDuring: '<spell>'` (no lea
 ### Progress & saving
 - `GameState` is the single source of progress. Its helpers (`collectCard`, `findSecret`, `award`, `learn`...) emit events, and the HUD, sound and autosave react to those.
 - Placed sweets get stable ids from build order (`<level>/<type><index>[.<n>]`) and are remembered in `collected`. **Inserting new sweet specs before existing ones changes their ids**, so append new ones in a level instead.
+- A saved checkpoint is a position. If a level is rebuilt so no lectern stands there any more, resuming snaps to the nearest lectern (`LevelSession.checkSavedCheckpoint`), so old saves never spawn you in a wall or outside a room.
 - Autosave runs on cards, secrets, checkpoints, learning a spell, level loads, and finished dialogue scripts; sweets and points are batched. Sandbox runs never save.
 - To change the save shape, bump `VERSION` in `save.ts` and add a migration.
 

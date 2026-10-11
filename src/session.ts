@@ -57,6 +57,7 @@ export class LevelSession {
 
     this.builder = new LevelBuilder(this.root, this.physics, def.id);
     def.build(this.builder);
+    spawn = this.checkSavedCheckpoint(spawn, def.id);
 
     const feet = new Vector3(...spawn.pos);
     this.player = new PlayerController(this.physics, game.input, this.events, game.tuning, this.builder, feet);
@@ -195,6 +196,25 @@ export class LevelSession {
 
   get currentArea(): AreaDef | null {
     return this.area;
+  }
+
+  /**
+   * Resuming at a saved checkpoint that no longer matches a lectern in this level (the level was
+   * rebuilt since: moved, or the room reshaped) would put you anywhere, even outside the walls.
+   * Then use the nearest lectern instead, and remember that one.
+   */
+  private checkSavedCheckpoint(spawn: SpawnPoint, levelId: string): SpawnPoint {
+    const cp = this.game.state.checkpoint;
+    if (!cp || cp.level !== levelId || cp.pos.distanceTo(new Vector3(...spawn.pos)) > 0.01) return spawn;
+    const spots = this.builder.entities.flatMap((e) => {
+      if (e.type !== 'checkpoint') return [];
+      const [x, y, z] = e.pos;
+      return [{ pos: new Vector3(x + Math.sin(e.yaw) * 1.3, y, z + Math.cos(e.yaw) * 1.3), yaw: e.yaw }];
+    });
+    if (!spots.length || spots.some((s) => s.pos.distanceTo(cp.pos) < 0.05)) return spawn;
+    const best = spots.reduce((a, s) => (s.pos.distanceTo(cp.pos) < a.pos.distanceTo(cp.pos) ? s : a));
+    this.game.state.checkpoint = { level: levelId, pos: best.pos.clone(), yaw: best.yaw };
+    return { pos: best.pos.toArray() as [number, number, number], yaw: best.yaw };
   }
 
   dispose(): void {

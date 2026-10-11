@@ -416,7 +416,7 @@ function finale(b: LevelBuilder): void {
     // The finale.
     { type: 'checkpoint', pos: [8.6, 0, 192.4], yaw: -Math.PI / 2, zone: { min: [-10, -1, 190.5], max: [10, 4, 193] } },
     { type: 'trigger', flag: 'exam-boss-woken', script: 'examBossIntro', min: [-10, -1, 190.5], max: [10, 4, 193.5] },
-    { type: 'examiner', id: 'exam-boss', pos: [0, 0, 204], arena: { min: [-17, -1, 191], max: [17, 13, 225] }, wakeFlag: 'exam-boss-woken' },
+    { type: 'examiner', id: 'exam-boss', pos: [0, 0, 204], arena: { min: [-17, -1, 191], max: [17, 13, 225] }, ring: { center: [0, 208], radius: 15 }, wakeFlag: 'exam-boss-woken' },
   );
 }
 

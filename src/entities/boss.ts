@@ -282,6 +282,18 @@ export class Examiner implements Entity, SpellTarget {
         }
         this.pos.x = MathUtils.clamp(this.pos.x, arena.min[0] + 1.5, arena.max[0] - 1.5);
         this.pos.z = MathUtils.clamp(this.pos.z, arena.min[2] + 1.5, arena.max[2] - 1.5);
+        // It moves without colliding: keep it off the walls of a round (or six-sided) hall.
+        if (this.spec.ring) {
+          const [cx, cz] = this.spec.ring.center;
+          const dx = this.pos.x - cx;
+          const dz = this.pos.z - cz;
+          const d = Math.hypot(dx, dz);
+          const r = this.spec.ring.radius;
+          if (d > r) {
+            this.pos.x = cx + (dx / d) * r;
+            this.pos.z = cz + (dz / d) * r;
+          }
+        }
         // Round the caged plinth, not through it.
         if (this.spec.avoid) {
           const [ax, , az] = this.spec.avoid;

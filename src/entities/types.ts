@@ -409,8 +409,10 @@ export type EntitySpec = SpecBase &
         /** Where it stalks you; it wakes when you're inside and `wakeFlag` is set. */
         arena: { min: V3; max: V3 };
         wakeFlag: string;
-        /** A point it keeps its distance from (the caged plinth). */
+        /** A point it keeps its distance from. */
         avoid?: V3;
+        /** A round room: it stays within `radius` of `center` (x, z) as well as inside `arena`. */
+        ring?: { center: [number, number]; radius: number };
       }
     | {
         type: 'houseSeal';
