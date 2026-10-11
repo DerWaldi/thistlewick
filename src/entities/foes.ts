@@ -10,6 +10,7 @@ import {
   Group,
   IcosahedronGeometry,
   MathUtils,
+  Matrix4,
   Mesh,
   MeshBasicMaterial,
   MeshStandardMaterial,
@@ -21,6 +22,7 @@ import {
   SRGBColorSpace,
   Vector3,
   type BufferGeometry,
+  type Object3D,
 } from 'three';
 import { dampAngle } from '../player/controller';
 import { RuneMarker } from '../spells/runes';
@@ -28,6 +30,7 @@ import type { SpellHit, SpellTarget } from '../spells/targets';
 import { paint } from '../world/builder';
 import { worldMaterial } from '../world/materials';
 import { mergeChildren } from '../world/merge';
+import { dressWith, modelIslands } from './models';
 import type { Entity, SpecOf, WorldContext } from './types';
 
 /**
@@ -645,6 +648,8 @@ export class Sootling implements Entity, SpellTarget {
   private facing = 0;
   private hop = 0;
   private readonly smoke: Mesh[] = [];
+  /** The model's smoke spire (when it has one), swaying as a whole. */
+  private readonly spire = new Group();
   private readonly smokeMat = new MeshStandardMaterial({ color: '#4a4246', roughness: 1, flatShading: true, transparent: true, opacity: 0.85 });
 
   constructor(
@@ -718,6 +723,20 @@ export class Sootling implements Entity, SpellTarget {
     this.arm.position.set(0.34, 0.5, 0.05);
     this.body.add(this.arm);
     this.root.add(this.body);
+    const model = modelIslands('sootling');
+    if (model) {
+      // The smoke spire sways as one, from the top of its head; the eyes keep their own glow.
+      this.smoke.length = 0;
+      this.spire.position.set(0, 0.86, -0.05);
+      this.body.add(this.spire);
+      const keep: Object3D[] = [];
+      this.arm.traverse((o) => keep.push(o));
+      dressWith(this.root, model, new Matrix4(), (i) => {
+        if (i.mat === 'glow_ff9a14') return { part: this.body, material: this.eyeMat };
+        if (i.center.y > 0.86 && Math.abs(i.center.x) < 0.3) return { part: this.spire };
+        return { part: this.body };
+      }, keep);
+    }
     this.root.traverse((o) => (o.castShadow = o instanceof Mesh && !(o.material instanceof MeshBasicMaterial)));
     this.root.position.copy(this.pos);
     ctx.scene.add(this.root);
@@ -857,8 +876,10 @@ export class Sootling implements Entity, SpellTarget {
       puff.rotation.set(Math.sin(this.t * 1.3 + i) * 0.15, i * 0.9, (i % 2 ? 0.4 : -0.4) + sway * 1.5);
     }
     this.smokeMat.opacity = dazed ? 0.45 : 0.85;
+    this.spire.rotation.z = Math.sin(this.t * 2.2) * (dazed ? 0.25 : 0.12);
+    this.spire.rotation.x = Math.cos(this.t * 1.7) * 0.08 + (dazed ? 0.3 : 0);
     if (!dazed && Math.random() < dt * 5) {
-      const top = this.smoke[this.smoke.length - 1].getWorldPosition(new Vector3());
+      const top = (this.smoke[this.smoke.length - 1] ?? this.spire).getWorldPosition(new Vector3()).add(new Vector3(0, this.smoke.length ? 0 : 0.9, 0));
       this.ctx.fx.burst(top, 1, SPARK, 0.4, 0.05, 0.8);
     }
     // The wind-up: the tendril rises over its head and a bomb swells at the tip.
