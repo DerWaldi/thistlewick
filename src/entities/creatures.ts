@@ -1,5 +1,6 @@
 import RAPIER from '@dimforge/rapier3d-compat';
 import { BoxGeometry, Color, ConeGeometry, CylinderGeometry, Group, IcosahedronGeometry, MathUtils, Mesh, MeshStandardMaterial, SphereGeometry, Vector3 } from 'three';
+import { dampAngle } from '../player/controller';
 import { RuneMarker } from '../spells/runes';
 import type { SpellHit, SpellTarget } from '../spells/targets';
 import { paint } from '../world/builder';
@@ -511,7 +512,7 @@ export class EmberCrab implements Entity, SpellTarget {
     }
     if (this.state === 'gone') return;
     this.root.position.lerpVectors(this.prev, this.pos, alpha);
-    this.root.rotation.y = MathUtils.damp(this.root.rotation.y, this.facing, 8, dt);
+    this.root.rotation.y = dampAngle(this.root.rotation.y, this.facing, 8, dt);
     const walking = this.state === 'walk';
     this.body.position.y = walking ? Math.abs(Math.sin(this.time * 14)) * 0.05 : 0;
     this.body.rotation.x = walking ? Math.sin(this.time * 14) * 0.05 : 0;

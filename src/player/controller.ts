@@ -761,6 +761,11 @@ export function angleDiff(a: number, b: number): number {
   return d;
 }
 
+/** Turn `current` towards `target` the short way round (a plain damp spins the long way past ±π). */
+export function dampAngle(current: number, target: number, lambda: number, dt: number): number {
+  return current + angleDiff(current, target) * (1 - Math.exp(-lambda * dt));
+}
+
 function rotateTowards(a: number, b: number, maxStep: number): number {
   const d = angleDiff(a, b);
   if (Math.abs(d) <= maxStep) return b;

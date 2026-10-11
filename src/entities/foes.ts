@@ -22,6 +22,7 @@ import {
   Vector3,
   type BufferGeometry,
 } from 'three';
+import { dampAngle } from '../player/controller';
 import { RuneMarker } from '../spells/runes';
 import type { SpellHit, SpellTarget } from '../spells/targets';
 import { paint } from '../world/builder';
@@ -267,7 +268,7 @@ export class Hexling implements Entity, SpellTarget {
     // A faint trail of hex-dust where she flies.
     if (this.state !== 'down' && Math.random() < dt * 14) this.ctx.fx.burst(this.root.position.clone().add(new Vector3(0, 0.2, 0)), 1, HEX, 0.3, 0.06, -0.1);
     const p = this.ctx.player.pos;
-    this.root.rotation.y = MathUtils.damp(this.root.rotation.y, Math.atan2(p.x - this.pos.x, p.z - this.pos.z), 5, dt);
+    this.root.rotation.y = dampAngle(this.root.rotation.y, Math.atan2(p.x - this.pos.x, p.z - this.pos.z), 5, dt);
     const down = this.state === 'down';
     // Quick shallow beats; the lower pair a touch behind the upper. Down, they droop and twitch.
     for (const w of this.wings) {
@@ -788,7 +789,7 @@ export class Sootling implements Entity, SpellTarget {
     for (const b of this.bombs) b.frame(dt);
     if (this.state === 'gone') return;
     this.root.position.lerpVectors(this.prev, this.pos, alpha);
-    this.root.rotation.y = MathUtils.damp(this.root.rotation.y, this.facing, 6, dt);
+    this.root.rotation.y = dampAngle(this.root.rotation.y, this.facing, 6, dt);
     const dazed = this.state === 'dazed';
     this.hop += dt * (dazed ? 0 : 6);
     this.body.position.y = dazed ? 0 : Math.abs(Math.sin(this.hop)) * 0.06;

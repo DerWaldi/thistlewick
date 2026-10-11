@@ -81,8 +81,10 @@ src/entities/          level objects: pushBlock (resetOn), mechanisms (knockSwit
                        foes (hexling: a flying bad fairy circling her patch, hex orbs that drift after
                        you, a Thwackwort knocks her down, a second banishes; sootling: lobs fuse bombs
                        that land, fizz and blow up, kick a bomb back with Thwackwort and it lands on
-                       him, thwack him twice to banish), boss (examiner: the Brass Examiner, six seals
-                       broken by six spells while its fists are stuck after a slam you must jump),
+                       him, thwack him twice to banish), boss (examiner: the Brass Examiner, six seals (rune
+                       medallions on its chest) broken by six spells while its fists are stuck after a slam you
+                       must jump; phases by seals broken: 2+ rolling shockwaves and hex rain on floor marks, 4+ a
+                       charge that leaves it stuck in the wall if dodged; it resets in full if you faint),
                        wanderer (pupils walking a loop, chatting), quests (questItem + ! / ? markers),
                        teasers (targets for spells not yet learned), hubObjects (cards, secrets, tapestry,
                        bookshelf, npc, sorting lantern, doors, hourglasses, spring pad), lessonObjects

@@ -18,6 +18,7 @@ import {
   type BufferGeometry,
 } from 'three';
 import { SPELLS, type SpellId } from '../data/spells';
+import { dampAngle } from '../player/controller';
 import { RuneMarker, runeTexture } from '../spells/runes';
 import type { SpellHit, SpellTarget } from '../spells/targets';
 import type { Entity, SpecOf, WorldContext } from './types';
@@ -130,6 +131,43 @@ export class Examiner implements Entity, SpellTarget {
     this.marker = new RuneMarker(ctx.scene, SEALS[0], 1.1);
     ctx.targets.add(this);
     ctx.events.emit('bossHealth', { name: 'The Brass Examiner', hp: this.hp, max: SEALS.length, active: false });
+    // Knocked out? The encounter starts again from the beginning: every seal whole, back at its post.
+    ctx.events.on('respawn', ({ reason }) => {
+      if (reason === 'faint' && this.state !== 'down') this.reset();
+    });
+  }
+
+  private reset(): void {
+    this.hp = SEALS.length;
+    this.state = 'dormant';
+    this.timer = 0;
+    this.volleyIn = 5;
+    this.rainIn = 6;
+    this.chargeIn = 4;
+    this.facing = Math.PI;
+    this.pos.set(...this.spec.pos);
+    this.prev.copy(this.pos);
+    this.root.position.copy(this.pos);
+    this.root.rotation.y = this.facing;
+    for (const sl of this.seals) {
+      sl.mat.color.copy(sl.color).multiplyScalar(0.5);
+      sl.mat.emissiveIntensity = 0.5;
+      sl.glyph.visible = true;
+      sl.disc.rotation.z = 0;
+      sl.disc.scale.setScalar(1);
+    }
+    for (const o of this.orbs) o.mesh.removeFromParent();
+    for (const w of this.waves) w.mesh.removeFromParent();
+    for (const d of this.drops) {
+      d.mark.removeFromParent();
+      d.orb.removeFromParent();
+    }
+    this.orbs.length = 0;
+    this.waves.length = 0;
+    this.drops.length = 0;
+    this.collider.setTranslation(new Vector3(this.pos.x, this.pos.y + 2.4, this.pos.z));
+    this.marker.setSpell(SEALS[0]);
+    this.ctx.events.emit('bossHealth', { name: 'The Brass Examiner', hp: this.hp, max: SEALS.length, active: false });
   }
 
   private build(): void {
@@ -563,7 +601,7 @@ export class Examiner implements Entity, SpellTarget {
     }
     if (this.state === 'down') return;
     this.root.position.lerpVectors(this.prev, this.pos, alpha);
-    this.root.rotation.y = MathUtils.damp(this.root.rotation.y, this.facing, 5, dt);
+    this.root.rotation.y = dampAngle(this.root.rotation.y, this.facing, 5, dt);
     const raise = this.state === 'windup' || this.state === 'rain' ? 1 : 0;
     const stuck = this.state === 'stuck';
     const armX = stuck ? -0.9 : MathUtils.lerp(Math.sin(this.t * 2) * 0.2, -2.9, raise);

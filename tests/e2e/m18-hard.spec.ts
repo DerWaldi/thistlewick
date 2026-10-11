@@ -610,3 +610,25 @@ test('the Brass Examiner fights in phases as its seals break: rolling shockwaves
   await page.evaluate(() => window.__tw.advance(0.1));
   await shot(page, 'm18-examiner-phases', browserName);
 });
+
+test('knocked out by the Brass Examiner, you start the encounter again: every seal whole', async ({ page }) => {
+  await sandbox(page, 'exams', ['exams-entered', 'exam-boss-woken']);
+  await calm(page, ['Hexling', 'Sootling']);
+  type B = { constructor: { name: string }; state: string; hp: number; pos: { x: number; z: number } };
+  const r = await page.evaluate(async () => {
+    const tw = window.__tw;
+    const g = tw.game as unknown as { state: { stamina: number }; world: { entities: B[] }; health: { damage(n: number, from: object): boolean } };
+    const boss = g.world.entities.find((e) => e.constructor.name === 'Examiner')!;
+    tw.teleport(0, 0, 196, 0);
+    tw.advance(1);
+    boss.hp = 3;
+    // Faint: down to nothing.
+    g.state.stamina = 1;
+    (tw.game as unknown as { session: { health: { damage(n: number, from: object): boolean } } }).session.health.damage(5, { x: 0, y: 0, z: 200, clone() { return this; } });
+    tw.advance(4);
+    await tw.idle();
+    return { hp: boss.hp, z: boss.pos.z };
+  });
+  expect(r.hp).toBe(6);
+  expect(r.z).toBeCloseTo(204, 0);
+});
