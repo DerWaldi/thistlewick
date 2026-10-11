@@ -8,7 +8,7 @@ export interface AreaDef {
   min: V3;
   max: V3;
   /** Overrides the level's ambience while you're in here (the lights dim as you go underground). */
-  ambience?: 'day' | 'dark';
+  ambience?: 'day' | 'dark' | 'dim';
 }
 
 export interface SpawnPoint {
@@ -29,7 +29,7 @@ export interface LevelDef {
   /** Sandbox levels never touch the save. */
   sandbox?: boolean;
   /** 'dark' for places underground: lamps and torches do the lighting (default 'day'). */
-  ambience?: 'day' | 'dark';
+  ambience?: 'day' | 'dark' | 'dim';
   /** Background music (default 'hub'). */
   music?: Mood;
   /**

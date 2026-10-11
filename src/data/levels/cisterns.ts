@@ -50,7 +50,7 @@ export const CISTERNS: LevelDef = {
     { id: 'star', name: 'The Star Chamber', min: [-3.5, 0, 136], max: [3.5, 12, 142.5] },
   ],
   intro: { script: 'cisternIntro', unlessFlag: 'cisterns-entered' },
-  ambience: 'dark',
+  ambience: 'dim',
   music: 'dungeon',
   build,
 };

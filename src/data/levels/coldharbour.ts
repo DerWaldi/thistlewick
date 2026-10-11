@@ -101,7 +101,8 @@ function build(b: LevelBuilder): void {
   signboard(b, 'Frozen falls\nare for climbing', [6.48, 1.3, 7.2], -Math.PI / 2);
 
   // ---------------------------------------------------------------- P3: across the boat dock
-  b.box([0, -0.15, 25.2], [8, 0.3, 2.6], { color: COLORS.wood, pattern: 'planks' });
+  // The jetty stands 3 cm proud of the floor: flush, the two surfaces flickered.
+  b.box([0, -0.12, 25.2], [8, 0.3, 2.6], { color: COLORS.wood, pattern: 'planks' });
   for (const x of [-3.5, 3.5]) b.cylinder([x, -1.6, 24.2], 0.15, 3, COLORS.woodDark, undefined, 6);
   b.add(
     // Running across takes about two seconds: a tap freeze melts long before that.
