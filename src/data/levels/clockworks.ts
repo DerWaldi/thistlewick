@@ -1,7 +1,8 @@
-import { BoxGeometry, ConeGeometry, CylinderGeometry, SphereGeometry, TorusGeometry, Vector3 } from 'three';
-import type { LevelBuilder, V3 } from '../../world/builder';
+import { BoxGeometry, ConeGeometry, CylinderGeometry, Mesh, SphereGeometry, TorusGeometry, Vector3, type BufferGeometry } from 'three';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { paint, type LevelBuilder, type V3 } from '../../world/builder';
 import type { LevelDef } from '../../world/level';
-import { COLORS } from '../../world/materials';
+import { COLORS, worldMaterial } from '../../world/materials';
 import { cobweb, deco, Glow, signboard, slab, wall, wallTorch } from '../../world/props';
 
 /**
@@ -57,20 +58,45 @@ const STAR_Z = 109.3;
 const STONE = '#6a5a52';
 const FLOOR = '#4a4038';
 
-function gear(b: LevelBuilder, c: V3, r: number, axis: 'x' | 'z', teeth = 14): void {
+/**
+ * A brass gear centred on `c`, its face across `axis`. Static decoration (merged into the
+ * level mesh), unless `spin` (rad/s, about its axle) is given: then it's its own mesh, turned
+ * every frame from the level clock, so it can keep time with movers riding on it.
+ */
+function gear(b: LevelBuilder, c: V3, r: number, axis: 'x' | 'z', teeth = 14, spin = 0): void {
+  const parts: [BufferGeometry, string, V3, V3][] = [];
   const rot: V3 = axis === 'x' ? [0, 0, Math.PI / 2] : [Math.PI / 2, 0, 0];
-  deco(b, new TorusGeometry(r, r * 0.08, 4, 24), c, BRASS, axis === 'x' ? [0, Math.PI / 2, 0] : [0, 0, 0]);
-  deco(b, new CylinderGeometry(r * 0.2, r * 0.2, 0.4, 10), c, '#8a6a2a', rot);
+  parts.push([new TorusGeometry(r, r * 0.08, 4, 24), BRASS, [0, 0, 0], axis === 'x' ? [0, Math.PI / 2, 0] : [0, 0, 0]]);
+  parts.push([new CylinderGeometry(r * 0.2, r * 0.2, 0.4, 10), '#8a6a2a', [0, 0, 0], rot]);
   for (let i = 0; i < 6; i++) {
     const a = (i / 6) * Math.PI;
-    deco(b, new BoxGeometry(0.15, r * 2, 0.15), c, BRASS, axis === 'x' ? [a, 0, 0] : [0, 0, a]);
+    parts.push([new BoxGeometry(0.15, r * 2, 0.15), BRASS, [0, 0, 0], axis === 'x' ? [a, 0, 0] : [0, 0, a]]);
   }
   for (let i = 0; i < teeth; i++) {
     const a = (i / teeth) * Math.PI * 2;
     const o = [Math.cos(a) * (r + r * 0.12), Math.sin(a) * (r + r * 0.12)];
-    const p: V3 = axis === 'x' ? [c[0], c[1] + o[1], c[2] + o[0]] : [c[0] + o[0], c[1] + o[1], c[2]];
-    deco(b, new BoxGeometry(axis === 'x' ? 0.2 : 0.35, 0.35, axis === 'x' ? 0.35 : 0.2), p, BRASS, axis === 'x' ? [a, 0, 0] : [0, 0, a]);
+    const p: V3 = axis === 'x' ? [0, o[1], o[0]] : [o[0], o[1], 0];
+    parts.push([new BoxGeometry(axis === 'x' ? 0.2 : 0.35, 0.35, axis === 'x' ? 0.35 : 0.2), BRASS, p, axis === 'x' ? [a, 0, 0] : [0, 0, a]]);
   }
+  if (!spin) {
+    for (const [g, color, p, rr] of parts) deco(b, g, [c[0] + p[0], c[1] + p[1], c[2] + p[2]], color, rr);
+    return;
+  }
+  const geos = parts.map(([g, color, p, rr]) => {
+    const gg = (g.index ? g.toNonIndexed() : g).rotateX(rr[0]).rotateY(rr[1]).rotateZ(rr[2]).translate(...p);
+    gg.deleteAttribute('uv');
+    return paint(gg, color, true, 'plain');
+  });
+  const mesh = new Mesh(mergeGeometries(geos)!, worldMaterial());
+  mesh.position.set(...c);
+  mesh.castShadow = true;
+  b.prop(mesh);
+  b.animated.push({
+    update: (_dt, t) => {
+      if (axis === 'x') mesh.rotation.x = spin * t;
+      else mesh.rotation.z = spin * t;
+    },
+  });
 }
 
 function build(b: LevelBuilder): void {
@@ -115,6 +141,8 @@ function build(b: LevelBuilder): void {
   // L1, the ledge at 6 (north half); L2, the gallery at 12 (south).
   b.box([0, 3, 37], [13, 6, 6], { color: STONE, info: { noGrab: true } });
   b.box([0, 11.8, 28.8], [13, 0.4, 5.6], { color: '#7a6a5a', info: { noGrab: true } });
+  // Behind the gallery: wall the shaft off above the escapement's roof (it looked out at the sky).
+  wall(b, 'x', 25.75, -6.5, 6.5, 12, { base: 12.5, thick: 0.5, color: STONE });
   wall(b, 'x', 40.5, -6.5, 6.5, 24, { color: STONE, holes: [{ from: -6, to: -2.6, bottom: 11.6, top: 15.4 }] });
   b.add(
     { type: 'trigger', flag: 'clockworks-hint-shaft', script: 'clockworksShaft', min: [-6, -1, 26], max: [6, 4, 30] },
@@ -158,7 +186,8 @@ function build(b: LevelBuilder): void {
     // Clockwise seen from the east: up on the south side, over the top, down to the north.
     b.mover([2.4, 0.3, 2.4], BRASS, (t) => new Vector3(0, 9 + R * Math.sin(phase - OMEGA * t + Math.PI), 50 + R * Math.cos(phase - OMEGA * t + Math.PI)));
   }
-  gear(b, [-2.2, 9, 50], R, 'x', 24);
+  // The wheel turns with its platforms (a point on it at angle θ moves like a platform: θ - ωt).
+  gear(b, [-2.2, 9, 50], R, 'x', 24, OMEGA);
   deco(b, new CylinderGeometry(0.6, 0.6, 3.5, 10), [-4, 9, 50], IRON, [0, 0, Math.PI / 2]);
   b.add(
     { type: 'checkpoint', pos: [-4.5, 12, 41.6], yaw: Math.PI / 2, zone: { min: [-6, 11, 40], max: [2.3, 15, 43.5] } },
