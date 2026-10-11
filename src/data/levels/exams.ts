@@ -86,6 +86,11 @@ interface SectionOpts {
   /** Floor holes (x0, x1, z0, z1). */
   holes?: [number, number, number, number][];
   floorColor?: string;
+  /**
+   * The previous section's height, when it's lower than this one: its north wall is this
+   * section's south wall, so carry it on up from just above its roof to this ceiling.
+   */
+  wallUpFrom?: number;
 }
 
 /**
@@ -99,6 +104,10 @@ function section(b: LevelBuilder, flames: Glow, o: SectionOpts): void {
   wall(b, 'z', 11, z0, z1, h, { color: STONE });
   wall(b, 'x', z1, -10.5, 10.5, h, { color: STONE, holes: [{ from: -1.8, to: 1.8, top: 3.4 }] });
   slab(b, -11.5, 11.5, z0, z1 + 0.5, h + 0.5, 0.5, COLORS.stoneDark);
+  if (o.wallUpFrom !== undefined && o.wallUpFrom < h) {
+    // From the top of the lower room's roof slab (which overhangs this wall by half a metre).
+    wall(b, 'x', z0, -10.5, 10.5, h - o.wallUpFrom - 0.5, { base: o.wallUpFrom + 0.5, color: STONE });
+  }
   b.add(
     { type: 'npc', speaker: o.who, pos: [-8, 0, z0 + 2.2], yaw: Math.PI / 2, look: LOOKS[o.who], talk: `exam-${o.who}` },
     { type: 'checkpoint', pos: [8, 0, z0 + 2.2], yaw: -Math.PI / 2, zone: { min: [-10, -1, z0 + 0.5], max: [10, 4, z0 + 4] } },
@@ -207,7 +216,7 @@ function quince(b: LevelBuilder, flames: Glow): void {
 // ---------------------------------------------------------------- III. Hopgood (z 60..86)
 
 function hopgood(b: LevelBuilder, flames: Glow): void {
-  section(b, flames, { z0: 60, z1: 86, height: 21, who: 'hopgood', numeral: 'III', title: 'Leaps & Bounds', gate: ['ex-h3'] });
+  section(b, flames, { z0: 60, z1: 86, height: 21, wallUpFrom: 8, who: 'hopgood', numeral: 'III', title: 'Leaps & Bounds', gate: ['ex-h3'] });
   // East ledge (top 5), west ledge (top 9), the seal shelf (top 17) above the west ledge's
   // north end. None can be grabbed: Hopgood wants bouncing, not climbing.
   b.box([-8, 2.5, 72], [5, 5, 8], { color: COLORS.stoneLight, info: { noGrab: true } });
@@ -321,7 +330,7 @@ function coldharbour(b: LevelBuilder, flames: Glow): void {
 // ---------------------------------------------------------------- VII. Underbough (z 164..190)
 
 function underbough(b: LevelBuilder, flames: Glow): void {
-  section(b, flames, { z0: 164, z1: 190, height: 21, who: 'underbough', numeral: 'VII', title: 'Airs & Graces', gate: ['ex-u2'], holes: [[-10.5, 10.5, 170, 184]] });
+  section(b, flames, { z0: 164, z1: 190, height: 21, wallUpFrom: 9, who: 'underbough', numeral: 'VII', title: 'Airs & Graces', gate: ['ex-u2'], holes: [[-10.5, 10.5, 170, 184]] });
   b.box([0, -14, 177], [21, 0.5, 14], { color: VOID, noCollide: true });
   b.mist(-10.5, 10.5, 170, 184, -5);
   // The landing (x -8..-3.5, z 176..179) beyond the ferry, and the seal shelf (top 9).
