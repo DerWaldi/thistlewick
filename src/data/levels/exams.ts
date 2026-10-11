@@ -33,7 +33,7 @@ import type { SpeakerId } from '../characters';
  *   VII Underbough   z 164..190  a chasm (z 170..184): the ferry floats home after 3 s under
  *                                a pendulum; the basket waits up by the seal shelf (9):
  *                                call it from the landing and ride it up
- *   The Thistle Hall x -18..18, z 190..226  a great hall with four pillars: the Brass Examiner
+ *   The Thistle Hall z 190..226  a hexagonal hall (centre z 208) with four pillars: the Brass Examiner
  *                                (a boss: jump its slams, then break the seal on its chest with
  *                                the spell its rune shows, six times) drops the Golden Thistle
  *                                where it falls; at the far end, a door down to the Lantern Hall
@@ -53,7 +53,7 @@ export const EXAMS: LevelDef = {
     { id: 'ashcombe', name: 'V. Hearth & Flame', min: [-10.5, -20, 112], max: [10.5, 20, 138] },
     { id: 'coldharbour', name: 'VI. Frosts & Waters', min: [-10.5, -20, 138], max: [10.5, 20, 164] },
     { id: 'underbough', name: 'VII. Airs & Graces', min: [-10.5, -20, 164], max: [10.5, 25, 190] },
-    { id: 'thistle', name: 'The Thistle Hall', min: [-18.5, -20, 190], max: [18.5, 20, 226] },
+    { id: 'thistle', name: 'The Thistle Hall', min: [-21, -20, 190], max: [21, 20, 226] },
   ],
   intro: { script: 'examsIntro', unlessFlag: 'exams-entered' },
   music: 'exams',
@@ -351,38 +351,53 @@ function underbough(b: LevelBuilder, flames: Glow): void {
 // ---------------------------------------------------------------- the Thistle Hall (z 190..207)
 
 function thistleHall(b: LevelBuilder, flames: Glow): void {
-  // A great hall for the last fight (x -18..18, z 190..226), with four pillars to duck behind.
-  const X = 18;
-  const Z0 = 190;
-  const Z1 = 226;
+  // A hexagonal hall for the last fight, centred on (0, 208): flat sides south (the doorway from
+  // Airs & Graces, whose north wall is that side) and north (the way home), four pillars.
+  const CX = 0;
+  const CZ = 208;
+  const A = 18; // centre to each flat side
+  const R = A / Math.cos(Math.PI / 6); // centre to each corner
   const H = 13;
-  b.floor(-X, X, Z0, Z1 - 0.5, { color: '#8a6a4a' });
-  wall(b, 'z', -X - 0.5, Z0, Z1 - 0.5, H, { color: STONE });
-  wall(b, 'z', X + 0.5, Z0, Z1 - 0.5, H, { color: STONE });
-  // The south wall either side of the Airs & Graces room's north wall.
-  for (const side of [-1, 1]) wall(b, 'x', Z0, side * 10.5, side * (X + 1), H, { color: STONE });
-  wall(b, 'x', Z1, -X - 1, X + 1, H, { color: STONE, holes: [{ from: -1.3, to: 1.3, top: 3.6 }] });
-  slab(b, -X - 1, X + 1, Z0 + 0.5, Z1 + 0.5, H + 0.5, 0.5, '#4a3226', 'planks');
+  const corner = (i: number): [number, number] => [CX + R * Math.cos((i * Math.PI) / 3), CZ + R * Math.sin((i * Math.PI) / 3)];
+  b.floor(-R - 1, R + 1, 190, CZ + A + 0.5, { color: '#8a6a4a' });
+  slab(b, -R - 1.5, R + 1.5, 190.5, CZ + A + 1, H + 0.5, 0.5, '#4a3226', 'planks');
+  // Sides: 0 = north-east (corner 0 to 1), 1 = north, 2 = north-west, 3 = south-west, 4 = south
+  // (the room before's wall), 5 = south-east. The north one has the door, built as a plain wall.
+  for (const i of [0, 2, 3, 5]) {
+    const [x0, z0] = corner(i);
+    const [x1, z1] = corner(i + 1);
+    const mx = (x0 + x1) / 2;
+    const mz = (z0 + z1) / 2;
+    const len = Math.hypot(x1 - x0, z1 - z0);
+    const out = Math.hypot(mx - CX, mz - CZ);
+    const nx = (mx - CX) / out;
+    const nz = (mz - CZ) / out;
+    b.box([mx + nx * 0.5, H / 2, mz + nz * 0.5], [1, H, len + 0.6], { color: STONE, rot: [0, Math.atan2(x1 - x0, z1 - z0), 0] });
+    // Banners and torches along each slanted wall, facing in.
+    const yaw = Math.atan2(-nx, -nz);
+    const c = ['#b0362f', '#4f7fb8', '#3f7a4a', '#d9922e'][[0, 2, 3, 5].indexOf(i)];
+    banner(b, [mx - nx * 0.05, 8, mz - nz * 0.05], yaw, c, '#e8c25a', 1.8, 6);
+    for (const t of [0.22, 0.78]) wallTorch(b, flames, [x0 + (x1 - x0) * t - nx * 0.05, 3, z0 + (z1 - z0) * t - nz * 0.05], yaw);
+  }
+  wall(b, 'x', CZ + A + 0.5, -R / 2 - 0.6, R / 2 + 0.6, H, { color: STONE, holes: [{ from: -1.3, to: 1.3, top: 3.6 }] });
+  // Pillars on the six corners (they hide the joins) and four inside to duck behind.
+  for (let i = 0; i < 6; i++) {
+    const [x, z] = corner(i);
+    b.cylinder([x, H / 2, z], 1.2, H, COLORS.stoneLight, { noGrab: true }, 10);
+  }
+  for (const x of [-9, 9]) for (const z of [199, 217]) column(b, x, z, H);
   deco(b, new BoxGeometry(3, 0.03, 34), [0, 0.015, 208], COLORS.carpet);
   deco(b, new BoxGeometry(3.4, 0.025, 34.2), [0, 0.012, 208], '#c99a3e');
-  for (const x of [-9, 9]) for (const z of [199, 217]) column(b, x, z, H);
-  for (const [i, c] of ['#b0362f', '#4f7fb8', '#3f7a4a', '#d9922e'].entries()) {
-    for (const z of [198 + (i % 2) * 14]) banner(b, [i < 2 ? -X + 0.05 : X - 0.05, 8, z], i < 2 ? Math.PI / 2 : -Math.PI / 2, c, '#e8c25a', 1.8, 6);
-  }
   b.add(
-    { type: 'npc', speaker: 'wendlebury', pos: [-15.6, 0, 191.8], yaw: Math.PI / 2, look: LOOKS.wendlebury, talk: 'examWendlebury' },
+    { type: 'npc', speaker: 'wendlebury', pos: [-8.6, 0, 192.4], yaw: Math.PI / 2, look: LOOKS.wendlebury, talk: 'examWendlebury' },
     // The Golden Thistle: the Brass Examiner drops it where he falls.
     { type: 'star', id: 'exam-star', pos: [0, 1.4, 208], script: 'examComplete', dropWhen: 'exam-boss' },
   );
-  for (const z of [194, 208, 222]) {
-    wallTorch(b, flames, [-X + 0.05, 3, z], Math.PI / 2);
-    wallTorch(b, flames, [X - 0.05, 3, z], -Math.PI / 2);
-  }
   chandelier(b, flames, 0, H - 2, 200, 2, true);
   chandelier(b, flames, 0, H - 2, 216, 2, true);
-  // The way home, at the far end: straight down to the Lantern Hall once the year is done
+  // The way home, across the hall: straight down to the Lantern Hall once the year is done
   // (the rooms behind you lock themselves up again).
-  b.add({ type: 'door', pos: [0, 0, Z1 - 0.55], yaw: Math.PI, width: 2.4, height: 3.4, to: { level: 'hub', spawn: 'default' }, lockedUnless: 'year-complete', talk: 'examsHomeDoor', label: 'The Lantern Hall' });
+  b.add({ type: 'door', pos: [0, 0, CZ + A - 0.05], yaw: Math.PI, width: 2.4, height: 3.4, to: { level: 'hub', spawn: 'default' }, lockedUnless: 'year-complete', talk: 'examsHomeDoor', label: 'The Lantern Hall' });
 }
 
 /**
@@ -399,9 +414,9 @@ function finale(b: LevelBuilder): void {
     { type: 'hexling', pos: [0, 0, 150], height: 4, radius: 4, interval: 3.4 },
     { type: 'hexling', pos: [0, 0, 177], height: 6, radius: 3.5, interval: 3.6 },
     // The finale.
-    { type: 'checkpoint', pos: [15.6, 0, 191.8], yaw: -Math.PI / 2, zone: { min: [-17, -1, 190.5], max: [17, 4, 193] } },
-    { type: 'trigger', flag: 'exam-boss-woken', script: 'examBossIntro', min: [-17, -1, 190.5], max: [17, 4, 193.5] },
-    { type: 'examiner', id: 'exam-boss', pos: [0, 0, 204], arena: { min: [-18, -1, 190.5], max: [18, 13, 225.5] }, wakeFlag: 'exam-boss-woken' },
+    { type: 'checkpoint', pos: [8.6, 0, 192.4], yaw: -Math.PI / 2, zone: { min: [-10, -1, 190.5], max: [10, 4, 193] } },
+    { type: 'trigger', flag: 'exam-boss-woken', script: 'examBossIntro', min: [-10, -1, 190.5], max: [10, 4, 193.5] },
+    { type: 'examiner', id: 'exam-boss', pos: [0, 0, 204], arena: { min: [-17, -1, 191], max: [17, 13, 225] }, wakeFlag: 'exam-boss-woken' },
   );
 }
 
