@@ -249,7 +249,9 @@ export function buildShelfMesh(w: number, h: number, seed = 1): Mesh {
   add([0.08, h, d], [w / 2 - 0.04, h / 2, 0], COLORS.wood);
   const shelves = Math.max(3, Math.round(h / 0.55));
   const bookColors = ['#7a2f3a', '#2f5a6a', '#5a6a3a', '#8a5a36', '#4a2c4f', '#a0522d', '#2b2b4a', '#c99a3e', '#3f7a4a'];
-  let r = seed;
+  // Seeds come from positions, which can be negative: keep the generator in 0..1 (a negative
+  // value once picked an undefined book colour, and three.js paints that white).
+  let r = Math.abs(Math.floor(seed * 1000)) % 233280;
   const rand = () => {
     r = (r * 9301 + 49297) % 233280;
     return r / 233280;

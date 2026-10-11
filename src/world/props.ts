@@ -450,7 +450,8 @@ function put(b: LevelBuilder, geo: BufferGeometry, origin: V3, rotY: number, loc
 
 /** A tiny deterministic random sequence for scattering props. */
 function scatter(seed: number): () => number {
-  let s = seed * 9301 + 49297;
+  // Seeds are often made from positions and can be negative; keep the sequence in 0..1.
+  let s = (Math.abs(Math.floor(seed)) * 9301 + 49297) % 233280;
   return () => {
     s = (s * 9301 + 49297) % 233280;
     return s / 233280;
