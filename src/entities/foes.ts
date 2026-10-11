@@ -30,7 +30,7 @@ import type { SpellHit, SpellTarget } from '../spells/targets';
 import { paint } from '../world/builder';
 import { worldMaterial } from '../world/materials';
 import { mergeChildren } from '../world/merge';
-import { DizzyStars, HitFlash } from './creatureFx';
+import { DizzyStars, HitFlash, MagicBolt } from './creatureFx';
 import { dressWith, FloatingMotes, modelIslands, type Island } from './models';
 import type { Entity, SpecOf, WorldContext } from './types';
 
@@ -94,7 +94,7 @@ function banish(ctx: WorldContext, spec: { id?: string; persist?: boolean }, id:
 type HexState = 'fly' | 'windup' | 'down' | 'gone';
 
 interface Orb {
-  mesh: Mesh;
+  mesh: MagicBolt;
   pos: Vector3;
   vel: Vector3;
   life: number;
@@ -114,7 +114,6 @@ export class Hexling implements Entity, SpellTarget {
   readonly pos: Vector3;
   private readonly prev: Vector3;
   private readonly orbs: Orb[] = [];
-  private readonly orbMat = new MeshStandardMaterial({ color: '#e0a8ff', emissive: new Color('#a040ff'), emissiveIntensity: 2.6 });
   private state: HexState = 'fly';
   private timer = 0;
   private reload: number;
@@ -230,8 +229,8 @@ export class Hexling implements Entity, SpellTarget {
     const from = this.pos.clone().add(new Vector3(0, 0.4, 0));
     const aim = this.ctx.player.pos.clone().add(new Vector3(0, 0.3, 0)).addScaledVector(this.ctx.player.vel, 0.3).sub(from);
     const vel = aim.normalize().multiplyScalar(this.spec.speed ?? 6.5);
-    const mesh = new Mesh(new IcosahedronGeometry(0.2, 1), this.orbMat);
-    mesh.position.copy(from);
+    const mesh = new MagicBolt('#e8a0ff', '#9a30ff');
+    mesh.update(from, vel, this.t);
     this.ctx.scene.add(mesh);
     this.orbs.push({ mesh, pos: from, vel, life: 4, homing: 1.4 });
     this.ctx.events.emit('hexCast', { pos: from.clone() });
@@ -307,7 +306,6 @@ export class Hexling implements Entity, SpellTarget {
         this.ctx.fx.burst(o.pos.clone(), 12, HEX, 2.2, 0.12, 0.6);
         this.ctx.events.emit('hexHit', { pos: o.pos.clone() });
         o.mesh.removeFromParent();
-        o.mesh.geometry.dispose();
         this.orbs.splice(i, 1);
       }
     }
@@ -315,9 +313,9 @@ export class Hexling implements Entity, SpellTarget {
 
   frameUpdate(dt: number, alpha: number): void {
     for (const o of this.orbs) {
-      o.mesh.position.copy(o.pos);
-      o.mesh.rotation.y += dt * 6;
-      if (Math.random() < dt * 24) this.ctx.fx.burst(o.pos.clone(), 1, HEX, 0.5, 0.07, 0.2);
+      o.mesh.update(o.pos, o.vel, this.t);
+      // Sparks shed behind it.
+      if (Math.random() < dt * 14) this.ctx.fx.burst(o.pos.clone().addScaledVector(o.vel, -0.06), 1, HEX, 0.3, 0.035, 0.1);
     }
     if (this.state === 'gone') return;
     this.root.position.lerpVectors(this.prev, this.pos, alpha);

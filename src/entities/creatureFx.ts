@@ -1,5 +1,27 @@
 import type RAPIER from '@dimforge/rapier3d-compat';
-import { Color, Group, Material, Mesh, MeshStandardMaterial, OctahedronGeometry, Vector3, type Object3D } from 'three';
+import {
+  AdditiveBlending,
+  CanvasTexture,
+  Color,
+  ConeGeometry,
+  DoubleSide,
+  Group,
+  MathUtils,
+  Material,
+  Mesh,
+  MeshBasicMaterial,
+  MeshStandardMaterial,
+  OctahedronGeometry,
+  Shape,
+  ShapeGeometry,
+  SphereGeometry,
+  Sprite,
+  SpriteMaterial,
+  SRGBColorSpace,
+  Vector3,
+  type BufferGeometry,
+  type Object3D,
+} from 'three';
 import type { Physics } from '../engine/physics';
 
 /*
@@ -210,4 +232,112 @@ export class Debris {
 function isShown(o: Object3D): boolean {
   for (let p: Object3D | null = o; p; p = p.parent) if (!p.visible) return false;
   return true;
+}
+
+interface BoltLook {
+  core: MeshBasicMaterial;
+  halo: SpriteMaterial;
+  tail: MeshBasicMaterial;
+  inner: MeshBasicMaterial;
+  star: MeshBasicMaterial;
+}
+const boltLooks = new Map<string, BoltLook>();
+let boltGeo: { core: SphereGeometry; tail: ConeGeometry; inner: ConeGeometry; star: BufferGeometry } | null = null;
+
+function glowTexture(inner: string, outer: string): CanvasTexture {
+  const c = document.createElement('canvas');
+  c.width = c.height = 64;
+  const g = c.getContext('2d')!;
+  const grad = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  grad.addColorStop(0, '#ffffff');
+  grad.addColorStop(0.18, inner);
+  grad.addColorStop(0.5, outer);
+  grad.addColorStop(1, 'rgba(0,0,0,0)');
+  g.fillStyle = grad;
+  g.fillRect(0, 0, 64, 64);
+  const t = new CanvasTexture(c);
+  t.colorSpace = SRGBColorSpace;
+  return t;
+}
+
+/** Opaque at the cone's base (by the core), fading out to its tip. */
+function tailTexture(color: string): CanvasTexture {
+  const c = document.createElement('canvas');
+  c.width = 4;
+  c.height = 64;
+  const g = c.getContext('2d')!;
+  const grad = g.createLinearGradient(0, 64, 0, 0);
+  grad.addColorStop(0, color);
+  grad.addColorStop(1, 'rgba(0,0,0,0)');
+  g.fillStyle = grad;
+  g.fillRect(0, 0, 4, 64);
+  const t = new CanvasTexture(c);
+  t.colorSpace = SRGBColorSpace;
+  return t;
+}
+
+function boltLook(color: string, glow: string): BoltLook {
+  const key = color + glow;
+  let look = boltLooks.get(key);
+  if (!look) {
+    const add = { transparent: true, depthWrite: false, blending: AdditiveBlending, toneMapped: false } as const;
+    look = {
+      core: new MeshBasicMaterial({ color: new Color(color).lerp(new Color('#ffffff'), 0.7), toneMapped: false }),
+      halo: new SpriteMaterial({ map: glowTexture(color, glow), ...add }),
+      tail: new MeshBasicMaterial({ map: tailTexture(glow), opacity: 0.8, side: DoubleSide, ...add }),
+      inner: new MeshBasicMaterial({ map: tailTexture(color), opacity: 0.9, side: DoubleSide, ...add }),
+      star: new MeshBasicMaterial({ color, side: DoubleSide, ...add }),
+    };
+    boltLooks.set(key, look);
+  }
+  return look;
+}
+
+/**
+ * A magic bolt: a white-hot core in a pulsing halo, a comet tail streaming behind it along its
+ * flight, and a four-pointed spark spinning round it. Shared geometry and materials per colour.
+ */
+export class MagicBolt extends Group {
+  private readonly halo: Sprite;
+  private readonly star: Mesh;
+  private readonly tail: Group;
+  private static readonly AHEAD = new Vector3();
+
+  constructor(color: string, glow: string, size = 1) {
+    super();
+    if (!boltGeo) {
+      const star = new Shape();
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * Math.PI * 2;
+        const r = i % 2 ? 0.07 : 0.32;
+        if (i === 0) star.moveTo(Math.cos(a) * r, Math.sin(a) * r);
+        else star.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+      }
+      // Cones point their tips down -Z, their bases at the core.
+      const cone = (r: number, h: number) => new ConeGeometry(r, h, 10, 1, true).rotateX(-Math.PI / 2).translate(0, 0, -h / 2);
+      boltGeo = { core: new SphereGeometry(0.1, 10, 8), tail: cone(0.17, 1.1), inner: cone(0.08, 0.7), star: new ShapeGeometry(star) };
+    }
+    const look = boltLook(color, glow);
+    this.add(new Mesh(boltGeo.core, look.core));
+    this.halo = new Sprite(look.halo);
+    this.halo.scale.setScalar(0.75);
+    this.add(this.halo);
+    this.tail = new Group();
+    this.tail.add(new Mesh(boltGeo.tail, look.tail), new Mesh(boltGeo.inner, look.inner));
+    this.add(this.tail);
+    this.star = new Mesh(boltGeo.star, look.star);
+    this.add(this.star);
+    this.scale.setScalar(size);
+  }
+
+  /** Place it, point the tail away from where it's going, and let it pulse and spin. */
+  update(pos: Vector3, vel: Vector3, t: number): void {
+    this.position.copy(pos);
+    const speed = vel.length();
+    if (speed > 0.01) this.lookAt(MagicBolt.AHEAD.copy(pos).add(vel));
+    // The tail stretches with speed and flickers.
+    this.tail.scale.set(1, 1, MathUtils.clamp(speed / 6.5, 0.4, 1.6) * (0.9 + Math.sin(t * 37) * 0.1));
+    this.halo.scale.setScalar(0.7 + Math.sin(t * 19) * 0.12);
+    this.star.rotation.z = t * 9;
+  }
 }

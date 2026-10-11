@@ -5,7 +5,6 @@ import {
   ConeGeometry,
   CylinderGeometry,
   Group,
-  IcosahedronGeometry,
   MathUtils,
   Matrix4,
   Mesh,
@@ -23,7 +22,7 @@ import {
 import { SPELLS, type SpellId } from '../data/spells';
 import { mergeChildren } from '../world/merge';
 import { angleDiff, dampAngle } from '../player/controller';
-import { HitFlash } from './creatureFx';
+import { HitFlash, MagicBolt } from './creatureFx';
 import { RuneMarker, runeTexture } from '../spells/runes';
 import type { SpellHit, SpellTarget } from '../spells/targets';
 import { dressWith, modelIslands, type Island } from './models';
@@ -74,7 +73,7 @@ interface Drop {
   z: number;
   timer: number;
   mark: Mesh;
-  orb: Mesh;
+  orb: MagicBolt;
 }
 
 const WAVE_SPEED = 7;
@@ -82,7 +81,7 @@ const WAVE_REACH = 20;
 const RAIN_FALL = 1.5;
 
 interface Orb {
-  mesh: Mesh;
+  mesh: MagicBolt;
   pos: Vector3;
   vel: Vector3;
   life: number;
@@ -90,6 +89,9 @@ interface Orb {
 
 const STAFF_UP = new Vector3();
 const DUST = new Color('#c8b090');
+/** Hex rain falls straight down. */
+const RAIN_VEL = new Vector3(0, -7, 0);
+const RAIN_AT = new Vector3();
 
 export class Examiner implements Entity, SpellTarget {
   readonly marker: RuneMarker;
@@ -125,7 +127,6 @@ export class Examiner implements Entity, SpellTarget {
   private readonly pos: Vector3;
   private readonly prev: Vector3;
   private readonly orbs: Orb[] = [];
-  private readonly orbMat = new MeshStandardMaterial({ color: '#ffe08a', emissive: new Color('#ff9a20'), emissiveIntensity: 2.6 });
   private state: State = 'dormant';
   private timer = 0;
   private volleyIn = 5;
@@ -445,16 +446,29 @@ export class Examiner implements Entity, SpellTarget {
     this.ctx.fx.burst(this.pos.clone().add(new Vector3(0, 2, 0)), 60, new Color('#ffd86a'), 6, 0.22, 0.5);
   }
 
+  /** Where the staff's crystal is now (volleys fly from it). */
+  private crystalAt(): Vector3 {
+    let mesh: Mesh | null = null;
+    this.root.traverse((o) => {
+      if ((o as Mesh).isMesh && (o as Mesh).material === this.crystal) mesh = o as Mesh;
+    });
+    if (!mesh) return this.pos.clone().add(new Vector3(0, 3.6, 0));
+    const m = mesh as Mesh;
+    m.geometry.computeBoundingSphere();
+    this.root.updateMatrixWorld(true);
+    return m.geometry.boundingSphere!.center.clone().applyMatrix4(m.matrixWorld);
+  }
+
   private shoot(count: number): void {
-    const from = this.pos.clone().add(new Vector3(0, 3.6, 0));
+    const from = this.crystalAt();
     const p = this.ctx.player.pos;
     const base = Math.atan2(p.x - from.x, p.z - from.z);
     for (let i = 0; i < count; i++) {
       const a = base + (i - (count - 1) / 2) * 0.28;
       const flat = Math.hypot(p.x - from.x, p.z - from.z);
       const vel = new Vector3(Math.sin(a), (p.y - from.y) / Math.max(flat, 1), Math.cos(a)).normalize().multiplyScalar(8);
-      const mesh = new Mesh(new IcosahedronGeometry(0.28, 1), this.orbMat);
-      mesh.position.copy(from);
+      const mesh = new MagicBolt('#ffd060', '#ff8a10', 1.3);
+      mesh.update(from, vel, this.t);
       this.ctx.scene.add(mesh);
       this.orbs.push({ mesh, pos: from.clone(), vel, life: 4 });
     }
@@ -475,7 +489,6 @@ export class Examiner implements Entity, SpellTarget {
         this.ctx.fx.burst(o.pos.clone(), 12, new Color('#ffb020'), 2.4, 0.14, 0.6);
         this.ctx.events.emit('hexHit', { pos: o.pos.clone() });
         o.mesh.removeFromParent();
-        o.mesh.geometry.dispose();
         this.orbs.splice(i, 1);
       }
     }
@@ -525,7 +538,7 @@ export class Examiner implements Entity, SpellTarget {
       const mark = new Mesh(new CircleGeometry(1.1, 20), new MeshBasicMaterial({ color: '#ffb020', transparent: true, opacity: 0.1, depthWrite: false }));
       mark.rotation.x = -Math.PI / 2;
       mark.position.set(x, this.pos.y + 0.05, z);
-      const orb = new Mesh(new IcosahedronGeometry(0.32, 1), this.orbMat);
+      const orb = new MagicBolt('#ffd060', '#ff8a10', 1.4);
       this.ctx.scene.add(mark, orb);
       this.drops.push({ x, z, timer: RAIN_FALL + i * 0.18, mark, orb });
     }
@@ -537,7 +550,7 @@ export class Examiner implements Entity, SpellTarget {
     for (let i = this.drops.length - 1; i >= 0; i--) {
       const d = this.drops[i];
       d.timer -= dt;
-      d.orb.position.set(d.x, this.pos.y + 0.4 + Math.max(0, d.timer) * 7, d.z);
+      d.orb.update(RAIN_AT.set(d.x, this.pos.y + 0.4 + Math.max(0, d.timer) * 7, d.z), RAIN_VEL, this.t);
       (d.mark.material as MeshBasicMaterial).opacity = 0.15 + 0.45 * (1 - Math.min(1, d.timer / RAIN_FALL));
       if (d.timer > 0) continue;
       if (Math.hypot(p.pos.x - d.x, p.pos.z - d.z) < 1.2 && p.feet.y < this.pos.y + 1.6 && p.mode !== 'reset') this.ctx.health.damage(1, new Vector3(d.x, this.pos.y, d.z));
@@ -547,7 +560,6 @@ export class Examiner implements Entity, SpellTarget {
       d.mark.removeFromParent();
       d.orb.removeFromParent();
       d.mark.geometry.dispose();
-      d.orb.geometry.dispose();
       this.drops.splice(i, 1);
     }
   }
@@ -721,10 +733,7 @@ export class Examiner implements Entity, SpellTarget {
   }
 
   frameUpdate(dt: number, alpha: number): void {
-    for (const o of this.orbs) {
-      o.mesh.position.copy(o.pos);
-      o.mesh.rotation.y += dt * 5;
-    }
+    for (const o of this.orbs) o.mesh.update(o.pos, o.vel, this.t);
     if (this.state === 'down') return;
     this.root.position.lerpVectors(this.prev, this.pos, alpha);
     this.root.rotation.y = dampAngle(this.root.rotation.y, this.facing, 5, dt);
