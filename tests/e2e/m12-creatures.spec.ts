@@ -272,3 +272,37 @@ test('the Strongroom: pendulums swing across, and the padlocked gates relock aft
   });
   await shot(page, 'm12-strongroom', browserName);
 });
+
+test('the Snapweed lunges at whoever is in reach, from a good way off', async ({ page }) => {
+  await boot(page, '?test&level=bestiary');
+  // Stand west-south-west of the Snapweed (12, 25), inside its new reach, and watch it lunge.
+  const r = await page.evaluate(async () => {
+    const tw = window.__tw;
+    await tw.idle();
+    const g = tw.game as unknown as { world: { entities: { constructor: { name: string }; state: string; head: { getWorldPosition(v: unknown): { x: number; z: number } } }[] }; renderer: { camera: { position: { set(x: number, y: number, z: number): void }; lookAt(x: number, y: number, z: number): void }; draw(): void } };
+    const w = g.world.entities.find((e) => e.constructor.name === 'Snapweed')!;
+    for (const e of g.world.entities) if (e.constructor.name === 'Gnarling') (e as unknown as { pos: { y: number } }).pos.y = -100;
+    tw.teleport(9.4, 0, 24, 0);
+    let headAt = null as null | { x: number; z: number };
+    const before = tw.state().stamina;
+    for (let i = 0; i < 120; i++) {
+      tw.advance(1 / 60);
+      if (w.state === 'snap') {
+        tw.advance(0.12);
+        const m = (w.head as unknown as { matrixWorld: { elements: number[] }; updateWorldMatrix(a: boolean, b: boolean): void });
+        g.renderer.draw();
+        m.updateWorldMatrix(true, false);
+        headAt = { x: m.matrixWorld.elements[12], z: m.matrixWorld.elements[14] };
+        g.renderer.camera.position.set(12, 3, 19);
+        g.renderer.camera.lookAt(10.5, 1, 24.5);
+        g.renderer.draw();
+        break;
+      }
+    }
+    tw.advance(0.3);
+    return { headAt, hurt: before - tw.state().stamina };
+  });
+  await page.screenshot({ path: 'tests/e2e/__shots__/m12-snapweed-lunge.png' });
+  expect(r.headAt!.x).toBeLessThan(11);
+  expect(r.hurt).toBeGreaterThan(0);
+});

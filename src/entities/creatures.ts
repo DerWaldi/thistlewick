@@ -71,7 +71,8 @@ export class Snapweed implements Entity, SpellTarget {
     private readonly id: string,
   ) {
     this.base = new Vector3(...spec.pos);
-    this.reach = spec.radius ?? 2.4;
+    // A longer reach than its spec says: the stem stretches to lunge (the user wanted it bigger).
+    this.reach = (spec.radius ?? 2.4) * 1.35;
     const mat = worldMaterial();
     // A rosette of long spiky leaves, two rings, red-tipped, and roots splaying from the base.
     for (let i = 0; i < 7; i++) {
@@ -278,9 +279,18 @@ export class Snapweed implements Entity, SpellTarget {
     // Face whoever it's after; sway when idle; rear back in the windup, lunge on the snap.
     const target = this.state === 'idle' || this.state === 'rest' ? Math.sin(this.time * 0.7) * 0.6 : this.faceYaw;
     this.stem.rotation.y += MathUtils.clamp(((target - this.stem.rotation.y + Math.PI * 3) % (Math.PI * 2)) - Math.PI, -dt * 8, dt * 8);
-    const wantLean = this.state === 'windup' ? -0.45 : this.state === 'snap' ? 0.75 : this.state === 'burning' ? 0.9 : Math.sin(this.time * 1.3) * 0.08;
+    const wantLean = this.state === 'windup' ? -0.5 : this.state === 'snap' ? 1.05 : this.state === 'burning' ? 0.9 : Math.sin(this.time * 1.3) * 0.08;
     this.lean = MathUtils.damp(this.lean, wantLean, this.state === 'snap' ? 30 : 10, dt);
+    // Yaw first, then the lean in the turned frame: it rears and lunges towards its target
+    // (with the default order the lean was always towards world +Z).
+    this.stem.rotation.order = 'YXZ';
     this.stem.rotation.x = this.lean;
+    // The lunge: the stem stretches out to its reach (the head keeps its shape).
+    if (this.state !== 'burning') {
+      const stretch = MathUtils.damp(this.stem.scale.y, this.state === 'snap' ? 1.7 : this.state === 'windup' ? 0.85 : 1, this.state === 'snap' ? 30 : 8, dt);
+      this.stem.scale.set(1, stretch, 1);
+      this.head.scale.set(1, 1 / stretch, 1);
+    }
     // Shut like a bud while nothing's near; jaws apart (and twitching) once it's after you.
     const open = this.state === 'windup' ? 0.85 : this.state === 'snap' ? 0 : this.state === 'idle' ? (this.awake ? 0.35 + Math.abs(Math.sin(this.time * 3)) * 0.12 : 0.02) : 0.25;
     this.jawTop.rotation.x = MathUtils.damp(this.jawTop.rotation.x, -open, 20, dt);
