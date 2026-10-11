@@ -7,6 +7,7 @@ import {
   Group,
   IcosahedronGeometry,
   MathUtils,
+  Matrix4,
   Mesh,
   MeshBasicMaterial,
   MeshStandardMaterial,
@@ -17,12 +18,14 @@ import {
   SphereGeometry,
   Vector3,
   type BufferGeometry,
+  type Object3D,
 } from 'three';
 import { SPELLS, type SpellId } from '../data/spells';
 import { mergeChildren } from '../world/merge';
 import { dampAngle } from '../player/controller';
 import { RuneMarker, runeTexture } from '../spells/runes';
 import type { SpellHit, SpellTarget } from '../spells/targets';
+import { dressWith, modelIslands, type Island } from './models';
 import type { Entity, SpecOf, WorldContext } from './types';
 
 type State = 'dormant' | 'stalk' | 'windup' | 'stuck' | 'stagger' | 'volley' | 'rain' | 'brace' | 'charge' | 'down';
@@ -93,6 +96,8 @@ export class Examiner implements Entity, SpellTarget {
   private readonly armL = new Group();
   private readonly armR = new Group();
   private readonly legs: Group[] = [];
+  /** Where the body (hips) sits in root space: the model's hips are lower than the built body's. */
+  private bodyY = 0.85;
   private readonly crystal = new MeshStandardMaterial({ color: '#ffb060', emissive: new Color('#ff7a10'), emissiveIntensity: 1.8, flatShading: true });
   private readonly visor: MeshStandardMaterial;
   private readonly seals: { mat: MeshStandardMaterial; disc: Mesh; glyph: Mesh; color: Color }[] = [];
@@ -123,6 +128,8 @@ export class Examiner implements Entity, SpellTarget {
     this.prev = this.pos.clone();
     this.visor = new MeshStandardMaterial({ color: '#2a2230', emissive: new Color('#ffb020'), emissiveIntensity: 0.3 });
     this.build();
+    const model = modelIslands('examiner');
+    if (model) this.wear(model);
     this.root.scale.setScalar(SCALE);
     this.root.position.copy(this.pos);
     ctx.scene.add(this.root);
@@ -263,6 +270,59 @@ export class Examiner implements Entity, SpellTarget {
     this.armL.add(crystal);
     mergeChildren(this.armL, [crystal]);
     mergeChildren(this.armR);
+  }
+
+  /**
+   * Wear the clockwork model. Built before the root is scaled, so the model goes in at 1/SCALE
+   * (it's already full size). Legs and arms swing from its hips and shoulders, the body leans
+   * from the hips; each seal's gem takes that seal's material (it darkens when broken), with the
+   * seal's rune laid over it; the visor and the staff's crystal keep their animated glow.
+   */
+  private wear(model: Island[]): void {
+    const k = 1 / SCALE;
+    const toRoot = new Matrix4().makeScale(k, k, k);
+    let helm: Object3D = this.body;
+    this.body.traverse((o) => {
+      if ((o as Mesh).material === this.visor) helm = o.parent!;
+    });
+    const HIP = 1.45;
+    this.bodyY = HIP * k;
+    this.body.position.y = this.bodyY;
+    for (const [i, leg] of this.legs.entries()) leg.position.set((i === 0 ? 0.35 : -0.35) * k, HIP * k, 0);
+    this.armL.position.set(0.84 * k, (2.72 - HIP) * k, 0);
+    this.armR.position.set(-0.84 * k, (2.72 - HIP) * k, 0);
+    helm.position.set(0, (2.9 - HIP) * k, 0);
+    // Which gem is which seal, by colour.
+    const GEM: Record<string, SpellId> = {
+      mat_f08a1a: 'thwackwort',
+      mat_f0d020: 'latchkin',
+      mat_9af4f4: 'glimmerwick',
+      mat_e82a2a: 'cindersnap',
+      mat_2a7cf0: 'rimewhistle',
+      mat_a040e8: 'thistledown',
+    };
+    const keep: Object3D[] = [];
+    for (const [i, spell] of SEALS.entries()) {
+      const gem = model.find((g) => GEM[g.mat] === spell);
+      if (!gem) continue;
+      const sl = this.seals[i];
+      sl.glyph.position.set(gem.center.x * k, (gem.center.y - HIP) * k, (gem.max.z + 0.02) * k);
+      sl.glyph.scale.setScalar(0.45);
+      keep.push(sl.glyph);
+    }
+    this.root.updateMatrixWorld(true);
+    dressWith(this.root, model, toRoot, (i) => {
+      const { x, y, z } = i.center;
+      const seal = GEM[i.mat];
+      if (seal) return { part: this.body, material: this.seals[SEALS.indexOf(seal)].mat };
+      if (i.mat === 'glow_ffb81a') return { part: helm, material: this.visor };
+      if (i.mat === 'glow_ffd060') return { part: this.armR, material: this.crystal };
+      if (y > 2.88 && Math.abs(x) < 0.3) return { part: helm };
+      if (x < -0.6 && z > 0.3) return { part: this.armR };
+      if (Math.abs(x) > 0.62 && y > 0.9 && y < 2.86) return { part: x > 0 ? this.armL : this.armR };
+      if (y < HIP && Math.abs(x) > 0.14 && Math.abs(x) < 0.56) return { part: x > 0 ? this.legs[0] : this.legs[1] };
+      return { part: this.body };
+    }, keep, { metalness: 0.35, roughness: 0.45 });
   }
 
   // ---------------------------------------------------------------- SpellTarget
@@ -654,7 +714,7 @@ export class Examiner implements Entity, SpellTarget {
     this.crystal.emissiveIntensity = this.state === 'rain' || this.state === 'volley' ? 4 + Math.sin(this.t * 25) : 1.8;
     const lean = stuck ? 0.45 : this.state === 'stagger' ? -0.3 : this.state === 'brace' || this.state === 'charge' ? 0.5 : 0;
     this.body.rotation.x = MathUtils.damp(this.body.rotation.x, lean, 8, dt);
-    this.body.position.y = 0.85 + (this.state === 'stalk' ? Math.abs(Math.sin(this.t * 5)) * 0.04 : 0);
+    this.body.position.y = this.bodyY + (this.state === 'stalk' ? Math.abs(Math.sin(this.t * 5)) * 0.04 : 0);
     const flare = this.state === 'windup' || this.state === 'brace' || this.state === 'charge';
     this.visor.emissiveIntensity = flare ? 3 + Math.sin(this.t * 30) : this.state === 'dormant' ? 0.3 : 1.2;
     // The visor reddens as it gets angrier.

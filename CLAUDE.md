@@ -213,6 +213,11 @@ Doors enforce the flow: the classroom exit has `lockedDuring: '<spell>'` (no lea
 - Conversations are async scripts in `src/data/dialogues.ts`. They `say(lines)` (with optional `choices`) and may change progress; the Sorting Lantern, for example, sets your house.
 - NPCs, doors, the lantern and the hourglasses are `Interactable`s: E triggers them, and the HUD shows the nearest prompt.
 
+### Foe models
+- `public/models/<foe>.glb` (rattlecoat, snapweed, embercrab, sootling, hexling, examiner) load at boot alongside physics (`loadModels` in `src/entities/models.ts`). Each file is one mesh per colour; `loadModels` splits them into connected pieces ("islands"), and each foe's `wear()` hands every piece to one of its existing pivot groups (a leg, a jaw, a wing) by where it sits, via `dressWith`. The foes keep their procedural animation, and fall back to their code-built bodies if a file fails to load.
+- Models face +Z with their feet at y 0, in metres. A piece can take a foe's own material (a visor, eyes, seal gems, a crystal) so its animated glow still works. To change a model, replace the file and check the foe's `wear()` rules still sort its pieces (render with `m21-bestiary`'s portraits).
+- The Gnarling and the Snapcasket are still built in code.
+
 ### Adding a level object
 1. Add a variant to `EntitySpec` in `src/entities/types.ts`.
 2. Write the class (implement `Entity`, and `SpellTarget` if it can be cast at).
