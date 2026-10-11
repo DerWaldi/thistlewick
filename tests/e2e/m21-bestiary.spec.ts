@@ -116,3 +116,67 @@ for (const s of SHEETS) {
     }
   });
 }
+
+type V = { x: number; y: number; z: number };
+type PE = { constructor: { name: string }; state?: string; pos?: V; base?: V; facing?: number; t?: number; time?: number };
+const SUBJECTS: [string, string, [number, number, number], number, number][] = [
+  // class, pose, room centre, camera distance, look height
+  ['Gnarling', 'chase', [-12, 0, 9], 1.9, 0.45],
+  ['Rattlecoat', 'approach', [15, 0, 9], 3.6, 1.2],
+  ['Snapcasket', 'chase', [-9, 0, 25], 2.3, 0.45],
+  ['Snapweed', 'idle', [12, 0, 25], 3.2, 1.1],
+  ['EmberCrab', 'walk', [-16, 0, 41], 2.3, 0.35],
+  ['Hexling', 'fly', [12, 0, 41], 2.6, 0.1],
+  ['Sootling', 'idle', [-17.5, 2.2, 57], 2.2, 0.5],
+  ['Examiner', 'stalk', [0, 0, 88], 9, 3],
+];
+
+// A portrait of every foe (three-quarter view, no HUD) into __shots__/renders, for art review.
+test('portraits of every foe', async ({ page, browserName }) => {
+  test.skip(browserName !== 'chromium', 'art review shots: one browser is enough');
+  test.setTimeout(180_000);
+  await page.setViewportSize({ width: 1000, height: 1000 });
+  await boot(page, '?test&level=bestiary');
+  await page.addStyleTag({ content: '#hud, #stats, #area-banner, .prompt, #prompt, .toasts, #toasts, #boss-bar { display: none !important; }' });
+  for (const [cls, pose, room, dist, look] of SUBJECTS) {
+    await page.evaluate(
+      ({ cls, pose, room, dist, look }) => {
+        const tw = window.__tw;
+        const g = tw.game as unknown as { world: { entities: PE[]; held: Set<PE> }; renderer: { camera: { position: { set(x: number, y: number, z: number): void }; lookAt(x: number, y: number, z: number): void }; draw(): void } };
+        let e: PE | undefined;
+        let best = Infinity;
+        for (const c of g.world.entities) {
+          const p = c.pos ?? c.base;
+          if (c.constructor.name !== cls || !p) continue;
+          const d = Math.hypot(p.x - room[0], p.z - room[2]);
+          if (d < best) {
+            best = d;
+            e = c;
+          }
+        }
+        const p = (e!.pos ?? e!.base)!;
+        // A three-quarter view from the gallery side, the foe turned to face the camera.
+        const side = room[0] < 0 ? 1 : room[0] > 0 ? -1 : 0;
+        const a = side === 0 ? Math.PI : Math.atan2(side, 0) + (side > 0 ? -0.55 : 0.55);
+        const cx = p.x + Math.sin(a) * dist;
+        const cz = p.z + Math.cos(a) * dist;
+        tw.teleport(p.x + Math.sin(a) * (dist + 2), room[1], p.z + Math.cos(a) * (dist + 2), 0);
+        e!.facing = Math.atan2(cx - p.x, cz - p.z);
+        g.world.held.add(e!);
+        e!.state = pose;
+        for (let i = 0; i < 40; i++) tw.advance(1 / 30);
+        const fy = p.y + look;
+        g.renderer.camera.position.set(cx, fy + dist * 0.18, cz);
+        g.renderer.camera.lookAt(p.x, fy, p.z);
+        // No rune markers in a portrait.
+        for (const c of g.world.entities) {
+          const m = (c as unknown as { marker?: { sprite: { visible: boolean } } }).marker;
+          if (m) m.sprite.visible = false;
+        }
+        g.renderer.draw();
+      },
+      { cls, pose, room, dist, look },
+    );
+    await page.screenshot({ path: `tests/e2e/__shots__/renders/${cls}.png` });
+  }
+});
