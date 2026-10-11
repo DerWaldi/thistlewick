@@ -705,7 +705,12 @@ function buildHub(b: LevelBuilder): void {
         info: { noGrab: true },
         noCollide: !solid,
       });
-    step(Math.PI, 0, true);
+    // The landing is for looks too: as a solid box its edge stood a lip above the ramp,
+    // which snagged you on the last step. You walk on a flat invisible landing instead,
+    // starting where the ramp reaches the top.
+    step(Math.PI, 0, false);
+    const landing = Math.PI - 0.18;
+    b.box([cx + Math.cos(landing) * 1.8, -0.15, cz + Math.sin(landing) * 1.8], [2.2, 0.3, 0.7], { invisible: true, rot: [0, -landing, 0], info: { noGrab: true } });
     const da = Math.PI / 8;
     for (let i = 0; i < 24; i++) step(Math.PI + (i + 1) * da, -0.3 * (i + 1), false);
     const chord = 2 * 1.8 * Math.sin(da / 2);
