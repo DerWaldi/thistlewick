@@ -301,14 +301,15 @@ function hexWingTexture(): CanvasTexture {
   const g = c.getContext('2d')!;
   // UV (0, 0.5) is the root, at the left middle.
   const grad = g.createRadialGradient(0, S / 2, 4, 0, S / 2, S);
-  grad.addColorStop(0, 'rgba(70,20,90,0.95)');
-  grad.addColorStop(0.35, 'rgba(150,80,210,0.75)');
-  grad.addColorStop(0.75, 'rgba(110,200,220,0.45)');
-  grad.addColorStop(1, 'rgba(200,240,255,0.25)');
+  // Violet at the root into bright blue and pale cyan at the tips, like a dragonfly's.
+  grad.addColorStop(0, 'rgba(120,40,200,0.95)');
+  grad.addColorStop(0.3, 'rgba(130,90,240,0.85)');
+  grad.addColorStop(0.65, 'rgba(90,170,250,0.75)');
+  grad.addColorStop(1, 'rgba(170,230,255,0.55)');
   g.fillStyle = grad;
   g.fillRect(0, 0, S, S);
   // Veins.
-  g.strokeStyle = 'rgba(40,10,50,0.9)';
+  g.strokeStyle = 'rgba(30,20,70,0.85)';
   g.lineCap = 'round';
   for (let i = 0; i < 7; i++) {
     const a = -0.9 + (i / 6) * 1.8;
@@ -319,27 +320,34 @@ function hexWingTexture(): CanvasTexture {
     g.stroke();
   }
   g.lineWidth = 1.5;
-  g.strokeStyle = 'rgba(40,10,50,0.6)';
+  g.strokeStyle = 'rgba(30,20,70,0.5)';
   for (let r = 0.35; r < 1; r += 0.2) {
     g.beginPath();
     g.arc(0, S / 2, S * r, -1, 1);
     g.stroke();
   }
-  // An eye-spot near the tip: a warning, like a moth's.
-  const ex = S * 0.68;
-  const ey = S * 0.42;
-  g.fillStyle = 'rgba(30,8,40,0.95)';
-  g.beginPath();
-  g.ellipse(ex, ey, 22, 18, 0.3, 0, Math.PI * 2);
-  g.fill();
-  g.fillStyle = 'rgba(255,90,200,0.95)';
-  g.beginPath();
-  g.ellipse(ex, ey, 13, 10, 0.3, 0, Math.PI * 2);
-  g.fill();
-  g.fillStyle = 'rgba(255,240,150,1)';
-  g.beginPath();
-  g.arc(ex + 3, ey - 2, 4, 0, Math.PI * 2);
-  g.fill();
+  // Magenta spots dotted near the edge: a warning.
+  for (const [fx, fy, r] of [
+    [0.72, 0.36, 15],
+    [0.86, 0.55, 11],
+    [0.55, 0.7, 10],
+    [0.42, 0.28, 8],
+  ]) {
+    const ex = S * fx;
+    const ey = S * fy;
+    g.fillStyle = 'rgba(40,10,60,0.95)';
+    g.beginPath();
+    g.arc(ex, ey, r + 4, 0, Math.PI * 2);
+    g.fill();
+    g.fillStyle = 'rgba(255,70,200,1)';
+    g.beginPath();
+    g.arc(ex, ey, r, 0, Math.PI * 2);
+    g.fill();
+    g.fillStyle = 'rgba(255,220,250,1)';
+    g.beginPath();
+    g.arc(ex + r * 0.25, ey - r * 0.25, r * 0.3, 0, Math.PI * 2);
+    g.fill();
+  }
   // Ragged holes and nicks out of the edge.
   g.globalCompositeOperation = 'destination-out';
   for (let i = 0; i < 14; i++) {
@@ -376,7 +384,8 @@ function wingGeometry(length: number, width: number, droop: number): BufferGeome
  */
 function buildHexling(body: Group, wings: { pivot: Group; side: number; lower: boolean }[], glow: MeshStandardMaterial): void {
   const mat = worldMaterial();
-  const SKIN = '#cdb9dc';
+  // Dark violet skin, so the green eyes glare out of it.
+  const SKIN = '#5a3a72';
   const add = (geo: BufferGeometry, color: string, x: number, y: number, z: number, rx = 0, ry = 0, rz = 0, sx = 1, sy = 1, sz = 1): Mesh => {
     const m = part(geo, color, mat);
     m.position.set(x, y, z);
@@ -386,16 +395,23 @@ function buildHexling(body: Group, wings: { pivot: Group; side: number; lower: b
     return m;
   };
   // Bodice and a collar of points.
-  add(new CylinderGeometry(0.075, 0.11, 0.3, 7), '#3b1a4e', 0, 0.3, 0);
+  add(new CylinderGeometry(0.07, 0.1, 0.3, 7), '#3a1658', 0, 0.3, 0);
   for (let i = 0; i < 6; i++) {
     const a = (i / 6) * Math.PI * 2;
     add(new ConeGeometry(0.035, 0.12, 4), '#7a2f7e', Math.sin(a) * 0.075, 0.46, Math.cos(a) * 0.075, Math.cos(a) * 1.2, 0, -Math.sin(a) * 1.2);
   }
   // A skirt of petals, alternating plum and magenta, flaring out and down.
-  for (let i = 0; i < 8; i++) {
-    const a = (i / 8) * Math.PI * 2;
-    const geo = new ConeGeometry(0.09, 0.4, 4).scale(1, 1, 0.4).rotateX(Math.PI).translate(0, -0.17, 0).rotateX(-0.5 - (i % 2) * 0.12).rotateY(a);
-    add(geo, i % 2 ? '#8a2f86' : '#4c1d60', 0, 0.17, 0);
+  // Two layers, long and pointed, hanging down to a sting of a point: wasp more than flower.
+  for (let i = 0; i < 10; i++) {
+    const a = (i / 10) * Math.PI * 2;
+    const len = 0.5 + (i % 3) * 0.08;
+    const geo = new ConeGeometry(0.08, len, 4).scale(1, 1, 0.4).rotateX(Math.PI).translate(0, -len * 0.42, 0).rotateX(-0.28 - (i % 2) * 0.1).rotateY(a);
+    add(geo, i % 2 ? '#b0309a' : '#6a2090', 0, 0.17, 0);
+  }
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * Math.PI * 2 + 0.3;
+    const geo = new ConeGeometry(0.07, 0.32, 4).scale(1, 1, 0.4).rotateX(Math.PI).translate(0, -0.14, 0).rotateX(-0.75).rotateY(a);
+    add(geo, '#d048b0', 0, 0.2, 0);
   }
   // Head: long-ish face, pointed chin, pointed ears.
   add(new SphereGeometry(0.13, 10, 8), SKIN, 0, 0.62, 0.0, 0, 0, 0, 0.92, 1.12, 0.95);
@@ -413,6 +429,12 @@ function buildHexling(body: Group, wings: { pivot: Group; side: number; lower: b
     add(new ConeGeometry(0.05, len, 5), i % 3 ? '#2b1236' : '#5a2266', Math.sin(a) * 0.08, 0.72 + Math.cos(a) * 0.03, -0.06, -0.9 + Math.cos(a) * 0.4, 0, -a * 0.75);
   }
   add(new SphereGeometry(0.135, 8, 6), '#2b1236', 0, 0.66, -0.035, 0, 0, 0, 1, 1.05, 0.95);
+  // Antennae: two thin feelers arching up and out from the brow, tipped with a bead.
+  for (const side of [-1, 1]) {
+    add(new CylinderGeometry(0.007, 0.011, 0.2, 4), '#1a0c14', side * 0.06, 0.82, 0.03, -0.3, 0, -side * 0.4);
+    add(new CylinderGeometry(0.005, 0.007, 0.12, 4), '#1a0c14', side * 0.13, 0.94, 0.0, 0.3, 0, -side * 1.0);
+    add(new SphereGeometry(0.02, 5, 4), '#d048b0', side * 0.18, 0.97, -0.02);
+  }
   for (let i = 0; i < 5; i++) {
     const a = -0.9 + (i / 4) * 1.8;
     add(new ConeGeometry(0.018, 0.08, 4), '#1a0c14', Math.sin(a) * 0.11, 0.76, Math.cos(a) * 0.07, 0.2, 0, -a * 0.6);
@@ -459,7 +481,8 @@ function buildHexling(body: Group, wings: { pivot: Group; side: number; lower: b
   const wingMat = new MeshBasicMaterial({ map: hexWingTexture(), transparent: true, side: DoubleSide, depthWrite: false, alphaTest: 0.04 });
   for (const lower of [false, true]) {
     for (const side of [-1, 1]) {
-      const geo = lower ? wingGeometry(0.5, 0.26, -0.05) : wingGeometry(0.78, 0.4, 0.06);
+      // Long and narrow, dragonfly-like.
+      const geo = lower ? wingGeometry(0.66, 0.24, -0.06) : wingGeometry(0.92, 0.34, 0.08);
       if (side < 0) geo.scale(-1, 1, 1);
       const wing = new Mesh(geo, wingMat);
       wing.rotation.z = side * (lower ? -0.55 : 0.4);
