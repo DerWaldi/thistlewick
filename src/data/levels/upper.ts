@@ -376,7 +376,8 @@ function leads(b: LevelBuilder): void {
   // where the crate docks), a lookout platform on it (14), and the telescope house, a little
   // domed turret on the north edge, clear of the bounce from the tile to the lookout.
   b.cylinder([23, (R + 11.4) / 2, 76], 4, 11.4 - R, COLORS.stoneLight, { noGrab: true }, 16);
-  deco(b, new CylinderGeometry(4.15, 4.15, 0.3, 16), [23, 11.25, 76], COLORS.stoneDark);
+  // (Its top stands 2 cm above the drum's: level with it, the two flickered.)
+  deco(b, new CylinderGeometry(4.15, 4.15, 0.3, 16), [23, 11.27, 76], COLORS.stoneDark);
   for (let i = 0; i < 16; i++) {
     const a = (i / 16) * Math.PI * 2;
     if (Math.sin(a) < -0.55) continue; // the crate's side (south)
