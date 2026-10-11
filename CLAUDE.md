@@ -72,7 +72,7 @@ src/entities/          level objects: pushBlock (resetOn), mechanisms (knockSwit
                        floe: an ice raft Thwackwort slides until it bumps something, rideable, `resetOn`),
                        air (skyLift: a platform/basket/crate Thistledown floats between `from` and `to`
                        by casting at its feather-stone post; carries riders, `startAt`, `returnAfter`;
-                       pendulum: a swinging bob that knocks you back),
+                       pendulum: a swinging bob that knocks you back; `style: 'log'` hangs a log on ropes),
                        creatures (snapweed: rooted, rears back then bites everything in `radius`, the
                        player and Gnarlings (anything in `ctx.creatures`); Cindersnap burns it.
                        emberCrab: patrols, lobs fireballs when it can see you; Thwackwort flips it

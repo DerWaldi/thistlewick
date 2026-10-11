@@ -35,7 +35,7 @@ export const WOODS: LevelDef = {
     { id: 'wicket', name: 'The Old Woods', min: [-17, -5, -1], max: [17, 20, 24] },
     { id: 'dell', name: 'Mushroom Dell', min: [-17, -5, 24], max: [17, 20, 44] },
     { id: 'canopy', name: 'The Canopy', min: [-17, -6, 44], max: [17, 25, 80] },
-    { id: 'hollow', name: 'The Hollow Log', min: [-6.5, 7, 80], max: [0.5, 12, 94], ambience: 'dark' },
+    { id: 'hollow', name: 'The Hollow Log', min: [-6.5, 7, 80], max: [0.5, 12, 94], ambience: 'dim' },
     { id: 'canopy', name: 'The Canopy', min: [-17, -6, 80], max: [17, 25, 94] },
     { id: 'brook', name: 'The Brook Shelf', min: [-17, -6, 94], max: [17, 12.5, 106] },
     { id: 'oak', name: 'The Old Oak', min: [-17, 12.5, 104], max: [17, 40, 131] },
@@ -292,6 +292,12 @@ function bridge(b: LevelBuilder, a: [number, number], c: [number, number], w = 1
     const ox = Math.cos(yaw) * side * (w / 2);
     const oz = -Math.sin(yaw) * side * (w / 2);
     deco(b, new CylinderGeometry(0.025, 0.025, len, 4).rotateX(Math.PI / 2), [(a[0] + c[0]) / 2 + ox, P + 0.9, (a[1] + c[1]) / 2 + oz], '#c8b090', [0, yaw, 0]);
+    // Posts at the ends and along the way, so the rope rails are tied to something.
+    const n = Math.max(1, Math.round(len / 1.6));
+    for (let k = 0; k <= n; k++) {
+      const t = k / n;
+      deco(b, new CylinderGeometry(0.06, 0.07, 1.0, 5), [a[0] + dx * t + ox, P + 0.45, a[1] + dz * t + oz], BARK);
+    }
   }
 }
 
@@ -327,9 +333,18 @@ function canopy(b: LevelBuilder): void {
   bridge(b, [1.6, 52.6], [5.1, 56.3]);
   bridge(b, [5, 59.6], [0.4, 63]);
   bridge(b, [-3.1, 78.3], [-3.1, 80.2]);
+  // The bough the swinging log hangs from, between the second and third platforms' trees.
+  {
+    const sx = 6.5;
+    const sz = 58;
+    const ex = -1;
+    const ez = 64.5;
+    const len = Math.hypot(ex - sx, ez - sz);
+    deco(b, new CylinderGeometry(0.35, 0.5, len, 7).rotateX(Math.PI / 2), [(sx + ex) / 2, P + 6.6, (sz + ez) / 2], BARK, [0, Math.atan2(ex - sx, ez - sz), 0]);
+  }
   b.add(
     // A log on ropes swings across the second bridge.
-    { type: 'pendulum', pos: [2.7, P + 6.5, 61.3], length: 5.6, swing: 0.75, period: 2.8, yaw: Math.atan2(-4.6, 3.4), bob: 0.75 },
+    { type: 'pendulum', pos: [2.7, P + 6.5, 61.3], length: 5.6, swing: 0.75, period: 2.8, yaw: Math.atan2(-4.6, 3.4), bob: 0.75, style: 'log' },
     // The basket waits at the far side: call it over, ride it back.
     { type: 'skyLift', style: 'basket', id: 'wd-basket', from: [-1.6, P, 67.7], to: [-2.6, P, 72.5], size: [2, 2], startAt: 'to', speed: 2 },
     { type: 'checkpoint', pos: [0, P, 49.4], yaw: 0, zone: { min: [-6, P - 1, 44], max: [6, P + 4, 53] } },
@@ -347,11 +362,36 @@ function hollow(b: LevelBuilder): void {
   const X1 = 0;
   // A fallen giant, hollow inside: floor with holes, walls, a curved-looking roof.
   b.floor(X0, X1, 80, 94, { top: P, thickness: 0.6, color: '#5a4030', holes: [[X0, X1, 83, 90]] });
-  for (const x of [X0 - 0.3, X1 + 0.3]) b.box([x, P + 2, 87], [0.6, 4, 14], { color: BARK });
-  b.box([(X0 + X1) / 2, P + 4.2, 87], [X1 - X0 + 1.2, 0.5, 14], { color: BARK });
-  for (const x of [X0 + 0.4, X1 - 0.4]) deco(b, new BoxGeometry(0.6, 1, 14), [x, P + 3.5, 87], BARK, [0, 0, x < -3 ? -0.6 : 0.6]);
-  // Bark rings at the ends.
-  for (const z of [80, 94]) deco(b, new CylinderGeometry(4, 4, 0.5, 10, 1, true).rotateX(Math.PI / 2), [-3, P + 1.9, z], '#5a3a22');
+  // The walls and roof you bump into are invisible boxes; what you see is the log itself, a
+  // round shell (only the part above the floor, so the holes don't look like solid wood).
+  for (const x of [X0 - 0.3, X1 + 0.3]) b.box([x, P + 2, 87], [0.6, 4, 14], { invisible: true });
+  b.box([(X0 + X1) / 2, P + 4.2, 87], [X1 - X0 + 1.2, 0.5, 14], { invisible: true });
+  const CY = P + 1.9;
+  const arc = (r: number) => {
+    const a0 = Math.acos(Math.min(1, 1.9 / r));
+    return [a0, Math.PI * 2 - 2 * a0] as const;
+  };
+  {
+    const [a0, al] = arc(3.9);
+    deco(b, new CylinderGeometry(3.9, 3.9, 14.6, 14, 1, true, a0, al).rotateX(Math.PI / 2), [-3, CY, 87], BARK);
+  }
+  {
+    // The inside face (the same shell turned inside out, a little smaller).
+    const [a0, al] = arc(3.55);
+    const inner = new CylinderGeometry(3.55, 3.55, 14.6, 14, 1, true, a0, al).toNonIndexed().scale(-1, 1, 1);
+    inner.computeVertexNormals();
+    deco(b, inner.rotateX(Math.PI / 2).rotateY(Math.PI), [-3, CY, 87], '#5a3a22');
+  }
+  // Bark rings round the ends, and a few knots.
+  for (const z of [79.8, 94.2]) {
+    const [a0, al] = arc(4.1);
+    deco(b, new CylinderGeometry(4.1, 4.1, 0.5, 14, 1, true, a0, al).rotateX(Math.PI / 2), [-3, CY, z], '#4a3020');
+  }
+  for (const [ax, z] of [
+    [0.9, 83],
+    [2.2, 91],
+    [-0.6, 88],
+  ]) deco(b, new IcosahedronGeometry(0.5, 0), [-3 + Math.cos(ax) * 3.9, CY + Math.sin(ax) * 3.9, z], '#4a3020'),
   b.add(
     { type: 'wickLamp', pos: [-1.2, P, 81.4], radius: 5.2, duration: 9, light: true },
     { type: 'glimmerBlock', pos: [-3.8, P - 0.15, 84.2], size: [1.5, 0.3, 1.5] },
@@ -404,6 +444,8 @@ function oak(b: LevelBuilder): void {
   b.cylinder([0, UP + 7, 122], 3, 14, BARK, undefined, 12);
   for (let i = 0; i < 7; i++) {
     const a = (i / 7) * Math.PI * 2 + 0.3;
+    // (Not the one that would run out through the root-gate, south.)
+    if (i === 5) continue;
     deco(b, new CylinderGeometry(0.4, 0.9, 4.5, 6), [Math.cos(a) * 3.6, UP + 0.6, 122 + Math.sin(a) * 3.6], BARK, [Math.sin(a) * 1.2, 0, -Math.cos(a) * 1.2]);
   }
   for (const [dx, dy, dz, r] of [

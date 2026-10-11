@@ -327,6 +327,8 @@ export type EntitySpec = SpecBase &
         yaw?: number;
         /** Bob radius (default 0.7). */
         bob?: number;
+        /** 'brass' (rod and disc, the default) or 'log' (a log slung on two ropes). */
+        style?: 'brass' | 'log';
       }
     | {
         type: 'snapweed';

@@ -201,14 +201,31 @@ export class Pendulum implements Entity {
     this.axis = new Vector3(Math.cos(spec.yaw ?? 0), 0, -Math.sin(spec.yaw ?? 0));
     this.time = (spec.phase ?? 0) * spec.period;
     const mat = worldMaterial();
-    const rod = new Mesh(paint(flat(new CylinderGeometry(0.06, 0.06, spec.length, 6)), '#3a3340', true), mat);
-    rod.position.y = -spec.length / 2;
-    const disc = new Mesh(paint(flat(new CylinderGeometry(spec.bob ?? 0.7, spec.bob ?? 0.7, 0.25, 16)), '#c99a3e', true), mat);
-    disc.rotation.x = Math.PI / 2;
-    disc.position.y = -spec.length;
-    const boss = new Mesh(paint(flat(new SphereGeometry(0.2, 8, 6)), '#8a6a2a', true), mat);
-    boss.position.y = -spec.length;
-    this.pivot.add(rod, disc, boss);
+    if (spec.style === 'log') {
+      // A log slung across the swing on two ropes, its cut ends showing the rings.
+      const r = spec.bob ?? 0.7;
+      const log = new Mesh(paint(flat(new CylinderGeometry(r, r * 1.05, 2.6, 9)), '#6b4a2e', true), mat);
+      log.rotation.x = Math.PI / 2;
+      log.position.y = -spec.length;
+      this.pivot.add(log);
+      for (const side of [-1, 1]) {
+        const rope = new Mesh(paint(flat(new CylinderGeometry(0.04, 0.04, spec.length, 5)), '#c8b090', true), mat);
+        rope.position.set(0, -spec.length / 2, side * 0.9);
+        const end = new Mesh(paint(flat(new CylinderGeometry(r * 0.85, r * 0.85, 0.04, 9)), '#c89a6a', true), mat);
+        end.rotation.x = Math.PI / 2;
+        end.position.set(0, -spec.length, side * 1.31);
+        this.pivot.add(rope, end);
+      }
+    } else {
+      const rod = new Mesh(paint(flat(new CylinderGeometry(0.06, 0.06, spec.length, 6)), '#3a3340', true), mat);
+      rod.position.y = -spec.length / 2;
+      const disc = new Mesh(paint(flat(new CylinderGeometry(spec.bob ?? 0.7, spec.bob ?? 0.7, 0.25, 16)), '#c99a3e', true), mat);
+      disc.rotation.x = Math.PI / 2;
+      disc.position.y = -spec.length;
+      const boss = new Mesh(paint(flat(new SphereGeometry(0.2, 8, 6)), '#8a6a2a', true), mat);
+      boss.position.y = -spec.length;
+      this.pivot.add(rod, disc, boss);
+    }
     mergeChildren(this.pivot);
     this.pivot.position.copy(this.origin);
     this.pivot.rotation.y = spec.yaw ?? 0;
