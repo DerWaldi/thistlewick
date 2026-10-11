@@ -4,3 +4,4 @@ test-results
 playwright-report
 tests/e2e/__shots__
 .DS_Store
+tools/trailer/out/
