@@ -46,8 +46,8 @@ const FACTORIES: { [T in EntityType]: Factory<T> } = {
   trigger: (s, c) => new Trigger(s, c),
   star: (s, c) => (c.state.collected.has(s.id) ? null : new ThistleStar(s, c)),
   rattlecoat: (s, c) => {
-    // Already beaten on an earlier visit: stays down, and whatever it guarded stays open.
-    if (c.state.flags.has(`down:${s.id}`)) {
+    // A castle Rattlecoat beaten on an earlier visit stays down, and what it guarded stays open.
+    if (s.persist && c.state.flags.has(`down:${s.id}`)) {
       c.signals.set(s.id, true);
       return null;
     }

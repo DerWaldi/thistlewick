@@ -17,24 +17,30 @@ import { RuneMarker } from '../spells/runes';
 import type { SpellHit, SpellTarget } from '../spells/targets';
 import type { Entity, SpecOf, WorldContext } from './types';
 
-type State = 'dormant' | 'approach' | 'windup' | 'swing' | 'recover' | 'stagger' | 'toppled' | 'rising' | 'collapsed';
+type State = 'dormant' | 'approach' | 'windup' | 'swing' | 'brace' | 'charge' | 'recover' | 'stagger' | 'toppled' | 'rising' | 'collapsed';
 
 const HALF = 0.55;
 const R = 0.45;
 const CENTER_TO_FEET = HALF + R;
-const WALK_SPEED = 2.0;
+const WALK_SPEED = 2.8;
+/** The charge: braced, then a straight dash at you from a few metres off. */
+const CHARGE_SPEED = 9;
+const CHARGE_RANGE: [number, number] = [4, 13];
 const REACH = 2.3;
 /** Once engaged, it keeps after you this far outside its arena (knockback shouldn't end the fight). */
 const LEASH = 12;
+/** Provoked (hit, or its Gnarlings are gone), it hunts you much further. */
+const LEASH_PROVOKED = 30;
 /** A tap just clangs off; it takes a charged Thwackwort to knock one over. */
 const CHARGE_TO_TOPPLE = 0.6;
 const MAX_HP = 2;
 
 /**
- * Rattlecoat: an empty suit of armour that clanks after intruders. Slow, heavily
- * telegraphed (it raises its sword and its visor glows), and too sturdy for a quick
- * Thwackwort: a charged one topples it. Topple it twice and it falls apart for good,
- * setting the signal `id`.
+ * Rattlecoat: an empty suit of armour that clanks after intruders. Telegraphed (it raises
+ * its sword and its visor glows), and too sturdy for a quick Thwackwort: a charged one
+ * topples it. Topple it twice and it falls apart for good, setting the signal `id`.
+ * It wakes when you step into its arena, when a spell hits it, or when the last Gnarling in
+ * its arena is gone; from a distance it braces and charges at you.
  */
 export class Rattlecoat implements Entity, SpellTarget {
   readonly spell = 'thwackwort' as const;
@@ -54,6 +60,10 @@ export class Rattlecoat implements Entity, SpellTarget {
   private hintShown = false;
   private t = 0;
   private vy = 0;
+  private provoked = false;
+  private hadGnarlings = false;
+  private chargeIn = 1.5;
+  private chargeDir = new Vector3();
 
   private root = new Group();
   private body = new Group();
@@ -145,6 +155,7 @@ export class Rattlecoat implements Entity, SpellTarget {
   }
 
   onSpell(hit: SpellHit): void {
+    this.provoked = true;
     if (hit.charge < CHARGE_TO_TOPPLE) {
       // Clang! Just a stagger.
       this.state = 'stagger';
@@ -173,7 +184,9 @@ export class Rattlecoat implements Entity, SpellTarget {
     this.ctx.targets.remove(this);
     this.ctx.physics.world.removeCollider(this.collider, false);
     this.ctx.signals.set(this.spec.id, true);
-    this.ctx.state.flags.add(`down:${this.spec.id}`);
+    // Only castle Rattlecoats stay down for good; in a trial it's back with its Gnarlings
+    // whenever the room is (a reload at a checkpoint, say).
+    if (this.spec.persist) this.ctx.state.flags.add(`down:${this.spec.id}`);
     this.ctx.state.award(POINTS.rattlecoat, 'toppling a Rattlecoat');
     this.ctx.sweets.burst('humbug', this.pos.clone(), 1);
     this.ctx.sweets.burst('bramble', this.pos.clone(), 2);
@@ -200,6 +213,23 @@ export class Rattlecoat implements Entity, SpellTarget {
   }
 
   // ---------------------------------------------------------------- behaviour
+
+  /** True once the Gnarlings of its room (any within 16 m of its post, if it had any) are all gone. */
+  private gnarlingsGone(): boolean {
+    let live = 0;
+    for (const c of this.ctx.creatures) {
+      if (c.constructor.name !== 'Gnarling') continue;
+      if (Math.hypot(c.pos.x - this.home.x, c.pos.z - this.home.z) < 16 && Math.abs(c.pos.y - this.home.y) < 6) live++;
+    }
+    if (live > 0) this.hadGnarlings = true;
+    return this.hadGnarlings && live === 0;
+  }
+
+  /** Is there floor (no more than a step down) just ahead in this direction? */
+  private groundAhead(yaw: number): boolean {
+    const o = new Vector3(this.pos.x + Math.sin(yaw) * (R + 0.35), this.pos.y, this.pos.z + Math.cos(yaw) * (R + 0.35));
+    return this.ctx.physics.raycast(o, new Vector3(0, -1, 0), CENTER_TO_FEET + 0.7, this.collider, (c) => c.handle !== this.ctx.player.collider.handle) !== null;
+  }
 
   private playerInArena(): boolean {
     const p = this.ctx.player.pos;
@@ -233,8 +263,10 @@ export class Rattlecoat implements Entity, SpellTarget {
     const dist = to.length();
     const faceYaw = Math.atan2(to.x, to.z);
     const available = player.mode !== 'reset' && !this.ctx.health.fainting;
-    const chasing = this.state !== 'dormant' && dist < LEASH;
-    const engaged = available && (this.playerInArena() || chasing);
+    if (!this.provoked && this.gnarlingsGone()) this.provoked = true;
+    const chasing = this.state !== 'dormant' && dist < (this.provoked ? LEASH_PROVOKED : LEASH);
+    const engaged = available && (this.playerInArena() || chasing || (this.provoked && dist < LEASH_PROVOKED));
+    this.chargeIn -= dt;
     let walk = 0;
     let walkYaw = this.facing;
 
@@ -258,9 +290,32 @@ export class Rattlecoat implements Entity, SpellTarget {
         walkYaw = faceYaw;
         if (dist < REACH && Math.abs(angleDiff(this.facing, faceYaw)) < 0.5) {
           this.state = 'windup';
-          this.timer = 0.85;
+          this.timer = 0.75;
+        } else if (this.chargeIn <= 0 && dist > CHARGE_RANGE[0] && dist < CHARGE_RANGE[1] && Math.abs(angleDiff(this.facing, faceYaw)) < 0.35) {
+          // Lowers its sword, stamps, and comes at you.
+          this.state = 'brace';
+          this.timer = 0.6;
         } else if (dist > 1.5) {
           walk = WALK_SPEED;
+        }
+        break;
+      case 'brace':
+        walkYaw = faceYaw;
+        if (this.timer <= 0) {
+          this.state = 'charge';
+          this.timer = 0.85;
+          this.hitThisSwing = false;
+          this.chargeDir.set(Math.sin(this.facing), 0, Math.cos(this.facing));
+        }
+        break;
+      case 'charge':
+        walk = CHARGE_SPEED;
+        walkYaw = this.facing;
+        if (!this.hitThisSwing && dist < 1.4) this.hitThisSwing = this.ctx.health.damage(1, this.pos.clone());
+        if (this.timer <= 0) {
+          this.state = 'recover';
+          this.timer = 1;
+          this.chargeIn = 3.5;
         }
         break;
       case 'windup':
@@ -298,10 +353,19 @@ export class Rattlecoat implements Entity, SpellTarget {
         break;
     }
 
-    if (this.state !== 'toppled' && this.state !== 'rising' && this.state !== 'swing') {
+    if (this.state !== 'toppled' && this.state !== 'rising' && this.state !== 'swing' && this.state !== 'charge') {
       this.facing += MathUtils.clamp(angleDiff(this.facing, walkYaw), -2.5 * dt, 2.5 * dt);
     }
     this.vy = this.vy - 20 * dt;
+    if (walk > 0 && !this.groundAhead(walkYaw)) {
+      // It won't step off a ledge, not even mid-charge: armour doesn't climb back out of pits.
+      walk = 0;
+      if (this.state === 'charge') {
+        this.state = 'recover';
+        this.timer = 1;
+        this.chargeIn = 3.5;
+      }
+    }
     const desired = new Vector3(Math.sin(walkYaw) * walk * dt, this.vy * dt, Math.cos(walkYaw) * walk * dt);
     if (this.state === 'toppled' && this.timer > 2.8) desired.addScaledVector(this.toppleDir, 4 * dt);
     const ph = player.collider.handle;
@@ -319,19 +383,20 @@ export class Rattlecoat implements Entity, SpellTarget {
     this.root.rotation.y = this.facing;
     this.marker.sprite.position.set(p.x, p.y + 1.5, p.z);
 
-    const walking = this.state === 'approach' || (this.state === 'dormant' && this.prev.distanceToSquared(this.pos) > 1e-6);
-    const s = walking ? Math.sin(this.t * 6) : 0;
+    const walking = this.state === 'approach' || this.state === 'charge' || (this.state === 'dormant' && this.prev.distanceToSquared(this.pos) > 1e-6);
+    const s = walking ? Math.sin(this.t * (this.state === 'charge' ? 14 : 6)) : 0;
     this.legL.rotation.x = s * 0.4;
     this.legR.rotation.x = -s * 0.4;
     this.armL.rotation.x = -s * 0.3;
     this.body.position.y = 0.85 + Math.abs(s) * 0.04;
 
-    const raise = this.state === 'windup' ? -2.6 : this.state === 'swing' ? 0.6 : -0.2 - s * 0.2;
+    const raise = this.state === 'windup' ? -2.6 : this.state === 'swing' ? 0.6 : this.state === 'brace' || this.state === 'charge' ? -1.5 : -0.2 - s * 0.2;
+    this.body.rotation.x = MathUtils.damp(this.body.rotation.x, this.state === 'brace' || this.state === 'charge' ? 0.35 : 0, 10, dt);
     this.armR.rotation.x = MathUtils.damp(this.armR.rotation.x, raise, this.state === 'swing' ? 30 : 8, dt);
     const lying = this.state === 'toppled' ? -1.5 : 0;
     this.root.rotation.x = MathUtils.damp(this.root.rotation.x, lying, this.state === 'toppled' ? 9 : 4, dt);
     if (this.state === 'stagger') this.body.rotation.z = Math.sin(this.t * 40) * 0.08;
     else this.body.rotation.z = 0;
-    this.visor.emissiveIntensity = this.state === 'windup' || this.state === 'swing' ? 2.5 : this.state === 'toppled' ? 0 : 0.5;
+    this.visor.emissiveIntensity = this.state === 'windup' || this.state === 'swing' || this.state === 'brace' || this.state === 'charge' ? 2.5 : this.state === 'toppled' ? 0 : 0.5;
   }
 }

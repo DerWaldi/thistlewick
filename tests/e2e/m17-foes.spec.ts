@@ -117,3 +117,30 @@ test('a thwacked Sootling is dazed; a second thwack banishes him', async ({ page
   expect(await castAtFoe(page, 'Sootling')).toBe('thwackwort');
   expect((await foe(page, 'Sootling')).state).toBe('gone');
 });
+
+test('the Rattlecoat comes for you once its Gnarlings are gone, and charges from a distance', async ({ page }) => {
+  await boot(page, '?test&level=trial');
+  const r = await page.evaluate(async () => {
+    const tw = window.__tw;
+    type E = { constructor: { name: string }; state: string; pos: { x: number; z: number }; bitten?: () => void };
+    const g = tw.game as unknown as { state: { flags: Set<string> }; world: { entities: E[] } };
+    for (const f of ['trial-entered', 'trial-hint-garden', 'trial-hint-moat']) g.state.flags.add(f);
+    await tw.idle();
+    const rc = g.world.entities.find((e) => e.constructor.name === 'Rattlecoat')!;
+    // Standing just inside the garden's door, out of its arena: it waits while its Gnarlings live.
+    tw.teleport(0, 0, 49.5, 0);
+    tw.advance(2);
+    const waiting = rc.state;
+    for (const e of g.world.entities) if (e.constructor.name === 'Gnarling') e.bitten?.();
+    const seen = new Set<string>();
+    for (let i = 0; i < 240; i++) {
+      tw.teleport(0, 0, 49.5, 0);
+      tw.advance(1 / 30);
+      seen.add(rc.state);
+    }
+    return { waiting, seen: [...seen] };
+  });
+  expect(r.waiting).toBe('dormant');
+  expect(r.seen).toContain('approach');
+  expect(r.seen).toContain('charge');
+});

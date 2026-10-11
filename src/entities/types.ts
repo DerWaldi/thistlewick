@@ -146,7 +146,15 @@ export type EntitySpec = SpecBase &
         perVisit?: boolean;
       }
     | { type: 'star'; id: string; pos: V3; script?: string }
-    | { type: 'rattlecoat'; id: string; pos: V3; yaw: number; arena: { min: V3; max: V3 } }
+    | {
+        type: 'rattlecoat';
+        id: string;
+        pos: V3;
+        yaw: number;
+        arena: { min: V3; max: V3 };
+        /** Stays down across visits (flag `down:<id>`), for the castle. */
+        persist?: boolean;
+      }
     | {
         type: 'padlock';
         /** Signal turned on while it's open. */

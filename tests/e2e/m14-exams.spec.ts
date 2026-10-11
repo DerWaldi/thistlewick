@@ -121,6 +121,8 @@ test('the Examination Hall opens off the First Floor once all seven lessons are 
 test('I. Gorse: three blocks bridge the trough; the Rattlecoat opens the gate', async ({ page, browserName }) => {
   await exams(page);
   await clear(page, 'Gnarling');
+  // (The room's Hexling has its own tests; out of the way, she'd soak up the thwacks.)
+  await clear(page, 'Hexling');
   // The middle block: three shoves north and it drops into the trough.
   for (let i = 0; i < 3; i++) expect(await castAt(page, [0, 0, 10.5], [0, 1, 14 + i * 2], 0, 1.4)).toBe('thwackwort');
   expect(await signal(page, 'ex-g1')).toBe(true);
@@ -141,14 +143,16 @@ test('I. Gorse: three blocks bridge the trough; the Rattlecoat opens the gate', 
   expect(over.z).toBeGreaterThan(26.5);
   expect(over.y).toBeGreaterThan(-0.1);
   // The Rattlecoat: charged knocks until it falls apart.
-  for (let i = 0; i < 6 && !(await signal(page, 'ex-rattle')); i++) {
+  for (let i = 0; i < 12 && !(await signal(page, 'ex-rattle')); i++) {
     await page.evaluate(() => {
       const tw = window.__tw;
       const r = (tw.game as unknown as G).world.entities.find((e) => e.constructor.name === 'Rattlecoat');
       const p = r?.pos ?? { x: 0, z: 31 };
-      tw.teleport(p.x, 0, p.z - 4, 0);
+      tw.teleport(p.x, 0, p.z - 3, 0);
       tw.advance(0.1);
-      tw.aimAt(p.x, 1.2, p.z);
+      // It charges about now: aim where it is, not where it was.
+      const q = r?.pos ?? p;
+      tw.aimAt(q.x, 1.2, q.z);
       tw.advance(0.05);
       tw.cast(1.2);
       tw.advance(1.2);

@@ -51,7 +51,9 @@ src/player/            controller (kinematic character), camera (orbit + spring 
 src/spells/            caster (soft-lock targeting, tap/charge, bolts), targets (SpellTarget interface +
                        registry), runes (procedural rune glyphs + floating markers)
 src/entities/          level objects: pushBlock (resetOn), mechanisms (knockSwitch: plate/book/target/bell,
-                       timed/latch/persist; plate; gate; checkpoint), gnarling, rattlecoat (needs charged hits),
+                       timed/latch/persist; plate; gate; checkpoint), gnarling, rattlecoat (needs charged hits; wakes when hit, when you enter its arena or when its room's
+                       Gnarlings are gone, then braces and charges from 4–13 m; won't step off ledges; stays
+                       beaten only with `persist`, so trial ones come back on a reload),
                        locks (padlock: relock/persist/orbit; chest/box/cabinet with card + sweets; drawbridge;
                        vaultDoor), snapcasket (Latchkin locks it, then Thwackwort; its `spell` changes),
                        springs (springPad: moss/mushroom/mattress/rune; springy for `duration` s after

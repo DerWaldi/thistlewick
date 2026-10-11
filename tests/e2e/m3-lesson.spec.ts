@@ -327,7 +327,7 @@ test('the garden: hidden card up the ruin, Rattlecoat needs a charge, Star finis
   expect(after.pts.mallowmere).toBeGreaterThanOrEqual(95);
 });
 
-test('a beaten Rattlecoat and taken Star stay that way on a return visit', async ({ page }) => {
+test('a taken Star stays taken; the Rattlecoat is back with its Gnarlings when the room is', async ({ page }) => {
   await prepared(page, 'trial', ['trial-entered', 'down:rattle']);
   const r = await page.evaluate(() => {
     const tw = window.__tw;
@@ -341,7 +341,7 @@ test('a beaten Rattlecoat and taken Star stay that way on a return visit', async
       gate: tw.signal('rattle'),
     };
   });
-  expect(r).toEqual({ rattle: 0, star: 0, gate: true });
+  expect(r).toEqual({ rattle: 1, star: 0, gate: false });
 });
 
 test('the world holds still while someone is talking', async ({ page }) => {
