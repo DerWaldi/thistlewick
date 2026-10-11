@@ -57,6 +57,7 @@ export class Snapcasket implements Entity, SpellTarget {
   private clamp = new Group();
   private tongue: Mesh;
   private fakeLock = new Group();
+  private tongueTip!: Mesh;
 
   constructor(
     private spec: SpecOf<'snapcasket'>,
@@ -106,11 +107,20 @@ export class Snapcasket implements Entity, SpellTarget {
       strap.position.set(side * 0.315, 0.27, 0);
       this.body.add(strap);
     }
-    // Lower teeth along the front rim, hidden while the lid is shut.
+    // Lower fangs round the rim (front and sides), hidden while the lid is shut: big ones
+    // at the corners, smaller between.
     for (let i = 0; i < 7; i++) {
-      const t = new Mesh(new ConeGeometry(0.035, 0.1, 4), tooth);
-      t.position.set(-0.33 + i * 0.11, 0.52, 0.2);
+      const big = i === 0 || i === 6 || i === 3;
+      const t = new Mesh(new ConeGeometry(big ? 0.05 : 0.035, big ? 0.17 : 0.11, 4), tooth);
+      t.position.set(-0.33 + i * 0.11, 0.5 + (big ? 0.06 : 0.03), 0.2);
       this.body.add(t);
+    }
+    for (const side of [-1, 1]) {
+      for (let i = 0; i < 3; i++) {
+        const t = new Mesh(new ConeGeometry(0.035, 0.11, 4), tooth);
+        t.position.set(side * 0.33, 0.53, -0.14 + i * 0.13);
+        this.body.add(t);
+      }
     }
     mergeChildren(this.body);
 
@@ -124,15 +134,28 @@ export class Snapcasket implements Entity, SpellTarget {
     const palate = new Mesh(new BoxGeometry(0.88, 0.03, 0.64), mouth);
     palate.position.set(0, 0.01, 0.33);
     this.lid.add(lidMesh, palate);
+    // Upper fangs: long ones hanging from the lid's front edge, more along its sides.
     for (let i = 0; i < 6; i++) {
-      const t = new Mesh(new ConeGeometry(0.035, 0.1, 4), tooth);
+      const big = i === 1 || i === 4;
+      const t = new Mesh(new ConeGeometry(big ? 0.055 : 0.04, big ? 0.2 : 0.13, 4), tooth);
       t.rotation.x = Math.PI;
-      t.position.set(-0.28 + i * 0.11, -0.03, 0.52);
+      t.position.set(-0.28 + i * 0.11, -0.03 - (big ? 0.07 : 0.035), 0.56);
       this.lid.add(t);
     }
     for (const side of [-1, 1]) {
-      const e = new Mesh(new SphereGeometry(0.06, 8, 5), this.eyes);
-      e.position.set(side * 0.16, -0.06, 0.5);
+      for (let i = 0; i < 3; i++) {
+        const t = new Mesh(new ConeGeometry(0.035, 0.11, 4), tooth);
+        t.rotation.x = Math.PI;
+        t.position.set(side * 0.38, -0.06, 0.16 + i * 0.13);
+        this.lid.add(t);
+      }
+    }
+    // Eyes set deep in the dark under the lid, slanted: they glare out of the gap.
+    for (const side of [-1, 1]) {
+      const e = new Mesh(new SphereGeometry(0.065, 8, 5), this.eyes);
+      e.position.set(side * 0.15, -0.07, 0.36);
+      e.scale.set(1.3, 0.75, 0.6);
+      e.rotation.z = side * 0.35;
       this.lid.add(e);
     }
     mergeChildren(this.lid);
@@ -143,9 +166,13 @@ export class Snapcasket implements Entity, SpellTarget {
     this.fakeLock.position.set(0, 0.375, 0.375);
     this.body.add(this.fakeLock);
 
-    this.tongue.scale.set(1, 0.35, 1.3);
-    this.tongue.position.set(0.12, 0.47, 0.32);
-    this.body.add(this.tongue);
+    // A fat red tongue that lolls out over the front, curling down the side of the chest.
+    this.tongue.scale.set(1, 0.3, 1.3);
+    this.tongue.position.set(0.1, 0.5, 0.24);
+    this.tongueTip = new Mesh(new SphereGeometry(0.1, 8, 5).scale(1, 0.4, 2), this.tongue.material);
+    this.tongueTip.position.set(0.1, 0.42, 0.42);
+    this.tongueTip.rotation.x = 1.25;
+    this.body.add(this.tongue, this.tongueTip);
 
     // Shown while locked: a glowing padlock and iron straps across the lid.
     const glow = new MeshStandardMaterial({ color: '#ffd45e', emissive: new Color('#ffb020'), emissiveIntensity: 1.4, metalness: 0.5 });
@@ -359,7 +386,10 @@ export class Snapcasket implements Entity, SpellTarget {
     this.eyes.emissiveIntensity = active ? 1.4 : this.state === 'dormant' ? (twitch > 0.02 ? 0.9 : 0) : 0.4;
     this.eyes.emissive.set(this.state === 'bite' ? '#ff3a1a' : '#ffd84a');
     this.tongue.visible = active;
-    this.tongue.position.y = 0.5;
+    // It lolls and swings while it chases; on a bite it whips back in.
+    // The tip hangs out over the front and swings while it chases; on a bite it whips back in.
+    this.tongueTip.visible = active && this.state !== 'bite';
+    this.tongueTip.rotation.set(1.25 + Math.sin(t * 7) * 0.12, Math.sin(t * 4) * 0.3, 0);
     this.fakeLock.visible = this.state === 'dormant';
     this.clamp.visible = locked;
     // Squash on landing, stretch in the air; rattle while locked.
