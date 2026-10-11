@@ -495,7 +495,6 @@ function oak(b: LevelBuilder): void {
   deco(b, new CylinderGeometry(0.45, 0.8, 9, 7), [-6, UP + 9.5, 123], BARK, [0, 0, 0.75]);
   // The door's frame: a gap in a mossy stone wall along the west edge.
   wall(b, 'z', 16.2, 108, 116, 4.5, { base: UP, color: ROCK, holes: [{ from: 110.7, to: 113.3, top: 3.4 }] });
-  signboard(b, 'Back to the Castle', [15.68, UP + 3.9, 112], -Math.PI / 2);
   for (const [x, z] of [
     [10, 126],
     [-13, 110],
