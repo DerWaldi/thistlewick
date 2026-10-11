@@ -86,7 +86,7 @@ export const DIALOGUES: Record<string, Script> = {
       await say([
         { speaker: 'wendlebury', text: "Seven Stars. Seven! Professor Underbough floated down from the roof to tell me, and then couldn't get back up. We've sent for a ladder." },
         { speaker: 'wendlebury', text: "That's every spell a first-year can learn, dear. Which means only one thing is left: the Final Examinations." },
-        { speaker: 'wendlebury', text: "The Examination Hall is on the First Floor, the iron door beside the stair to the roof. All seven professors have set you a room. Take your time. Explore first, if you like. The exams will wait." },
+        { speaker: 'wendlebury', text: "The Examination Hall is behind the great iron door at the top of this very stair. All seven professors have set you a room. Take your time. Explore first, if you like. The exams will wait." },
       ]);
       return;
     }

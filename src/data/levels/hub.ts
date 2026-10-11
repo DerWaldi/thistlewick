@@ -87,6 +87,7 @@ export const HUB: LevelDef = {
     fromGrounds: { pos: [0, 0, 2], yaw: 0 },
     fromClockTower: { pos: [0, 0, 60.4], yaw: Math.PI },
     fromUpper: { pos: [10.6, 5, 25.5], yaw: -Math.PI / 2 },
+    fromExams: { pos: [0, 5, 27.4], yaw: Math.PI },
   },
   areas: [
     { id: 'hall', name: 'The Lantern Hall', min: [-12, -2, 0], max: [12, 14, 30] },
@@ -211,8 +212,8 @@ function buildHub(b: LevelBuilder): void {
   windowPane(b, glow, 'z', -12.5, 27.6, 10.6, 1.4, 2.6, 1);
   b.add({ type: 'card', card: 'pellam-fogg', pos: [-11.45, 9.75, 27.6] });
 
-  // Gallery decor: shelves along the north wall, the door onto the cloister roof.
-  for (const x of [-6, -2.5, 1, 4.5]) shelf(b, [x, 5, 29.6], Math.PI, 3, 3.2);
+  // Gallery decor: shelves along the north wall (the middle is the Examination Hall's portal).
+  for (const x of [-7.5, -4.5, 4.5]) shelf(b, [x, 5, 29.6], Math.PI, 3, 3.2);
   b.add({ type: 'sweetLine', kind: 'fizzwort', from: [-6, 5.6, 24], to: [6, 5.6, 24], count: 7 });
 
   // Secret 1: the swaying tapestry in the east wall hides an alcove.
@@ -833,6 +834,7 @@ function buildHub(b: LevelBuilder): void {
   b.add({ type: 'door', pos: [11.95, 5, 25.5], yaw: -Math.PI / 2, width: 2.2, height: 3.2, to: { level: 'upper', spawn: 'default' }, lockedUnless: 'sorted', talk: 'upstairsDoor', label: 'The First Floor' });
   // Last of all (ids follow build order): the students' errands.
   errands(b);
+  examPortal(b, candle);
   skyline(b);
 
   glow.finish(b, '#ffc68a');
@@ -1189,6 +1191,44 @@ function errands(b: LevelBuilder): void {
   );
   // ---- Wren's scarf: on the court's east balcony (moss on the cloister roof bounces you up).
   b.add({ type: 'questItem', quest: 'scarf', pos: [-14, 9.75, 52] });
+}
+
+/**
+ * The Examination Hall's door: the great iron door at the top of the Lantern Hall's grand
+ * stair, on the axis of the whole hall, framed in a carved stone portal under the school's
+ * banners and crest. Shut until all seven lessons are done. Appended last (ids).
+ */
+function examPortal(b: LevelBuilder, candle: Glow): void {
+  const Z = 30;
+  const G = 5;
+  b.add({ type: 'door', pos: [0, G, Z - 0.05], yaw: Math.PI, width: 2.8, height: 4.2, to: { level: 'exams', spawn: 'default' }, afterLesson: 'thistledown', talk: 'examsDoor', label: 'The Examination Hall', style: 'iron' });
+  const STONE = COLORS.stoneLight;
+  // Pilasters with bases and capitals, and a round arch over the door.
+  for (const x of [-2.15, 2.15]) {
+    deco(b, new BoxGeometry(0.6, 4.6, 0.45), [x, G + 2.3, Z - 0.22], STONE);
+    deco(b, new BoxGeometry(0.8, 0.3, 0.6), [x, G + 0.15, Z - 0.3], COLORS.stoneDark);
+    deco(b, new BoxGeometry(0.8, 0.3, 0.6), [x, G + 4.6, Z - 0.3], COLORS.stoneDark);
+  }
+  deco(b, new TorusGeometry(2.15, 0.3, 6, 16, Math.PI), [0, G + 4.75, Z - 0.22], STONE);
+  deco(b, new BoxGeometry(3.4, 0.25, 0.3), [0, G + 4.5, Z - 0.2], COLORS.stoneDark);
+  // The school's crest in the arch: a gilt thistle.
+  deco(b, new CircleGeometry(1.4, 16, 0, Math.PI), [0, G + 4.75, Z - 0.06], '#3b2c55', [0, Math.PI, 0]);
+  deco(b, new SphereGeometry(0.42, 8, 6), [0, G + 5.6, Z - 0.12], '#c99a3e');
+  for (let i = 0; i < 7; i++) {
+    const a = -0.9 + (i / 6) * 1.8;
+    deco(b, new ConeGeometry(0.07, 0.5, 4), [Math.sin(a) * 0.4, G + 6.0 + Math.cos(a) * 0.25, Z - 0.14], '#8a5ab0', [0, 0, -a]);
+  }
+  deco(b, new CylinderGeometry(0.05, 0.06, 0.8, 5), [0, G + 5, Z - 0.12], '#c99a3e');
+  // School banners either side, a runner up from the stair, candelabra.
+  for (const x of [-3.5, 3.5]) banner(b, [x, G + 5.4, Z - 0.05], Math.PI, '#3b2c55', '#c99a3e', 1.3, 3.6);
+  deco(b, new BoxGeometry(2.6, 0.03, 8.6), [0, G + 0.015, Z - 4.6], COLORS.carpet);
+  deco(b, new BoxGeometry(3, 0.025, 8.7), [0, G + 0.012, Z - 4.6], '#c99a3e');
+  for (const x of [-2.9, 2.9]) {
+    deco(b, new CylinderGeometry(0.2, 0.32, 0.12, 8), [x, G + 0.06, Z - 0.9], '#c99a3e');
+    deco(b, new CylinderGeometry(0.05, 0.06, 1.7, 6), [x, G + 0.9, Z - 0.9], '#c99a3e');
+    deco(b, new CylinderGeometry(0.28, 0.06, 0.12, 8), [x, G + 1.8, Z - 0.9], '#c99a3e');
+    for (const dx of [-0.18, 0, 0.18]) candlestick(b, candle, [x + dx, G + 1.86, Z - 0.9], dx ? 0.2 : 0.3);
+  }
 }
 
 /**

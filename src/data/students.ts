@@ -93,7 +93,7 @@ export const STUDENTS: StudentDef[] = [
       'The roof is out of bounds. Which is exactly why everyone goes up there.',
       'Our common room only opens for us. Yours only opens for you. The doors are very particular.',
       ...(s.knows('springwell') ? ["The library's top shelves have a ledge on them. Oswin keeps throwing books up there. Don't ask."] : []),
-      ...(s.lessons.size >= 7 && !s.flags.has('year-complete') ? ['The Examination Hall is open! The iron door by the roof stair. I heard there is something made of brass in there. Something big.'] : []),
+      ...(s.lessons.size >= 7 && !s.flags.has('year-complete') ? ['The Examination Hall is open! The great iron door at the top of the grand stair. I heard there is something made of brass in there. Something big.'] : []),
     ],
   },
   {

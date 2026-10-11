@@ -259,10 +259,9 @@ export function currentObjective(s: GameState): Objective {
   if (!s.flags.has('year-complete')) {
     return {
       title: 'The Final Examinations',
-      detail: 'Up the grand stair to the Lantern Hall gallery, through the door to the First Floor, and along the Long Hall: the iron door beside the stair to the roof.',
+      detail: 'The great iron door at the top of the grand stair in the Lantern Hall, under the school crest.',
       route: {
-        hub: [outOfWestWing, upToGallery, { pos: [11.95, 5, 25.5] }],
-        upper: [{ pos: [4.55, 0, 49] }],
+        hub: [outOfWestWing, upToGallery, { pos: [0, 5, 29.9] }],
         exams: [{ pos: [0, 2.6, 202] }],
       },
     };

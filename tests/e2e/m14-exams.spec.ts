@@ -72,7 +72,7 @@ const clear = (page: Page, name: string) =>
     }
   }, name);
 
-test('the Examination Hall opens off the First Floor once all seven lessons are done', async ({ page, browserName }) => {
+test('the Examination Hall opens at the top of the Lantern Hall stair once all seven lessons are done', async ({ page, browserName }) => {
   await boot(page, '?test&new');
   const r = await page.evaluate(async (all) => {
     const tw = window.__tw;
@@ -80,11 +80,11 @@ test('the Examination Hall opens off the First Floor once all seven lessons are 
     const g = tw.game as unknown as G;
     g.state.house = 'mallowmere';
     for (const f of ['sorted', 'greeted', 'exams-entered']) g.state.flags.add(f);
-    tw.loadLevel('upper');
+    tw.loadLevel('hub');
     await tw.idle();
     tw.advance(0.3);
     const tryDoor = async () => {
-      tw.teleport(3.4, 0, 49, -Math.PI / 2);
+      tw.teleport(0, 5, 28.6, 0);
       tw.advance(0.3);
       tw.interact();
       await tw.idle();
@@ -102,12 +102,14 @@ test('the Examination Hall opens off the First Floor once all seven lessons are 
     tw.interact();
     await tw.idle();
     tw.advance(1.5);
-    return { before, after, back: tw.state().level, x: tw.state().feet.x };
+    return { before, after, back: tw.state().level, at: tw.state().feet };
   }, ALL);
-  expect(r.before).toBe('upper');
+  expect(r.before).toBe('hub');
   expect(r.after).toBe('exams');
-  expect(r.back).toBe('upper');
-  expect(r.x).toBeGreaterThan(2);
+  // ...and back out onto the gallery, in front of the door.
+  expect(r.back).toBe('hub');
+  expect(r.at.y).toBeGreaterThan(4.5);
+  expect(r.at.z).toBeGreaterThan(26);
   await exams(page);
   await page.evaluate(() => {
     const tw = window.__tw;

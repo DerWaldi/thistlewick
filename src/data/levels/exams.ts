@@ -129,7 +129,7 @@ function build(b: LevelBuilder): void {
   wall(b, 'z', -11, -0.5, 8, 9, { color: STONE });
   wall(b, 'z', 11, -0.5, 8, 9, { color: STONE });
   slab(b, -11.5, 11.5, -1.5, 8, 9.5, 0.5, COLORS.stoneDark);
-  b.add({ type: 'door', pos: [0, 0, -0.45], yaw: 0, width: 2.4, height: 3.4, to: { level: 'upper', spawn: 'fromExams' }, label: 'The First Floor' });
+  b.add({ type: 'door', pos: [0, 0, -0.45], yaw: 0, width: 2.4, height: 3.4, to: { level: 'hub', spawn: 'fromExams' }, label: 'The Lantern Hall' });
   for (const [i, c] of ['#b0362f', '#4f7fb8', '#3f7a4a', '#d9922e'].entries()) {
     banner(b, [i < 2 ? -10.45 : 10.45, 6, 2.5 + (i % 2) * 3], i < 2 ? Math.PI / 2 : -Math.PI / 2, c, '#e8c25a', 1.4, 3.6);
   }

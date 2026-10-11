@@ -106,7 +106,9 @@ function longHall(b: LevelBuilder, glow: Glow, flames: Glow): void {
   const sitters = ['mother-wortle', 'agnes-thistlewick', 'pellam-fogg', 'ezekiel-crumbleton', 'hester-quillfeather', 'ambrose-wick'];
   sitters.forEach((id, i) => {
     const east = i % 2 === 0;
-    portrait(b, CARD_BY_ID.get(id)!.portrait, [east ? -4.45 : 4.45, 3.3, 6 + i * 6], east ? Math.PI / 2 : -Math.PI / 2, 1.2, 1.5, (i % 3) * 0.03 - 0.03);
+    // (Not over the House Wing's doorway, z 23..27 on the west wall.)
+    const z = i === 3 ? 19.5 : 6 + i * 6;
+    portrait(b, CARD_BY_ID.get(id)!.portrait, [east ? -4.45 : 4.45, 3.3, z], east ? Math.PI / 2 : -Math.PI / 2, 1.2, 1.5, (i % 3) * 0.03 - 0.03);
   });
   for (const z of [10, 19, 31, 40]) armour(b, [z % 2 ? -3.9 : 3.9, 0, z], z % 2 ? Math.PI / 2 : -Math.PI / 2);
   bench(b, [-3.6, 0, 14], Math.PI / 2, 2.4);
@@ -126,12 +128,13 @@ function longHall(b: LevelBuilder, glow: Glow, flames: Glow): void {
   slab(b, -5.5, 5.5, 44, 54.5, 11.5, 0.5, '#4a3226', 'planks');
   wall(b, 'x', 54.5, -5.5, 5.5, 11.5, { color: STONE, holes: [{ from: -1.5, to: 1.5, bottom: 7.2, top: 10.6 }] });
   wall(b, 'z', 5, 44, 54.5, 11.5, { color: STONE, holes: [{ from: 47.8, to: 50.2, top: 3.4 }] });
-  // Beside the stair, west: the Examination Hall, once all seven lessons are done.
-  b.add({ type: 'door', pos: [4.55, 0, 49], yaw: -Math.PI / 2, width: 2.2, height: 3.2, to: { level: 'exams', spawn: 'default' }, afterLesson: 'thistledown', talk: 'examsDoor', label: 'The Examination Hall', style: 'iron' });
+  // (The Examination Hall's door stood here; it's at the top of the Lantern Hall's grand
+  // stair now. This inert spec keeps the later ids where they were.)
+  b.add({ type: 'trigger', flag: 'unused', when: ['never'] });
   b.stairs([0, 0, 44.4], 0, 18, 0.4, 0.52, 3, COLORS.stoneLight);
   // Beside the stair foot, not in the way.
   signboard(b, 'To the Leads (the roof)', [-3, 3, 43.95], Math.PI);
-  b.box([-3, 1.6, 43.9], [0.12, 3.2, 0.12], { color: COLORS.woodDark });
+  b.box([-3, 1.6, 44.05], [0.12, 3.2, 0.12], { color: COLORS.woodDark }); // behind the board, not across it
 }
 
 // ---------------------------------------------------------------- the Great Library
