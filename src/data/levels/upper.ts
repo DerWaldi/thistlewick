@@ -50,7 +50,7 @@ export const UPPER: LevelDef = {
     hallBenchWest: { pos: [-3.2, 0, 14], yaw: Math.PI / 2 },
     hallBenchEast: { pos: [3.2, 0, 34], yaw: -Math.PI / 2 },
     librarian: { pos: [-11, 0, 31.5], yaw: Math.PI },
-    readingTable: { pos: [-28, 0, 14], yaw: 0 },
+    readingTable: { pos: [-26.3, 0, 22], yaw: -Math.PI / 2 }, // beside the reading table, facing it
     mezzanine: { pos: [-20, 5, 38.5], yaw: Math.PI },
     // One fireside per common room: `<house>Fireside`.
     bramblecoteFireside: { pos: [13, 0, 36], yaw: 0 },

@@ -229,3 +229,36 @@ test('castle levels list named NPC spots for later quests', async ({ page }) => 
   expect(spots.hub).toBeGreaterThan(3);
   expect(spots.grounds).toBeGreaterThan(3);
 });
+
+test('nobody stands inside the furniture: every NPC spot is clear and on the ground', async ({ page }) => {
+  test.setTimeout(120_000);
+  const bad: string[] = [];
+  for (const level of ['upper', 'hub', 'grounds']) {
+    await boot(page, `?test&level=${level}`);
+    bad.push(
+      ...(await page.evaluate(async (level) => {
+        const path = '/src/data/levels/index.ts';
+        const { LEVELS } = (await import(/* @vite-ignore */ path)) as { LEVELS: Record<string, { npcSpots?: Record<string, { pos: [number, number, number] }> }> };
+        type V = { x: number; y: number; z: number };
+        type Hit = { distance: number } | null;
+        const g = window.__tw.game as unknown as { physics: { raycast(o: V, d: V, max: number): Hit } };
+        const out: string[] = [];
+        for (const [name, { pos }] of Object.entries(LEVELS[level].npcSpots ?? {})) {
+          // A person-sized body: nothing solid within 0.3 m round it at knee and chest height...
+          for (const h of [0.5, 1.3]) {
+            for (let i = 0; i < 8; i++) {
+              const a = (i / 8) * Math.PI * 2;
+              const hit = g.physics.raycast({ x: pos[0], y: pos[1] + h, z: pos[2] }, { x: Math.sin(a), y: 0, z: Math.cos(a) }, 0.3);
+              if (hit) out.push(`${level}.${name}: something solid at ${h} m`);
+            }
+          }
+          // ...and floor right under its feet.
+          const ground = g.physics.raycast({ x: pos[0], y: pos[1] + 0.5, z: pos[2] }, { x: 0, y: -1, z: 0 }, 0.8);
+          if (!ground) out.push(`${level}.${name}: no floor`);
+        }
+        return [...new Set(out)];
+      }, level)),
+    );
+  }
+  expect(bad).toEqual([]);
+});
