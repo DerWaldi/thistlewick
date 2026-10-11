@@ -1,5 +1,5 @@
 import RAPIER from '@dimforge/rapier3d-compat';
-import { BoxGeometry, Color, ConeGeometry, CylinderGeometry, Group, IcosahedronGeometry, MathUtils, Mesh, MeshStandardMaterial, SphereGeometry, Vector3, type BufferGeometry } from 'three';
+import { BoxGeometry, Color, ConeGeometry, CylinderGeometry, Group, IcosahedronGeometry, MathUtils, Matrix4, Mesh, MeshStandardMaterial, SphereGeometry, Vector3, type BufferGeometry } from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { dampAngle } from '../player/controller';
 import { RuneMarker } from '../spells/runes';
@@ -7,6 +7,7 @@ import type { SpellHit, SpellTarget } from '../spells/targets';
 import { paint } from '../world/builder';
 import { worldMaterial } from '../world/materials';
 import { mergeChildren } from '../world/merge';
+import { dressWith, modelIslands, type Island } from './models';
 import type { Entity, SpecOf, WorldContext } from './types';
 
 /** A vertex-coloured mesh in a shared material, so a creature's parts merge into few draw calls. */
@@ -151,6 +152,19 @@ export class Snapweed implements Entity, SpellTarget {
     this.root.add(this.fire);
     mergeChildren(this.stem, [this.head]);
     mergeChildren(this.root, [this.stem, this.fire]);
+    const model = modelIslands('snapweed');
+    if (model) {
+      // The model's jaws hinge at the back of its head, 1.55 m up; dressed at 0.9 scale.
+      const S = 0.9;
+      this.head.position.set(0, 1.55 * S, -0.15 * S);
+      const head = (i: Island) => i.min.y > 1.2 && ['mat_a40e20', 'mat_3a0610', 'mat_f6ecd0', 'mat_d0162c', 'mat_e83244'].includes(i.mat);
+      dressWith(this.root, model, new Matrix4().makeScale(S, S, S), (i) => {
+        const near = Math.hypot(i.center.x, i.center.z) < 0.22;
+        if (head(i)) return { part: i.center.y >= 1.53 ? this.jawTop : this.jawBottom };
+        if (i.mat === 'mat_3f9a22' || i.mat === 'mat_2f7a18' || i.center.y > 1.1 || (i.mat === 'mat_d02030' && near && i.center.y > 0.4)) return { part: this.stem };
+        return { part: this.root };
+      }, [this.fire]);
+    }
     this.root.position.copy(this.base);
     this.root.traverse((o) => (o.castShadow = true));
     ctx.scene.add(this.root);
