@@ -306,12 +306,12 @@ function build(b: LevelBuilder): void {
   ]) {
     pottedPlant(b, [x, 0, z], 1.3, Math.round(z));
   }
-  glassWall(b, 'x', 68.5, -9.5, 9.5, [{ from: -1.5, to: 1.5, top: 3.4 }]);
+  glassWall(b, 'x', 68.5, -9.5, 9.5, [{ from: -2.1, to: 2.1, top: 3.4 }]); // the gate's posts (±1.5..2.1) cover the cut edges
 
   // ================================================================ the Bramble Heart (z 88.5..100.5)
   wall(b, 'z', -6.5, 88.5, 100.5, H, { color: BRICK, cap: 3 });
   wall(b, 'z', 6.5, 88.5, 100.5, H, { color: BRICK, cap: 3 });
-  wall(b, 'x', 100.5, -6.5, 6.5, H, { color: BRICK, holes: [{ from: -1.2, to: 1.2, top: 3.4 }], cap: 3 });
+  wall(b, 'x', 100.5, -6.5, 6.5, H, { color: BRICK, holes: [{ from: -1.8, to: 1.8, top: 3.4 }], cap: 3 }); // the gate's posts cover the cut edges
   for (let z = 90; z < 100; z += 3) deco(b, new BoxGeometry(13, 0.25, 0.25), [0, H, z], IRON);
   b.cylinder([0, 0.5, 95], 0.7, 1, COLORS.stoneLight, undefined, 8);
   deco(b, new CylinderGeometry(0.85, 0.85, 0.12, 8), [0, 1.06, 95], '#c99a3e');
@@ -427,7 +427,7 @@ function hothouse(b: LevelBuilder, flames: Glow): void {
   b.pool(-9, 9, 104, 129.5, W, -3);
   glassWall(b, 'z', -9.5, Z0, Z1);
   glassWall(b, 'z', 9.5, Z0, Z1);
-  glassWall(b, 'x', Z1, -9.5, 9.5, [{ from: -1.5, to: 1.5, top: 3.4 }]);
+  glassWall(b, 'x', Z1, -9.5, 9.5, [{ from: -2.1, to: 2.1, top: 3.4 }]); // the gate's posts (±1.5..2.1) cover the cut edges
   for (let z = Z0 + 2; z < Z1; z += 3) deco(b, new BoxGeometry(19, 0.25, 0.25), [0, H, z], IRON);
   const pillars: [number, number][] = [
     [0, 106.2],

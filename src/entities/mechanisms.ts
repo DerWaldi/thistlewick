@@ -290,14 +290,16 @@ export class Gate implements Entity {
     frame.position.copy(this.base);
     frame.rotation.y = yaw;
     const stone = worldMaterial();
+    // Posts and lintel reach 4 cm into the opening: levels cut doorways exactly the gate's
+    // width, and faces flush with the cut edges flickered (z-fighting).
     const post = (side: number) => {
-      const m = new Mesh(paint(new BoxGeometry(0.6, h + 0.6, 0.8).toNonIndexed(), COLORS.stoneDark, true), stone);
-      m.position.set(side * (w / 2 + 0.3), (h + 0.6) / 2, 0);
+      const m = new Mesh(paint(new BoxGeometry(0.64, h + 0.64, 0.8).toNonIndexed(), COLORS.stoneDark, true), stone);
+      m.position.set(side * (w / 2 + 0.28), (h + 0.56) / 2, 0);
       m.castShadow = true;
       return m;
     };
-    const lintel = new Mesh(paint(new BoxGeometry(w + 1.2, 0.6, 0.8).toNonIndexed(), COLORS.stoneDark, true), stone);
-    lintel.position.y = h + 0.3;
+    const lintel = new Mesh(paint(new BoxGeometry(w + 1.2, 0.64, 0.8).toNonIndexed(), COLORS.stoneDark, true), stone);
+    lintel.position.y = h + 0.28;
     frame.add(post(-1), post(1), lintel);
     ctx.scene.add(frame);
     const right = new Vector3(Math.cos(yaw), 0, -Math.sin(yaw));
