@@ -1202,31 +1202,37 @@ function skyline(b: LevelBuilder): void {
   const STONE = COLORS.stoneLight;
   const DARK = COLORS.stoneDark;
   // A gable roof: a triangular prism over a rectangle, eaves at `eave`, ridge `rise` above.
-  const gable = (x0: number, x1: number, z0: number, z1: number, eave: number, rise: number, alongX: boolean, color = SLATE) => {
+  // `free` says which ends (low, high along the ridge) stand clear: those overhang and get a
+  // stone gable wall; an end that butts against another wall or roof stops flush instead, or
+  // it would poke out through that wall's face.
+  const gable = (x0: number, x1: number, z0: number, z1: number, eave: number, rise: number, alongX: boolean, free: [boolean, boolean] = [true, true], color = SLATE) => {
     const w = (alongX ? z1 - z0 : x1 - x0) + 0.8;
-    const len = (alongX ? x1 - x0 : z1 - z0) + 0.6;
+    const a0 = (alongX ? x0 : z0) - (free[0] ? 0.3 : 0);
+    const a1 = (alongX ? x1 : z1) + (free[1] ? 0.3 : 0);
+    const len = a1 - a0;
+    const mid = (a0 + a1) / 2;
+    const across = alongX ? (z0 + z1) / 2 : (x0 + x1) / 2;
+    const at = (along: number, y: number): V3 => (alongX ? [along, y, across] : [across, y, along]);
     // A 3-sided cylinder is a triangular prism: apex up after the turn, base at -r/2.
     const g = new CylinderGeometry(1, 1, len, 3).rotateX(-Math.PI / 2).scale(w / Math.sqrt(3), rise / 1.5, 1).translate(0, rise / 3, 0);
     if (alongX) g.rotateY(Math.PI / 2);
-    deco(b, g, [(x0 + x1) / 2, eave, (z0 + z1) / 2], color);
-    // Stone gable walls at the ends (bare, the prism's ends read as black triangles).
-    for (const end of [-1, 1]) {
+    deco(b, g, at(mid, eave), color);
+    const cap = alongX ? new BoxGeometry(len, 0.25, 0.35) : new BoxGeometry(0.35, 0.25, len);
+    deco(b, cap, at(mid, eave + rise + 0.05), DARK);
+    for (const [i, end] of [
+      [0, a0],
+      [1, a1],
+    ] as [0 | 1, number][]) {
+      if (!free[i]) continue;
+      const inward = i === 0 ? 0.1 : -0.1;
+      // A stone gable wall (bare, the prism's ends read as black triangles) with a round window.
       const gw = new CylinderGeometry(1, 1, 0.35, 3).rotateX(-Math.PI / 2).scale((w - 0.6) / Math.sqrt(3), (rise - 0.2) / 1.5, 1).translate(0, (rise - 0.2) / 3, 0);
       if (alongX) gw.rotateY(Math.PI / 2);
-      const off = end * (len / 2 - 0.1);
-      deco(b, gw, [(x0 + x1) / 2 + (alongX ? off : 0), eave, (z0 + z1) / 2 + (alongX ? 0 : off)], STONE);
-      // A round window in each gable.
+      deco(b, gw, at(end + inward, eave), STONE);
       const win = new CylinderGeometry(0.45, 0.45, 0.4, 10).rotateX(Math.PI / 2);
       if (alongX) win.rotateY(Math.PI / 2);
-      deco(b, win, [(x0 + x1) / 2 + (alongX ? off * 1.004 : 0), eave + rise * 0.38, (z0 + z1) / 2 + (alongX ? 0 : off * 1.004)], '#2a2230');
-    }
-    // A ridge cap and a gold finial at each end.
-    const cap = alongX ? new BoxGeometry(len, 0.25, 0.35) : new BoxGeometry(0.35, 0.25, len);
-    deco(b, cap, [(x0 + x1) / 2, eave + rise + 0.05, (z0 + z1) / 2], DARK);
-    for (const end of [-1, 1]) {
-      const ex = alongX ? (x0 + x1) / 2 + (end * len) / 2 : (x0 + x1) / 2;
-      const ez = alongX ? (z0 + z1) / 2 : (z0 + z1) / 2 + (end * len) / 2;
-      deco(b, new SphereGeometry(0.22, 6, 4), [ex, eave + rise + 0.3, ez], '#c99a3e');
+      deco(b, win, at(end + inward * 0.6, eave + rise * 0.38), '#2a2230');
+      deco(b, new SphereGeometry(0.22, 6, 4), at(end, eave + rise + 0.3), '#c99a3e');
     }
   };
   // Crenellations round the top of a rectangle of wall.
@@ -1288,11 +1294,32 @@ function skyline(b: LevelBuilder): void {
   deco(b, new ConeGeometry(1.8, 2.6, 4), [0, 23.6, 15], COLORS.roof, [0, Math.PI / 4, 0]);
 
   // The Long Gallery (x 34.5..42.5, z 23.5..52.5, top 10.8) and the Crooked Corridor's legs.
-  gable(34.5, 42.5, 23.5, 52.5, 10.8, 4, false);
+  // Its south end runs into the corridor's roof; leg 1 butts onto the hall's west wall (x 13),
+  // leg 2 runs from leg 1's roof to leg 3's wall (z 17).
+  gable(34.5, 42.5, 24, 52.5, 10.8, 4, false, [false, true]);
   chimney(36, 44, 10.8, 4.5);
-  gable(21, 34, 17, 24, 9.4, 3, true);
-  gable(12.5, 26.5, 5, 11, 5.4, 2.6, true);
-  gable(21, 27, 10.5, 17.5, 5.4, 2.6, false);
+  gable(21, 43, 17, 24, 9.4, 3, true, [true, false]);
+  gable(13, 26.5, 5, 11, 5.4, 2.6, true, [false, true]);
+  gable(21, 27, 11, 17, 5.4, 2.6, false, [false, false]);
+
+  // The east wing, behind the court's east wall (x -17), so the balcony door leads somewhere:
+  // a solid block (the camera stops at its face, nothing grabs it; the wall's cap keeps
+  // everyone off it anyway), windows above the wall line, a slate roof.
+  const EW = { x0: -27, x1: -17, z0: 37, z1: 61.5, top: 16 };
+  b.box([(EW.x0 + EW.x1) / 2, EW.top / 2, (EW.z0 + EW.z1) / 2], [EW.x1 - EW.x0, EW.top, EW.z1 - EW.z0], { color: COLORS.stone, info: { noGrab: true } });
+  deco(b, new BoxGeometry(0.3, 0.35, EW.z1 - EW.z0), [EW.x1 + 0.1, 11.2, (EW.z0 + EW.z1) / 2], DARK);
+  for (let z = EW.z0 + 2.5; z < EW.z1 - 1; z += 3.2) {
+    if (z > 50 && z < 54) continue; // the balcony door is there
+    deco(b, new BoxGeometry(0.1, 1.8, 0.9), [EW.x1 + 0.03, 13.2, z], '#2a2230');
+    deco(b, new CylinderGeometry(0.45, 0.45, 0.1, 8, 1, false, 0, Math.PI).rotateZ(Math.PI / 2), [EW.x1 + 0.03, 14.1, z], '#2a2230');
+    deco(b, new BoxGeometry(0.2, 0.15, 1.2), [EW.x1 + 0.08, 12.25, z], STONE);
+  }
+  // A lintel and a lamp over the balcony door, so it reads as a way in.
+  deco(b, new BoxGeometry(0.25, 0.35, 2.4), [EW.x1 + 0.1, 12.5, 52], STONE);
+  for (const z of [EW.z0 + 3, EW.z0 + 7]) deco(b, new BoxGeometry(0.9, 1.8, 0.1), [EW.x0 + (z - EW.z0) + 1, 12.5, EW.z0 - 0.03], '#2a2230');
+  crenels(EW.x0, EW.x1, EW.z0, EW.z1, EW.top);
+  gable(EW.x0 + 0.8, EW.x1 - 0.8, EW.z0 + 0.8, EW.z1 - 0.8, EW.top, 5, false);
+  chimney(-23, 44, EW.top, 4);
 
   // Two tall towers outside the court's north corners, flanking the clock tower.
   turret(-18.2, 64.2, 2.4, 0, 18, 6);
