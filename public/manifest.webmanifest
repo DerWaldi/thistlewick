@@ -1,0 +1,14 @@
+{
+  "name": "Thistlewick: First Year",
+  "short_name": "Thistlewick",
+  "description": "A whimsical 3D wizard-school adventure: learn seven spells, explore a crooked castle, win the House Cup.",
+  "start_url": "/",
+  "display": "fullscreen",
+  "background_color": "#1e1430",
+  "theme_color": "#2a1d3a",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

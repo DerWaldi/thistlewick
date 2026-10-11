@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Thistlewick: a thistle head on a night-purple tile, with a gold spark of magic. -->
+  <defs>
+    <radialGradient id="sky" cx="50%" cy="38%" r="70%">
+      <stop offset="0" stop-color="#4a2f66"/>
+      <stop offset="1" stop-color="#1e1430"/>
+    </radialGradient>
+    <linearGradient id="head" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f0b8ff"/>
+      <stop offset="1" stop-color="#9a3fc8"/>
+    </linearGradient>
+    <linearGradient id="calyx" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8fc455"/>
+      <stop offset="1" stop-color="#4f7f2a"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="url(#sky)" stroke="#c99a3e" stroke-width="2.5"/>
+  <!-- The stem and two spiky leaves. -->
+  <path d="M32 58 L32 44" stroke="#4f7f2a" stroke-width="4" stroke-linecap="round"/>
+  <path d="M32 52 L22 47 L25 50 L19 49 L24 53 Z" fill="#5f9a34"/>
+  <path d="M32 50 L42 45 L39 48 L45 47 L40 51 Z" fill="#5f9a34"/>
+  <!-- The flower: a fan of purple tufts. -->
+  <g fill="url(#head)" stroke="#7a2aa8" stroke-width="0.6" stroke-linejoin="round">
+    <path d="M32 30 L24.3 27.7 L14.7 20.0 L26.1 24.5 Z"/>
+    <path d="M32 30 L25.2 25.8 L20.3 18.3 L27.8 23.2 Z"/>
+    <path d="M32 30 L26.5 24.1 L22.0 12.7 L29.7 22.3 Z"/>
+    <path d="M32 30 L28.2 22.9 L27.7 14.1 L31.7 22.0 Z"/>
+    <path d="M32 30 L30.2 22.2 L32.0 10.0 L33.8 22.2 Z"/>
+    <path d="M32 30 L32.3 22.0 L36.3 14.1 L35.8 22.9 Z"/>
+    <path d="M32 30 L34.3 22.3 L42.0 12.7 L37.5 24.1 Z"/>
+    <path d="M32 30 L36.2 23.2 L43.7 18.3 L38.8 25.8 Z"/>
+    <path d="M32 30 L37.9 24.5 L49.3 20.0 L39.7 27.7 Z"/>
+  </g>
+  <!-- The calyx: a green bulb with a crosshatch of spines. -->
+  <ellipse cx="32" cy="35" rx="11.5" ry="10" fill="url(#calyx)"/>
+  <path d="M23 31 L41 41 M23 39 L41 29 M27 27 L37 43 M37 27 L27 43" stroke="#3d6620" stroke-width="1.6" stroke-linecap="round" opacity="0.8"/>
+  <path d="M21 34 L17 33 M43 34 L47 33 M24 41 L21 44 M40 41 L43 44" stroke="#8fc455" stroke-width="2" stroke-linecap="round"/>
+  <!-- A gold spark. -->
+  <path d="M50 8 L52 13 L57 15 L52 17 L50 22 L48 17 L43 15 L48 13 Z" fill="#ffd45e"/>
+</svg>

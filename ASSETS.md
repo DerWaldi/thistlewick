@@ -7,3 +7,4 @@ To use a recorded track instead of the synthesised music, place it at `src/asset
 | Asset | Used for | Source | Licence |
 |---|---|---|---|
 | `public/models/*.glb` (Rattlecoat, Snapweed, Ember Crab, Sootling, Hexling, Brass Examiner) | Foe models | Made for Thistlewick with Claude from the project's own concept art (exported from three.js) | Original to this project |
+| `public/favicon.svg` (and the `.ico`, `apple-touch-icon.png`, `icon-192/512.png` rendered from it) | Browser tab and home-screen icon | Drawn for Thistlewick (SVG by hand) | Original to this project |
