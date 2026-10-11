@@ -22,7 +22,7 @@ import {
 } from 'three';
 import { SPELLS, type SpellId } from '../data/spells';
 import { mergeChildren } from '../world/merge';
-import { dampAngle } from '../player/controller';
+import { angleDiff, dampAngle } from '../player/controller';
 import { RuneMarker, runeTexture } from '../spells/runes';
 import type { SpellHit, SpellTarget } from '../spells/targets';
 import { dressWith, modelIslands, type Island } from './models';
@@ -87,6 +87,8 @@ interface Orb {
   life: number;
 }
 
+const STAFF_UP = new Vector3();
+
 export class Examiner implements Entity, SpellTarget {
   readonly marker: RuneMarker;
   readonly radius = 1.6;
@@ -98,6 +100,11 @@ export class Examiner implements Entity, SpellTarget {
   private readonly legs: Group[] = [];
   /** The model's staff (its own group, so it stays upright in the hand). */
   private readonly staff = new Group();
+  private readonly staffGrip = new Vector3();
+  private staffVel = 0;
+  private staffSlide = 0;
+  private stride = 0;
+  private helm: Object3D | null = null;
   /** Where the body (hips) sits in root space: the model's hips are lower than the built body's. */
   private bodyY = 0.85;
   private readonly crystal = new MeshStandardMaterial({ color: '#ffb060', emissive: new Color('#ff7a10'), emissiveIntensity: 1.8, flatShading: true });
@@ -132,6 +139,9 @@ export class Examiner implements Entity, SpellTarget {
     this.build();
     const model = modelIslands('examiner');
     if (model) this.wear(model);
+    this.body.traverse((o) => {
+      if ((o as Mesh).material === this.visor) this.helm = o.parent;
+    });
     this.root.scale.setScalar(SCALE);
     this.root.position.copy(this.pos);
     ctx.scene.add(this.root);
@@ -316,6 +326,7 @@ export class Examiner implements Entity, SpellTarget {
     this.root.updateMatrixWorld(true);
     this.staff.position.copy(this.armR.worldToLocal(this.root.localToWorld(new Vector3(-0.88 * k, 1.1 * k, 0.54 * k))));
     this.armR.add(this.staff);
+    this.staffGrip.copy(this.staff.position);
     // The pole and its bands below and above the grip, and the lantern up top (not the fingers).
     const isStaff = (i: Island) => (i.center.z > 0.47 || i.center.y > 3.45) && Math.abs(i.center.x + 0.88) < 0.15 && !(i.center.y > 0.95 && i.center.y < 1.16 && i.max.x - i.min.x < 0.09);
     this.root.updateMatrixWorld(true);
@@ -709,23 +720,94 @@ export class Examiner implements Entity, SpellTarget {
     if (this.state === 'down') return;
     this.root.position.lerpVectors(this.prev, this.pos, alpha);
     this.root.rotation.y = dampAngle(this.root.rotation.y, this.facing, 5, dt);
-    const raise = this.state === 'windup' || this.state === 'rain' ? 1 : 0;
-    const stuck = this.state === 'stuck';
-    const armX = stuck ? -0.9 : MathUtils.lerp(Math.sin(this.t * 2) * 0.2, -2.9, raise);
-    this.armL.rotation.x = MathUtils.damp(this.armL.rotation.x, armX, 12, dt);
-    this.armR.rotation.x = MathUtils.damp(this.armR.rotation.x, armX, 12, dt);
-    // Upright in the hand whatever the arm does: raised overhead for the hex rain, planted in a slam.
-    this.staff.rotation.x = -this.armR.rotation.x - this.body.rotation.x;
-    // A stomping walk while it moves (a stalk, or the charge at a run); planted otherwise.
-    const moving = this.state === 'stalk' || this.state === 'charge';
-    const stride = moving ? Math.sin(this.t * (this.state === 'charge' ? 12 : 5)) * (this.state === 'charge' ? 0.7 : 0.45) : 0;
-    this.legs[0].rotation.x = MathUtils.damp(this.legs[0].rotation.x, stride, 14, dt);
-    this.legs[1].rotation.x = MathUtils.damp(this.legs[1].rotation.x, -stride, 14, dt);
+    const st = this.state;
+    const stuck = st === 'stuck';
+    const moving = st === 'stalk' || st === 'charge';
+    // The walk: heavy strides, arms swinging against the legs, the torso twisting and rolling
+    // into each step, a dip on every footfall.
+    const pace = st === 'charge' ? 12 : 5;
+    this.stride = moving ? this.stride + dt * pace : this.stride;
+    const sw = moving ? Math.sin(this.stride) : 0;
+    const legAmp = st === 'charge' ? 0.7 : 0.45;
+    this.legs[0].rotation.x = MathUtils.damp(this.legs[0].rotation.x, sw * legAmp, 14, dt);
+    this.legs[1].rotation.x = MathUtils.damp(this.legs[1].rotation.x, -sw * legAmp, 14, dt);
+    const breathe = Math.sin(this.t * 1.6);
+    // Arms: x (forward/back) and z (out from the side) for each pose. armL is the free hand,
+    // armR carries the staff.
+    let lx = breathe * 0.04;
+    let lz = 0.05;
+    let rx = -0.25 + breathe * 0.03;
+    let rz = -0.08;
+    if (moving) {
+      lx = -sw * (st === 'charge' ? 0.9 : 0.55);
+      rx = -0.35 + sw * (st === 'charge' ? 0.5 : 0.3);
+      if (st === 'charge') {
+        lz = 0.25;
+        rz = -0.25;
+      }
+    }
+    if (st === 'windup') {
+      // Both fists high, the staff hoisted with them.
+      lx = -2.9;
+      rx = -2.7;
+      lz = 0.15;
+      rz = -0.15;
+    } else if (st === 'rain') {
+      // Staff thrust up to call the hexes down, the free hand spread.
+      rx = -2.9;
+      lx = -1.2;
+      lz = 0.7;
+    } else if (st === 'volley') {
+      // Staff levelled at you, the free hand drawn back.
+      rx = -1.45;
+      lx = 0.4;
+      lz = 0.3;
+    } else if (stuck) {
+      lx = -0.9;
+      rx = -0.9;
+    } else if (st === 'stagger') {
+      lx = -0.6 + Math.sin(this.t * 18) * 0.3;
+      rx = -0.6 + Math.cos(this.t * 18) * 0.3;
+      lz = 0.8;
+      rz = -0.8;
+    } else if (st === 'brace') {
+      lx = 0.5;
+      rx = 0.3;
+      lz = 0.35;
+      rz = -0.35;
+    }
+    const k = st === 'windup' || st === 'volley' ? 10 : 7;
+    this.armL.rotation.x = MathUtils.damp(this.armL.rotation.x, lx, k, dt);
+    this.armR.rotation.x = MathUtils.damp(this.armR.rotation.x, rx, k, dt);
+    this.armL.rotation.z = MathUtils.damp(this.armL.rotation.z, lz, k, dt);
+    this.armR.rotation.z = MathUtils.damp(this.armR.rotation.z, rz, k, dt);
+    // Torso: twists and rolls into the stride; the head looks for you.
+    this.body.rotation.y = MathUtils.damp(this.body.rotation.y, sw * 0.14, 10, dt);
+    this.body.rotation.z = MathUtils.damp(this.body.rotation.z, moving ? Math.cos(this.stride) * 0.05 : breathe * 0.01, 10, dt);
+    if (this.helm) {
+      const p = this.ctx.player.pos;
+      const look = MathUtils.clamp(angleDiff(this.root.rotation.y, Math.atan2(p.x - this.pos.x, p.z - this.pos.z)), -0.7, 0.7);
+      this.helm.rotation.y = MathUtils.damp(this.helm.rotation.y, st === 'dormant' ? breathe * 0.1 : look - this.body.rotation.y, 6, dt);
+    }
+    // The staff: upright in the hand, but on a spring, so it sways and lags behind the arm and
+    // swings forward on each step; levelled at you for a volley; it slides down through the
+    // grip when hoisted, so the lantern rides just over the helm.
+    const level = st === 'volley' ? 1.35 : 0;
+    const upright = -this.armR.rotation.x - this.body.rotation.x;
+    const target = upright + level + (moving ? Math.cos(this.stride) * 0.18 : 0) + (stuck ? -0.25 : 0);
+    this.staffVel += ((target - this.staff.rotation.x) * 90 - this.staffVel * 11) * dt;
+    this.staff.rotation.x += this.staffVel * dt;
+    this.staff.rotation.z = MathUtils.damp(this.staff.rotation.z, -this.armR.rotation.z + (moving ? sw * 0.06 : 0), 8, dt);
+    const hoisted = st === 'windup' || st === 'rain' ? 1 : 0;
+    this.staffSlide = MathUtils.damp(this.staffSlide, hoisted, 6, dt);
+    // Along the staff's own axis (the arm's frame is upside down when it's raised overhead).
+    this.staff.position.copy(this.staffGrip).addScaledVector(STAFF_UP.set(0, 1, 0).applyEuler(this.staff.rotation), -this.staffSlide * (1.7 / SCALE));
     // The staff's crystal glows for the hex rain and volleys.
     this.crystal.emissiveIntensity = this.state === 'rain' || this.state === 'volley' ? 4 + Math.sin(this.t * 25) : 1.8;
     const lean = stuck ? 0.45 : this.state === 'stagger' ? -0.3 : this.state === 'brace' || this.state === 'charge' ? 0.5 : 0;
     this.body.rotation.x = MathUtils.damp(this.body.rotation.x, lean, 8, dt);
-    this.body.position.y = this.bodyY + (this.state === 'stalk' ? Math.abs(Math.sin(this.t * 5)) * 0.04 : 0);
+    // A dip on every footfall; a slow breath standing still.
+    this.body.position.y = this.bodyY + (this.state === 'stalk' || this.state === 'charge' ? (Math.abs(Math.cos(this.stride)) - 1) * 0.05 : Math.sin(this.t * 1.6) * 0.012);
     const flare = this.state === 'windup' || this.state === 'brace' || this.state === 'charge';
     this.visor.emissiveIntensity = flare ? 3 + Math.sin(this.t * 30) : this.state === 'dormant' ? 0.3 : 1.2;
     // The visor reddens as it gets angrier.
