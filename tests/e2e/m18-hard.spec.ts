@@ -497,6 +497,8 @@ test('the Brass Examiner: jump its slams, break six seals with the spell each sh
     let jumpsCleared = 0;
     for (let round = 0; round < 12 && boss.hp > 0; round++) {
       // Wait for the wind-up, standing close; jump just before the slam lands.
+      // (Stamina topped up: this test is about the seals, the phases have their own.)
+      (tw.game as unknown as { state: { stamina: number } }).state.stamina = 5;
       for (let i = 0; i < 600 && boss.state !== 'windup'; i++) {
         tw.teleport(boss.pos.x, 0, boss.pos.z - 3, 0);
         tw.advance(1 / 30);
@@ -548,4 +550,63 @@ test('the Brass Examiner: jump its slams, break six seals with the spell each sh
     tw.advance(0.5);
   });
   await shot(page, 'm18-examiner-down', browserName);
+});
+
+test('the Brass Examiner fights in phases as its seals break: rolling shockwaves, raining hexes, a charge into the wall', async ({ page, browserName }) => {
+  test.setTimeout(120_000);
+  await sandbox(page, 'exams', ['exams-entered', 'exam-boss-woken']);
+  await calm(page, ['Hexling', 'Sootling']);
+  type B = { constructor: { name: string }; state: string; hp: number; pos: { x: number; y: number; z: number }; waves: unknown[]; drops: unknown[] };
+  const r = await page.evaluate(async () => {
+    const tw = window.__tw;
+    const g = tw.game as unknown as { state: { stamina: number }; world: { entities: B[] } };
+    const boss = g.world.entities.find((e) => e.constructor.name === 'Examiner')!;
+    tw.teleport(0, 0, 196, 0);
+    tw.advance(0.5);
+    const seen = { waves: 0, drops: 0, charge: false, crash: false };
+    const watch = (s: number) => {
+      for (let i = 0; i < s * 30; i++) {
+        g.state.stamina = 5;
+        tw.advance(1 / 30);
+        seen.waves = Math.max(seen.waves, boss.waves.length);
+        seen.drops = Math.max(seen.drops, boss.drops.length);
+        if (boss.state === 'charge') seen.charge = true;
+        if (seen.charge && boss.state === 'stuck') seen.crash = true;
+      }
+    };
+    // Phase two (two seals gone): slam waves and hex rain, kept at a distance.
+    boss.hp = 4;
+    tw.teleport(boss.pos.x, 0, boss.pos.z - 3, 0);
+    watch(3);
+    const wavesP2 = seen.waves;
+    (boss as unknown as { rainIn: number }).rainIn = 0;
+    for (let i = 0; i < 90 && !seen.drops; i++) {
+      // Keep away from it: hexes rain on you when you hang back.
+      const dx = boss.pos.x > 0 ? -8 : 8;
+      tw.teleport(boss.pos.x + dx, 0, boss.pos.z, 0);
+      watch(1 / 10);
+    }
+    const dropsP2 = seen.drops;
+    // Phase three: a charge from range that ends in the wall when you sidestep.
+    boss.hp = 2;
+    for (let k = 0; k < 4 && !seen.crash; k++) {
+      (boss as unknown as { chargeIn: number }).chargeIn = 0;
+      tw.teleport(boss.pos.z > 208 ? 0 : 0, 0, boss.pos.z > 208 ? 194 : 222, 0);
+      for (let i = 0; i < 300 && boss.state !== 'charge'; i++) {
+        g.state.stamina = 5;
+        tw.advance(1 / 30);
+      }
+      // Sidestep out of its path.
+      const p = tw.state().feet;
+      tw.teleport(p.x + 5, 0, p.z, 0);
+      watch(3);
+    }
+    return { wavesP2, dropsP2, ...seen };
+  });
+  expect(r.wavesP2).toBeGreaterThan(0);
+  expect(r.dropsP2).toBeGreaterThan(0);
+  expect(r.charge).toBe(true);
+  expect(r.crash).toBe(true);
+  await page.evaluate(() => window.__tw.advance(0.1));
+  await shot(page, 'm18-examiner-phases', browserName);
 });

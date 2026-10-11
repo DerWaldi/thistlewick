@@ -10,17 +10,19 @@ import {
   Mesh,
   MeshBasicMaterial,
   MeshStandardMaterial,
+  CircleGeometry,
+  PlaneGeometry,
   RingGeometry,
   SphereGeometry,
   Vector3,
   type BufferGeometry,
 } from 'three';
 import { SPELLS, type SpellId } from '../data/spells';
-import { RuneMarker } from '../spells/runes';
+import { RuneMarker, runeTexture } from '../spells/runes';
 import type { SpellHit, SpellTarget } from '../spells/targets';
 import type { Entity, SpecOf, WorldContext } from './types';
 
-type State = 'dormant' | 'stalk' | 'windup' | 'stuck' | 'stagger' | 'volley' | 'down';
+type State = 'dormant' | 'stalk' | 'windup' | 'stuck' | 'stagger' | 'volley' | 'rain' | 'brace' | 'charge' | 'down';
 
 /**
  * The Brass Examiner, the Final Examinations' last test: a great suit of brass armour all
@@ -28,8 +30,13 @@ type State = 'dormant' | 'stalk' | 'windup' | 'stuck' | 'stagger' | 'volley' | '
  * both fists (the visor flares and a ring glows on the floor) and slams a shockwave across
  * the floor that only a jump clears. Its fists then stick in the flagstones for a moment and
  * a seal on its chest lights up with a rune: that's the moment to hit it with that spell
- * (charged, where the spell can be). Six seals, six spells; it gets faster and angrier as
- * they break, and throws hex volleys when you keep your distance.
+ * (charged, where the spell can be). Six seals, six spells, worn as six rune medallions
+ * on its chest that go dark one by one. The fight has three phases by seals broken:
+ *  - 0-1: it stalks and slams, and throws hex volleys when you keep your distance;
+ *  - 2-3: every slam also sends a shockwave rolling out across the whole hall (jump it), and
+ *    hexes rain down on glowing marks on the floor;
+ *  - 4-5: two rolling shockwaves per slam, wider volleys, and a charge: it braces, then
+ *    rushes at you; dodge, and it crashes into the wall and is stuck there for a moment.
  */
 const SEALS: SpellId[] = ['thwackwort', 'latchkin', 'glimmerwick', 'cindersnap', 'rimewhistle', 'thistledown'];
 const SEAL_NAMES: Record<string, string> = {
@@ -43,6 +50,29 @@ const SEAL_NAMES: Record<string, string> = {
 const SCALE = 2.5;
 const SLAM_RANGE = 3.8;
 const SHOCK_RADIUS = 5.2;
+
+/** A shockwave rolling out across the floor from a slam. */
+interface Wave {
+  cx: number;
+  cz: number;
+  r: number;
+  delay: number;
+  hit: boolean;
+  mesh: Mesh;
+}
+
+/** A hex falling on a glowing mark. */
+interface Drop {
+  x: number;
+  z: number;
+  timer: number;
+  mark: Mesh;
+  orb: Mesh;
+}
+
+const WAVE_SPEED = 7;
+const WAVE_REACH = 20;
+const RAIN_FALL = 1.5;
 
 interface Orb {
   mesh: Mesh;
@@ -60,7 +90,13 @@ export class Examiner implements Entity, SpellTarget {
   private readonly armL = new Group();
   private readonly armR = new Group();
   private readonly visor: MeshStandardMaterial;
-  private readonly seal: MeshStandardMaterial;
+  private readonly seals: { mat: MeshStandardMaterial; disc: Mesh; glyph: Mesh; color: Color }[] = [];
+  private readonly waves: Wave[] = [];
+  private readonly drops: Drop[] = [];
+  private rainIn = 6;
+  private chargeIn = 4;
+  private readonly chargeDir = new Vector3();
+  private chargeHit = false;
   private readonly ring: Mesh;
   private readonly pos: Vector3;
   private readonly prev: Vector3;
@@ -81,7 +117,6 @@ export class Examiner implements Entity, SpellTarget {
     this.pos = new Vector3(...spec.pos);
     this.prev = this.pos.clone();
     this.visor = new MeshStandardMaterial({ color: '#2a2230', emissive: new Color('#ffb020'), emissiveIntensity: 0.3 });
-    this.seal = new MeshStandardMaterial({ color: '#3a2a1a', emissive: new Color('#ffd86a'), emissiveIntensity: 0 });
     this.build();
     this.root.scale.setScalar(SCALE);
     this.root.position.copy(this.pos);
@@ -118,8 +153,21 @@ export class Examiner implements Entity, SpellTarget {
     this.root.add(this.body);
     add(this.body, new CylinderGeometry(0.4, 0.3, 0.32, 8), dark, [0, 0.1, 0]);
     add(this.body, new BoxGeometry(0.8, 0.78, 0.5), brass, [0, 0.62, 0]);
-    // The seal on its chest, which lights with the rune of the spell that breaks it.
-    add(this.body, new CylinderGeometry(0.2, 0.2, 0.06, 12).rotateX(Math.PI / 2), this.seal, [0, 0.66, 0.27]);
+    // Six seals on its chest, a rune medallion for each spell, in a ring round a brass boss.
+    // The one to break next pulses while its fists are stuck; broken ones go dark and crack.
+    add(this.body, new CylinderGeometry(0.1, 0.1, 0.05, 10).rotateX(Math.PI / 2), dark, [0, 0.62, 0.27]);
+    SEALS.forEach((spell, i) => {
+      const a = Math.PI / 2 + (i / SEALS.length) * Math.PI * 2;
+      const x = Math.cos(a) * 0.25;
+      const y = 0.62 + Math.sin(a) * 0.25;
+      const color = new Color(SPELLS[spell].color);
+      const mat = new MeshStandardMaterial({ color: color.clone().multiplyScalar(0.5), emissive: color, emissiveIntensity: 0.5, metalness: 0.4, roughness: 0.4 });
+      const disc = add(this.body, new CylinderGeometry(0.09, 0.09, 0.05, 12).rotateX(Math.PI / 2), mat, [x, y, 0.27]);
+      const glyph = new Mesh(new PlaneGeometry(0.15, 0.15), new MeshBasicMaterial({ map: runeTexture(spell), transparent: true, depthWrite: false }));
+      glyph.position.set(x, y, 0.3);
+      this.body.add(glyph);
+      this.seals.push({ mat, disc, glyph, color });
+    });
     add(this.body, new SphereGeometry(0.24, 8, 6), brass, [0.5, 0.95, 0]);
     add(this.body, new SphereGeometry(0.24, 8, 6), brass, [-0.5, 0.95, 0]);
     const helm = new Group();
@@ -166,6 +214,17 @@ export class Examiner implements Entity, SpellTarget {
       return;
     }
     const name = SEAL_NAMES[this.spell];
+    const broken = this.seals[SEALS.length - this.hp];
+    if (broken) {
+      broken.mat.color.set('#2a2420');
+      broken.mat.emissiveIntensity = 0;
+      broken.glyph.visible = false;
+      broken.disc.rotation.z = 0.5;
+      broken.disc.scale.setScalar(0.85);
+      const wp = new Vector3();
+      broken.disc.getWorldPosition(wp);
+      this.ctx.fx.burst(wp, 24, broken.color, 3, 0.12, 0.6);
+    }
     this.hp--;
     this.ctx.events.emit('bossHit', { pos: this.pos.clone() });
     this.ctx.fx.burst(this.pos.clone().add(new Vector3(0, 2.4, 0.6)), 30, new Color('#ffd86a'), 4, 0.18, 0.4);
@@ -175,6 +234,15 @@ export class Examiner implements Entity, SpellTarget {
       return;
     }
     this.ctx.events.emit('toast', { text: `The ${name} breaks! (${SEALS.length - this.hp} of ${SEALS.length})`, kind: 'info' });
+    if (this.hp === 4 || this.hp === 2) {
+      // A new phase: it roars, and fights differently from here on.
+      this.ctx.events.emit('bossRoar', { pos: this.pos.clone() });
+      const text = this.hp === 4 ? 'The Examiner shakes the floor! Jump the shockwaves, and mind the hexes from above.' : 'The Examiner is furious! It charges now: dodge, and it hits the wall.';
+      this.ctx.events.emit('toast', { text, kind: 'hint' });
+      // Show off the new trick soon after the roar.
+      if (this.hp === 4) this.rainIn = 2;
+      else this.chargeIn = 2;
+    }
     this.state = 'stagger';
     this.timer = 1.4;
     this.marker.setSpell(this.spell);
@@ -188,6 +256,13 @@ export class Examiner implements Entity, SpellTarget {
     this.ctx.signals.set(this.spec.id, true);
     this.ctx.state.flags.add(`down:${this.spec.id}`);
     this.ring.visible = false;
+    for (const w of this.waves) w.mesh.removeFromParent();
+    for (const d of this.drops) {
+      d.mark.removeFromParent();
+      d.orb.removeFromParent();
+    }
+    this.waves.length = 0;
+    this.drops.length = 0;
     // Falls apart: every part flies off and clatters down.
     this.root.updateMatrixWorld(true);
     const parts: Mesh[] = [];
@@ -242,8 +317,113 @@ export class Examiner implements Entity, SpellTarget {
     }
   }
 
+  private wave(delay: number): void {
+    const mesh = new Mesh(new RingGeometry(0.96, 1, 72), new MeshBasicMaterial({ color: '#ffcf6a', transparent: true, opacity: 0.8, depthWrite: false }));
+    mesh.rotation.x = -Math.PI / 2;
+    mesh.visible = false;
+    this.ctx.scene.add(mesh);
+    this.waves.push({ cx: this.pos.x, cz: this.pos.z, r: SHOCK_RADIUS, delay, hit: false, mesh });
+  }
+
+  private updateWaves(dt: number): void {
+    const p = this.ctx.player;
+    for (let i = this.waves.length - 1; i >= 0; i--) {
+      const w = this.waves[i];
+      w.delay -= dt;
+      if (w.delay > 0) continue;
+      w.r += WAVE_SPEED * dt;
+      w.mesh.visible = true;
+      w.mesh.scale.setScalar(w.r);
+      w.mesh.position.set(w.cx, this.pos.y + 0.06, w.cz);
+      (w.mesh.material as MeshBasicMaterial).opacity = 0.8 * (1 - w.r / WAVE_REACH);
+      const d = Math.hypot(p.pos.x - w.cx, p.pos.z - w.cz);
+      const grounded = p.feet.y < this.pos.y + 0.45;
+      if (!w.hit && Math.abs(d - w.r) < 0.55 && grounded && p.mode !== 'reset') {
+        w.hit = true;
+        this.ctx.health.damage(1, new Vector3(w.cx, this.pos.y, w.cz));
+      }
+      if (w.r > WAVE_REACH) {
+        w.mesh.removeFromParent();
+        w.mesh.geometry.dispose();
+        this.waves.splice(i, 1);
+      }
+    }
+  }
+
+  /** Hexes rain on the floor: one where you stand, more round about, each on a glowing mark. */
+  private rain(count: number): void {
+    const p = this.ctx.player.pos;
+    for (let i = 0; i < count; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const r = i === 0 ? 0 : 1.8 + Math.random() * 2.2;
+      const x = p.x + Math.sin(a) * r;
+      const z = p.z + Math.cos(a) * r;
+      const mark = new Mesh(new CircleGeometry(1.1, 20), new MeshBasicMaterial({ color: '#ffb020', transparent: true, opacity: 0.1, depthWrite: false }));
+      mark.rotation.x = -Math.PI / 2;
+      mark.position.set(x, this.pos.y + 0.05, z);
+      const orb = new Mesh(new IcosahedronGeometry(0.32, 1), this.orbMat);
+      this.ctx.scene.add(mark, orb);
+      this.drops.push({ x, z, timer: RAIN_FALL + i * 0.18, mark, orb });
+    }
+    this.ctx.events.emit('hexCast', { pos: this.pos.clone().add(new Vector3(0, 4, 0)) });
+  }
+
+  private updateDrops(dt: number): void {
+    const p = this.ctx.player;
+    for (let i = this.drops.length - 1; i >= 0; i--) {
+      const d = this.drops[i];
+      d.timer -= dt;
+      d.orb.position.set(d.x, this.pos.y + 0.4 + Math.max(0, d.timer) * 7, d.z);
+      (d.mark.material as MeshBasicMaterial).opacity = 0.15 + 0.45 * (1 - Math.min(1, d.timer / RAIN_FALL));
+      if (d.timer > 0) continue;
+      if (Math.hypot(p.pos.x - d.x, p.pos.z - d.z) < 1.2 && p.feet.y < this.pos.y + 1.6 && p.mode !== 'reset') this.ctx.health.damage(1, new Vector3(d.x, this.pos.y, d.z));
+      const at = new Vector3(d.x, this.pos.y + 0.4, d.z);
+      this.ctx.fx.burst(at, 14, new Color('#ffb020'), 2.6, 0.14, 0.6);
+      this.ctx.events.emit('hexHit', { pos: at });
+      d.mark.removeFromParent();
+      d.orb.removeFromParent();
+      d.mark.geometry.dispose();
+      d.orb.geometry.dispose();
+      this.drops.splice(i, 1);
+    }
+  }
+
+  /** Keeps it inside its hall (it moves without colliding); true if it had to be pushed back. */
+  private confine(): boolean {
+    const arena = this.spec.arena;
+    const x0 = this.pos.x;
+    const z0 = this.pos.z;
+    this.pos.x = MathUtils.clamp(this.pos.x, arena.min[0] + 1.5, arena.max[0] - 1.5);
+    this.pos.z = MathUtils.clamp(this.pos.z, arena.min[2] + 1.5, arena.max[2] - 1.5);
+    if (this.spec.ring) {
+      const [cx, cz] = this.spec.ring.center;
+      const dx = this.pos.x - cx;
+      const dz = this.pos.z - cz;
+      const d = Math.hypot(dx, dz);
+      const r = this.spec.ring.radius;
+      if (d > r) {
+        this.pos.x = cx + (dx / d) * r;
+        this.pos.z = cz + (dz / d) * r;
+      }
+    }
+    if (this.spec.avoid) {
+      const [ax, , az] = this.spec.avoid;
+      const dx = this.pos.x - ax;
+      const dz = this.pos.z - az;
+      const d = Math.hypot(dx, dz);
+      if (d < 3.4) {
+        const k = 3.4 / Math.max(d, 0.01);
+        this.pos.x = ax + dx * k;
+        this.pos.z = az + dz * k;
+      }
+    }
+    return Math.abs(this.pos.x - x0) > 1e-4 || Math.abs(this.pos.z - z0) > 1e-4;
+  }
+
   fixedUpdate(dt: number): void {
     this.t += dt;
+    this.updateWaves(dt);
+    this.updateDrops(dt);
     this.timer -= dt;
     this.prev.copy(this.pos);
     this.updateOrbs(dt);
@@ -280,39 +460,60 @@ export class Examiner implements Entity, SpellTarget {
           this.pos.x += Math.sin(this.facing) * speed * dt;
           this.pos.z += Math.cos(this.facing) * speed * dt;
         }
-        this.pos.x = MathUtils.clamp(this.pos.x, arena.min[0] + 1.5, arena.max[0] - 1.5);
-        this.pos.z = MathUtils.clamp(this.pos.z, arena.min[2] + 1.5, arena.max[2] - 1.5);
-        // It moves without colliding: keep it off the walls of a round (or six-sided) hall.
-        if (this.spec.ring) {
-          const [cx, cz] = this.spec.ring.center;
-          const dx = this.pos.x - cx;
-          const dz = this.pos.z - cz;
-          const d = Math.hypot(dx, dz);
-          const r = this.spec.ring.radius;
-          if (d > r) {
-            this.pos.x = cx + (dx / d) * r;
-            this.pos.z = cz + (dz / d) * r;
-          }
-        }
-        // Round the caged plinth, not through it.
-        if (this.spec.avoid) {
-          const [ax, , az] = this.spec.avoid;
-          const dx = this.pos.x - ax;
-          const dz = this.pos.z - az;
-          const d = Math.hypot(dx, dz);
-          if (d < 3.4) {
-            const k = 3.4 / Math.max(d, 0.01);
-            this.pos.x = ax + dx * k;
-            this.pos.z = az + dz * k;
-          }
-        }
+        this.confine();
         this.volleyIn -= dt;
+        this.rainIn -= dt;
+        this.chargeIn -= dt;
         if (flat < SLAM_RANGE && this.ctx.player.mode !== 'reset') {
           this.state = 'windup';
           this.timer = [1.0, 0.85, 0.7][angry];
+        } else if (angry === 2 && this.chargeIn <= 0 && flat > 6) {
+          this.state = 'brace';
+          this.timer = 0.9;
+          this.ctx.events.emit('bossRoar', { pos: this.pos.clone() });
+        } else if (angry >= 1 && this.rainIn <= 0 && flat > 4) {
+          this.state = 'rain';
+          this.timer = 0.6;
         } else if (this.volleyIn <= 0 && flat > 6) {
           this.state = 'volley';
           this.timer = 0.7;
+        }
+        break;
+      }
+      case 'rain':
+        this.facing = Math.atan2(p.x - this.pos.x, p.z - this.pos.z);
+        if (this.timer <= 0) {
+          this.rain(angry === 2 ? 5 : 4);
+          this.rainIn = angry === 2 ? 7 : 8;
+          this.volleyIn = Math.max(this.volleyIn, 2);
+          this.state = 'stalk';
+        }
+        break;
+      case 'brace':
+        // Stamps, lowers its head; turns to you until the last moment.
+        this.facing = Math.atan2(p.x - this.pos.x, p.z - this.pos.z);
+        if (this.timer <= 0) {
+          this.chargeDir.set(Math.sin(this.facing), 0, Math.cos(this.facing));
+          this.chargeHit = false;
+          this.state = 'charge';
+          this.timer = 2;
+        }
+        break;
+      case 'charge': {
+        this.pos.addScaledVector(this.chargeDir, 12 * dt);
+        if (!this.chargeHit && flat < 2.2 && this.ctx.player.mode !== 'reset') this.chargeHit = this.ctx.health.damage(1, this.pos.clone());
+        const crashed = this.confine();
+        if (crashed) {
+          // Into the wall: dazed, fists down, seal open.
+          this.ctx.events.emit('bombBlast', { pos: this.pos.clone() });
+          this.ctx.fx.burst(this.pos.clone().add(new Vector3(0, 2, 0)), 30, new Color('#c8b090'), 5, 0.22, 0.3);
+          this.state = 'stuck';
+          this.timer = 2.6;
+          this.marker.setSpell(this.spell);
+          this.chargeIn = 8;
+        } else if (this.timer <= 0) {
+          this.state = 'stalk';
+          this.chargeIn = 6;
         }
         break;
       }
@@ -346,8 +547,12 @@ export class Examiner implements Entity, SpellTarget {
     if (flat < SHOCK_RADIUS && !airborne && this.ctx.player.mode !== 'reset') this.ctx.health.damage(2, this.pos.clone());
     this.ctx.events.emit('bombBlast', { pos: this.pos.clone() });
     this.ctx.fx.burst(this.pos.clone().add(new Vector3(0, 0.3, 0)), 40, new Color('#c8b090'), 6, 0.25, 0.2);
+    const angry = this.hp <= 2 ? 2 : this.hp <= 4 ? 1 : 0;
+    // Later phases: shockwaves roll on out across the hall (jump each as it reaches you).
+    if (angry >= 1) this.wave(0);
+    if (angry >= 2) this.wave(1.1);
     this.state = 'stuck';
-    this.timer = [2.6, 2.3, 2][this.hp <= 2 ? 2 : this.hp <= 4 ? 1 : 0];
+    this.timer = [2.6, 2.3, 2][angry];
     this.marker.setSpell(this.spell);
   }
 
@@ -359,15 +564,23 @@ export class Examiner implements Entity, SpellTarget {
     if (this.state === 'down') return;
     this.root.position.lerpVectors(this.prev, this.pos, alpha);
     this.root.rotation.y = MathUtils.damp(this.root.rotation.y, this.facing, 5, dt);
-    const raise = this.state === 'windup' ? 1 : 0;
+    const raise = this.state === 'windup' || this.state === 'rain' ? 1 : 0;
     const stuck = this.state === 'stuck';
     const armX = stuck ? -0.9 : MathUtils.lerp(Math.sin(this.t * 2) * 0.2, -2.9, raise);
     this.armL.rotation.x = MathUtils.damp(this.armL.rotation.x, armX, 12, dt);
     this.armR.rotation.x = MathUtils.damp(this.armR.rotation.x, armX, 12, dt);
-    this.body.rotation.x = MathUtils.damp(this.body.rotation.x, stuck ? 0.45 : this.state === 'stagger' ? -0.3 : 0, 8, dt);
+    const lean = stuck ? 0.45 : this.state === 'stagger' ? -0.3 : this.state === 'brace' || this.state === 'charge' ? 0.5 : 0;
+    this.body.rotation.x = MathUtils.damp(this.body.rotation.x, lean, 8, dt);
     this.body.position.y = 0.85 + (this.state === 'stalk' ? Math.abs(Math.sin(this.t * 5)) * 0.04 : 0);
-    this.visor.emissiveIntensity = this.state === 'windup' ? 3 + Math.sin(this.t * 30) : this.state === 'dormant' ? 0.3 : 1.2;
-    this.seal.emissiveIntensity = stuck ? 2.5 + Math.sin(this.t * 10) * 0.8 : 0.2;
+    const flare = this.state === 'windup' || this.state === 'brace' || this.state === 'charge';
+    this.visor.emissiveIntensity = flare ? 3 + Math.sin(this.t * 30) : this.state === 'dormant' ? 0.3 : 1.2;
+    // The visor reddens as it gets angrier.
+    this.visor.emissive.set(this.hp <= 2 ? '#ff4a20' : this.hp <= 4 ? '#ff8020' : '#ffb020');
+    const next = SEALS.length - this.hp;
+    this.seals.forEach((sl, i) => {
+      if (i < next) return;
+      sl.mat.emissiveIntensity = i === next && stuck ? 2.6 + Math.sin(this.t * 10) * 0.9 : i === next ? 0.9 : 0.4;
+    });
     const ringMat = this.ring.material as MeshBasicMaterial;
     ringMat.opacity = this.state === 'windup' ? 0.35 + Math.sin(this.t * 20) * 0.2 : 0;
     this.ring.position.set(this.root.position.x, this.pos.y + 0.05, this.root.position.z);
