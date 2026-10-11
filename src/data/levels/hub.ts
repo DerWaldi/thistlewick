@@ -583,14 +583,14 @@ function buildHub(b: LevelBuilder): void {
   // ================================================================ LONG GALLERY (x 35..42, z 24..52, y=3)
   // Added after everything else: entity ids come from build order, so new specs go last.
   const G = 3;
-  wall(b, 'z', 34.5, 23.5, 52.5, 10.4, { color: COLORS.stoneLight, holes: [{ from: 49.5, to: 51.5, bottom: G, top: G + 3 }] }); // a false wall fills this
+  wall(b, 'z', 34.5, 23.5, 52.5, 10.4, { color: COLORS.stoneLight, holes: [{ from: 49.5, to: 51.5, bottom: G - 0.02, top: G + 3 }] }); // a false wall fills this
   wall(b, 'z', 42.5, 23.5, 52.5, 10.4, {
     color: COLORS.stoneLight,
     holes: [
-      { from: 33.4, to: 37.6, bottom: G, top: G + 3.6 }, // the store-room
+      { from: 33.4, to: 37.6, bottom: G - 0.02, top: G + 3.6 }, // the store-room
     ],
   });
-  wall(b, 'x', 52.5, 34.5, 42.5, 10.4, { color: COLORS.stoneLight, holes: [{ from: 37.3, to: 39.7, bottom: G, top: G + 3.4 }] });
+  wall(b, 'x', 52.5, 34.5, 42.5, 10.4, { color: COLORS.stoneLight, holes: [{ from: 37.3, to: 39.7, bottom: G - 0.02, top: G + 3.4 }] });
   b.box([38.5, G / 2, 38.25], [7, G, 28.5], { color: '#8a6a4a', pattern: 'planks' });
   slab(b, 34.5, 42.5, 23.5, 52.5, 10.8, 0.4, '#5e4a3e', 'planks');
   // The corridor's north wall (the portcullis wall) stops at 9 m; close the gallery's end up to its ceiling.

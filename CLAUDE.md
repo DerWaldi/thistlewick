@@ -237,6 +237,7 @@ Levels place objects with `b.add({ type: ..., ... })`. Objects talk to each othe
 - **Lights:** keep point lights to about 8 per level, and never add or remove lights at runtime: that triggers shader recompiles, which hitch. Use `lantern(pos, 0, 0, false)` for unlit decorative lanterns.
 - **Tests draw on demand:** in `?test` mode nothing renders unless asked. `shot()` calls `__tw.render()` first, so use it for screenshots.
 - **Tests and triggers:** room triggers open dialogues, and dialogues freeze the player until the script ends. In tests, `await tw.idle()` after anything that might trigger one, or pre-set the trigger's flag.
+- **No coplanar faces:** a doorway's sill (`holes[].bottom`) level with the floor beyond it, a plank deck flush on a floor, a gate post flush with its opening: surfaces in the same plane flicker (z-fighting). Drop sills 2 cm under the floor, lift decks a few cm, overlap rather than touch.
 - **Ledges must be flush:** the grab looks for a lip directly above a wall face, plus room to stand (at least about 0.9 m deep). Overhanging sills can't be grabbed.
 - **Events:** communicate through the typed `EventBus`. Add new events to `GameEvents` in `src/engine/events.ts`. SFX, particles and animation subscribe to events and never poll.
 - **Tuning:** all game-feel numbers live in `src/data/tuning.ts`. Edit them live in the panel (`` ` `` key); edits persist in localStorage (`thistlewick.tuning`). Use "Copy tuning JSON" to promote values to defaults.

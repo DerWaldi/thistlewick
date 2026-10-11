@@ -274,7 +274,12 @@ function mainspring(b: LevelBuilder, flames: Glow): void {
   wall(b, 'z', 8.5, Z0, Z1, 33, { color: STONE });
   // The Bell Chamber is narrower: close the slots either side of its north wall.
   for (const x of [-7.5, 7.5]) b.box([x, 16.5, Z0], [2, 33, 1], { color: STONE });
-  wall(b, 'x', Z1, -8.5, 8.5, 33, { color: STONE, holes: [{ from: -2.1, to: 2.1, bottom: TOP, top: TOP + 3.6 }] });
+  // Above the Bell Chamber (its walls stop at 30): an iron grille closes the slot to the sky.
+  for (let x = -6.3; x <= 6.31; x += 0.45) deco(b, new BoxGeometry(0.08, 3.5, 0.08), [x, 31.75, Z0], IRON);
+  for (const y of [30.15, 31.75, 33.35]) deco(b, new BoxGeometry(13, 0.12, 0.12), [0, y, Z0], IRON);
+  b.box([0, 31.75, Z0], [13, 3.5, 0.2], { invisible: true, info: { noGrab: true, seeThrough: true, cameraIgnore: true } });
+  // (The doorway's sill sits 2 cm under the gallery floor: level with it, the two flickered.)
+  wall(b, 'x', Z1, -8.5, 8.5, 33, { color: STONE, holes: [{ from: -2.1, to: 2.1, bottom: TOP - 0.02, top: TOP + 3.6 }] });
   slab(b, -8.5, 8.5, Z0, Z1, 33.5, 0.5, COLORS.stoneDark);
   b.box([0, -9, 91], [16, 0.5, 29], { color: '#1e1816', noCollide: true });
   b.mist(-8, 8, 76.5, 106, -1);
