@@ -323,7 +323,7 @@ function build(b: LevelBuilder): void {
   // The Star and the way up moved on to the new chamber (replaced in place: ids stay put).
   b.add(
     { type: 'star', id: 'vault-star', pos: [0, 1.9, STAR_Z], script: 'vaultComplete' },
-    { type: 'door', pos: [0, 0, STAR_Z + 2.95], yaw: Math.PI, width: 2.4, height: 3.4, to: { level: 'quince', spawn: 'fromVault' }, label: 'Up to class' },
+    { type: 'door', pos: [0, 0, STAR_Z + 2.45], yaw: Math.PI, width: 2.4, height: 3.4, to: { level: 'quince', spawn: 'fromVault' }, label: 'Up to class' },
   );
   wallTorch(b, flames, [-2.98, 2.6, 117], Math.PI / 2);
   wallTorch(b, flames, [2.98, 2.6, 117], -Math.PI / 2);

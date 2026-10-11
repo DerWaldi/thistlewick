@@ -151,10 +151,11 @@ function build(b: LevelBuilder): void {
     const z = 2.9 + i * 0.45;
     deco(b, new BoxGeometry(0.1, 0.14, 0.16), [6.45, 1.55 + (i % 2) * 0.85, z], '#d4a94a');
   }
-  // A key as tall as a first-year, hung over the door.
-  deco(b, new TorusGeometry(0.45, 0.1, 6, 16), [0, 5.1, 0.6], '#d4a94a');
-  deco(b, new BoxGeometry(0.16, 0.16, 2.2).rotateY(Math.PI / 2), [1.55, 5.1, 0.6], '#d4a94a');
-  for (const x of [2.3, 2.6]) deco(b, new BoxGeometry(0.12, 0.42, 0.12), [x, 4.85, 0.6], '#d4a94a');
+  // A key as tall as a first-year, hung centred over the door (bow to bit spans x -0.55..2.66).
+  const KX = -1.05;
+  deco(b, new TorusGeometry(0.45, 0.1, 6, 16), [KX, 5.1, 0.6], '#d4a94a');
+  deco(b, new BoxGeometry(0.16, 0.16, 2.2).rotateY(Math.PI / 2), [KX + 1.55, 5.1, 0.6], '#d4a94a');
+  for (const x of [2.3, 2.6]) deco(b, new BoxGeometry(0.12, 0.42, 0.12), [KX + x, 4.85, 0.6], '#d4a94a');
   rug(b, [0, 0, 5], 5, 6, '#2f5a6a', '#d4a94a');
   pottedPlant(b, [-6.4, 0, 1], 1.3, 3);
   pottedPlant(b, [6.4, 0, 1], 1.3, 4);

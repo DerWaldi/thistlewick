@@ -328,7 +328,7 @@ function build(b: LevelBuilder): void {
     ...ring.map((r) => ({ type: 'burnable' as const, style: 'briar' as const, ...r, fireproofUntil: ['s1', 's2'] })),
     // The Star and the way back moved on to the Hothouse (replaced in place: ids stay put).
     { type: 'star', id: 'glasshouse-star', pos: [0, 1.9, STAR_Z], script: 'glasshouseComplete' },
-    { type: 'door', pos: [0, 0, STAR_Z + 3], yaw: Math.PI, width: 2.4, height: 3.4, to: { level: 'ashcombe', spawn: 'fromGlasshouse' }, label: 'Back to class' },
+    { type: 'door', pos: [0, 0, STAR_Z + 2.65], yaw: Math.PI, width: 2.4, height: 3.4, to: { level: 'ashcombe', spawn: 'fromGlasshouse' }, label: 'Back to class' },
   );
   for (let i = 0; i < 8; i++) {
     const a = (i / 8) * Math.PI * 2;

@@ -204,7 +204,7 @@ function build(b: LevelBuilder): void {
     // ice on the dais now holds the sluice lever.
     { type: 'star', id: 'cistern-star', pos: [0, UP + 1.9, STAR_Z], script: 'cisternComplete' },
     { type: 'burnable', style: 'ice', pos: [0, UP + 1.9, 93], size: [1.8, 1.8, 1.8] },
-    { type: 'door', pos: [0, UP, STAR_Z + 2.95], yaw: Math.PI, width: 2.4, height: 3.4, to: { level: 'coldharbour', spawn: 'fromCisterns' }, label: 'Up to class' },
+    { type: 'door', pos: [0, UP, STAR_Z + 2.65], yaw: Math.PI, width: 2.4, height: 3.4, to: { level: 'coldharbour', spawn: 'fromCisterns' }, label: 'Up to class' },
   );
   b.cylinder([0, UP + 0.5, 93], 0.9, 1, COLORS.stoneLight, undefined, 8);
   for (let i = 0; i < 10; i++) deco(b, new ConeGeometry(0.08, 0.5 + (i % 3) * 0.3, 4), [-6.5 + i * 1.45, UP + 6.6, 84 + (i % 2) * 6], '#d8f2fc', [Math.PI, 0, 0]);

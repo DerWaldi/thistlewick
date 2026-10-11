@@ -79,9 +79,11 @@ export class SpringPad implements Entity, SpellTarget {
         // Gills underneath.
         add(this.top, new CylinderGeometry(r * 0.95, r * 0.3, 0.12, 14), '#f3dcc8', 0, -0.04, 0);
         if (this.fling) {
-          // Lean the cap the way it throws you.
+          // Lean the cap the way it throws you (the fling's yaw is in world space, the cap
+          // sits in the pad's yawed group): tip "up" towards that direction.
           const lean = Math.min(0.45, this.fling.length() * 0.05);
-          this.top.rotation.x = lean;
+          const phi = spec.fling!.yaw - (spec.yaw ?? 0);
+          this.top.quaternion.setFromAxisAngle(new Vector3(Math.cos(phi), 0, -Math.sin(phi)), lean);
         }
         shape = RAPIER.ColliderDesc.cylinder(0.25, r);
         shapeCenter = this.pos.clone().add(new Vector3(0, h - 0.1, 0));

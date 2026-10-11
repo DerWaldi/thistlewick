@@ -206,7 +206,7 @@ function build(b: LevelBuilder): void {
     // The Star and the way up moved on to the Mainspring (replaced in place: ids stay put);
     // the plate on the bell's crown opens the gallery door to it.
     { type: 'star', id: 'clockworks-star', pos: [0, TOP + 1.9, STAR_Z], script: 'clockworksComplete' },
-    { type: 'door', pos: [0, TOP, STAR_Z + 2.95], yaw: Math.PI, width: 2.4, height: 3.4, to: { level: 'underbough', spawn: 'fromClockworks' }, label: 'Up to class' },
+    { type: 'door', pos: [0, TOP, STAR_Z + 2.65], yaw: Math.PI, width: 2.4, height: 3.4, to: { level: 'underbough', spawn: 'fromClockworks' }, label: 'Up to class' },
     { type: 'sweetLine', kind: 'fizzwort', from: [-4, 16.6, 73], to: [4, 16.6, 73], count: 4 },
   );
   for (const z of [62, 72]) {
