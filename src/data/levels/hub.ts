@@ -23,7 +23,11 @@ import {
   chandelier,
   column,
   crate,
+  chimneyStack,
+  crenels as crenelRing,
   deco,
+  gableRoof,
+  turret as turretOn,
   dustMotes,
   Glow,
   grass,
@@ -1238,78 +1242,12 @@ function examPortal(b: LevelBuilder, candle: Glow): void {
  * off from the roofs), and it all merges into the level mesh.
  */
 function skyline(b: LevelBuilder): void {
-  const SLATE = COLORS.slate;
   const STONE = COLORS.stoneLight;
   const DARK = COLORS.stoneDark;
-  // A gable roof: a triangular prism over a rectangle, eaves at `eave`, ridge `rise` above.
-  // `free` says which ends (low, high along the ridge) stand clear: those overhang and get a
-  // stone gable wall; an end that butts against another wall or roof stops flush instead, or
-  // it would poke out through that wall's face.
-  const gable = (x0: number, x1: number, z0: number, z1: number, eave: number, rise: number, alongX: boolean, free: [boolean, boolean] = [true, true], color = SLATE) => {
-    const w = (alongX ? z1 - z0 : x1 - x0) + 0.8;
-    const a0 = (alongX ? x0 : z0) - (free[0] ? 0.3 : 0);
-    const a1 = (alongX ? x1 : z1) + (free[1] ? 0.3 : 0);
-    const len = a1 - a0;
-    const mid = (a0 + a1) / 2;
-    const across = alongX ? (z0 + z1) / 2 : (x0 + x1) / 2;
-    const at = (along: number, y: number): V3 => (alongX ? [along, y, across] : [across, y, along]);
-    // A 3-sided cylinder is a triangular prism: apex up after the turn, base at -r/2.
-    const g = new CylinderGeometry(1, 1, len, 3).rotateX(-Math.PI / 2).scale(w / Math.sqrt(3), rise / 1.5, 1).translate(0, rise / 3, 0);
-    if (alongX) g.rotateY(Math.PI / 2);
-    deco(b, g, at(mid, eave), color);
-    const cap = alongX ? new BoxGeometry(len, 0.25, 0.35) : new BoxGeometry(0.35, 0.25, len);
-    deco(b, cap, at(mid, eave + rise + 0.05), DARK);
-    for (const [i, end] of [
-      [0, a0],
-      [1, a1],
-    ] as [0 | 1, number][]) {
-      if (!free[i]) continue;
-      const inward = i === 0 ? 0.1 : -0.1;
-      // A stone gable wall (bare, the prism's ends read as black triangles) with a round window.
-      const gw = new CylinderGeometry(1, 1, 0.35, 3).rotateX(-Math.PI / 2).scale((w - 0.6) / Math.sqrt(3), (rise - 0.2) / 1.5, 1).translate(0, (rise - 0.2) / 3, 0);
-      if (alongX) gw.rotateY(Math.PI / 2);
-      deco(b, gw, at(end + inward, eave), STONE);
-      const win = new CylinderGeometry(0.45, 0.45, 0.4, 10).rotateX(Math.PI / 2);
-      if (alongX) win.rotateY(Math.PI / 2);
-      deco(b, win, at(end + inward * 0.6, eave + rise * 0.38), '#2a2230');
-      deco(b, new SphereGeometry(0.22, 6, 4), at(end, eave + rise + 0.3), '#c99a3e');
-    }
-  };
-  // Crenellations round the top of a rectangle of wall.
-  const crenels = (x0: number, x1: number, z0: number, z1: number, y: number) => {
-    for (const [ax, from, to, at] of [
-      [true, x0, x1, z0],
-      [true, x0, x1, z1],
-      [false, z0, z1, x0],
-      [false, z0, z1, x1],
-    ] as [boolean, number, number, number][]) {
-      deco(b, ax ? new BoxGeometry(to - from + 0.6, 0.5, 0.6) : new BoxGeometry(0.6, 0.5, to - from + 0.6), ax ? [(from + to) / 2, y + 0.25, at] : [at, y + 0.25, (from + to) / 2], STONE);
-      for (let u = from + 0.6; u < to - 0.3; u += 1.4) deco(b, new BoxGeometry(0.7, 0.55, 0.6), ax ? [u, y + 0.75, at] : [at, y + 0.75, u], STONE);
-    }
-  };
-  // A round turret with a crenellated top and a pointed roof.
-  const turret = (x: number, z: number, r: number, base: number, top: number, roof: number, color = COLORS.roof) => {
-    deco(b, new CylinderGeometry(r, r * 1.05, top - base, 12), [x, (base + top) / 2, z], STONE);
-    // Perched turrets (not from the ground) sit on a corbel.
-    if (base > 0) deco(b, new ConeGeometry(r * 1.05, 1.8, 12).rotateX(Math.PI), [x, base - 0.9, z], DARK);
-    deco(b, new CylinderGeometry(r + 0.25, r + 0.25, 0.5, 12), [x, top + 0.25, z], STONE);
-    for (let i = 0; i < 8; i++) {
-      const a = (i / 8) * Math.PI * 2;
-      deco(b, new BoxGeometry(0.5, 0.6, 0.4), [x + Math.cos(a) * (r + 0.05), top + 0.8, z + Math.sin(a) * (r + 0.05)], STONE, [0, -a, 0]);
-    }
-    deco(b, new ConeGeometry(r + 0.35, roof, 12), [x, top + 0.5 + roof / 2, z], color);
-    deco(b, new CylinderGeometry(0.04, 0.04, 1.2, 4), [x, top + 0.5 + roof + 0.5, z], DARK);
-    deco(b, new SphereGeometry(0.18, 6, 4), [x, top + 0.5 + roof + 0.15, z], '#c99a3e');
-    // Arrow slits, facing out every way.
-    for (let i = 0; i < 4; i++) {
-      const a = (i / 4) * Math.PI * 2 + Math.PI / 4;
-      deco(b, new BoxGeometry(0.14, 1.1, 0.1), [x + Math.cos(a) * r, (base + top) / 2 + 0.6, z + Math.sin(a) * r], '#2a2230', [0, -a + Math.PI / 2, 0]);
-    }
-  };
-  const chimney = (x: number, z: number, base: number, h: number) => {
-    deco(b, new BoxGeometry(0.9, h, 0.9), [x, base + h / 2, z], STONE);
-    deco(b, new BoxGeometry(1.1, 0.25, 1.1), [x, base + h, z], DARK);
-  };
+  const gable = (x0: number, x1: number, z0: number, z1: number, eave: number, rise: number, alongX: boolean, free: [boolean, boolean] = [true, true]) => gableRoof(b, x0, x1, z0, z1, eave, rise, alongX, free);
+  const crenels = (x0: number, x1: number, z0: number, z1: number, y: number) => crenelRing(b, x0, x1, z0, z1, y);
+  const turret = (x: number, z: number, r: number, base: number, top: number, roof: number) => turretOn(b, x, z, r, base, top, roof);
+  const chimney = (x: number, z: number, base: number, h: number) => chimneyStack(b, x, z, base, h);
 
   // The Lantern Hall (x -12.5..12.5, z 0..30.5, flat top at 12.6): a parapet round the top,
   // a steep slate roof inside it, turrets on the corners, chimneys.

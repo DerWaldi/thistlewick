@@ -2,7 +2,7 @@ import { BoxGeometry, ConeGeometry, CylinderGeometry, IcosahedronGeometry, Spher
 import type { LevelBuilder, V3 } from '../../world/builder';
 import type { LevelDef } from '../../world/level';
 import { COLORS } from '../../world/materials';
-import { armour, bench, bookStack, candlestick, cobweb, crate, deco, Glow, portrait, pottedPlant, rug, shelf, signboard, slab, table, wall, wallTorch, windowPane } from '../../world/props';
+import { armour, bench, bookStack, candlestick, chimneyStack, cobweb, crate, crenels, deco, gableRoof, Glow, portrait, pottedPlant, rug, shelf, signboard, slab, table, turret, wall, wallTorch, windowPane } from '../../world/props';
 import { CARD_BY_ID } from '../cards';
 import { HOUSES, type HouseId } from '../houses';
 
@@ -84,6 +84,7 @@ function build(b: LevelBuilder): void {
   leads(b);
   // Last (ids follow build order): Oswin's book on top of the library's north bookcases.
   errands(b);
+  skyline(b);
   glow.finish(b, '#ffe2a0');
   flames.finish(b, '#ffb060');
   b.finish();
@@ -126,7 +127,10 @@ function longHall(b: LevelBuilder, glow: Glow, flames: Glow): void {
   );
   // The stair hall at the north end: up to the roof.
   slab(b, -5.5, 5.5, 44, 54.5, 11.5, 0.5, '#4a3226', 'planks');
-  wall(b, 'x', 54.5, -5.5, 5.5, 11.5, { color: STONE, holes: [{ from: -1.5, to: 1.5, bottom: 7.2, top: 10.6 }] });
+  // The stair hall is taller than the Long Hall: wall up the gap above the Long Hall's ceiling.
+  wall(b, 'x', 44, -5.5, 5.5, 4.5, { base: 7, color: STONE });
+  // (The doorway's sill sits 2 cm under the Leads' floor: level with it, the two flickered.)
+  wall(b, 'x', 54.5, -5.5, 5.5, 11.5, { color: STONE, holes: [{ from: -1.5, to: 1.5, bottom: 7.18, top: 10.6 }] });
   wall(b, 'z', 5, 44, 54.5, 11.5, { color: STONE, holes: [{ from: 47.8, to: 50.2, top: 3.4 }] });
   // (The Examination Hall's door stood here; it's at the top of the Lantern Hall's grand
   // stair now. This inert spec keeps the later ids where they were.)
@@ -300,6 +304,35 @@ function commonRoom(b: LevelBuilder, flames: Glow, c: (typeof COMMON)[number]): 
   b.add({ type: 'sweetLine', kind: 'fizzwort', from: [cx - 3, 0.6, farZ + toward * 1.5], to: [cx + 3, 0.6, farZ + toward * 1.5], count: 4 });
 }
 
+// ---------------------------------------------------------------- the castle around the Leads
+
+/**
+ * Roofs, parapets and turrets on the buildings the Leads look down on (the Library, the
+ * House Wing, the Long Hall, the stair hall), so the roof route is a castle rooftop and not a
+ * view of bare planks. Decoration only: the Leads' parapets are capped, nobody gets near.
+ */
+function skyline(b: LevelBuilder): void {
+  // The Library (x -37..-5, z 7.5..40.5, top 12.5) and the House Wing (x 5..37, top 6.5).
+  crenels(b, -37, -5, 7.5, 40.5, 12.5);
+  gableRoof(b, -36, -6, 8.5, 39.5, 12.5, 6, false);
+  chimneyStack(b, -30, 30, 12.5, 6);
+  crenels(b, 5, 37, 7.5, 40.5, 6.5);
+  gableRoof(b, 6, 36, 8.5, 39.5, 6.5, 5, false);
+  chimneyStack(b, 14, 18, 6.5, 5);
+  chimneyStack(b, 28, 32, 6.5, 5);
+  // The Long Hall between them, from the stair hall south (its eaves stay inside the walls).
+  gableRoof(b, -5, 5, -0.5, 44, 7.5, 3.4, false, [true, false]);
+  // The stair hall: a parapet and two turrets on its north corners, either side of the door.
+  crenels(b, -5.5, 5.5, 44, 54.5, 11.5);
+  for (const x of [-5.5, 5.5]) turret(b, x, 54.5, 1.3, 11.5, 15.5, 3.5);
+  for (const [x, z] of [
+    [-37, 40.5],
+    [37, 40.5],
+    [-37, 7.5],
+    [37, 7.5],
+  ]) turret(b, x, z, 1.8, x < 0 ? 12.5 : 6.5, x < 0 ? 18 : 12, 4); // from above each wing's ceiling
+}
+
 // ---------------------------------------------------------------- the Leads (the roof)
 
 function leads(b: LevelBuilder): void {
@@ -335,11 +368,23 @@ function leads(b: LevelBuilder): void {
     { type: 'springPad', pos: [5.8, R, 76], radius: 1, style: 'rune', duration: 4, fling: { yaw: Math.PI / 2, speed: 9.5 } },
     { type: 'sweetLine', kind: 'fizzwort', from: [-20, R + 0.6, 60], to: [-20, R + 0.6, 80], count: 6 },
   );
-  // The observatory: a drum (top 11.4) with a dome, a lookout platform on top (14).
+  // The observatory: a drum (top 11.4) whose top is an open terrace (a parapet round it, open
+  // where the crate docks), a lookout platform on it (14), and the telescope house, a little
+  // domed turret on the north edge, clear of the bounce from the tile to the lookout.
   b.cylinder([23, (R + 11.4) / 2, 76], 4, 11.4 - R, COLORS.stoneLight, { noGrab: true }, 16);
-  deco(b, new SphereGeometry(3.6, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2), [23, 11.4, 76], '#5a6a7a');
+  deco(b, new CylinderGeometry(4.15, 4.15, 0.3, 16), [23, 11.25, 76], COLORS.stoneDark);
+  for (let i = 0; i < 16; i++) {
+    const a = (i / 16) * Math.PI * 2;
+    if (Math.sin(a) < -0.55) continue; // the crate's side (south)
+    b.box([23 + Math.cos(a) * 3.8, 11.7, 76 + Math.sin(a) * 3.8], [0.35, 0.6, 1.2], { color: COLORS.stoneLight, rot: [0, -a, 0], info: { noGrab: true } });
+  }
   b.cylinder([21.3, 12.7, 76], 1.6, 2.6, COLORS.stoneLight, { noGrab: true }, 12);
-  deco(b, new CylinderGeometry(0.15, 0.25, 2, 6), [21.3, 15, 75.6], '#c99a3e', [0.6, 0, 0]);
+  deco(b, new CylinderGeometry(1.75, 1.75, 0.25, 12), [21.3, 13.9, 76], COLORS.stoneDark);
+  b.cylinder([23, 12.2, 78.9], 1.1, 1.6, COLORS.stoneLight, { noGrab: true }, 12);
+  deco(b, new SphereGeometry(1.2, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2), [23, 13, 78.9], '#4f6070');
+  deco(b, new BoxGeometry(0.35, 1.1, 0.05), [23, 13.55, 77.72], '#1e1a24', [0.55, 0, 0]);
+  deco(b, new CylinderGeometry(0.14, 0.22, 2.2, 8), [23, 14.1, 78.3], '#c99a3e', [0.75, 0, 0]);
+  deco(b, new SphereGeometry(0.12, 6, 4), [23, 14.35, 78.9], '#c99a3e');
   b.add(
     { type: 'checkpoint', pos: [27.5, R, 71], yaw: -Math.PI / 2, zone: { min: [17, R - 1, 70], max: [30, R + 3, 84] } },
     { type: 'skyLift', style: 'crate', from: [23, R + 1.2, 71.4], to: [23, 11.4, 71.4], size: [1.2, 1.2], post: [0.45, -0.45], speed: 1.6 },
