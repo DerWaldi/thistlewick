@@ -3,7 +3,10 @@ import { BoxGeometry, Color, ConeGeometry, CylinderGeometry, Group, MathUtils, M
 import { angleDiff } from '../player/controller';
 import { RuneMarker } from '../spells/runes';
 import type { SpellHit, SpellTarget } from '../spells/targets';
+import { paint } from '../world/builder';
+import { worldMaterial } from '../world/materials';
 import { mergeChildren } from '../world/merge';
+import { padlockModel } from './locks';
 import type { Entity, SpecOf, WorldContext } from './types';
 
 type State = 'dormant' | 'notice' | 'chase' | 'bite' | 'recover' | 'locked' | 'gone';
@@ -16,12 +19,17 @@ const GIVE_UP_RANGE = 14;
 const HOP_SPEED = 3.4;
 const BITE_SPEED = 7;
 const BITE_RANGE = 2.2;
+/** Built small, shown at a real chest's size (see Chest in locks.ts), so it passes for one. */
+const SIZE = 1.33;
+/** Asleep, it holds still and shut, except for a twitch of the lid every this many seconds. */
+const TWITCH_EVERY = 8.5;
 const LOCK_TIME = 5;
 
 /**
- * Snapcasket: a chest that would rather eat you than hold your things. It sits
- * quiet (a pink tongue-tip and a row of teeth give it away), then hops after you
- * and snaps. Latchkin locks its lid shut for a few seconds; while it's locked,
+ * Snapcasket: a chest that would rather eat you than hold your things. Asleep it looks
+ * just like a padlocked chest (same size, wood, bands and lock); the only tell is a
+ * twitch of the lid every few seconds, with a glint of eyes and teeth. Woken, it hops
+ * after you and snaps. Latchkin locks its lid shut for a few seconds; while it's locked,
  * Thwackwort sends it packing for good.
  */
 export class Snapcasket implements Entity, SpellTarget {
@@ -48,6 +56,7 @@ export class Snapcasket implements Entity, SpellTarget {
   private eyes: MeshStandardMaterial;
   private clamp = new Group();
   private tongue: Mesh;
+  private fakeLock = new Group();
 
   constructor(
     private spec: SpecOf<'snapcasket'>,
@@ -78,51 +87,47 @@ export class Snapcasket implements Entity, SpellTarget {
   }
 
   private buildModel(): void {
-    const wood = new MeshStandardMaterial({ color: '#6e4226', flatShading: true, roughness: 0.9 });
-    const woodLight = new MeshStandardMaterial({ color: '#8a5a36', flatShading: true, roughness: 0.9 });
-    const iron = new MeshStandardMaterial({ color: '#3a3340', flatShading: true, metalness: 0.4, roughness: 0.6 });
+    // The same material, colours and plank pattern as a real chest: it's in disguise.
+    const mat = worldMaterial();
+    const woodPart = (geo: BoxGeometry) => new Mesh(paint(geo.toNonIndexed(), '#7a4a26', true, 'planks'), mat);
+    const ironPart = (geo: BoxGeometry | TorusGeometry) => new Mesh(paint(geo.toNonIndexed(), '#3a3340', true), mat);
     const mouth = new MeshStandardMaterial({ color: '#5a1420', roughness: 0.8 });
     const tooth = new MeshStandardMaterial({ color: '#f3ead8', flatShading: true, roughness: 0.6 });
 
-    const base = new Mesh(new BoxGeometry(0.9, 0.45, 0.66), wood);
+    const base = woodPart(new BoxGeometry(0.9, 0.45, 0.66));
     base.position.y = 0.26;
     const inside = new Mesh(new BoxGeometry(0.78, 0.04, 0.54), mouth);
     inside.position.y = 0.47;
-    const bands = new Mesh(new BoxGeometry(0.94, 0.08, 0.7), iron);
-    bands.position.y = 0.4;
+    const bands = ironPart(new BoxGeometry(0.94, 0.08, 0.68));
+    bands.position.y = 0.395;
     this.body.add(base, inside, bands);
-    for (const sx of [-1, 1]) {
-      for (const sz of [-1, 1]) {
-        const foot = new Mesh(new BoxGeometry(0.14, 0.08, 0.14), iron);
-        foot.position.set(sx * 0.34, 0.04, sz * 0.24);
-        this.body.add(foot);
-      }
+    for (const side of [-1, 1]) {
+      const strap = ironPart(new BoxGeometry(0.06, 0.47, 0.68));
+      strap.position.set(side * 0.315, 0.27, 0);
+      this.body.add(strap);
     }
-    // Lower teeth along the front rim: the giveaway.
+    // Lower teeth along the front rim, hidden while the lid is shut.
     for (let i = 0; i < 7; i++) {
       const t = new Mesh(new ConeGeometry(0.035, 0.1, 4), tooth);
-      t.position.set(-0.33 + i * 0.11, 0.53, 0.3);
+      t.position.set(-0.33 + i * 0.11, 0.52, 0.2);
       this.body.add(t);
     }
     mergeChildren(this.body);
 
     // Lid hinged at the back, with upper teeth and eyes glowing underneath.
     this.lid.position.set(0, 0.49, -0.33);
-    const lidMesh = new Mesh(new CylinderGeometry(0.33, 0.33, 0.9, 8, 1, false, 0, Math.PI), woodLight);
+    const lidMesh = new Mesh(paint(new CylinderGeometry(0.32, 0.32, 0.9, 8, 1, false, 0, Math.PI).toNonIndexed(), '#8a5a36', true), mat);
     lidMesh.rotation.z = Math.PI / 2;
     lidMesh.position.z = 0.33;
     lidMesh.castShadow = true;
-    const lidBand = new Mesh(new TorusGeometry(0.335, 0.03, 4, 10, Math.PI), iron);
-    lidBand.rotation.y = Math.PI / 2;
-    lidBand.position.z = 0.33;
     // Close the underside of the half-cylinder lid: the roof of its mouth.
     const palate = new Mesh(new BoxGeometry(0.88, 0.03, 0.64), mouth);
     palate.position.set(0, 0.01, 0.33);
-    this.lid.add(lidMesh, lidBand, palate);
+    this.lid.add(lidMesh, palate);
     for (let i = 0; i < 6; i++) {
       const t = new Mesh(new ConeGeometry(0.035, 0.1, 4), tooth);
       t.rotation.x = Math.PI;
-      t.position.set(-0.28 + i * 0.11, -0.03, 0.62);
+      t.position.set(-0.28 + i * 0.11, -0.03, 0.52);
       this.lid.add(t);
     }
     for (const side of [-1, 1]) {
@@ -132,6 +137,11 @@ export class Snapcasket implements Entity, SpellTarget {
     }
     mergeChildren(this.lid);
     this.body.add(this.lid);
+
+    // A padlock on the front, like any chest's. It drops off when the thing wakes up.
+    this.fakeLock = padlockModel(0.9 / SIZE).group;
+    this.fakeLock.position.set(0, 0.375, 0.375);
+    this.body.add(this.fakeLock);
 
     this.tongue.scale.set(1, 0.35, 1.3);
     this.tongue.position.set(0.12, 0.47, 0.32);
@@ -152,6 +162,9 @@ export class Snapcasket implements Entity, SpellTarget {
     mergeChildren(this.clamp);
     this.clamp.visible = false;
     this.body.add(this.clamp);
+    // Its feet are on the floor, like a chest's (the body was built 0.035 up).
+    this.body.position.y = -0.035 * SIZE;
+    this.body.scale.setScalar(SIZE);
     this.root.add(this.body);
   }
 
@@ -337,20 +350,22 @@ export class Snapcasket implements Entity, SpellTarget {
     const locked = this.state === 'locked';
     const active = this.state !== 'dormant' && !locked;
     // Lid: shut when dormant or locked, chattering while chasing, gaping on a bite.
-    // Dormant ones sit a crack open, breathing, so the teeth show if you look.
-    const target = locked ? 0 : this.state === 'dormant' ? 0.14 + Math.sin(t * 1.3) * 0.04 : this.state === 'bite' ? (this.grounded ? 0.1 : 1) : 0.35 + Math.abs(Math.sin(t * 9)) * 0.35;
+    // Asleep it only twitches now and then: watch a chest for a while before you trust it.
+    const phase = t % TWITCH_EVERY;
+    const twitch = this.state === 'dormant' && phase < 0.4 ? Math.sin((phase / 0.4) * Math.PI) * 0.13 : 0;
+    const target = locked ? 0 : this.state === 'dormant' ? twitch : this.state === 'bite' ? (this.grounded ? 0.1 : 1) : 0.35 + Math.abs(Math.sin(t * 9)) * 0.35;
     this.lidOpen = MathUtils.damp(this.lidOpen, target, this.state === 'bite' ? 25 : 14, dt);
     this.lid.rotation.x = -this.lidOpen * 1.1;
-    this.eyes.emissiveIntensity = active ? 1.4 : this.state === 'dormant' ? 0.15 + Math.max(0, Math.sin(t * 0.7)) * 0.2 : 0.4;
+    this.eyes.emissiveIntensity = active ? 1.4 : this.state === 'dormant' ? (twitch > 0.02 ? 0.9 : 0) : 0.4;
     this.eyes.emissive.set(this.state === 'bite' ? '#ff3a1a' : '#ffd84a');
-    // The tongue-tip lolls out while it pretends to be a chest; tucked away otherwise.
-    this.tongue.visible = this.state === 'dormant' || active;
-    this.tongue.position.y = this.state === 'dormant' ? 0.47 + Math.sin(t * 1.3) * 0.01 : 0.5;
+    this.tongue.visible = active;
+    this.tongue.position.y = 0.5;
+    this.fakeLock.visible = this.state === 'dormant';
     this.clamp.visible = locked;
     // Squash on landing, stretch in the air; rattle while locked.
     const sy = this.grounded ? 1 : MathUtils.clamp(1 + this.vel.y * 0.03, 0.85, 1.15);
-    const cur = MathUtils.damp(this.body.scale.y, sy, 14, dt);
-    this.body.scale.set(1 / Math.sqrt(cur), cur, 1 / Math.sqrt(cur));
+    const cur = MathUtils.damp(this.body.scale.y / SIZE, sy, 14, dt);
+    this.body.scale.set(SIZE / Math.sqrt(cur), SIZE * cur, SIZE / Math.sqrt(cur));
     this.body.rotation.z = locked ? Math.sin(t * 40) * 0.08 * Math.min(1, this.timer) : 0;
   }
 }

@@ -585,6 +585,8 @@ function buildHub(b: LevelBuilder): void {
   wall(b, 'x', 52.5, 34.5, 42.5, 10.4, { color: COLORS.stoneLight, holes: [{ from: 37.3, to: 39.7, bottom: G, top: G + 3.4 }] });
   b.box([38.5, G / 2, 38.25], [7, G, 28.5], { color: '#8a6a4a', pattern: 'planks' });
   slab(b, 34.5, 42.5, 23.5, 52.5, 10.8, 0.4, '#5e4a3e', 'planks');
+  // The corridor's north wall (the portcullis wall) stops at 9 m; close the gallery's end up to its ceiling.
+  b.box([38.5, 9.7, 23.5], [8, 1.4, 1], { color: COLORS.stoneLight });
   for (let z = 26; z < 52; z += 4) deco(b, new BoxGeometry(7.2, 0.35, 0.35), [38.5, 10.42, z], COLORS.woodDark);
   rug(b, [38.5, G, 38], 2.2, 25, '#5d4470', '#c99a3e');
   for (const z of [29, 37, 45]) {

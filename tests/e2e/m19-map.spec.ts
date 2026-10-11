@@ -36,7 +36,7 @@ test("Snoop's Map can be bought, and lists what's still hiding room by room", as
     const g = tw.game as unknown as { state: { sweets: number; upgrades: Set<string>; cards: Set<string>; secrets: Set<string>; buy(i: unknown): boolean }; options: unknown };
     const { SHOP_ITEMS } = await import(/* @vite-ignore */ '/src/data/shop.ts' as string);
     const map = (SHOP_ITEMS as { ref: string }[]).find((i) => i.ref === 'snoops-map')!;
-    g.state.sweets = 100;
+    g.state.sweets = 1000;
     const bought = g.state.buy(map);
     g.state.cards.add('pellam-fogg');
     g.state.secrets.add('hub-tapestry');

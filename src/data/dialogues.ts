@@ -351,7 +351,7 @@ export const DIALOGUES: Record<string, Script> = {
 
   vaultPantry: async ({ say }) => {
     await say([
-      { speaker: 'quince', text: "(echoing) The pantry. Some of those chests are chests. Some are Snapcaskets. Look for teeth." },
+      { speaker: 'quince', text: "(echoing) The pantry. Some of those chests are chests. Some are Snapcaskets, and they look exactly alike. Watch a chest a while before you trust it: a Snapcasket cannot keep its lid still for long." },
       { speaker: 'quince', text: "(echoing) Latchkin LOCKS a Snapcasket shut. While it's locked, Thwackwort it. Quickly, they don't stay locked." },
     ]);
   },

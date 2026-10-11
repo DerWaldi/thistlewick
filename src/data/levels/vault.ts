@@ -389,6 +389,8 @@ function countingHouse(b: LevelBuilder, flames: Glow): void {
   b.stairs([-7.25, 0, 124], 0, 8, 0.4, 0.5, 3.5, COLORS.stoneLight);
   for (let z = 132; z < 152; z += 2) deco(b, new BoxGeometry(0.08, 1, 0.08), [-5.55, 3.7, z], COLORS.woodDark);
   deco(b, new BoxGeometry(0.06, 0.08, 20), [-5.55, 4.2, 141.5], COLORS.woodDark);
+  // The rail holds you: an invisible fence along it (you jump down from the open end by the stair).
+  b.box([-5.55, 3.85, 141.5], [0.12, 1.3, 20], { invisible: true, info: { noGrab: true, cameraIgnore: true, seeThrough: true } });
   // The counting table: a broad desk of a pillar, padlock on its north face.
   b.box([0, 1.2, 141], [4, 2.4, 10], { color: '#6a4a32', pattern: 'planks', info: { noGrab: true } });
   treasure(b, -1, 139, 10, 41);

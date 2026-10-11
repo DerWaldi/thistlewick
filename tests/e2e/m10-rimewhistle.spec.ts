@@ -428,7 +428,7 @@ test('Lost & Found has the Rime Toad; the Cisterns and the grounds sandboxes kno
   const cards = await page.evaluate(() => {
     const g = window.__tw.game as unknown as G;
     g.state.lessons.add('rimewhistle');
-    g.state.sweets = 100;
+    g.state.sweets = 1000;
     g.shop.buy('lost-rime-toad');
     return [...g.state.cards];
   });

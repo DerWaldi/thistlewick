@@ -21,13 +21,13 @@ export interface ShopItem {
 }
 
 export const SHOP_ITEMS: ShopItem[] = [
-  { id: 'card-ezekiel', kind: 'card', ref: 'ezekiel-crumbleton', name: 'Fabled Folk: Ezekiel Crumbleton', price: 25, blurb: "Our great-grandad! Family discount: none." },
-  { id: 'card-hester', kind: 'card', ref: 'hester-quillfeather', name: 'Fabled Folk: Hester Quillfeather', price: 25, blurb: 'Slightly creased. The rules she wrote are worse.' },
-  { id: 'card-puddlewump', kind: 'card', ref: 'puddlewump', name: 'Fabled Folk: The Puddlewump', price: 25, blurb: 'Hums if you hold it near a window. Allegedly.' },
-  { id: 'up-stout', kind: 'upgrade', ref: 'stout-heart', name: 'Stout Heart', price: 50, blurb: 'A lucky acorn on a string. One more stamina pip.' },
-  { id: 'up-quick', kind: 'upgrade', ref: 'quick-wand', name: 'Quick Wand', price: 35, blurb: 'A wand-wax that makes charging Thwackwort much faster.' },
-  { id: 'up-tooth', kind: 'upgrade', ref: 'sweet-tooth', name: 'Sweet Tooth Charm', price: 25, blurb: 'Sweets fly to you from twice as far away.' },
-  { id: 'up-map', kind: 'upgrade', ref: 'snoops-map', name: "Snoop's Map", price: 60, blurb: 'Every room in the castle, and which of them still hide a card or a secret. Esc, then Map.' },
+  { id: 'card-ezekiel', kind: 'card', ref: 'ezekiel-crumbleton', name: 'Fabled Folk: Ezekiel Crumbleton', price: 120, blurb: "Our great-grandad! Family discount: none." },
+  { id: 'card-hester', kind: 'card', ref: 'hester-quillfeather', name: 'Fabled Folk: Hester Quillfeather', price: 120, blurb: 'Slightly creased. The rules she wrote are worse.' },
+  { id: 'card-puddlewump', kind: 'card', ref: 'puddlewump', name: 'Fabled Folk: The Puddlewump', price: 120, blurb: 'Hums if you hold it near a window. Allegedly.' },
+  { id: 'up-stout', kind: 'upgrade', ref: 'stout-heart', name: 'Stout Heart', price: 300, blurb: 'A lucky acorn on a string. One more stamina pip.' },
+  { id: 'up-quick', kind: 'upgrade', ref: 'quick-wand', name: 'Quick Wand', price: 180, blurb: 'A wand-wax that makes charging Thwackwort much faster.' },
+  { id: 'up-tooth', kind: 'upgrade', ref: 'sweet-tooth', name: 'Sweet Tooth Charm', price: 90, blurb: 'Sweets fly to you from twice as far away.' },
+  { id: 'up-map', kind: 'upgrade', ref: 'snoops-map', name: "Snoop's Map", price: 220, blurb: 'Every room in the castle, and which of them still hide a card or a secret. Esc, then Map.' },
 ];
 
 /**
@@ -47,7 +47,7 @@ export const LOST_AND_FOUND: { card: string; lesson: SpellId; blurb: string }[] 
 /** What's on the shelves for this player: the usual stock plus anything they missed in a finished trial. */
 export function shopStock(state: { lessons: Set<string>; cards: Set<string> }): ShopItem[] {
   const lost = LOST_AND_FOUND.filter((l) => state.lessons.has(l.lesson) && !state.cards.has(l.card)).map(
-    (l): ShopItem => ({ id: `lost-${l.card}`, kind: 'card', ref: l.card, name: `Lost & Found: ${CARD_BY_ID.get(l.card)?.name ?? l.card}`, price: 40, blurb: l.blurb }),
+    (l): ShopItem => ({ id: `lost-${l.card}`, kind: 'card', ref: l.card, name: `Lost & Found: ${CARD_BY_ID.get(l.card)?.name ?? l.card}`, price: 150, blurb: l.blurb }),
   );
   return [...lost, ...SHOP_ITEMS];
 }

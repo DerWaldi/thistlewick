@@ -456,7 +456,7 @@ test('a card missed in a finished trial turns up in the Lost & Found', async ({ 
     const tw = window.__tw;
     const g = tw.game as unknown as G & { state: { sweets: number }; shop: { buy(id: string): boolean } };
     g.state.lessons.add('glimmerwick');
-    g.state.sweets = 100;
+    g.state.sweets = 1000;
     const bought = g.shop.buy('lost-gloomwisp');
     const again = g.shop.buy('lost-gloomwisp');
     return { bought, again, cards: [...g.state.cards], sweets: g.state.sweets };
@@ -464,7 +464,7 @@ test('a card missed in a finished trial turns up in the Lost & Found', async ({ 
   expect(r.bought).toBe(true);
   expect(r.again).toBe(false);
   expect(r.cards).toContain('gloomwisp');
-  expect(r.sweets).toBe(60);
+  expect(r.sweets).toBe(850);
 });
 
 test('sandbox runs know every spell taught up to that level', async ({ page }) => {

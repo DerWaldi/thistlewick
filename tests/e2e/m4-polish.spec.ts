@@ -24,7 +24,7 @@ test('the Cupboard opens after the lesson and sells cards and upgrades', async (
     const openedEarly = g.shop.isOpen;
     tw.learn('thwackwort');
     g.state.lessons.add('thwackwort');
-    g.state.sweets = 120;
+    g.state.sweets = 680;
     tw.interact();
     // The script waits for the shop to close.
     await new Promise((r) => setTimeout(r, 50));
@@ -40,7 +40,7 @@ test('the Cupboard opens after the lesson and sells cards and upgrades', async (
     const tw = window.__tw;
     const g = tw.game as unknown as Shopish;
     const bought = ['card-puddlewump', 'up-stout', 'up-quick', 'up-tooth'].map((id) => g.shop.buy(id));
-    const tooPoor = g.shop.buy('card-hester'); // 120 - 25 - 50 - 35 = 10 left
+    const tooPoor = g.shop.buy('card-hester'); // 680 - 120 - 300 - 180 = 80 left
     const soon = g.shop.buy('up-map');
     g.shop.close();
     await tw.idle();
@@ -60,7 +60,7 @@ test('the Cupboard opens after the lesson and sells cards and upgrades', async (
   expect(r.bought).toEqual([true, true, true, false]);
   expect(r.tooPoor).toBe(false);
   expect(r.soon).toBe(false);
-  expect(r.sweets).toBe(10);
+  expect(r.sweets).toBe(80);
   expect(r.max).toBe(6);
   expect(r.stamina).toBe(6);
   expect(r.charge).toBeLessThan(1);
@@ -91,6 +91,8 @@ test('pausing stops the world', async ({ page }) => {
 });
 
 test('the title screen offers Continue only when there is a save', async ({ page, browserName }) => {
+  // Three full loads of the game with the title backdrop: slow on a busy machine.
+  test.setTimeout(120_000);
   await page.goto('/');
   await page.evaluate(() => localStorage.clear());
   await page.goto('/');

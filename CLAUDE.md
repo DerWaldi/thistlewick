@@ -55,7 +55,8 @@ src/entities/          level objects: pushBlock (resetOn), mechanisms (knockSwit
                        Gnarlings are gone, then braces and charges from 4–13 m; won't step off ledges; stays
                        beaten only with `persist`, so trial ones come back on a reload),
                        locks (padlock: relock/persist/orbit; chest/box/cabinet with card + sweets; drawbridge;
-                       vaultDoor), snapcasket (Latchkin locks it, then Thwackwort; its `spell` changes),
+                       vaultDoor), snapcasket (looks exactly like a padlocked chest while asleep, its only tell a lid twitch every
+                       8.5 s; Latchkin locks it, then Thwackwort; its `spell` changes),
                        springs (springPad: moss/mushroom/mattress/rune; springy for `duration` s after
                        Springwell, a charged cast launches higher, `fling` throws you sideways),
                        glimmer (wickLamp: Glimmerwick lights it for `duration` s, charged = 1.5x reach;
@@ -177,7 +178,7 @@ Doors enforce the flow: the classroom exit has `lockedDuring: '<spell>'` (no lea
 - To change the save shape, bump `VERSION` in `save.ts` and add a migration.
 
 ### Shop & upgrades
-- Snoop's Map (60 sweets) adds a Map button to the pause menu: every level and room with its cards and secrets found/total, from `src/data/atlas.ts`. The atlas is generated from the levels; `tests/e2e/m19-map.spec.ts` fails when it's stale (regenerate it from the same scan).
+- Snoop's Map (220 sweets) adds a Map button to the pause menu: every level and room with its cards and secrets found/total, from `src/data/atlas.ts`. The atlas is generated from the levels; `tests/e2e/m19-map.spec.ts` fails when it's stale (regenerate it from the same scan).
 - Stock lives in `src/data/shop.ts`. Effects come from `UPGRADE_EFFECTS` and are read through `GameState` getters (`chargeTimeScale`, `magnetScale`, `maxStamina`).
 - Scripts can `openShop()`; the Tansy and Moss scripts do so once Thwackwort is learned.
 - The world halts while the dialogue, shop, album or pause menu is open (`game.isHalted`).
@@ -219,6 +220,7 @@ Levels place objects with `b.add({ type: ..., ... })`. Objects talk to each othe
 - Trials run once, so cards missed inside one turn up at the Cupboard's Lost & Found (`LOST_AND_FOUND` in `src/data/shop.ts`) once its lesson is done.
 - Ground that can vanish (glimmerstone) is `ColliderInfo.temporary`: never remembered as a safe respawn spot, and a respawn spot must still have ground under it.
 - Spiral stairs: walk on an invisible helical ramp under visual-only steps.
+- `b.stairs` walks on an invisible ramp, with invisible fill just under it so nobody walks in beneath from the side. Decorative handrails need an invisible fence collider (`seeThrough`, so spells still pass).
 
 ## Conventions
 

@@ -446,7 +446,7 @@ test('Lost & Found has the Clockwork Owl; the Clockworks sandbox knows Thistledo
   const cards = await page.evaluate(() => {
     const g = window.__tw.game as unknown as G;
     g.state.lessons.add('thistledown');
-    g.state.sweets = 100;
+    g.state.sweets = 1000;
     g.shop.buy('lost-clockwork-owl');
     return [...g.state.cards];
   });

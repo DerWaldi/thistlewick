@@ -30,7 +30,7 @@ const iron = () => IRON;
 const yawQ = (yaw: number) => new Quaternion().setFromAxisAngle(UP, yaw);
 
 /** A chunky brass padlock, built facing +Z with its body centred on the origin. */
-function padlockModel(scale = 1): { group: Group; shackle: Group } {
+export function padlockModel(scale = 1): { group: Group; shackle: Group } {
   const group = new Group();
   const b = brass();
   const body = new Mesh(new BoxGeometry(0.34, 0.3, 0.14), b);

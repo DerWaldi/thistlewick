@@ -219,6 +219,12 @@ export class LevelBuilder implements PlayerEnvironment {
     const angle = (Math.atan2(height, flat) * 180) / Math.PI;
     this.ramp(at(-run / 2, 0), Math.hypot(flat, height), width, angle, yaw, color, true);
     this.box(at(run * (steps - 0.5), height / 2), [width, height, run], { rot: [0, yaw, 0], invisible: true });
+    // Fill in under the slope, just below it, so nobody walks in under the stairs from the side.
+    for (let i = 0; i < steps - 1; i++) {
+      const top = ((run * i + run / 2) / flat) * height - 0.08;
+      if (top < 0.3) continue;
+      this.box(at(run * i + run / 2, top / 2), [width, top, run], { rot: [0, yaw, 0], invisible: true, info: { noGrab: true, cameraIgnore: true } });
+    }
   }
 
   /** Rectangular pool with a water surface; falling in resets the player. */

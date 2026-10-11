@@ -66,7 +66,7 @@ test('dressed rooms render and furniture is solid', async ({ page, browserName }
   await shot(page, 'm5-hall', browserName);
 });
 
-test('the classroom keeps you in until the Trial is done', async ({ page }) => {
+test('the classroom keeps you in until the Trial is done and reported', async ({ page }) => {
   await boot(page, '?test&new');
   const r = await page.evaluate(async () => {
     const tw = window.__tw;
@@ -91,12 +91,16 @@ test('the classroom keeps you in until the Trial is done', async ({ page }) => {
     tw.advance(0.5);
     const midLesson = await tryLeave();
     g.state.lessons.add('thwackwort');
+    // The Star alone isn't enough: you have to report back to Gorse first.
     const afterTrial = await tryLeave();
-    return { beforeLearning, midLesson, afterTrial };
+    g.state.flags.add('gorse-reward');
+    const afterReport = await tryLeave();
+    return { beforeLearning, midLesson, afterTrial, afterReport };
   });
   expect(r.beforeLearning).toBe('hub');
   expect(r.midLesson).toBe('classroom');
-  expect(r.afterTrial).toBe('hub');
+  expect(r.afterTrial).toBe('classroom');
+  expect(r.afterReport).toBe('hub');
 });
 
 test('the Trial door shuts for good once the Star is won', async ({ page }) => {

@@ -462,7 +462,7 @@ test('Lost & Found has the Ember Newt; the Glasshouse sandbox grants Cindersnap'
   const stock = await page.evaluate(() => {
     const g = window.__tw.game as unknown as G & { state: { sweets: number }; shop: { buy(id: string): boolean } };
     g.state.lessons.add('cindersnap');
-    g.state.sweets = 100;
+    g.state.sweets = 1000;
     g.shop.buy('lost-ember-newt');
     return [...g.state.cards];
   });
