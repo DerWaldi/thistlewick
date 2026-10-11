@@ -181,6 +181,24 @@ test('the Ember Crypt: lamp-lit glimmer stones over the chasm to the Star', asyn
     return tw.state().area;
   });
   expect(star).toBe('lantern');
+  // Through the doorway, the portcullis drops behind you: the crabs can't follow you with fire.
+  const back = await page.evaluate(async () => {
+    const tw = window.__tw;
+    tw.input({ x: 0, y: 1 });
+    tw.advance(0.6);
+    tw.input(null);
+    tw.advance(2);
+    await tw.idle();
+    const shut = tw.signal('crypt-shut');
+    const checkpoint = tw.state().checkpoint;
+    tw.input({ x: 0, y: -1 });
+    tw.advance(2.5);
+    tw.input(null);
+    return { shut, checkpoint, z: tw.state().feet.z };
+  });
+  expect(back.shut).toBe(true);
+  expect(back.checkpoint?.[2]).toBeGreaterThan(90.5);
+  expect(back.z).toBeGreaterThan(90.5);
 });
 
 test('the Clockwork Moat: three moving platforms over the pit, Gnarlings, and the switch to the Star', async ({ page, browserName }) => {

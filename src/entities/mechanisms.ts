@@ -265,7 +265,8 @@ export class Plate implements Entity {
 }
 
 /**
- * A portcullis in a stone frame. Opens while all the signals in `when` are on.
+ * A portcullis in a stone frame. Opens while all the signals in `when` are on (and none in
+ * `shutWhen`).
  * It won't drop onto the player.
  */
 export class Gate implements Entity {
@@ -341,11 +342,11 @@ export class Gate implements Entity {
     ctx.physics.setInfo(this.collider, { noGrab: true });
 
     const update = () => {
-      this.wantOpen = ctx.signals.all(spec.when);
+      this.wantOpen = ctx.signals.all(spec.when) && !(spec.shutWhen ?? []).some((id) => ctx.signals.get(id));
       // Already open when the level loads (a remembered switch): no grinding up on arrival.
       if (this.fresh && this.wantOpen) this.snapOpen();
     };
-    ctx.signals.onChange(spec.when, update);
+    ctx.signals.onChange([...spec.when, ...(spec.shutWhen ?? [])], update);
     update();
   }
 

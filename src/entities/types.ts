@@ -57,7 +57,16 @@ export type EntitySpec = SpecBase &
         persist?: boolean;
       }
     | { type: 'plate'; id: string; pos: V3; /** Stays down once stepped on. */ latch?: boolean }
-    | { type: 'gate'; pos: V3; yaw: number; width: number; height: number; when: string[] }
+    | {
+        type: 'gate';
+        pos: V3;
+        yaw: number;
+        width: number;
+        height: number;
+        when: string[];
+        /** ...but shut while any of these are on (`when: []` makes it open until then). */
+        shutWhen?: string[];
+      }
     | { type: 'sweet'; kind: SweetKind; pos: V3 }
     | { type: 'sweetLine'; kind: SweetKind; from: V3; to: V3; count: number }
     | {
@@ -132,7 +141,10 @@ export type EntitySpec = SpecBase &
         type: 'trigger';
         /** Progress flag set when this fires; a trigger fires once per save. */
         flag: string;
-        script: string;
+        /** Dialogue to run when it fires (optional: some triggers only set `signal`). */
+        script?: string;
+        /** A signal turned on when it fires (e.g. a gate that drops behind you). */
+        signal?: string;
         /** Fire when the player is inside this box... */
         min?: V3;
         max?: V3;

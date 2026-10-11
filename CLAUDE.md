@@ -157,6 +157,7 @@ Each render frame then runs the camera, animator, level and entity visuals, cast
 - Gnarlings are quicker than they were (gnarling.ts constants). Frozen Ember Crabs are rough ice (not slippery): they're stepping stones, and crabs you need as stones have `reform` (a shattered one crawls back after that many seconds).
 - First-time foe loot lands on the ground under the foe (or at your feet), never in a chasm. The Examiner keeps `avoid` distance from the caged plinth.
 - One-way traps: every lift you can be knocked off of either floats home (`returnAfter`) or can be called from where you respawn.
+- Foes you can only stun (crabs without Rimewhistle, Hexlings, Sootlings) mustn't shell you down the next corridor: drop a gate behind the player (`gate` with `when: []` and `shutWhen`, set by a `trigger` with `signal` and `perVisit`), with a checkpoint past it so a respawn never lands behind it. The Ember Crypt does this.
 - Foes that throw things need line of sight; give rooms cover. Hexlings high up are hard to aim at (camera pitch), which is part of the fight.
 
 ### Lessons (the core loop)

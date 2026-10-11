@@ -26,7 +26,9 @@ import { cobweb, column, deco, Glow, rubble, slab, urn, wall, wallTorch } from '
  *                                         C1 on the landing lights the first two, C2 on the island
  *                                         halfway lights the rest; two Ember Crabs on the far ledge
  *                                         spit fire as you cross (Thwackwort flips them a while)
- *   Passage          x -3..3,  z 90.5..98.5 (the old Star chamber)
+ *   Passage          x -3..3,  z 90.5..98.5 (the old Star chamber): a portcullis drops behind
+ *                                         you as you come in from the crypt (the crabs stay
+ *                                         put), and a checkpoint
  *   Moth Ossuary     x -8..8,  z 98.5..131 a chasm (z 102..126) crossed on ten glimmer stones lit
  *                                         by three lamps that burn only 6 s: L1 on the landing,
  *                                         then hanging lamps L2 and L3 over the chasm, lit from
@@ -217,9 +219,24 @@ function build(b: LevelBuilder): void {
 
   emberCrypt(b, flames);
   mothOssuary(b, flames);
+  cryptGate(b);
 
   flames.finish(b, '#ffb060');
   b.finish();
+}
+
+/**
+ * A portcullis in the Ember Crypt's north doorway that drops once you're through: Thwackwort
+ * only flips the crabs for a moment, so without it they'd shell you from behind all the way
+ * down the passage. A checkpoint just past it, so a fall later never puts you back behind it.
+ * Built last of all so earlier ids stay put.
+ */
+function cryptGate(b: LevelBuilder): void {
+  b.add(
+    { type: 'gate', pos: [0, 0, 90.5], yaw: 0, width: 2.4, height: 3.4, when: [], shutWhen: ['crypt-shut'] },
+    { type: 'checkpoint', pos: [2.4, 0, 94.5], yaw: -Math.PI / 2, zone: { min: [-3, -1, 91.6], max: [3, 4, 98.4] } },
+    { type: 'trigger', flag: 'catacombs-crypt-shut', signal: 'crypt-shut', perVisit: true, min: [-3, -1, 91.6], max: [3, 4, 98.4] },
+  );
 }
 
 /**

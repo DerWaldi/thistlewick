@@ -33,7 +33,8 @@ export class Trigger implements Entity {
     if (this.held < (spec.delay ?? 0) || this.held === 0 || ctx.dialogue.isOpen) return;
     this.fired = true;
     if (!spec.perVisit) ctx.state.flags.add(spec.flag);
-    void ctx.talk(spec.script);
+    if (spec.signal) ctx.signals.set(spec.signal, true);
+    if (spec.script) void ctx.talk(spec.script);
   }
 }
 
