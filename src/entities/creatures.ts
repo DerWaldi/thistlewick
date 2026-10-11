@@ -1,5 +1,6 @@
 import RAPIER from '@dimforge/rapier3d-compat';
-import { BoxGeometry, Color, ConeGeometry, CylinderGeometry, Group, IcosahedronGeometry, MathUtils, Mesh, MeshStandardMaterial, SphereGeometry, Vector3 } from 'three';
+import { BoxGeometry, Color, ConeGeometry, CylinderGeometry, Group, IcosahedronGeometry, MathUtils, Mesh, MeshStandardMaterial, SphereGeometry, Vector3, type BufferGeometry } from 'three';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { dampAngle } from '../player/controller';
 import { RuneMarker } from '../spells/runes';
 import type { SpellHit, SpellTarget } from '../spells/targets';
@@ -271,6 +272,9 @@ export class EmberCrab implements Entity, SpellTarget {
   private dir = 1;
   private facing = 0;
   private time = Math.random() * 10;
+  private readonly legs: { g: Group; side: number; i: number }[] = [];
+  private readonly claws: { arm: Group; jaw: Group; side: number }[] = [];
+  private readonly flames: Mesh[] = [];
 
   constructor(
     private spec: SpecOf<'emberCrab'>,
@@ -287,35 +291,98 @@ export class EmberCrab implements Entity, SpellTarget {
     this.shellMat.emissive = new Color('#ff5a1a');
     const glowMat = flatMat('#ffd27a', '#ff8a3c', 1.5);
     const sm = this.shellMat;
-    const shell = part(new IcosahedronGeometry(0.5, 0), '#b8401e', sm);
-    shell.scale.set(1.2, 0.5, 0.9);
+    // A lump of red rock for a shell, with lava glowing along every seam between its facets.
+    const shellGeo = new IcosahedronGeometry(0.55, 1).scale(1.15, 0.62, 1);
+    const shell = part(shellGeo.clone(), '#8a2814', sm);
+    shell.position.y = 0.05;
     this.body.add(shell);
-    // Glowing cracks in the shell.
-    for (let i = 0; i < 4; i++) {
-      const crack = new Mesh(new BoxGeometry(0.5, 0.03, 0.04), glowMat);
-      crack.position.set((i - 1.5) * 0.18, 0.23, (i % 2) * 0.1 - 0.05);
-      crack.rotation.y = i * 0.7;
-      this.body.add(crack);
+    {
+      const pos = shellGeo.getAttribute('position');
+      const seen = new Set<string>();
+      const seams: BufferGeometry[] = [];
+      const a = new Vector3();
+      const b = new Vector3();
+      for (let i = 0; i < pos.count; i += 3) {
+        for (const [u, v] of [
+          [i, i + 1],
+          [i + 1, i + 2],
+          [i + 2, i],
+        ]) {
+          a.fromBufferAttribute(pos, u);
+          b.fromBufferAttribute(pos, v);
+          if (a.y < -0.05 && b.y < -0.05) continue;
+          const key = [a, b].map((p) => `${p.x.toFixed(3)},${p.y.toFixed(3)},${p.z.toFixed(3)}`).sort().join('|');
+          if (seen.has(key)) continue;
+          seen.add(key);
+          // Not every seam: an irregular web of cracks, not a cage.
+          if ((seen.size * 7919) % 10 < 4) continue;
+          const mid = a.clone().add(b).multiplyScalar(0.5);
+          const len = a.distanceTo(b);
+          const g = new BoxGeometry(0.02, 0.02, len * 0.95);
+          g.lookAt(b.clone().sub(a));
+          g.translate(mid.x * 1.015, mid.y * 1.015 + 0.05, mid.z * 1.015);
+          seams.push(g);
+        }
+      }
+      this.body.add(new Mesh(mergeGeometries(seams)!, flatMat('#ffb040', '#ff6a10', 1.1)));
     }
+    // Eye stalks, each tipped with a little candle flame.
     for (const side of [-1, 1]) {
-      // Eyes on stalks, and two claws.
-      const stalk = part(new CylinderGeometry(0.03, 0.03, 0.3, 4), '#5a2010', sm);
-      stalk.position.set(side * 0.15, 0.32, 0.3);
-      const eye = new Mesh(new SphereGeometry(0.07, 6, 4), glowMat);
-      eye.position.set(side * 0.15, 0.48, 0.3);
-      const claw = part(new IcosahedronGeometry(0.2, 0), '#c8502a', sm);
-      claw.scale.set(1, 0.6, 1.4);
-      claw.position.set(side * 0.55, 0.05, 0.45);
-      this.body.add(stalk, eye, claw);
+      const stalk = part(new CylinderGeometry(0.035, 0.045, 0.34, 5), '#5a2010', sm);
+      stalk.position.set(side * 0.13, 0.48, 0.32);
+      stalk.rotation.z = side * -0.12;
+      this.body.add(stalk);
+      const flame = new Mesh(new ConeGeometry(0.06, 0.18, 5), glowMat);
+      flame.position.set(side * 0.15, 0.73, 0.32);
+      const bulb = new Mesh(new SphereGeometry(0.06, 6, 4), glowMat);
+      bulb.position.set(side * 0.15, 0.64, 0.32);
+      this.flames.push(flame);
+      this.body.add(flame, bulb);
+    }
+    // Three jointed legs a side, each its own pivot so it can scuttle.
+    for (const side of [-1, 1]) {
       for (let l = 0; l < 3; l++) {
-        const leg = part(new CylinderGeometry(0.035, 0.03, 0.55, 4), '#5a2010', sm);
-        leg.position.set(side * 0.55, -0.15, -0.25 + l * 0.25);
-        leg.rotation.z = side * 1.1;
+        const leg = new Group();
+        leg.position.set(side * 0.5, 0.0, -0.22 + l * 0.22);
+        leg.rotation.y = side * (l - 1) * -0.35;
+        const upper = part(new CylinderGeometry(0.04, 0.05, 0.36, 5), '#8a2a14', sm);
+        upper.position.set(side * 0.16, 0.08, 0);
+        upper.rotation.z = side * -1.0;
+        const lower = part(new ConeGeometry(0.045, 0.42, 5), '#6a2010', sm);
+        lower.position.set(side * 0.36, -0.1, 0);
+        lower.rotation.z = side * -2.7;
+        leg.add(upper, lower);
+        mergeChildren(leg);
+        this.legs.push({ g: leg, side, i: l });
         this.body.add(leg);
       }
     }
-    // Legs are merged too: the scuttle is a body wobble rather than per-leg animation.
-    mergeChildren(this.body);
+    // Two big pincers on jointed arms: a fixed upper jaw and a lower one that snaps.
+    for (const side of [-1, 1]) {
+      const arm = new Group();
+      arm.position.set(side * 0.42, 0.02, 0.36);
+      const fore = part(new CylinderGeometry(0.06, 0.08, 0.32, 5), '#8a2a14', sm);
+      fore.position.set(side * 0.08, 0, 0.12);
+      fore.rotation.set(Math.PI / 2, 0, side * 0.5);
+      const palm = part(new IcosahedronGeometry(0.17, 0), '#c0441e', sm);
+      palm.scale.set(1, 0.8, 1.2);
+      palm.position.set(side * 0.18, 0.02, 0.32);
+      const top = part(new ConeGeometry(0.1, 0.36, 5), '#c84a20', sm);
+      top.position.set(side * 0.16, 0.08, 0.55);
+      top.rotation.set(Math.PI / 2 - 0.25, 0, 0);
+      arm.add(fore, palm, top);
+      mergeChildren(arm);
+      const jaw = new Group();
+      jaw.position.set(side * 0.18, -0.02, 0.38);
+      const low = part(new ConeGeometry(0.08, 0.3, 5), '#a83a1a', sm);
+      low.position.set(0, -0.02, 0.15);
+      low.rotation.set(Math.PI / 2 + 0.2, 0, 0);
+      jaw.add(low);
+      arm.add(jaw);
+      this.claws.push({ arm, jaw, side });
+      this.body.add(arm);
+    }
+    mergeChildren(this.body, [...this.legs.map((l) => l.g), ...this.claws.map((c) => c.arm), ...this.flames]);
     this.root.add(this.body);
     this.ice = new Mesh(new BoxGeometry(1.6, 1, 1.4), new MeshStandardMaterial({ color: '#cfeefa', transparent: true, opacity: 0.6, roughness: 0.1, emissive: new Color('#5aaed0'), emissiveIntensity: 0.3 }));
     this.ice.position.y = 0.15;
@@ -514,11 +581,25 @@ export class EmberCrab implements Entity, SpellTarget {
     this.root.position.lerpVectors(this.prev, this.pos, alpha);
     this.root.rotation.y = dampAngle(this.root.rotation.y, this.facing, 8, dt);
     const walking = this.state === 'walk';
-    this.body.position.y = walking ? Math.abs(Math.sin(this.time * 14)) * 0.05 : 0;
-    this.body.rotation.x = walking ? Math.sin(this.time * 14) * 0.05 : 0;
+    const aiming = this.state === 'aim';
+    this.body.position.y = walking ? Math.abs(Math.sin(this.time * 14)) * 0.04 : 0;
+    this.body.rotation.x = MathUtils.damp(this.body.rotation.x, aiming ? -0.2 : walking ? Math.sin(this.time * 14) * 0.04 : 0, 10, dt);
+    // A scuttle: legs lift and swing in two alternating sets of three.
+    for (const l of this.legs) {
+      const ph = this.time * 14 + (l.i % 2 === (l.side > 0 ? 0 : 1) ? 0 : Math.PI);
+      l.g.rotation.z = walking ? Math.max(0, Math.sin(ph)) * 0.35 * -l.side : 0;
+      l.g.rotation.x = walking ? Math.cos(ph) * 0.25 : 0;
+    }
+    // Claws: raised and snapping when it aims, idly clicking otherwise.
+    for (const c of this.claws) {
+      c.arm.rotation.x = MathUtils.damp(c.arm.rotation.x, aiming ? -0.7 : Math.sin(this.time * 2 + c.side) * 0.08, 10, dt);
+      c.jaw.rotation.x = aiming ? 0.25 + Math.abs(Math.sin(this.time * 18)) * 0.3 : Math.abs(Math.sin(this.time * 1.5 + c.side * 2)) * 0.25;
+    }
+    for (const [i, f] of this.flames.entries()) f.scale.set(1, 0.85 + Math.sin(this.time * 17 + i * 2) * 0.15 + (aiming ? 0.3 : 0), 1);
     // Flipped over when stunned; still and glassy when frozen.
     this.body.rotation.z = MathUtils.damp(this.body.rotation.z, this.state === 'stunned' ? Math.PI : 0, 10, dt);
-    this.shellMat.emissiveIntensity = this.state === 'frozen' ? 0 : this.state === 'aim' ? 1.4 : 0.6 + Math.sin(this.time * 3) * 0.15;
+    // The rock barely glows; the seams carry it.
+    this.shellMat.emissiveIntensity = this.state === 'frozen' ? 0 : this.state === 'aim' ? 0.5 : 0.12 + Math.sin(this.time * 3) * 0.05;
     this.shellMat.color.set(this.state === 'frozen' ? '#a8d8ec' : '#ffffff');
     this.marker.setSpell(this.spell);
     this.marker.sprite.position.copy(this.root.position).add(new Vector3(0, 1.2, 0));
