@@ -1,6 +1,7 @@
 import RAPIER from '@dimforge/rapier3d-compat';
 import { BoxGeometry, Color, ConeGeometry, CylinderGeometry, Group, MathUtils, Mesh, MeshStandardMaterial, SphereGeometry, TorusGeometry, Vector3 } from 'three';
 import { angleDiff } from '../player/controller';
+import { HitFlash } from './creatureFx';
 import { RuneMarker } from '../spells/runes';
 import type { SpellHit, SpellTarget } from '../spells/targets';
 import { paint } from '../world/builder';
@@ -49,6 +50,7 @@ export class Snapcasket implements Entity, SpellTarget {
   private time = Math.random() * 10;
   private lidOpen = 0;
   private flyAway = 0;
+  private flash!: HitFlash;
 
   private root = new Group();
   private body = new Group();
@@ -193,6 +195,7 @@ export class Snapcasket implements Entity, SpellTarget {
     this.body.position.y = -0.035 * SIZE;
     this.body.scale.setScalar(SIZE);
     this.root.add(this.body);
+    this.flash = new HitFlash(this.root);
   }
 
   // ---------------------------------------------------------------- SpellTarget
@@ -222,6 +225,7 @@ export class Snapcasket implements Entity, SpellTarget {
     this.timer = LOCK_TIME;
     this.vel.set(hit.dir.x * 2, 2.5, hit.dir.z * 2);
     this.grounded = false;
+    this.flash.flash();
     this.ctx.events.emit('snapLocked', { pos: this.pos.clone() });
   }
 
@@ -258,6 +262,14 @@ export class Snapcasket implements Entity, SpellTarget {
         this.flyAway += dt;
         this.vel.y -= 20 * dt;
         this.pos.addScaledVector(this.vel, dt);
+        if (this.flyAway >= 0.4) {
+          // It spins off and bursts into planks.
+          this.root.position.set(this.pos.x, this.pos.y - CENTER_TO_FEET, this.pos.z);
+          this.ctx.debris.crumble(this.root, { from: this.pos.clone(), push: this.vel.clone().setY(0).multiplyScalar(0.4), speed: 3, up: 3, life: 1.4 });
+          this.ctx.fx.burst(this.pos.clone(), 14, new Color('#c8b8a0'), 2.5, 0.14, 1);
+          this.flyAway = 1.2;
+          this.root.visible = false;
+        }
       }
       return;
     }
@@ -397,5 +409,6 @@ export class Snapcasket implements Entity, SpellTarget {
     const cur = MathUtils.damp(this.body.scale.y / SIZE, sy, 14, dt);
     this.body.scale.set(SIZE / Math.sqrt(cur), SIZE * cur, SIZE / Math.sqrt(cur));
     this.body.rotation.z = locked ? Math.sin(t * 40) * 0.08 * Math.min(1, this.timer) : 0;
+    this.flash.update(dt);
   }
 }

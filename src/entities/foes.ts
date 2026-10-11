@@ -30,6 +30,7 @@ import type { SpellHit, SpellTarget } from '../spells/targets';
 import { paint } from '../world/builder';
 import { worldMaterial } from '../world/materials';
 import { mergeChildren } from '../world/merge';
+import { DizzyStars, HitFlash } from './creatureFx';
 import { dressWith, FloatingMotes, modelIslands, type Island } from './models';
 import type { Entity, SpecOf, WorldContext } from './types';
 
@@ -119,6 +120,11 @@ export class Hexling implements Entity, SpellTarget {
   private reload: number;
   private t = Math.random() * 20;
   private vy = 0;
+  private readonly stars = new DizzyStars(0.75, 0.35);
+  private flash!: HitFlash;
+  private legs?: Object3D;
+  private hand!: Object3D;
+  private aura?: Sprite;
 
   constructor(
     private spec: SpecOf<'hexling'>,
@@ -137,6 +143,11 @@ export class Hexling implements Entity, SpellTarget {
     const model = modelIslands('hexling');
     if (model) this.wear(model);
     this.root.traverse((o) => (o.castShadow = o instanceof Mesh && !(o.material instanceof MeshBasicMaterial)));
+    this.flash = new HitFlash(this.root);
+    this.legs = this.body.getObjectByName('legs');
+    this.hand = this.body.getObjectByName('hand')!;
+    this.aura = this.body.getObjectByName('aura') as Sprite | undefined;
+    this.root.add(this.stars);
     this.root.position.copy(this.pos);
     ctx.scene.add(this.root);
     this.collider = ctx.physics.world.createCollider(RAPIER.ColliderDesc.ball(0.55).setTranslation(this.pos.x, this.pos.y, this.pos.z).setSensor(true));
@@ -199,12 +210,16 @@ export class Hexling implements Entity, SpellTarget {
     this.state = 'down';
     this.timer = 3.2;
     this.vy = 1.5;
+    this.flash.flash();
     this.ctx.events.emit('gnarlingStunned', { pos: this.pos.clone() });
     this.ctx.fx.burst(this.pos.clone(), 12, HEX, 2.2, 0.12, 0.8);
   }
 
   private gone(): void {
     this.state = 'gone';
+    // Her wings and wand come apart and drift down.
+    this.stars.visible = false;
+    this.ctx.debris.crumble(this.root, { from: this.pos.clone(), speed: 1.6, up: 2, gravity: 7, life: 1.2 });
     this.root.visible = false;
     this.ctx.targets.remove(this);
     this.ctx.physics.world.removeCollider(this.collider, false);
@@ -319,14 +334,14 @@ export class Hexling implements Entity, SpellTarget {
       w.pivot.rotation.x = down ? 0.5 : 0;
     }
     this.motes?.update(this.t);
-    const legs = this.body.getObjectByName('legs');
+    const legs = this.legs;
     if (legs) legs.rotation.x = MathUtils.damp(legs.rotation.x, down ? 0 : 0.25 + Math.sin(this.t * 3) * 0.12, 6, dt);
     this.body.rotation.z = MathUtils.damp(this.body.rotation.z, down ? 1.4 : Math.sin(this.t * 1.3) * 0.12, 8, dt);
     this.glow.emissiveIntensity = this.state === 'windup' ? 3 + Math.sin(this.t * 40) : down ? 0.3 : 1;
-    const hand = this.body.getObjectByName('hand')!;
-    hand.scale.setScalar(this.state === 'windup' ? 1 + (0.75 - Math.max(0, this.timer)) * 2.2 : 0.45);
-    const aura = this.body.getObjectByName('aura') as Sprite | undefined;
-    if (aura) (aura.material as SpriteMaterial).opacity = down ? 0.12 : this.state === 'windup' ? 0.55 : 0.3;
+    this.hand.scale.setScalar(this.state === 'windup' ? 1 + (0.75 - Math.max(0, this.timer)) * 2.2 : 0.45);
+    if (this.aura) (this.aura.material as SpriteMaterial).opacity = down ? 0.12 : this.state === 'windup' ? 0.55 : 0.3;
+    this.stars.update(dt, down, this.t);
+    this.flash.update(dt);
     this.marker.sprite.position.copy(this.root.position).add(new Vector3(0, 1.3, 0));
   }
 }
@@ -691,6 +706,9 @@ export class Sootling implements Entity, SpellTarget {
   /** The model's smoke spire (when it has one), swaying as a whole. */
   private readonly spire = new Group();
   private motes: FloatingMotes | null = null;
+  private readonly stars = new DizzyStars(1.25, 0.35);
+  private flash!: HitFlash;
+  private wasWindup = false;
   private readonly smokeMat = new MeshStandardMaterial({ color: '#4a4246', roughness: 1, flatShading: true, transparent: true, opacity: 0.85 });
 
   constructor(
@@ -784,6 +802,8 @@ export class Sootling implements Entity, SpellTarget {
       }, keep);
     }
     this.root.traverse((o) => (o.castShadow = o instanceof Mesh && !(o.material instanceof MeshBasicMaterial)));
+    this.flash = new HitFlash(this.root);
+    this.root.add(this.stars);
     this.root.position.copy(this.pos);
     ctx.scene.add(this.root);
     this.collider = ctx.physics.world.createCollider(RAPIER.ColliderDesc.ball(0.5).setTranslation(this.pos.x, this.pos.y + 0.6, this.pos.z).setSensor(true));
@@ -810,12 +830,17 @@ export class Sootling implements Entity, SpellTarget {
     if (this.state === 'windup') this.lob(this.pos.clone().add(new Vector3(Math.sin(this.facing) * 0.4, 0, Math.cos(this.facing) * 0.4)), 1.4, 0.5);
     this.state = 'dazed';
     this.timer = 2.6 + hit.charge * 1.5;
+    this.flash.flash();
     this.ctx.events.emit('gnarlingStunned', { pos: this.pos.clone() });
   }
 
   private gone(): void {
     if (this.state === 'gone') return;
     this.state = 'gone';
+    // Thwacked into a cloud of soot, its lumps scattering.
+    this.stars.visible = false;
+    this.ctx.debris.crumble(this.root, { from: this.pos.clone().add(new Vector3(0, 0.5, 0)), speed: 2.4, up: 3.5, life: 0.9 });
+    this.ctx.fx.burst(this.pos.clone().add(new Vector3(0, 0.6, 0)), 26, SOOT, 2.8, 0.3, 0.6);
     this.root.visible = false;
     this.ctx.targets.remove(this);
     this.ctx.physics.world.removeCollider(this.collider, false);
@@ -940,6 +965,11 @@ export class Sootling implements Entity, SpellTarget {
     this.arm.visible = reach > 0.05;
     held.scale.setScalar(windup ? MathUtils.damp(held.scale.x, 1, 6, dt) : 0.1);
     this.eyeMat.emissiveIntensity = dazed ? 0.2 : windup ? 2.6 : 1.2;
+    this.stars.update(dt, dazed, this.t);
+    this.flash.update(dt);
+    // A rustle as it pulls a bomb out of the soot.
+    if (windup && !this.wasWindup) this.ctx.events.emit('foeWindup', { pos: this.pos.clone(), kind: 'pull' });
+    this.wasWindup = windup;
     this.marker.sprite.position.copy(this.root.position).add(new Vector3(0, 1.75, 0));
   }
 }

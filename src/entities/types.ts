@@ -9,6 +9,7 @@ import type { EventBus } from '../engine/events';
 import type { Physics } from '../engine/physics';
 import type { PlayerController } from '../player/controller';
 import type { Puffs } from '../player/effects';
+import type { Debris } from './creatureFx';
 import type { PlayerHealth } from '../player/health';
 import type { TargetRegistry } from '../spells/targets';
 import type { GameState } from '../state/gameState';
@@ -452,6 +453,8 @@ export interface WorldContext {
   signals: Signals;
   targets: TargetRegistry;
   fx: Puffs;
+  /** Pieces of beaten foes falling apart. */
+  debris: Debris;
   sweets: SweetField;
   /** Where Glimmerwick's lamps are lit (hidden platforms, false walls). */
   glimmer: GlimmerField;

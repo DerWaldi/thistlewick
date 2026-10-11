@@ -10,6 +10,8 @@ export class Sfx {
   private master: GainNode | null = null;
   private noise: AudioBuffer | null = null;
   volume = 0.5;
+  /** Where the player's ears are, for sounds that fade with distance (foe footsteps). */
+  listener: (() => { x: number; y: number; z: number } | null) | null = null;
 
   constructor(events: EventBus) {
     const unlock = () => this.ensure();
@@ -230,6 +232,24 @@ export class Sfx {
     events.on('rattleCollapse', () => {
       for (let i = 0; i < 6; i++) setTimeout(() => this.tone(1200 + Math.random() * 1600, 900, 0.12, 'square', 0.05), i * 70);
     });
+    events.on('foeStep', ({ pos, heavy }) => {
+      const k = this.near(pos, 10 + heavy * 18);
+      if (k <= 0) return;
+      this.thud(k * (0.25 + heavy * 0.55), 110 - heavy * 50);
+      // Armour clinks with every step.
+      if (heavy < 0.9) this.tone(1500 + Math.random() * 300, 1300, 0.05, 'square', 0.015 * k);
+    });
+    events.on('foeWindup', ({ pos, kind }) => {
+      const k = this.near(pos, 26);
+      if (k <= 0) return;
+      if (kind === 'pull') {
+        this.hiss(0.3, 2600, 0.08 * k);
+        return;
+      }
+      // A rising whoosh as the arm (or both fists) goes up.
+      this.hiss(kind === 'slam' ? 0.7 : 0.35, kind === 'slam' ? 500 : 900, 0.14 * k);
+      this.tone(kind === 'slam' ? 90 : 180, kind === 'slam' ? 260 : 520, kind === 'slam' ? 0.7 : 0.3, 'sawtooth', 0.03 * k);
+    });
     events.on('gnarlingBanished', () => {
       this.hiss(0.3, 2600, 0.15);
       [784, 988, 1175].forEach((f, i) => setTimeout(() => this.tone(f, f, 0.15, 'sine', 0.08), i * 60));
@@ -306,6 +326,14 @@ export class Sfx {
     src.connect(f).connect(g).connect(this.master);
     src.start(t, Math.random() * 0.5);
     src.stop(t + dur);
+  }
+
+  /** 1 next to the listener, fading to 0 at `range` metres. */
+  private near(pos: { x: number; y: number; z: number }, range: number): number {
+    const at = this.listener?.();
+    if (!at) return 1;
+    const d = Math.hypot(pos.x - at.x, pos.y - at.y, pos.z - at.z);
+    return Math.max(0, 1 - d / range);
   }
 
   private thud(k: number, freq = 160): void {

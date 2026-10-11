@@ -64,6 +64,10 @@ export interface GameEvents {
   gnarlingStunned: { pos: Vector3 };
   gnarlingBanished: { pos: Vector3 };
   rattleClang: { pos: Vector3 };
+  /** A heavy foe's footfall (`heavy` 0..1: a Rattlecoat about 0.5, the Examiner 1). */
+  foeStep: { pos: Vector3; heavy: number };
+  /** A foe draws back to strike: a sword swing, a slam, a bomb pulled from the soot. */
+  foeWindup: { pos: Vector3; kind: 'swing' | 'slam' | 'pull' };
   hexCast: { pos: Vector3 };
   hexHit: { pos: Vector3 };
   bombThrow: { pos: Vector3 };

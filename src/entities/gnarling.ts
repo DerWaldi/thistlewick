@@ -5,10 +5,10 @@ import {
   CylinderGeometry,
   Group,
   IcosahedronGeometry,
+  OctahedronGeometry,
   MathUtils,
   Mesh,
   MeshStandardMaterial,
-  OctahedronGeometry,
   SphereGeometry,
   BoxGeometry,
   type BufferGeometry,
@@ -17,6 +17,7 @@ import {
 import { POINTS } from '../data/houses';
 import { angleDiff } from '../player/controller';
 import { RuneMarker } from '../spells/runes';
+import { DizzyStars, HitFlash } from './creatureFx';
 import type { SpellHit, SpellTarget } from '../spells/targets';
 import type { Creature } from './creatures';
 import type { Entity, SpecOf, WorldContext } from './types';
@@ -66,7 +67,8 @@ export class Gnarling implements Entity, SpellTarget, Creature {
   private root = new Group();
   private body = new Group();
   private eyes: MeshStandardMaterial;
-  private stars = new Group();
+  private stars = new DizzyStars(1.35);
+  private flash!: HitFlash;
   private legs: Group[] = [];
   private arms: Group[] = [];
 
@@ -184,17 +186,8 @@ export class Gnarling implements Entity, SpellTarget, Creature {
     mergeChildren(this.body, [...this.legs, ...this.arms]);
     this.root.add(this.body);
 
-    // Dizzy stars, shown while stunned.
-    const starMat = new MeshStandardMaterial({ color: '#ffe58a', emissive: new Color('#ffd84a'), emissiveIntensity: 1 });
-    for (let i = 0; i < 3; i++) {
-      const s = new Mesh(new OctahedronGeometry(0.07, 0), starMat);
-      const a = (i / 3) * Math.PI * 2;
-      s.position.set(Math.cos(a) * 0.3, 0, Math.sin(a) * 0.3);
-      this.stars.add(s);
-    }
-    this.stars.position.y = 1.35;
-    this.stars.visible = false;
     this.root.add(this.stars);
+    this.flash = new HitFlash(this.root);
   }
 
   // ---------------------------------------------------------------- SpellTarget
@@ -222,6 +215,7 @@ export class Gnarling implements Entity, SpellTarget, Creature {
     this.state = 'stunned';
     this.timer = 3.5 + hit.charge * 2;
     this.spinVis = 0;
+    this.flash.flash();
     this.ctx.events.emit('gnarlingStunned', { pos: this.pos.clone() });
   }
 
@@ -229,6 +223,9 @@ export class Gnarling implements Entity, SpellTarget, Creature {
     this.state = 'gone';
     this.ctx.targets.remove(this);
     this.ctx.creatures.delete(this);
+    // Thwacked to bits: the root-goblin falls apart into twigs.
+    this.stars.visible = false;
+    this.ctx.debris.crumble(this.root, { from: this.pos.clone(), speed: 2.5, up: 4, life: 1.2 });
     this.root.visible = false;
     this.ctx.physics.world.removeCollider(this.collider, false);
     const at = this.pos.clone();
@@ -424,9 +421,9 @@ export class Gnarling implements Entity, SpellTarget, Creature {
     this.eyes.color.set(angry ? '#ff8a6a' : '#fff3a0');
 
     const stunned = this.state === 'stunned';
-    this.stars.visible = stunned;
+    this.flash.update(dt);
+    this.stars.update(dt, stunned, t);
     if (stunned) {
-      this.stars.rotation.y += dt * 6;
       this.spinVis = Math.min(1, this.spinVis + dt * 2);
       this.body.rotation.x = MathUtils.damp(this.body.rotation.x, this.grounded ? -1.2 : this.body.rotation.x + dt * 14, 8, dt);
     } else {

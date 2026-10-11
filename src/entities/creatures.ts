@@ -2,6 +2,7 @@ import RAPIER from '@dimforge/rapier3d-compat';
 import { BoxGeometry, Color, ConeGeometry, CylinderGeometry, Group, IcosahedronGeometry, MathUtils, Matrix4, Mesh, MeshStandardMaterial, SphereGeometry, Vector3, type BufferGeometry, type Object3D } from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { dampAngle } from '../player/controller';
+import { DizzyStars, HitFlash, plainMaterials } from './creatureFx';
 import { RuneMarker } from '../spells/runes';
 import type { SpellHit, SpellTarget } from '../spells/targets';
 import { paint } from '../world/builder';
@@ -49,6 +50,8 @@ export class Snapweed implements Entity, SpellTarget {
   readonly spell = 'cindersnap' as const;
   readonly marker: RuneMarker;
   readonly radius = 0.7;
+  /** Its own colours, which char as it burns. */
+  private skin: { m: MeshStandardMaterial; base: Color }[] = [];
   private collider: RAPIER.Collider;
   private readonly root = new Group();
   private readonly stem = new Group();
@@ -168,6 +171,7 @@ export class Snapweed implements Entity, SpellTarget {
     }
     this.root.position.copy(this.base);
     this.root.traverse((o) => (o.castShadow = true));
+    this.skin = plainMaterials(this.root).map((m) => ({ m, base: m.color.clone() }));
     ctx.scene.add(this.root);
     this.collider = ctx.physics.addStaticCylinder(this.base.clone().add(new Vector3(0, 0.75, 0)), 0.75, 0.35, { noGrab: true });
     this.marker = new RuneMarker(ctx.scene, 'cindersnap', 0.55);
@@ -256,6 +260,9 @@ export class Snapweed implements Entity, SpellTarget {
 
   private wither(): void {
     this.state = 'gone';
+    // Burnt to a crisp: the charred husk breaks up and blows away as ash.
+    this.fire.visible = false;
+    this.ctx.debris.crumble(this.root, { from: this.base.clone().add(new Vector3(0, 0.8, 0)), speed: 1.4, up: 2, gravity: 9, life: 1.1, tint: CHAR, ignore: [this.collider] });
     this.root.visible = false;
     this.ctx.targets.remove(this);
     this.ctx.physics.world.removeCollider(this.collider, false);
@@ -299,10 +306,16 @@ export class Snapweed implements Entity, SpellTarget {
       const s = Math.max(0.1, this.timer / 1.2);
       this.stem.scale.set(1, s, 1);
       this.fire.scale.setScalar(0.8 + Math.sin(this.time * 30) * 0.15);
+      // Blackens as it burns.
+      const k = 1 - Math.max(0, this.timer / 1.2);
+      for (const { m, base } of this.skin) m.color.copy(base).lerp(CHAR, k);
     }
     this.headPos.copy(this.base);
   }
 }
+
+const CHAR = new Color('#2a2018');
+const FROSTED = new Color('#cfeefa');
 
 type CrabState = 'walk' | 'aim' | 'stunned' | 'frozen' | 'gone';
 
@@ -328,6 +341,8 @@ export class EmberCrab implements Entity, SpellTarget {
   private readonly root = new Group();
   private readonly body = new Group();
   private readonly shellMat: MeshStandardMaterial;
+  private readonly stars = new DizzyStars(0.85, 0.35);
+  private flash!: HitFlash;
   private readonly ice: Mesh;
   private readonly pos: Vector3;
   private readonly prev: Vector3;
@@ -461,6 +476,8 @@ export class EmberCrab implements Entity, SpellTarget {
     this.root.traverse((o) => (o.castShadow = true));
     const model = modelIslands('embercrab');
     if (model) this.wear(model);
+    this.flash = new HitFlash(this.root, [this.shellMat]);
+    this.root.add(this.stars);
     this.root.position.copy(this.pos);
     ctx.scene.add(this.root);
     // A sensor while alive (you walk into it and get pinched, like Gnarlings), a solid block of
@@ -549,6 +566,7 @@ export class EmberCrab implements Entity, SpellTarget {
       return;
     }
     // Flipped onto its back for a moment.
+    this.flash.flash();
     this.state = 'stunned';
     this.timer = 3 + hit.charge * 2;
     this.ctx.events.emit('gnarlingStunned', { pos: this.pos.clone() });
@@ -558,7 +576,7 @@ export class EmberCrab implements Entity, SpellTarget {
 
   private shatter(): void {
     this.state = 'gone';
-    this.root.visible = false;
+    this.stars.visible = false;
     this.ctx.targets.remove(this);
     if (this.spec.reform) {
       // A stepping stone you need: it crawls back out of the water a few seconds later.
@@ -569,8 +587,13 @@ export class EmberCrab implements Entity, SpellTarget {
       this.ctx.physics.world.removeCollider(this.collider, false);
       this.ctx.physics.world.removeCollider(this.iceCollider, false);
     }
+    // The block bursts: frosted chunks of crab, the ice itself in shards.
+    this.ice.visible = false;
+    this.ctx.debris.crumble(this.root, { from: this.pos.clone(), speed: 3.5, up: 4, life: 1.1, tint: FROSTED, ignore: [this.collider, this.iceCollider] });
+    this.root.visible = false;
     this.ctx.events.emit('crabShatter', { pos: this.pos.clone() });
     this.ctx.fx.burst(this.pos.clone(), 26, FROST, 4, 0.16, 2);
+    this.ctx.fx.burst(this.pos.clone().add(new Vector3(0, 0.3, 0)), 12, FROST, 3, 0.3, 3);
     if (this.spec.id) {
       this.ctx.signals.set(this.spec.id, true);
       if (this.spec.persist) this.ctx.state.flags.add(`down:${this.spec.id}`);
@@ -716,6 +739,8 @@ export class EmberCrab implements Entity, SpellTarget {
     // The rock barely glows; the seams carry it.
     this.shellMat.emissiveIntensity = this.state === 'frozen' ? 0 : this.state === 'aim' ? 0.5 : 0.12 + Math.sin(this.time * 3) * 0.05;
     this.shellMat.color.set(this.state === 'frozen' ? '#a8d8ec' : '#ffffff');
+    this.stars.update(dt, this.state === 'stunned', this.time);
+    this.flash.update(dt);
     this.marker.setSpell(this.spell);
     this.marker.sprite.position.copy(this.root.position).add(new Vector3(0, 1.2, 0));
   }

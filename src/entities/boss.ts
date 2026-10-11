@@ -23,6 +23,7 @@ import {
 import { SPELLS, type SpellId } from '../data/spells';
 import { mergeChildren } from '../world/merge';
 import { angleDiff, dampAngle } from '../player/controller';
+import { HitFlash } from './creatureFx';
 import { RuneMarker, runeTexture } from '../spells/runes';
 import type { SpellHit, SpellTarget } from '../spells/targets';
 import { dressWith, modelIslands, type Island } from './models';
@@ -88,6 +89,7 @@ interface Orb {
 }
 
 const STAFF_UP = new Vector3();
+const DUST = new Color('#c8b090');
 
 export class Examiner implements Entity, SpellTarget {
   readonly marker: RuneMarker;
@@ -103,6 +105,9 @@ export class Examiner implements Entity, SpellTarget {
   private readonly staffGrip = new Vector3();
   private staffVel = 0;
   private staffSlide = 0;
+  private flash!: HitFlash;
+  private stepSign = 0;
+  private shownState = '';
   private stride = 0;
   private helm: Object3D | null = null;
   /** Where the body (hips) sits in root space: the model's hips are lower than the built body's. */
@@ -142,6 +147,7 @@ export class Examiner implements Entity, SpellTarget {
     this.body.traverse((o) => {
       if ((o as Mesh).material === this.visor) this.helm = o.parent;
     });
+    this.flash = new HitFlash(this.root);
     this.root.scale.setScalar(SCALE);
     this.root.position.copy(this.pos);
     ctx.scene.add(this.root);
@@ -365,6 +371,7 @@ export class Examiner implements Entity, SpellTarget {
     if (this.state !== 'stuck') return;
     if (SPELLS[this.spell].chargeable && hit.charge < 0.5) {
       // Glances off: this seal wants more than a tap.
+      this.flash.flash();
       this.ctx.events.emit('rattleClang', { pos: this.pos.clone() });
       this.ctx.events.emit('toast', { text: `The ${SEAL_NAMES[this.spell]} holds. Charge it!`, kind: 'hint' });
       return;
@@ -382,6 +389,7 @@ export class Examiner implements Entity, SpellTarget {
       this.ctx.fx.burst(wp, 24, broken.color, 3, 0.12, 0.6);
     }
     this.hp--;
+    this.flash.flash();
     this.ctx.events.emit('bossHit', { pos: this.pos.clone() });
     this.ctx.fx.burst(this.pos.clone().add(new Vector3(0, 2.4, 0.6)), 30, new Color('#ffd86a'), 4, 0.18, 0.4);
     this.ctx.events.emit('bossHealth', { name: 'The Brass Examiner', hp: this.hp, max: SEALS.length, active: this.hp > 0 });
@@ -821,5 +829,19 @@ export class Examiner implements Entity, SpellTarget {
     ringMat.opacity = this.state === 'windup' ? 0.35 + Math.sin(this.t * 20) * 0.2 : 0;
     this.ring.position.set(this.root.position.x, this.pos.y + 0.05, this.root.position.z);
     this.marker.sprite.position.copy(this.root.position).add(new Vector3(Math.sin(this.root.rotation.y) * 1.2, 2.5, Math.cos(this.root.rotation.y) * 1.2));
+    this.flash.update(dt);
+    // Each footfall booms and kicks up dust; the slam winds up with a rising roar of air.
+    const fall = Math.cos(this.stride);
+    if (moving && Math.sign(fall) !== this.stepSign) {
+      this.stepSign = Math.sign(fall);
+      this.ctx.events.emit('foeStep', { pos: this.pos.clone(), heavy: 1 });
+      const side = Math.sin(this.stride) > 0 ? 1 : -1;
+      const foot = this.root.localToWorld(new Vector3(side * 0.35 / SCALE, 0, 0.2 / SCALE));
+      this.ctx.fx.burst(foot.setY(this.pos.y + 0.05), 6, DUST, 1.6, 0.16, 0.6);
+    }
+    if (st !== this.shownState) {
+      if (st === 'windup') this.ctx.events.emit('foeWindup', { pos: this.pos.clone(), kind: 'slam' });
+      this.shownState = st;
+    }
   }
 }

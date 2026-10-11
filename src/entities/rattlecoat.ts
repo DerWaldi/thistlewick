@@ -24,6 +24,7 @@ import { mergeChildren } from '../world/merge';
 import { dressWith, modelIslands, type Island } from './models';
 import { POINTS } from '../data/houses';
 import { angleDiff } from '../player/controller';
+import { DizzyStars, HitFlash } from './creatureFx';
 import { RuneMarker } from '../spells/runes';
 import type { SpellHit, SpellTarget } from '../spells/targets';
 import type { Entity, SpecOf, WorldContext } from './types';
@@ -84,7 +85,10 @@ export class Rattlecoat implements Entity, SpellTarget {
   private legR = new Group();
   private visor: MeshStandardMaterial;
   private tabard: Group[] = [];
-  private pieces: { mesh: Mesh; vel: Vector3; spin: Vector3 }[] = [];
+  private readonly stars = new DizzyStars(0, 0.4, 1.4);
+  private flash!: HitFlash;
+  private stepSign = 0;
+  private shownState = '';
 
   constructor(
     private spec: SpecOf<'rattlecoat'>,
@@ -104,6 +108,8 @@ export class Rattlecoat implements Entity, SpellTarget {
     this.build();
     const model = modelIslands('rattlecoat');
     if (model) this.wear(model);
+    this.flash = new HitFlash(this.root);
+    ctx.scene.add(this.stars);
     ctx.scene.add(this.root);
     this.marker = new RuneMarker(ctx.scene, 'thwackwort', 0.7);
     ctx.targets.add(this);
@@ -284,6 +290,7 @@ export class Rattlecoat implements Entity, SpellTarget {
       // Clang! Just a stagger.
       this.state = 'stagger';
       this.timer = 0.45;
+      this.flash.flash();
       this.ctx.events.emit('rattleClang', { pos: this.pos.clone() });
       if (!this.hintShown) {
         this.hintShown = true;
@@ -293,6 +300,7 @@ export class Rattlecoat implements Entity, SpellTarget {
     }
     this.hp--;
     this.toppleDir.copy(hit.dir);
+    this.flash.flash();
     this.facing = Math.atan2(-hit.dir.x, -hit.dir.z);
     this.ctx.events.emit('rattleTopple', { pos: this.pos.clone() });
     if (this.hp <= 0) {
@@ -314,25 +322,10 @@ export class Rattlecoat implements Entity, SpellTarget {
     this.ctx.state.award(POINTS.rattlecoat, 'toppling a Rattlecoat');
     this.ctx.sweets.burst('humbug', this.pos.clone(), 1);
     this.ctx.sweets.burst('bramble', this.pos.clone(), 2);
-    // Every piece flies off on its own.
-    this.root.updateMatrixWorld(true);
-    const meshes: Mesh[] = [];
-    this.root.traverse((o) => {
-      if (o instanceof Mesh) meshes.push(o);
-    });
-    for (const m of meshes) {
-      const wp = m.getWorldPosition(new Vector3());
-      const wq = m.getWorldQuaternion(m.quaternion.clone());
-      this.ctx.scene.attach(m);
-      m.position.copy(wp);
-      m.quaternion.copy(wq);
-      const out = wp.clone().sub(this.pos).setY(0).normalize();
-      this.pieces.push({
-        mesh: m,
-        vel: out.multiplyScalar(2 + Math.random() * 2.5).add(this.toppleDir.clone().multiplyScalar(2)).setY(3 + Math.random() * 3),
-        spin: new Vector3(Math.random() * 8 - 4, Math.random() * 8 - 4, Math.random() * 8 - 4),
-      });
-    }
+    // Every piece flies off on its own, and the heap lies there a while.
+    this.stars.visible = false;
+    this.ctx.debris.crumble(this.root, { from: this.pos.clone(), push: this.toppleDir.clone().multiplyScalar(2), speed: 3, up: 4.5, life: 7 });
+    this.root.visible = false;
     this.ctx.events.emit('rattleCollapse', { pos: this.pos.clone() });
   }
 
@@ -362,23 +355,7 @@ export class Rattlecoat implements Entity, SpellTarget {
   }
 
   fixedUpdate(dt: number): void {
-    if (this.state === 'collapsed') {
-      for (const pc of this.pieces) {
-        if (pc.mesh.position.y <= 0.08) {
-          pc.vel.multiplyScalar(0.8);
-          pc.vel.y = Math.abs(pc.vel.y) > 1.5 ? -pc.vel.y * 0.3 : 0;
-          pc.spin.multiplyScalar(0.8);
-          pc.mesh.position.y = 0.08;
-        } else {
-          pc.vel.y -= 18 * dt;
-        }
-        pc.mesh.position.addScaledVector(pc.vel, dt);
-        pc.mesh.rotation.x += pc.spin.x * dt;
-        pc.mesh.rotation.y += pc.spin.y * dt;
-        pc.mesh.rotation.z += pc.spin.z * dt;
-      }
-      return;
-    }
+    if (this.state === 'collapsed') return;
     this.prev.copy(this.pos);
     this.t += dt;
     this.timer -= dt;
@@ -512,7 +489,8 @@ export class Rattlecoat implements Entity, SpellTarget {
     this.legL.rotation.x = s * 0.4;
     this.legR.rotation.x = -s * 0.4;
     this.armL.rotation.x = -s * 0.3;
-    this.body.position.y = 0.85 + Math.abs(s) * 0.04;
+    // Breathes in its armour when it stands still.
+    this.body.position.y = 0.85 + Math.abs(s) * 0.04 + (walking ? 0 : Math.sin(this.t * 1.5) * 0.015);
 
     const raise = this.state === 'windup' ? -2.6 : this.state === 'swing' ? 0.6 : this.state === 'brace' || this.state === 'charge' ? -1.5 : -0.2 - s * 0.2;
     this.body.rotation.x = MathUtils.damp(this.body.rotation.x, this.state === 'brace' || this.state === 'charge' ? 0.35 : 0, 10, dt);
@@ -525,5 +503,19 @@ export class Rattlecoat implements Entity, SpellTarget {
     // The tabard swings with its stride, trails behind a charge, and flaps when it staggers.
     const flap = this.state === 'charge' ? -0.5 : this.state === 'stagger' ? Math.sin(this.t * 30) * 0.2 : s * 0.18 + Math.sin(this.t * 1.7) * 0.03;
     for (const [i, panel] of this.tabard.entries()) panel.rotation.x = MathUtils.damp(panel.rotation.x, i === 0 ? flap : -flap, 10, dt);
+    // Stars over the helm while it lies there (outside the root, which is tipped over).
+    const down = this.state === 'toppled';
+    if (down) this.stars.position.copy(this.root.localToWorld(new Vector3(0, 1.6, 0))).add(new Vector3(0, 0.45, 0));
+    this.stars.update(dt, down, this.t);
+    this.flash.update(dt);
+    // Sounds: a clanking footfall each time a foot comes down, a whoosh as the sword goes up.
+    if (walking && s !== 0 && Math.sign(s) !== this.stepSign) {
+      this.stepSign = Math.sign(s);
+      this.ctx.events.emit('foeStep', { pos: this.pos.clone(), heavy: this.state === 'charge' ? 0.7 : 0.5 });
+    }
+    if (this.state !== this.shownState) {
+      if (this.state === 'windup') this.ctx.events.emit('foeWindup', { pos: this.pos.clone(), kind: 'swing' });
+      this.shownState = this.state;
+    }
   }
 }

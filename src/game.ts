@@ -70,6 +70,7 @@ export class Game {
     this.renderer = new Renderer(canvas);
     this.input = new Input(canvas);
     this.sfx = new Sfx(this.events);
+    this.sfx.listener = () => this.session?.player.pos ?? null;
     this.music = new Music(() => this.sfx.context);
     this.events.on('dialogueOpen', ({ open }) => this.music.setDuck(open));
     this.dialogue = new Dialogue(this.events, (pitch) => this.sfx.blip(pitch));

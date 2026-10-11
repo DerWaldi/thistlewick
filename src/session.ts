@@ -20,6 +20,7 @@ import { Signals } from './world/signals';
 import { World } from './world/world';
 import { questGivers } from './data/quests';
 import { wanderers } from './data/students';
+import { Debris } from './entities/creatureFx';
 
 /**
  * Everything that belongs to one loaded level: its physics world, geometry,
@@ -41,6 +42,7 @@ export class LevelSession {
   private animator: StudentAnimator;
   readonly shadow: BlobShadow;
   private puffs: Puffs;
+  private debris: Debris;
   private area: AreaDef | null = null;
   /** The interactable whose prompt is showing. */
   focus: Interactable | null = null;
@@ -72,6 +74,7 @@ export class LevelSession {
     this.camera.yaw = spawn.yaw;
     this.shadow = new BlobShadow(this.root, this.physics, this.player);
     this.puffs = new Puffs(this.root, this.events, this.player);
+    this.debris = new Debris(this.root, this.physics);
 
     const targets = new TargetRegistry();
     const sweets = new SweetField(this.root, this.physics, this.player, game.state, game.tuning);
@@ -87,6 +90,7 @@ export class LevelSession {
       signals: new Signals(this.events),
       targets,
       fx: this.puffs,
+      debris: this.debris,
       sweets,
       glimmer: new GlimmerField(),
       heat: new HeatField(),
@@ -128,6 +132,7 @@ export class LevelSession {
   fixedUpdate(dt: number): void {
     this.builder.fixedUpdate(dt);
     this.world.fixedUpdate(dt);
+    this.debris.fixedUpdate(dt);
     this.player.update(dt, this.camera.yaw);
     this.health.update(dt);
     this.builder.applyMovers();
