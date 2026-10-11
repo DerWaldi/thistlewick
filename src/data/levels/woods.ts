@@ -67,19 +67,74 @@ function build(b: LevelBuilder): void {
   b.finish();
 }
 
-/** Invisible walls round the edge, with a thick wood beyond them so nobody sees the end. */
+/**
+ * Invisible walls round the edge, and a deep wood beyond them so the Old Woods feel like the
+ * middle of a forest: ground under it, a hedge of bushes along the edge, several ranks of
+ * trees of all sizes, and a dark wall of firs at the back so nobody sees out to the hills.
+ * Decoration only (merged into the level mesh, no colliders).
+ */
 function bounds(b: LevelBuilder): void {
   for (const x of [-16.5, 16.5]) b.box([x, 12, 65], [1, 40, 132], { invisible: true, info: { noGrab: true, cameraIgnore: true } });
   b.box([0, 12, 130.5], [34, 40, 1], { invisible: true, info: { noGrab: true, cameraIgnore: true } });
-  for (let i = 0; i < 44; i++) {
-    const side = i % 2 ? 1 : -1;
-    const z = -2 + Math.floor(i / 2) * 6.2;
-    const y = z < 44 ? 0 : z < 104 ? -3 : 13;
-    const h = 12 + (i % 3) * 3;
-    deco(b, new CylinderGeometry(0.5, 0.7, h, 6), [side * (18.5 + (i % 4)), y + h / 2 - 1, z], BARK);
-    deco(b, new ConeGeometry(4 + (i % 3), h * 0.8, 7), [side * (18.5 + (i % 4)), y + h * 0.8, z], i % 3 ? '#3f5f34' : '#4a6a3a');
+  let seed = 7;
+  const rnd = () => {
+    seed = (seed * 9301 + 49297) % 233280;
+    return seed / 233280;
+  };
+  // The floor of the forest outside, at each stretch's level (the canopy's ravine runs down at -3).
+  const groundY = (z: number) => (z < 44 ? 0 : z < 104 ? -3 : 13);
+  for (const [z0, z1] of [
+    [-20, 44],
+    [44, 104],
+    [104, 150],
+  ]) {
+    const y = groundY(z0 + 1);
+    for (const side of [-1, 1]) deco(b, new BoxGeometry(40, 0.4, z1 - z0), [side * 36.5, y - 0.2, (z0 + z1) / 2], '#3d5a2c');
   }
-  for (let i = 0; i < 9; i++) deco(b, new ConeGeometry(5, 18, 7), [-16 + i * 4, 22, 134 + (i % 2) * 3], i % 2 ? '#3f5f34' : '#4a6a3a');
+  deco(b, new BoxGeometry(34, 0.4, 20), [0, -0.2, -10.5], '#3d5a2c');
+  deco(b, new BoxGeometry(34, 0.4, 20), [0, 12.8, 141], '#3d5a2c');
+  const LEAVES = ['#3f5f34', '#4a6a3a', '#355a2e', '#56763e', '#2f4a28'];
+  const leafy = (x: number, y: number, z: number, h: number) => {
+    deco(b, new CylinderGeometry(0.3 + h * 0.025, 0.45 + h * 0.035, h, 6), [x, y + h / 2, z], BARK);
+    const n = 2 + Math.floor(rnd() * 3);
+    for (let k = 0; k < n; k++) {
+      const r = 1.6 + rnd() * 2.2;
+      deco(b, new IcosahedronGeometry(r, 0), [x + (rnd() - 0.5) * 2.4, y + h * (0.65 + rnd() * 0.35), z + (rnd() - 0.5) * 2.4], LEAVES[Math.floor(rnd() * LEAVES.length)], [rnd() * 3, rnd() * 3, 0]);
+    }
+  };
+  const fir = (x: number, y: number, z: number, h: number) => {
+    deco(b, new CylinderGeometry(0.35, 0.55, h * 0.4, 6), [x, y + h * 0.2, z], BARK);
+    for (let k = 0; k < 3; k++) deco(b, new ConeGeometry(3.2 - k * 0.8, h * 0.45, 7), [x, y + h * (0.35 + k * 0.2), z], LEAVES[(k + Math.floor(rnd() * 5)) % LEAVES.length]);
+  };
+  // East and west: a hedge along the edge, then five ranks of mixed trees, then firs.
+  for (const side of [-1, 1]) {
+    for (let z = -16; z < 146; z += 2.2) {
+      const y = groundY(z);
+      bush(b, side * (17.6 + rnd() * 0.8), z, 1.3 + rnd() * 0.8, Math.floor(z * 13 + side * 5) + 400, y);
+    }
+    for (let rank = 0; rank < 5; rank++) {
+      for (let z = -16 + rank * 1.3; z < 146; z += 4.2 + rnd() * 1.6) {
+        const x = side * (19.5 + rank * 3.4 + rnd() * 2);
+        const y = groundY(z);
+        const h = 8 + rnd() * 7 + (z >= 44 && z < 104 ? 5 : 0);
+        if (rnd() < 0.55) leafy(x, y, z, h);
+        else fir(x, y, z, h + 3);
+      }
+    }
+    for (let z = -16; z < 150; z += 5) fir(side * (38 + rnd() * 3), groundY(z), z, 22 + rnd() * 6);
+  }
+  // Behind the gateway (south, past the wall back to the grounds) and past the Old Oak (north).
+  for (const [zFrom, zTo, y] of [
+    [-16, -2, 0],
+    [132, 150, 13],
+  ]) {
+    for (let z = zFrom; z < zTo; z += 3.6) {
+      for (let x = -16; x <= 16; x += 4 + rnd() * 1.5) {
+        if (rnd() < 0.5) leafy(x + rnd(), y, z + rnd(), 9 + rnd() * 6);
+        else fir(x + rnd(), y, z + rnd(), 12 + rnd() * 6);
+      }
+    }
+  }
 }
 
 /**

@@ -176,7 +176,7 @@ test("Pip's kite: no Pip before Thwackwort; accept, fetch it off the north walkw
 test("Oswin's book: a rune tile on the mezzanine bounces you onto the bookcase tops", async ({ page, browserName }) => {
   await start(page, 'springwell', 'upper');
   expect(await givers(page)).toEqual(['book']);
-  await talk(page, [-28, 0, 15.6]);
+  await talk(page, [-26.3, 0, 20.4]);
   expect(await flags(page)).toEqual(['quest:book']);
   expect(await castAt(page, [-30, 5, 37.3], [-30, 5.1, 37.7], 0, 0.3)).toBe('springwell');
   const up = await page.evaluate(async () => {
@@ -207,7 +207,7 @@ test("Oswin's book: a rune tile on the mezzanine bounces you onto the bookcase t
     tw.advance(0.3);
   });
   await shot(page, 'm15-library-ledge', browserName);
-  await talk(page, [-28, 0, 15.6]);
+  await talk(page, [-26.3, 0, 20.4]);
   expect(await flags(page)).toContain('quest:book:done');
 });
 
