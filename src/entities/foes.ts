@@ -30,7 +30,7 @@ import type { SpellHit, SpellTarget } from '../spells/targets';
 import { paint } from '../world/builder';
 import { worldMaterial } from '../world/materials';
 import { mergeChildren } from '../world/merge';
-import { dressWith, modelIslands } from './models';
+import { dressWith, modelIslands, type Island } from './models';
 import type { Entity, SpecOf, WorldContext } from './types';
 
 /**
@@ -134,12 +134,45 @@ export class Hexling implements Entity, SpellTarget {
     this.root.add(this.body);
     // Bigger than a real fairy, so she reads from across a room.
     this.body.scale.setScalar(1.4);
+    const model = modelIslands('hexling');
+    if (model) this.wear(model);
     this.root.traverse((o) => (o.castShadow = o instanceof Mesh && !(o.material instanceof MeshBasicMaterial)));
     this.root.position.copy(this.pos);
     ctx.scene.add(this.root);
     this.collider = ctx.physics.world.createCollider(RAPIER.ColliderDesc.ball(0.55).setTranslation(this.pos.x, this.pos.y, this.pos.z).setSensor(true));
     this.marker = new RuneMarker(ctx.scene, 'thwackwort', 0.55);
     ctx.targets.add(this);
+  }
+
+  /**
+   * Wear the fairy model (its waist at her flying centre): wings to their flapping pivots, legs
+   * to their swing, the wand tip's glow kept as her own (it swells in the wind-up).
+   */
+  private modelWings = false;
+
+  private wear(model: Island[]): void {
+    this.modelWings = true;
+    const DROP = -0.7;
+    const toRoot = new Matrix4().makeTranslation(0, DROP, 0);
+    // Root space at rest into the body's own (scaled) space.
+    this.root.updateMatrixWorld(true);
+    const inBody = (x: number, y: number, z: number) => this.body.worldToLocal(this.root.localToWorld(new Vector3(x, y + DROP, z)));
+    for (const w of this.wings) w.pivot.position.copy(inBody(w.side * 0.03, w.lower ? 1.05 : 1.2, -0.08));
+    const legs = this.body.getObjectByName('legs')!;
+    legs.position.copy(inBody(0, 0.85, 0));
+    const hand = this.body.getObjectByName('hand')!;
+    hand.position.copy(inBody(0.22, 1.1, 0.3));
+    this.root.updateMatrixWorld(true);
+    dressWith(this.root, model, toRoot, (i) => {
+      const { x, y } = i.center;
+      if (i.mat === 'glow_ffb0f4') return null;
+      if (i.mat.startsWith('wing_')) {
+        const w = this.wings.find((k) => k.side === (x > 0 ? 1 : -1) && k.lower === y < 1.0)!;
+        return { part: w.pivot };
+      }
+      if (i.mat === 'mat_24102e' && y < 0.86 && Math.abs(x) < 0.08) return { part: legs };
+      return { part: this.body };
+    }, [hand]);
   }
 
   aimPoint(out: Vector3): Vector3 {
@@ -276,7 +309,8 @@ export class Hexling implements Entity, SpellTarget {
     // Quick shallow beats; the lower pair a touch behind the upper. Down, they droop and twitch.
     for (const w of this.wings) {
       const beat = down ? Math.sin(this.t * 9) * 0.05 : Math.sin(this.t * 24 - (w.lower ? 0.6 : 0)) * 0.55;
-      w.pivot.rotation.y = w.side * (0.3 + beat);
+      // The model's wings are already spread: they beat about that, the built ones about 0.3.
+      w.pivot.rotation.y = w.side * ((this.modelWings ? -0.1 : 0.3) + beat * (this.modelWings ? 0.6 : 1));
       w.pivot.rotation.x = down ? 0.5 : 0;
     }
     const legs = this.body.getObjectByName('legs');
