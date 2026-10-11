@@ -1,3 +1,4 @@
+import { loadModels } from './entities/models';
 import RAPIER from '@dimforge/rapier3d-compat';
 import { Vector3 } from 'three';
 import { createTuningPanel } from './engine/debug';
@@ -12,7 +13,8 @@ const testMode = params.has('test');
 const sandboxLevel = params.get('level');
 
 async function boot(): Promise<void> {
-  await RAPIER.init();
+  // Physics and the foe models load together; the game starts once both are in.
+  await Promise.all([RAPIER.init(), loadModels()]);
   const canvas = document.getElementById('game') as HTMLCanvasElement;
   const game = new Game(canvas, { manual: testMode });
   game.debugStats = debug;

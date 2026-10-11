@@ -10,7 +10,9 @@ import {
   IcosahedronGeometry,
   MathUtils,
   Mesh,
+  Matrix4,
   MeshStandardMaterial,
+  type Object3D,
   PlaneGeometry,
   Shape,
   SphereGeometry,
@@ -19,6 +21,7 @@ import {
   type BufferGeometry,
 } from 'three';
 import { mergeChildren } from '../world/merge';
+import { dressWith, modelIslands, type Island } from './models';
 import { POINTS } from '../data/houses';
 import { angleDiff } from '../player/controller';
 import { RuneMarker } from '../spells/runes';
@@ -99,6 +102,8 @@ export class Rattlecoat implements Entity, SpellTarget {
     this.kcc.enableSnapToGround(0.3);
     this.visor = new MeshStandardMaterial({ color: '#2a2230', emissive: new Color('#ff8a2a'), emissiveIntensity: 0.6 });
     this.build();
+    const model = modelIslands('rattlecoat');
+    if (model) this.wear(model);
     ctx.scene.add(this.root);
     this.marker = new RuneMarker(ctx.scene, 'thwackwort', 0.7);
     ctx.targets.add(this);
@@ -236,6 +241,29 @@ export class Rattlecoat implements Entity, SpellTarget {
     mergeChildren(this.armL);
     mergeChildren(this.armR);
     mergeChildren(this.body, [helm, this.armL, this.armR, ...this.tabard]);
+  }
+
+  /** Wear the knight model: each piece goes to the limb, helm or tabard panel it belongs to. */
+  private wear(model: Island[]): void {
+    let helm: Object3D = this.body;
+    this.body.traverse((o) => {
+      if ((o as Mesh).material === this.visor) helm = o.parent!;
+    });
+    // Pivots at the model's own joints: hips at 1.0, shoulders at 1.55.
+    this.legL.position.set(0.15, 1.0, 0);
+    this.legR.position.set(-0.15, 1.0, 0);
+    this.armL.position.set(0.42, 0.7, 0);
+    this.armR.position.set(-0.42, 0.7, 0);
+    const tabard = (i: Island) => (i.mat === 'mat_b01622' || i.mat === 'mat_840f1a') && Math.abs(i.center.z) >= 0.12 && i.center.y < 1.62 && Math.abs(i.center.x) < 0.14;
+    dressWith(this.root, model, new Matrix4(), (i) => {
+      const { x, y } = i.center;
+      if (i.mat === 'glow_ff8a1a') return { part: helm, material: this.visor };
+      if (tabard(i)) return { part: this.tabard[i.center.z > 0 ? 0 : 1] };
+      if (y > 1.72 || (y > 1.64 && Math.abs(x) < 0.17)) return { part: helm };
+      if (Math.abs(x) > 0.3 && y < 1.45) return { part: x > 0 ? this.armL : this.armR };
+      if (Math.abs(x) > 0.05 && Math.abs(x) < 0.3 && y < 1.05 && !(y > 0.94 && i.mat === 'mat_eadcb6' && i.max.y - i.min.y < 0.2)) return { part: x > 0 ? this.legL : this.legR };
+      return { part: this.body };
+    });
   }
 
   // ---------------------------------------------------------------- SpellTarget
