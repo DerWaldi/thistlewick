@@ -145,7 +145,9 @@ export class SweetField {
           this.state.collectSweet(s.kind, s.pos.clone(), s.id);
           return false;
         }
-        if (d < magnet) s.magnet = true;
+        // Only through open air: the Sweet Tooth Charm's reach mustn't pull sweets through hay
+        // bales, hedges or walls.
+        if (d < magnet && this.inSight(s.pos, target, d)) s.magnet = true;
       }
       if (s.magnet) {
         // Accelerate towards the player; quick enough to never feel like it's chasing you.
@@ -155,6 +157,12 @@ export class SweetField {
       }
       return true;
     });
+  }
+
+  private inSight(from: Vector3, to: Vector3, d: number): boolean {
+    if (d < 0.9) return true;
+    const dir = to.clone().sub(from).normalize();
+    return !this.physics.raycast(from, dir, d - 0.4, this.player.collider, (c) => !this.physics.getInfo(c)?.seeThrough);
   }
 
   private fall(s: Sweet, dt: number): void {

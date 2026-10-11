@@ -11,8 +11,9 @@ import { barrel, bush, cobweb, crate, deco, Glow, grass, ivy, mushrooms, pottedP
  *   Potting Shed   x -5..5,  z 0..8.5    a checkpoint; vines across the door north
  *   Briar Maze     x -9..9,  z 8.5..28.5 three hedge rows (3 m, ungrabbable), each passable
  *                                        only by burning a briar plug (briars hurt to touch);
- *                                        a briar clump across lane A-B; two Gnarlings in lane
- *                                        B-C and a brazier there that scares them off; vines
+ *                                        a briar clump across lane A-B; two Gnarlings in each
+ *                                        of the first two lanes; two more in lane B-C and a
+ *                                        brazier there that scares them off; vines
  *                                        over the exit (east end of lane C-D)
  *   Lily Pond      x -9..9,  z 28.5..48.5 water z 31.5..44.3. A drawbridge (rope on the south
  *                                        bank) reaches the island; two crates hang on ropes over
@@ -343,6 +344,7 @@ function build(b: LevelBuilder): void {
 
   snapweedBeds(b);
   hothouse(b, flames);
+  mazeGnarlings(b);
 
   flames.finish(b, '#ffb060');
   b.finish();
@@ -382,7 +384,9 @@ function snapweedBeds(b: LevelBuilder): void {
     { type: 'sweet', kind: 'bramble', pos: [-8.3, 0.6, 76] },
     { type: 'sweetLine', kind: 'fizzwort', from: [-3, 0.6, 81], to: [4, 0.6, 81], count: 4 },
   );
-  signboard(b, 'Snapweed!\nDo not feed.', [0, 2.2, 73.08], Math.PI);
+  // On posts in front of the hedge: hung on it, its leaf clumps covered the words.
+  signboard(b, 'Snapweed!\nDo not feed.', [0, 2.2, 72.55], Math.PI);
+  for (const x of [-0.9, 0.9]) deco(b, new BoxGeometry(0.12, 2.2, 0.12), [x, 1.1, 72.66], COLORS.woodDark);
   grass(b, -9, 9, 69, 88, 0, 2);
   for (const [x, z, sd] of [
     [-8.3, 72, 3],
@@ -391,6 +395,21 @@ function snapweedBeds(b: LevelBuilder): void {
   ] as [number, number, number][]) {
     mushrooms(b, x, z, 4, sd);
   }
+}
+
+/**
+ * More Gnarlings in the maze's first two lanes, so it's a fight from the start, not just in
+ * the brazier lane. Built last so the earlier specs keep their ids.
+ */
+function mazeGnarlings(b: LevelBuilder): void {
+  b.add(
+    // Lane A (z 8.5..13.5), guarding the burnable plug at its far end.
+    { type: 'gnarling', pos: [3, 0, 11.6], wander: 2 },
+    { type: 'gnarling', pos: [7, 0, 11.2], wander: 1.5 },
+    // Lane B (z 13.5..18.5), one either side of the briar clump.
+    { type: 'gnarling', pos: [4, 0, 16], wander: 2 },
+    { type: 'gnarling', pos: [-4.5, 0, 16], wander: 2 },
+  );
 }
 
 /**

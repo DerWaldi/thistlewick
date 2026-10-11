@@ -226,6 +226,18 @@ test('Ashcombe teaches Cindersnap: the cobweb, the rope and crate, the braziers 
 
 test('the Briar Maze: briars bite, burn away, and Gnarlings keep clear of a lit brazier', async ({ page, browserName }) => {
   await prepared(page, 'glasshouse', { cinder: true, flags: ['glasshouse-hint-maze', 'glasshouse-hint-gnarlings'] });
+  // (The first two lanes' Gnarlings would make this a brawl; put them away. The brazier lane's stay.)
+  const early = await page.evaluate(() => {
+    let n = 0;
+    for (const e of (window.__tw.game as unknown as G).world.entities as { constructor: { name: string }; pos?: { y: number; z: number }; home?: { y: number } }[]) {
+      if (e.constructor.name !== 'Gnarling' || !e.pos || e.pos.z > 18.5) continue;
+      n++;
+      e.pos.y = -100;
+      if (e.home) e.home.y = -100;
+    }
+    return n;
+  });
+  expect(early).toBe(4);
   // The vines out of the shed.
   expect(await burn(page, [0, 0, 5], [0, 1.6, 8.5])).toBe('cindersnap');
   // Walking into the first briar plug hurts.
@@ -250,7 +262,7 @@ test('the Briar Maze: briars bite, burn away, and Gnarlings keep clear of a lit 
       await tw.idle();
       const g = tw.game as unknown as G;
       for (const e of g.world.entities) {
-        if (e.constructor.name !== 'Gnarling' || !e.pos) continue;
+        if (e.constructor.name !== 'Gnarling' || !e.pos || e.pos.y < -50) continue;
         closest = Math.min(closest, Math.hypot(e.pos.x - 0.5, e.pos.z - 21));
       }
     }
