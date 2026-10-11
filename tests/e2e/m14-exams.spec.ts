@@ -389,7 +389,7 @@ test('the Golden Thistle ends the year: points, the House Cup, the ending', asyn
     }
     // Behind on points, so the Headmistress has to step in.
     g.state.housePoints.bramblecote = 900;
-    // The Brass Examiner (tested on its own) already beaten: the cage over the Thistle is open.
+    // The Brass Examiner (tested on its own) already beaten: the Thistle waits in the hall.
     g.state.flags.add('down:exam-boss');
     g.state.flags.add('exam-boss-woken');
     tw.loadLevel('exams');
@@ -397,7 +397,7 @@ test('the Golden Thistle ends the year: points, the House Cup, the ending', asyn
     let ended = false;
     (tw.game as unknown as { events: { on(t: string, f: () => void): void } }).events.on('yearComplete', () => (ended = true));
     // The way home stays shut until the Thistle is taken.
-    tw.teleport(0, 0, 205, 0);
+    tw.teleport(0, 0, 224, 0);
     tw.advance(0.3);
     tw.interact();
     await tw.idle();
@@ -407,7 +407,7 @@ test('the Golden Thistle ends the year: points, the House Cup, the ending', asyn
     tw.setCamera(0, 0.15);
     tw.advance(0.3);
     tw.render();
-    tw.teleport(0, 1.6, 202, 0);
+    tw.teleport(0, 0, 208, 0);
     tw.advance(0.6);
     await tw.idle();
     tw.advance(0.3);
@@ -425,10 +425,10 @@ test('the Golden Thistle ends the year: points, the House Cup, the ending', asyn
     tw.advance(0.3);
   });
   await shot(page, 'm14-thistle-hall', browserName);
-  // Home through the door behind the plinth, straight to the Lantern Hall.
+  // Home through the door at the far end, straight to the Lantern Hall.
   const home = await page.evaluate(async () => {
     const tw = window.__tw;
-    tw.teleport(0, 0, 205, 0);
+    tw.teleport(0, 0, 224, 0);
     tw.advance(0.3);
     tw.interact();
     await tw.idle();

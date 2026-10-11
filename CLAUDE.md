@@ -153,9 +153,9 @@ Each render frame then runs the camera, animator, level and entity visuals, cast
 
 ### Difficulty
 - Every trial ends in a harder room built around the new foes before its Star: the Sootling's Leap (trial), the Counting House (vault), the Weathercock Run (tower), the Moth Ossuary (catacombs), the Hothouse Pool (glasshouse), the Sluice Canal (cisterns), the Mainspring (clockworks). The old Star chambers are passages now; Stars and exit doors were moved by replacing their specs in place (ids stay put) and the new rooms are appended last. `tests/e2e/m18-hard.spec.ts` plays each one.
-- The exams have a foe in every room and the Brass Examiner in the Thistle Hall; the Golden Thistle is caged (four gates on `exam-boss`) until it falls (flag `down:exam-boss`).
+- The exams have a foe in every room and the Brass Examiner in the Thistle Hall; the Golden Thistle (a `star` with `dropWhen: 'exam-boss'`) appears where it falls (flag `down:exam-boss`), in a 36 m hall with pillars.
 - Gnarlings are quicker than they were (gnarling.ts constants). Frozen Ember Crabs are rough ice (not slippery): they're stepping stones, and crabs you need as stones have `reform` (a shattered one crawls back after that many seconds).
-- First-time foe loot lands on the ground under the foe (or at your feet), never in a chasm. The Examiner keeps `avoid` distance from the caged plinth.
+- First-time foe loot lands on the ground under the foe (or at your feet), never in a chasm. 
 - One-way traps: every lift you can be knocked off of either floats home (`returnAfter`) or can be called from where you respawn.
 - Foes you can only stun (crabs without Rimewhistle, Hexlings, Sootlings) mustn't shell you down the next corridor: drop a gate behind the player (`gate` with `when: []` and `shutWhen`, set by a `trigger` with `signal` and `perVisit`), with a checkpoint past it so a respawn never lands behind it. The Ember Crypt does this.
 - Foes that throw things need line of sight; give rooms cover. Hexlings high up are hard to aim at (camera pitch), which is part of the fight.

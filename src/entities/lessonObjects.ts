@@ -76,10 +76,30 @@ export class ThistleStar implements Entity {
     this.group.add(star, this.light);
     this.group.position.copy(this.pos);
     ctx.scene.add(this.group);
+    const drop = spec.dropWhen;
+    if (drop && !ctx.signals.get(drop)) {
+      // Not there yet: it falls from the boss when the boss falls.
+      this.hidden = true;
+      this.group.visible = false;
+      this.light.intensity = 0;
+      ctx.events.on('bossDown', ({ pos }) => {
+        this.pos.set(pos.x, this.pos.y, pos.z);
+        this.group.position.copy(this.pos);
+      });
+      ctx.signals.onChange([drop], () => {
+        if (!this.hidden || !ctx.signals.get(drop)) return;
+        this.hidden = false;
+        this.group.visible = true;
+        this.light.intensity = 4;
+        ctx.fx.burst(this.pos.clone(), 50, new Color('#ffe08a'), 5, 0.14, 3);
+      });
+    }
   }
 
+  private hidden = false;
+
   fixedUpdate(): void {
-    if (this.taken) return;
+    if (this.taken || this.hidden) return;
     // Generous: it floats over a pedestal, and walking up to it should be enough.
     const p = this.ctx.player.pos;
     if (Math.hypot(p.x - this.pos.x, p.z - this.pos.z) < 1.3 && Math.abs(p.y - this.pos.y) < 1.8) {
@@ -95,7 +115,7 @@ export class ThistleStar implements Entity {
   }
 
   frameUpdate(dt: number): void {
-    if (this.taken) return;
+    if (this.taken || this.hidden) return;
     this.t += dt;
     this.group.rotation.y = this.t * 1.4;
     this.group.position.y = this.pos.y + Math.sin(this.t * 2) * 0.12;

@@ -484,7 +484,7 @@ test('the Brass Examiner: jump its slams, break six seals with the spell each sh
   test.setTimeout(120_000);
   await sandbox(page, 'exams', ['exams-entered', 'exam-boss-woken']);
   await calm(page, ['Hexling', 'Sootling']);
-  // The Thistle's cage is shut while he stands.
+  // No Thistle while he stands.
   expect(await page.evaluate(() => window.__tw.signal('exam-boss'))).toBe(false);
   type B = { constructor: { name: string }; state: string; hp: number; spell: string; pos: { x: number; y: number; z: number } };
   const fight = await page.evaluate(async () => {
@@ -529,6 +529,18 @@ test('the Brass Examiner: jump its slams, break six seals with the spell each sh
   expect(fight.state).toBe('down');
   expect(fight.cage).toBe(true);
   expect(fight.jumpsCleared).toBeGreaterThan(2);
+  // The Golden Thistle drops where he fell, and can be picked up there.
+  const star = await page.evaluate(async () => {
+    const tw = window.__tw;
+    type E = { constructor: { name: string }; pos: { x: number; z: number }; hidden?: boolean };
+    const es = (tw.game as unknown as { world: { entities: E[] } }).world.entities;
+    const boss = es.find((e) => e.constructor.name === 'Examiner')!;
+    const s = es.find((e) => e.constructor.name === 'ThistleStar')!;
+    const near = Math.hypot(s.pos.x - boss.pos.x, s.pos.z - boss.pos.z);
+    return { hidden: s.hidden, near };
+  });
+  expect(star.hidden).toBe(false);
+  expect(star.near).toBeLessThan(1);
   await page.evaluate(() => {
     const tw = window.__tw;
     tw.teleport(0, 0, 192, 0);

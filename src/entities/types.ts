@@ -157,7 +157,14 @@ export type EntitySpec = SpecBase &
         /** Fire once per visit to the level rather than once per save (hints). */
         perVisit?: boolean;
       }
-    | { type: 'star'; id: string; pos: V3; script?: string }
+    | {
+        type: 'star';
+        id: string;
+        pos: V3;
+        script?: string;
+        /** Hidden until this signal is on; if a boss going down turns it on, it appears where the boss fell. */
+        dropWhen?: string;
+      }
     | {
         type: 'rattlecoat';
         id: string;

@@ -262,7 +262,7 @@ export function currentObjective(s: GameState): Objective {
       detail: 'The great iron door at the top of the grand stair in the Lantern Hall, under the school crest.',
       route: {
         hub: [outOfWestWing, upToGallery, { pos: [0, 5, 29.9] }],
-        exams: [{ pos: [0, 2.6, 202] }],
+        exams: [{ pos: [0, 1.4, 208] }],
       },
     };
   }
