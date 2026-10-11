@@ -201,6 +201,7 @@ Doors enforce the flow: the classroom exit has `lockedDuring: '<spell>'` (no lea
 - Water has animated glints and a lighter rim at grazing angles.
 - The world material darkens vertical faces near y=0, as a cheap contact shadow.
 - Set dressing (all merged into the level mesh, except cobwebs, which share one batched mesh per level): `rug`, `bench`, `table` (with candles into a `Glow`), `candlestick`, `pottedPlant`, `urn`, `bookStack`, `cauldron`, `armour`, `barrel`, `cobweb(corner, d1, d2)`, `rubble`, `wallTorch`, `ivy`, `mushrooms`, `bush`. Furniture gets invisible box colliders. Remember walls are 1 m thick centred on `at`, so faces sit at `at ± 0.5`.
+- The hub's `skyline()` puts a castle on top of the flat ceilings (the hall's slate gable roof, parapets, corner turrets, lantern-house and chimneys; roofs on the Long Gallery and corridor legs; two towers outside the court's north corners). Decoration only, no colliders: climbs are fenced off from the roofs. Perched turrets start above the ceiling below them so nothing shows indoors.
 - `wall(..., { cap })` adds an invisible, ungrabbable, camera-ignored extension on top of a boundary wall, so nobody hops onto it and out of the level. Use it on any outer wall whose top can be reached from a ledge, ruin or walkway.
 - `portrait()` paints a `PortraitSpec` (oil-painting style: curtain, brushwork, varnish; optional `hairStyle`, `collar`, `expression`, `jewel`, `eyes`) into an ornate gilt frame with rosettes and a plaque.
 
