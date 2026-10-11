@@ -255,12 +255,15 @@ function buildHub(b: LevelBuilder): void {
   for (const x of [-3.9, 3.9]) urn(b, [x, 0, 13.6], true, x > 0 ? 5 : 6);
   armour(b, [-4.6, 0, 29.3], Math.PI, '#8a2a3a');
   armour(b, [4.6, 0, 29.3], Math.PI, '#2f5a6a');
-  b.box([-1.5, 5.8, 27.6], [1.8, 0.08, 0.8], { color: COLORS.wood, pattern: 'planks' });
-  for (const x of [-2.25, -0.75]) deco(b, new BoxGeometry(0.1, 0.76, 0.6), [x, 5.38, 27.6], COLORS.woodDark);
-  b.box([-1.5, 5.4, 27.6], [1.4, 0.8, 0.5], { invisible: true });
-  bookStack(b, [-2.1, 5.84, 27.5], 5, 3);
-  bookStack(b, [-1.1, 5.84, 27.7], 3, 8);
-  candlestick(b, candle, [-1.6, 5.84, 27.85], 0.2);
+  // A writing desk at the gallery's west end (clear of the Examination Hall's runner).
+  const DX = 9.6;
+  const DZ = 22.6;
+  b.box([DX, 5.8, DZ], [1.8, 0.08, 0.8], { color: COLORS.wood, pattern: 'planks' });
+  for (const x of [DX - 0.75, DX + 0.75]) deco(b, new BoxGeometry(0.1, 0.76, 0.6), [x, 5.38, DZ], COLORS.woodDark);
+  b.box([DX, 5.4, DZ], [1.4, 0.8, 0.5], { invisible: true });
+  bookStack(b, [DX - 0.6, 5.84, DZ - 0.1], 5, 3);
+  bookStack(b, [DX + 0.4, 5.84, DZ + 0.1], 3, 8);
+  candlestick(b, candle, [DX - 0.1, 5.84, DZ + 0.25], 0.2);
   for (const [c, d1, d2] of [
     [[-12, HH - 0.6, 0], [1, 0], [0, 1]],
     [[12, HH - 0.6, 0], [-1, 0], [0, 1]],

@@ -1062,7 +1062,7 @@ export const DIALOGUES: Record<string, Script> = {
   // ---------------------------------------------------------------- the Final Examinations
 
   examsDoor: async ({ say }) => {
-    await say([{ speaker: 'sign', text: '"THE EXAMINATION HALL. Final-year... no, FIRST-year examinations. Pupils who have passed all seven lessons only."' }]);
+    await say([{ speaker: 'sign', text: '"THE EXAMINATION HALL. End-of-year examinations, First Year. For pupils who have passed all seven lessons."' }]);
   },
 
   examsIntro: async ({ say }) => {

@@ -118,7 +118,15 @@ function build(b: LevelBuilder): void {
   for (let i = 0; i < 6; i++) {
     deco(b, new CylinderGeometry(0.03, 0.03, 0.5 + (i % 3) * 0.15, 4), [-8 + i * 0.25, 2.2 - (i % 3) * 0.08, 21.7], '#c8d8f0');
   }
-  for (let x = -9; x <= 9; x += 3) deco(b, new ConeGeometry(0.3, 0.9, 3), [x, 1.7, 22.3], x % 2 ? '#6a7a9a' : '#e8f0ff', [0, 0, Math.PI / 2]);
+  // Flags on short poles along the north parapet, in the four house colours.
+  const FLAGS = ['#b0362f', '#4f7fb8', '#3f7a4a', '#d9a62e'];
+  for (let i = 0, x = -9; x <= 9; x += 3, i++) {
+    deco(b, new CylinderGeometry(0.035, 0.045, 2.2, 5), [x, 2.3, 22.3], '#3a3340');
+    deco(b, new SphereGeometry(0.07, 6, 4), [x, 3.45, 22.3], '#c99a3e');
+    // A slim pennant streaming off the pole (a flattened three-sided cone, drooping a little).
+    const pennant = new ConeGeometry(0.28, 1.2, 3).scale(1, 1, 0.12).rotateZ(Math.PI / 2 - 0.12);
+    deco(b, pennant, [x - 0.6, 3.15, 22.3], FLAGS[i % FLAGS.length]);
+  }
   deco(b, new SphereGeometry(0.4, 8, 6), [-7, 1.6, 21.4], '#c99a3e');
   // The view from the top: hills all round, far below, and the lake glinting to the south.
   for (let i = 0; i < 30; i++) {
