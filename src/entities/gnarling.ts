@@ -10,6 +10,8 @@ import {
   MeshStandardMaterial,
   OctahedronGeometry,
   SphereGeometry,
+  BoxGeometry,
+  type BufferGeometry,
   Vector3,
 } from 'three';
 import { POINTS } from '../data/houses';
@@ -65,7 +67,8 @@ export class Gnarling implements Entity, SpellTarget, Creature {
   private body = new Group();
   private eyes: MeshStandardMaterial;
   private stars = new Group();
-  private legs: Mesh[] = [];
+  private legs: Group[] = [];
+  private arms: Group[] = [];
 
   constructor(
     private spec: SpecOf<'gnarling'>,
@@ -96,59 +99,89 @@ export class Gnarling implements Entity, SpellTarget, Creature {
     if (this.state !== 'gone') this.banish();
   }
 
+  /**
+   * A root creature: a faceted bark body under a big spiky crown of leaves, glowing eyes
+   * under a scowling brow, long root arms ending in three claws, and root legs that splay into
+   * toes. Arms and legs are their own groups so they can swing.
+   */
   private buildModel(): void {
     const bark = new MeshStandardMaterial({ color: '#6b4a2e', flatShading: true, roughness: 0.95 });
     const barkDark = new MeshStandardMaterial({ color: '#4a3220', flatShading: true, roughness: 0.95 });
-    const leaf = new MeshStandardMaterial({ color: '#6e9a3e', flatShading: true, roughness: 0.9 });
-    const mouthMat = new MeshStandardMaterial({ color: '#1b0f08' });
+    const leaf = new MeshStandardMaterial({ color: '#6aa83a', flatShading: true, roughness: 0.9 });
+    const leafDark = new MeshStandardMaterial({ color: '#3f7a2a', flatShading: true, roughness: 0.9 });
+    const add = (parent: Group, geo: BufferGeometry, mat: MeshStandardMaterial, p: [number, number, number], r: [number, number, number] = [0, 0, 0], sc?: [number, number, number]) => {
+      const m = new Mesh(geo, mat);
+      m.position.set(...p);
+      m.rotation.set(...r);
+      if (sc) m.scale.set(...sc);
+      m.castShadow = true;
+      parent.add(m);
+      return m;
+    };
 
-    const torso = new Mesh(new IcosahedronGeometry(0.34, 0), bark);
-    torso.scale.set(1, 1.15, 0.95);
-    torso.position.y = 0.42;
-    torso.castShadow = true;
-    this.body.add(torso);
-    // Knobbly bits.
-    for (const [px, py, pz, s] of [
-      [0.22, 0.55, 0.12, 0.09],
-      [-0.25, 0.35, -0.05, 0.08],
-      [0.05, 0.2, -0.26, 0.1],
+    // The body: a faceted lump of bark, wider at the shoulders, with ridges down it.
+    add(this.body, new IcosahedronGeometry(0.3, 1), bark, [0, 0.58, 0], [0, 0.3, 0], [1, 1.2, 0.88]);
+    for (const [a, y, len] of [
+      [0.5, 0.52, 0.34],
+      [-0.6, 0.6, 0.3],
+      [2.4, 0.55, 0.36],
+      [-2.2, 0.5, 0.3],
+      [3.1, 0.62, 0.28],
     ]) {
-      const k = new Mesh(new OctahedronGeometry(s, 0), barkDark);
-      k.position.set(px, py, pz);
-      this.body.add(k);
+      add(this.body, new OctahedronGeometry(0.06, 0), barkDark, [Math.sin(a) * 0.27, y, Math.cos(a) * 0.24], [0, a, 0], [0.7, len / 0.12, 0.7]);
     }
-    // Leaf tuft.
-    for (let i = 0; i < 4; i++) {
-      const l = new Mesh(new ConeGeometry(0.08, 0.36, 4), leaf);
-      const a = (i / 4) * Math.PI * 2;
-      l.position.set(Math.cos(a) * 0.08, 0.86, Math.sin(a) * 0.08);
-      l.rotation.set(Math.sin(a) * 0.5, 0, -Math.cos(a) * 0.5);
-      l.castShadow = true;
-      this.body.add(l);
-    }
-    // Eyes and a grumpy mouth.
-    const eyeGeo = new SphereGeometry(0.06, 6, 4);
+    // A scowling brow over deep-set eyes, and a small jagged mouth.
+    add(this.body, new BoxGeometry(0.3, 0.06, 0.08), barkDark, [0, 0.74, 0.24], [0.2, 0, 0]);
+    const eyeGeo = new SphereGeometry(0.055, 6, 4);
     for (const side of [-1, 1]) {
-      const e = new Mesh(eyeGeo, this.eyes);
-      e.position.set(side * 0.12, 0.52, 0.28);
-      this.body.add(e);
+      const e = add(this.body, eyeGeo, this.eyes, [side * 0.1, 0.67, 0.25], [0, 0, side * 0.35], [1.25, 0.85, 0.7]);
+      e.castShadow = false;
     }
-    const mouth = new Mesh(new CylinderGeometry(0.1, 0.1, 0.03, 6, 1, false, 0, Math.PI), mouthMat);
-    mouth.rotation.set(Math.PI / 2, 0, Math.PI);
-    mouth.position.set(0, 0.36, 0.3);
-    this.body.add(mouth);
-    // Twig arms and stubby legs.
+    // The crown: a ring of long leaf spikes around a tall centre one, leaning out.
+    add(this.body, new ConeGeometry(0.07, 0.5, 4), leaf, [0, 1.08, -0.02]);
+    // Two rings: long spikes splaying wide from the top, a shorter mane lower round the head.
+    for (let i = 0; i < 12; i++) {
+      const a = (i / 12) * Math.PI * 2 + 0.2;
+      const len = 0.32 + ((i * 5) % 3) * 0.09;
+      const lean = 0.6 + ((i * 3) % 3) * 0.18;
+      add(this.body, new ConeGeometry(0.06, len, 4), i % 2 ? leafDark : leaf, [Math.cos(a) * 0.15, 0.9 + len * 0.32, Math.sin(a) * 0.13], [Math.sin(a) * lean, 0, -Math.cos(a) * lean]);
+    }
+    for (let i = 0; i < 9; i++) {
+      const a = (i / 9) * Math.PI * 2;
+      if (Math.cos(a) > 0.75) continue; // leave the face clear
+      add(this.body, new ConeGeometry(0.05, 0.24, 4), i % 2 ? leaf : leafDark, [Math.sin(a) * 0.24, 0.84, Math.cos(a) * 0.2], [Math.cos(a) * 1.1, 0, -Math.sin(a) * 1.1]);
+    }
+    // A couple of sprouts on the shoulders.
+    for (const side of [-1, 1]) add(this.body, new ConeGeometry(0.035, 0.16, 4), leafDark, [side * 0.24, 0.8, -0.05], [0, 0, -side * 0.8]);
+
+    // Long root arms, hanging, each with three claws.
     for (const side of [-1, 1]) {
-      const arm = new Mesh(new CylinderGeometry(0.03, 0.04, 0.34, 4), barkDark);
-      arm.position.set(side * 0.34, 0.42, 0.04);
-      arm.rotation.z = side * 0.9;
+      const arm = new Group();
+      arm.position.set(side * 0.27, 0.72, 0.02);
+      arm.rotation.z = side * 0.25;
+      add(arm, new CylinderGeometry(0.035, 0.05, 0.3, 5), barkDark, [0, -0.15, 0], [0, 0, side * 0.2]);
+      add(arm, new CylinderGeometry(0.03, 0.035, 0.26, 5), bark, [side * 0.04, -0.4, 0.02], [0.15, 0, -side * 0.1]);
+      for (let c = 0; c < 3; c++) {
+        add(arm, new ConeGeometry(0.022, 0.15, 4), barkDark, [side * 0.03 + (c - 1) * 0.035, -0.58, 0.04 + (c === 1 ? 0.02 : 0)], [Math.PI + 0.15, 0, (c - 1) * 0.35]);
+      }
+      mergeChildren(arm);
+      this.arms.push(arm);
       this.body.add(arm);
-      const leg = new Mesh(new CylinderGeometry(0.06, 0.05, 0.2, 5), barkDark);
-      leg.position.set(side * 0.13, 0.1, 0);
+    }
+    // Root legs that splay into toes on the ground.
+    for (const side of [-1, 1]) {
+      const leg = new Group();
+      leg.position.set(side * 0.13, 0, 0);
+      add(leg, new CylinderGeometry(0.06, 0.045, 0.34, 5), barkDark, [0, 0.2, 0]);
+      for (let c = 0; c < 3; c++) {
+        const a = (c - 1) * 0.6 + (side > 0 ? 0.2 : -0.2);
+        add(leg, new ConeGeometry(0.035, 0.22, 4), barkDark, [Math.sin(a) * 0.08, 0.03, 0.04 + Math.cos(a) * 0.08], [Math.PI / 2 - 0.15, 0, -a]);
+      }
+      mergeChildren(leg);
       this.legs.push(leg);
       this.body.add(leg);
     }
-    mergeChildren(this.body, this.legs);
+    mergeChildren(this.body, [...this.legs, ...this.arms]);
     this.root.add(this.body);
 
     // Dizzy stars, shown while stunned.
@@ -159,7 +192,7 @@ export class Gnarling implements Entity, SpellTarget, Creature {
       s.position.set(Math.cos(a) * 0.3, 0, Math.sin(a) * 0.3);
       this.stars.add(s);
     }
-    this.stars.position.y = 1.05;
+    this.stars.position.y = 1.35;
     this.stars.visible = false;
     this.root.add(this.stars);
   }
@@ -376,6 +409,10 @@ export class Gnarling implements Entity, SpellTarget, Creature {
     this.body.rotation.z = moving ? Math.sin(t * 14) * 0.12 : 0;
     this.legs[0].position.z = moving ? Math.sin(t * 14) * 0.08 : 0;
     this.legs[1].position.z = moving ? -Math.sin(t * 14) * 0.08 : 0;
+    // Arms: swing with the waddle, rise claws-up in the wind-up, reach forward in the lunge.
+    const armX = this.state === 'windup' ? -2.4 : this.state === 'lunge' ? -1.5 : moving ? Math.sin(t * 14) * 0.5 : Math.sin(t * 1.6) * 0.08;
+    this.arms[0].rotation.x = MathUtils.damp(this.arms[0].rotation.x, armX, 14, dt);
+    this.arms[1].rotation.x = MathUtils.damp(this.arms[1].rotation.x, this.state === 'windup' || this.state === 'lunge' ? armX : moving ? -armX : armX, 14, dt);
 
     const crouch = this.state === 'windup' ? 0.72 : this.state === 'notice' ? 1.15 : 1;
     const sy = MathUtils.damp(this.body.scale.y, crouch, 18, dt);
