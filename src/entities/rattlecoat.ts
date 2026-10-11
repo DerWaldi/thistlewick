@@ -4,13 +4,21 @@ import {
   Color,
   ConeGeometry,
   CylinderGeometry,
+  DoubleSide,
+  ExtrudeGeometry,
   Group,
+  IcosahedronGeometry,
   MathUtils,
   Mesh,
   MeshStandardMaterial,
+  PlaneGeometry,
+  Shape,
   SphereGeometry,
+  TorusGeometry,
   Vector3,
+  type BufferGeometry,
 } from 'three';
+import { mergeChildren } from '../world/merge';
 import { POINTS } from '../data/houses';
 import { angleDiff } from '../player/controller';
 import { RuneMarker } from '../spells/runes';
@@ -72,6 +80,7 @@ export class Rattlecoat implements Entity, SpellTarget {
   private legL = new Group();
   private legR = new Group();
   private visor: MeshStandardMaterial;
+  private tabard: Group[] = [];
   private pieces: { mesh: Mesh; vel: Vector3; spin: Vector3 }[] = [];
 
   constructor(
@@ -88,58 +97,145 @@ export class Rattlecoat implements Entity, SpellTarget {
     ctx.physics.setInfo(this.collider, { noGrab: true });
     this.kcc = ctx.physics.world.createCharacterController(0.02);
     this.kcc.enableSnapToGround(0.3);
-    this.visor = new MeshStandardMaterial({ color: '#2a2230', emissive: new Color('#ff3a1a'), emissiveIntensity: 0.2 });
+    this.visor = new MeshStandardMaterial({ color: '#2a2230', emissive: new Color('#ff8a2a'), emissiveIntensity: 0.6 });
     this.build();
     ctx.scene.add(this.root);
     this.marker = new RuneMarker(ctx.scene, 'thwackwort', 0.7);
     ctx.targets.add(this);
   }
 
+  /**
+   * An undead knight: dark plate over pale bones (thighs, upper arms, ribs and neck show
+   * between the plates), a tattered crimson tabard that swings as it walks, a crested helm with
+   * an orange visor slit, an old sword and a kite shield.
+   */
   private build(): void {
-    const steel = new MeshStandardMaterial({ color: '#9aa0aa', metalness: 0.75, roughness: 0.35, flatShading: true });
-    const dark = new MeshStandardMaterial({ color: '#4a4e58', metalness: 0.6, roughness: 0.5, flatShading: true });
-    const plume = new MeshStandardMaterial({ color: '#b0362f', roughness: 0.9, flatShading: true });
-    const add = (parent: Group, geo: import('three').BufferGeometry, mat: MeshStandardMaterial, p: [number, number, number]) => {
+    // (Low metalness: there's no environment map, so very metallic plate renders black.)
+    const plate = new MeshStandardMaterial({ color: '#676a7a', metalness: 0.35, roughness: 0.45, flatShading: true });
+    const trim = new MeshStandardMaterial({ color: '#a8aab4', metalness: 0.4, roughness: 0.3, flatShading: true });
+    const bone = new MeshStandardMaterial({ color: '#d9cdb0', roughness: 0.85, flatShading: true });
+    const cloth = new MeshStandardMaterial({ color: '#8a1e2a', roughness: 0.95, flatShading: true, side: DoubleSide });
+    const leather = new MeshStandardMaterial({ color: '#4a3020', roughness: 0.9, flatShading: true });
+    const gold = new MeshStandardMaterial({ color: '#d4a548', metalness: 0.4, roughness: 0.35, flatShading: true });
+    const add = (parent: Group, geo: BufferGeometry, mat: MeshStandardMaterial, p: [number, number, number], r: [number, number, number] = [0, 0, 0]) => {
       const m = new Mesh(geo, mat);
       m.position.set(...p);
+      m.rotation.set(...r);
       m.castShadow = true;
       parent.add(m);
       return m;
     };
+
+    // Legs: a bone thigh, a plated knee, a greave and an armoured boot.
     for (const [leg, x] of [
-      [this.legL, 0.2],
-      [this.legR, -0.2],
+      [this.legL, 0.17],
+      [this.legR, -0.17],
     ] as const) {
       leg.position.set(x, 0.85, 0);
-      add(leg, new CylinderGeometry(0.11, 0.13, 0.75, 6), steel, [0, -0.38, 0]);
-      add(leg, new BoxGeometry(0.22, 0.12, 0.36), dark, [0, -0.8, 0.06]);
+      add(leg, new CylinderGeometry(0.045, 0.055, 0.36, 6), bone, [0, -0.2, 0]);
+      add(leg, new SphereGeometry(0.075, 6, 5), bone, [0, -0.02, 0]);
+      add(leg, new IcosahedronGeometry(0.1, 0), plate, [0, -0.4, 0.04]);
+      add(leg, new CylinderGeometry(0.1, 0.085, 0.34, 7), plate, [0, -0.6, 0]);
+      add(leg, new BoxGeometry(0.2, 0.11, 0.34), plate, [0, -0.8, 0.06]);
+      add(leg, new ConeGeometry(0.035, 0.12, 4), trim, [0, -0.72, 0.21], [Math.PI / 2, 0, 0]);
+      mergeChildren(leg);
       this.root.add(leg);
     }
+
     this.body.position.y = 0.85;
     this.root.add(this.body);
-    add(this.body, new CylinderGeometry(0.34, 0.26, 0.3, 8), dark, [0, 0.1, 0]); // belt/skirt
-    add(this.body, new BoxGeometry(0.66, 0.7, 0.42), steel, [0, 0.6, 0]); // breastplate
-    add(this.body, new SphereGeometry(0.2, 8, 6), steel, [0.42, 0.88, 0]); // pauldrons
-    add(this.body, new SphereGeometry(0.2, 8, 6), steel, [-0.42, 0.88, 0]);
+    // Pelvis and spine bones, a ribcage either side of the tabard.
+    add(this.body, new CylinderGeometry(0.2, 0.16, 0.12, 7), bone, [0, 0.04, 0]);
+    add(this.body, new CylinderGeometry(0.035, 0.035, 0.5, 5), bone, [0, 0.3, -0.12]);
+    for (let i = 0; i < 4; i++) {
+      const y = 0.32 + i * 0.09;
+      add(this.body, new TorusGeometry(0.2 - i * 0.008, 0.018, 4, 10, Math.PI * 1.1), bone, [0, y, -0.02], [Math.PI / 2, 0, Math.PI * 0.95]);
+    }
+    // The breastplate over the top of the chest, a spiked gorget, a belt with a gold buckle.
+    add(this.body, new BoxGeometry(0.58, 0.34, 0.36), plate, [0, 0.74, 0.02]);
+    add(this.body, new BoxGeometry(0.6, 0.05, 0.38), trim, [0, 0.58, 0.02]);
+    add(this.body, new CylinderGeometry(0.16, 0.22, 0.14, 8), plate, [0, 0.96, 0]);
+    add(this.body, new BoxGeometry(0.5, 0.08, 0.32), leather, [0, 0.16, 0.02]);
+    add(this.body, new BoxGeometry(0.1, 0.09, 0.04), gold, [0, 0.16, 0.19]);
+    // Spiked pauldrons.
+    for (const x of [0.36, -0.36]) {
+      add(this.body, new SphereGeometry(0.17, 8, 6, 0, Math.PI * 2, 0, Math.PI / 1.6), plate, [x, 0.86, 0], [0, 0, x > 0 ? -0.4 : 0.4]);
+      add(this.body, new ConeGeometry(0.05, 0.22, 4), trim, [x * 1.15, 1.02, 0], [0, 0, x > 0 ? -0.5 : 0.5]);
+    }
+
+    // The tabard, front and back: a crimson cloth hanging from the belt, its hem torn into tongues.
+    for (const [z, flip] of [
+      [0.2, 0],
+      [-0.17, Math.PI],
+    ] as const) {
+      const panel = new Group();
+      panel.position.set(0, 0.62, z);
+      panel.rotation.y = flip;
+      add(panel, new PlaneGeometry(0.36, 0.5), cloth, [0, 0, 0]);
+      add(panel, new PlaneGeometry(0.34, 0.62), cloth, [0, -0.6, 0]);
+      for (let i = 0; i < 4; i++) {
+        const len = 0.18 + ((i * 7) % 3) * 0.08;
+        add(panel, new ConeGeometry(0.045, len, 3).scale(1, 1, 0.15).rotateX(Math.PI), cloth, [-0.13 + i * 0.087, -0.91 - len / 2, 0]);
+      }
+      add(panel, new BoxGeometry(0.05, 0.3, 0.01), gold, [0, -0.45, 0.01]);
+      mergeChildren(panel);
+      this.tabard.push(panel);
+      this.body.add(panel);
+    }
+
+    // The helm: tall and dark, a crimson crest from brow to nape, an orange visor slit.
     const helm = new Group();
-    helm.position.y = 1.2;
+    helm.position.y = 1.18;
     this.body.add(helm);
-    add(helm, new CylinderGeometry(0.2, 0.22, 0.38, 10), steel, [0, 0.12, 0]);
-    add(helm, new SphereGeometry(0.2, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2), steel, [0, 0.31, 0]);
-    add(helm, new BoxGeometry(0.3, 0.05, 0.05), this.visor as MeshStandardMaterial, [0, 0.15, 0.2]);
-    add(helm, new ConeGeometry(0.08, 0.45, 5), plume, [0, 0.62, -0.05]);
+    add(helm, new CylinderGeometry(0.035, 0.035, 0.14, 5), bone, [0, -0.08, 0]);
+    add(helm, new CylinderGeometry(0.18, 0.2, 0.38, 8), plate, [0, 0.14, 0]);
+    add(helm, new SphereGeometry(0.18, 8, 5, 0, Math.PI * 2, 0, Math.PI / 2), plate, [0, 0.33, 0]);
+    add(helm, new BoxGeometry(0.08, 0.3, 0.06), trim, [0, 0.12, 0.18]);
+    for (const x of [-0.1, 0.1]) add(helm, new BoxGeometry(0.1, 0.16, 0.05), trim, [x, 0.04, 0.17]);
+    add(helm, new BoxGeometry(0.28, 0.05, 0.05), this.visor, [0, 0.17, 0.19]);
+    // A tall crest of crimson bristles over the top, brow to nape.
+    for (let i = 0; i < 7; i++) {
+      const h = 0.42 - Math.abs(i - 3) * 0.06;
+      add(helm, new ConeGeometry(0.06, h, 4).scale(0.5, 1, 1), cloth, [0, 0.42 + h / 2, 0.18 - i * 0.06], [-0.45 + i * 0.15, 0, 0]);
+    }
+    mergeChildren(helm, [helm.children.find((c) => (c as Mesh).material === this.visor)!]);
+
+    // Arms: a bone upper arm, a plated elbow, a gauntlet.
     for (const [arm, x] of [
-      [this.armL, 0.48],
-      [this.armR, -0.48],
+      [this.armL, 0.42],
+      [this.armR, -0.42],
     ] as const) {
       arm.position.set(x, 0.85, 0);
-      add(arm, new CylinderGeometry(0.09, 0.1, 0.6, 6), steel, [0, -0.3, 0]);
-      add(arm, new SphereGeometry(0.11, 6, 4), dark, [0, -0.62, 0]);
+      add(arm, new CylinderGeometry(0.035, 0.04, 0.28, 5), bone, [0, -0.15, 0]);
+      add(arm, new IcosahedronGeometry(0.075, 0), plate, [0, -0.32, 0]);
+      add(arm, new CylinderGeometry(0.08, 0.065, 0.28, 7), plate, [0, -0.48, 0]);
+      add(arm, new SphereGeometry(0.075, 6, 4), plate, [0, -0.64, 0]);
       this.body.add(arm);
     }
-    // A notched old sword in the right hand.
-    add(this.armR, new BoxGeometry(0.06, 0.08, 1.1), steel, [0, -0.65, 0.5]);
-    add(this.armR, new BoxGeometry(0.3, 0.05, 0.06), dark, [0, -0.65, 0]);
+    // An old notched sword in the right hand.
+    add(this.armR, new BoxGeometry(0.06, 0.035, 1.05), trim, [0, -0.66, 0.58]);
+    add(this.armR, new BoxGeometry(0.28, 0.05, 0.06), gold, [0, -0.66, 0.06]);
+    add(this.armR, new CylinderGeometry(0.025, 0.025, 0.16, 5), leather, [0, -0.66, -0.04], [Math.PI / 2, 0, 0]);
+    // A kite shield on the left arm, with a pale thistle on its face.
+    const shield = new Shape();
+    shield.moveTo(0, 0.3);
+    shield.lineTo(0.22, 0.22);
+    shield.lineTo(0.2, -0.05);
+    shield.lineTo(0, -0.36);
+    shield.lineTo(-0.2, -0.05);
+    shield.lineTo(-0.22, 0.22);
+    shield.closePath();
+    const sg = new ExtrudeGeometry(shield, { depth: 0.05, bevelEnabled: true, bevelSize: 0.02, bevelThickness: 0.02, bevelSegments: 1 });
+    // Held across the front of the body, its face forward.
+    add(this.armL, sg, plate, [-0.08, -0.5, 0.14]);
+    // The thistle: a stem, two leaves, a round head with a spiky crown.
+    add(this.armL, new BoxGeometry(0.03, 0.26, 0.02), bone, [-0.08, -0.6, 0.235]);
+    for (const side of [-1, 1]) add(this.armL, new ConeGeometry(0.03, 0.14, 3).scale(1, 1, 0.3), bone, [-0.08 + side * 0.06, -0.62, 0.235], [0, 0, side * -1.1]);
+    add(this.armL, new SphereGeometry(0.06, 6, 4).scale(1, 1, 0.4), bone, [-0.08, -0.44, 0.235]);
+    for (let i = 0; i < 5; i++) add(this.armL, new ConeGeometry(0.018, 0.1, 3).scale(1, 1, 0.3), bone, [-0.08 + (i - 2) * 0.025, -0.36, 0.235], [0, 0, (i - 2) * -0.35]);
+    mergeChildren(this.armL);
+    mergeChildren(this.armR);
+    mergeChildren(this.body, [helm, this.armL, this.armR, ...this.tabard]);
   }
 
   // ---------------------------------------------------------------- SpellTarget
@@ -397,6 +493,9 @@ export class Rattlecoat implements Entity, SpellTarget {
     this.root.rotation.x = MathUtils.damp(this.root.rotation.x, lying, this.state === 'toppled' ? 9 : 4, dt);
     if (this.state === 'stagger') this.body.rotation.z = Math.sin(this.t * 40) * 0.08;
     else this.body.rotation.z = 0;
-    this.visor.emissiveIntensity = this.state === 'windup' || this.state === 'swing' || this.state === 'brace' || this.state === 'charge' ? 2.5 : this.state === 'toppled' ? 0 : 0.5;
+    this.visor.emissiveIntensity = this.state === 'windup' || this.state === 'swing' || this.state === 'brace' || this.state === 'charge' ? 3 : this.state === 'toppled' ? 0 : 1;
+    // The tabard swings with its stride, trails behind a charge, and flaps when it staggers.
+    const flap = this.state === 'charge' ? -0.5 : this.state === 'stagger' ? Math.sin(this.t * 30) * 0.2 : s * 0.18 + Math.sin(this.t * 1.7) * 0.03;
+    for (const [i, panel] of this.tabard.entries()) panel.rotation.x = MathUtils.damp(panel.rotation.x, i === 0 ? flap : -flap, 10, dt);
   }
 }
