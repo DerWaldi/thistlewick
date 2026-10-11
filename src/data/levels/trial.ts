@@ -8,8 +8,8 @@ import { banner, barrel, bush, cobweb, column, crate, deco, Glow, grass, hollyho
  * The Thwackwort Trial, under Gorse's classroom. Five rooms, south to north (+Z):
  *
  *   Antechamber      x -6..6,  z 0..10   knock a switch to open the first gate
- *   Shoving Room     x -8..8,  z 10..26  block A bridges the flooded pit (push it east one
- *                                        tile, then north), block B goes north then east onto
+ *   Shoving Room     x -8..8,  z 10..26  block A bridges the flooded pit (push it west one
+ *                                        tile, then north), block B goes north then west onto
  *                                        the plate that holds the exit gate; a bell resets both
  *   Gauntlet         x -4..4,  z 26..48  timed switch (9 s), then hurdle (z 31), gap (35..37.5),
  *                                        step (40..43, 1.2 m) and hurdle (45.8) to the gate
@@ -113,7 +113,7 @@ function build(b: LevelBuilder): void {
   b.pool(-8, 8, 17, 26, -1.2, -2);
   // Pier edges so the pit reads clearly.
   for (const x of [-2.1, 2.1]) b.box([x, 0.1, 23.75], [0.2, 0.2, 4.5], { color: COLORS.stoneLight });
-  // The pillar that stops block B going straight east. B starts a tile in from the south
+  // The pillar that stops block B going straight west. B starts a tile in from the south
   // wall so there's room to stand behind it and shove it north.
   b.box([5, 1, 14], [2, 2, 2], { color: COLORS.stoneLight });
   deco(b, new BoxGeometry(2.2, 0.2, 2.2), [5, 2.1, 14], COLORS.stoneDark);
@@ -186,7 +186,7 @@ function build(b: LevelBuilder): void {
     hollyhock(b, 9.7, z, seed++);
   }
   tree(b, 7.5, 67);
-  // A ruined wall stump on the west side: too tall to jump, but a pushed block helps.
+  // A ruined wall stump on the east side: too tall to jump, but a pushed block helps.
   b.box([-9, 2.2, 57], [2, 4.4, 4], { color: COLORS.stoneLight });
   deco(b, new BoxGeometry(2.2, 0.3, 4.2), [-9, 4.5, 57], COLORS.moss);
   b.add(

@@ -54,7 +54,7 @@ test('the three hub secrets: tapestry alcove, sliding bookshelf, behind the cloc
       tw.input(null);
       tw.advance(0.3);
     };
-    // 1: walk through the swaying tapestry in the hall's west wall.
+    // 1: walk through the swaying tapestry in the hall's east wall.
     tw.teleport(-9.5, 0, 23.5, -Math.PI / 2);
     tw.advance(0.2);
     walk(1.4);
@@ -105,7 +105,7 @@ test('the three hub secrets: tapestry alcove, sliding bookshelf, behind the cloc
   expect(r.cards).toEqual(expect.arrayContaining(['mother-wortle', 'barnaby-gorse', 'grey-lady']));
 });
 
-test('platforming cards: the west chandelier and the gallery window', async ({ page }) => {
+test('platforming cards: the east chandelier and the gallery window', async ({ page }) => {
   const cards = await page.evaluate(() => {
     const tw = window.__tw;
     const hop = (secs: number) => {

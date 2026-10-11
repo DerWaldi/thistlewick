@@ -126,10 +126,10 @@ test('I. Gorse: three blocks bridge the trough; the Rattlecoat opens the gate', 
   // The middle block: three shoves north and it drops into the trough.
   for (let i = 0; i < 3; i++) expect(await castAt(page, [0, 0, 10.5], [0, 1, 14 + i * 2], 0, 1.4)).toBe('thwackwort');
   expect(await signal(page, 'ex-g1')).toBe(true);
-  // The west block: east into the lane, then north over the first.
+  // The east block: west into the lane, then north over the first.
   for (let i = 0; i < 2; i++) await castAt(page, [-7, 0, 16], [-4 + i * 2, 1, 16]);
   for (let i = 0; i < 4; i++) await castAt(page, [0, 0, 12.5], [0, 1, 16 + i * 2], 0, 1.4);
-  // The east block: west into the lane, then north over both.
+  // The west block: east into the lane, then north over both.
   for (let i = 0; i < 2; i++) await castAt(page, [7, 0, 16], [4 - i * 2, 1, 16]);
   for (let i = 0; i < 5; i++) await castAt(page, [0, 0, 12.5], [0, 1, 16 + i * 2], 0, 1.4);
   await page.evaluate(() => {
@@ -164,7 +164,7 @@ test('I. Gorse: three blocks bridge the trough; the Rattlecoat opens the gate', 
 test('II. Quince: all three padlocks open at once', async ({ page }) => {
   await exams(page);
   await clear(page, 'Snapcasket');
-  // From the south-east, two locks are in view; the third round the east side.
+  // From the south-west, two locks are in view; the third round the west side.
   expect(await castAt(page, [3.5, 0, 44.5], [0, 1.9, 46.45], 0, 0.4)).toBe('latchkin');
   expect(await castAt(page, [3.5, 0, 44.5], [1.55, 1.9, 48], 0, 0.4)).toBe('latchkin');
   expect(await castAt(page, [3, 0, 52], [0, 1.9, 49.55], 0, 0.8)).toBe('latchkin');
@@ -180,13 +180,13 @@ test('II. Quince: all three padlocks open at once', async ({ page }) => {
 test('III. Hopgood: moss, a flinging toadstool, and a charged rune tile to the seal', async ({ page, browserName }) => {
   await exams(page);
   expect(await castAt(page, [-3.6, 0, 68], [-3.6, 0.2, 72], 0, 0.3)).toBe('springwell');
-  const west = await walk(page, [-1.2, 0, 72], -Math.PI / 2, 2);
-  expect(west.y).toBeGreaterThan(4.9);
+  const east = await walk(page, [-1.2, 0, 72], -Math.PI / 2, 2);
+  expect(east.y).toBeGreaterThan(4.9);
   expect(await castAt(page, [-9, 5, 71.5], [-7.5, 5.8, 74.5], 0, 0.3)).toBe('springwell');
   // (Players hop onto the cap; the test starts on it.)
-  const east = await walk(page, [-7.5, 6.2, 74.5], Math.PI / 2, 2);
-  expect(east.y).toBeGreaterThan(8.9);
-  expect(east.x).toBeGreaterThan(0.5);
+  const west = await walk(page, [-7.5, 6.2, 74.5], Math.PI / 2, 2);
+  expect(west.y).toBeGreaterThan(8.9);
+  expect(west.x).toBeGreaterThan(0.5);
   // A plain bounce falls short of the shelf; a charged one with jump held makes it.
   expect(await castAt(page, [8, 9, 73], [8, 9.1, 77.8], 0, 0.3)).toBe('springwell');
   const plain = await walk(page, [8, 9, 75.6], 0, 3);

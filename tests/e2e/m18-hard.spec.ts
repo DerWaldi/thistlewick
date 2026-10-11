@@ -237,7 +237,7 @@ test('Tumbledown Tower, the Weathercock Run: rune to rune, up to the beam, flung
   expect(c1.feet.y).toBeGreaterThan(46.9);
   const c2 = await bounce([43, 47, 10], [42.2, 47, 10.8], Math.atan2(0.8, -0.8));
   expect(c2.feet.y).toBeGreaterThan(49.9);
-  // Moss on C2: straight up, then steer east onto the beam.
+  // Moss on C2: straight up, then steer west onto the beam.
   const beam = await bounce([49.5, 50, 4], [48.7, 50, 4], Math.PI / 2, 1.6, 0.35);
   expect(beam.feet.y).toBeGreaterThan(52.9);
   const end = await bounce([58, 53, 4], [56.4, 53, 4], Math.PI / 2, 2);

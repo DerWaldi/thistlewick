@@ -10,7 +10,7 @@ import { HOUSE_ORDER, HOUSES } from '../houses';
  * Mr. Hopgood's Leaps & Bounds gym, off the Long Gallery (x -8..8, z 0..16, a tall
  * room). Enter from the gallery (south door). Hopgood teaches Springwell; three
  * platforms along the north wall carry latching plates, each reached by bouncing
- * off its pad (the tall one needs jump held on landing). The iron door (east) leads
+ * off its pad (the tall one needs jump held on landing). The iron door (west) leads
  * down... well, up, to the Tumbledown Tower.
  */
 export const HOPGOOD: LevelDef = {

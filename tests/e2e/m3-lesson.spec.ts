@@ -118,10 +118,10 @@ test('the Shoving Room: block A bridges the pit, block B holds the gate', async 
         tw.cast(hold);
         tw.advance(2);
       });
-    await shove([-5.3, 0, 12, Math.PI / 2], A, 0); // east one tile
+    await shove([-5.3, 0, 12, Math.PI / 2], A, 0); // west one tile
     await shove([-1, 0, 10.6, 0], A, 1.2); // charged north into the pit
     await shove([3, 0, 12.3, 0], Bk, 0); // north one tile
-    await shove([0.6, 0, 16, Math.PI / 2], Bk, 1.2); // east to the wall, onto the plate
+    await shove([0.6, 0, 16, Math.PI / 2], Bk, 1.2); // west to the wall, onto the plate
     const a = { ...A.pos };
     const plate = tw.signal('r2-plate');
     tw.advance(2);

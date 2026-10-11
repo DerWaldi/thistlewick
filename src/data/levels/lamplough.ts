@@ -8,10 +8,10 @@ import { CARD_BY_ID } from '../cards';
 /**
  * Mr. Lamplough's study in the Undercroft, under the Lantern Hall (x -9..9, z 0..20,
  * dark). Enter from the hub (south door). Lamplough teaches Glimmerwick; three latching
- * plates: P1 on the west ledge (top 3.3) up glimmer steps lit by lamp A; P2 on the east
+ * plates: P1 on the east ledge (top 3.3) up glimmer steps lit by lamp A; P2 on the west
  * island across a trench (x 2..6.5) on a glimmer bridge lit by lamp B; P3 on the north
  * shelf (top 2.4), whose glimmer step only a CHARGED lamp C reaches. The iron door
- * (east) leads down to the Lamplit Catacombs.
+ * (west) leads down to the Lamplit Catacombs.
  */
 export const LAMPLOUGH: LevelDef = {
   id: 'lamplough',
@@ -68,7 +68,7 @@ function build(b: LevelBuilder): void {
     { type: 'wickLamp', pos: [3, 4.2, 15], style: 'hanging', radius: 2, duration: 0, lit: true, light: true, lightRange: 13 },
   );
 
-  // P1: the west ledge, up glimmer steps lit by lamp A.
+  // P1: the east ledge, up glimmer steps lit by lamp A.
   b.box([-7.75, 1.65, 8], [2.5, 3.3, 4], { color: COLORS.stoneLight, info: { noGrab: true } });
   b.add(
     { type: 'wickLamp', id: 'gA', pos: [-2.5, 0, 5.2], radius: 4.5, duration: 10, light: true },
@@ -123,7 +123,7 @@ function build(b: LevelBuilder): void {
   deco(b, new CylinderGeometry(0.4, 0.5, 0.9, 8), [-6, 0.45, 1.5], COLORS.stoneDark);
   wallTorch(b, flames, [-2.2, 2.5, 0.02], 0);
   wallTorch(b, flames, [2.2, 2.5, 0.02], 0);
-  // Between the west ledge (z 6..10) and the shelves (from z 13.7).
+  // Between the east ledge (z 6..10) and the shelves (from z 13.7).
   portrait(b, CARD_BY_ID.get('ambrose-wick')!.portrait, [-9, 3, 11.9], Math.PI / 2, 1.1, 1.4, 0.03);
   for (const [c, d1, d2] of [
     [[-9, H - 0.5, 0], [1, 0], [0, 1]],

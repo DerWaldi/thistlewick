@@ -8,7 +8,7 @@ import { CARD_BY_ID } from '../cards';
 /**
  * Professor Gorse's Practical Charms classroom (x -8..8, z 0..14). Enter from the
  * Crooked Corridor (south door). Gorse teaches Thwackwort, three practice targets
- * unlock the iron door (east) down to the Thwackwort Trial.
+ * unlock the iron door (west) down to the Thwackwort Trial.
  */
 export const CLASSROOM: LevelDef = {
   id: 'classroom',

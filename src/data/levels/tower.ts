@@ -8,7 +8,7 @@ import { banner, barrel, cobweb, crate, deco, Glow, rubble, rug, signboard, wall
  * The Tumbledown Tower, Springwell's trial, climbed from Hopgood's gym. A tower
  * x -10..10, z 0..20, stacked in tiers, then a run across turrets outside:
  *
- *   Base      y 0      pad A (moss) up onto the west block L1 (top 5)
+ *   Base      y 0      pad A (moss) up onto the east block L1 (top 5)
  *   Stair     y 5..17  toadstools: M1 (cap 4) up to shelf P2 (9.5); leaning M2 (8.5, beside P2) throws
  *                      you to shelf P3 (13), M3 (12) up through the floor hatch (x 1..6, z 1..7)
  *   Bellfry   y 17.5   Snapcaskets; the walkway (top 27, north) needs a CHARGED bounce off pad B;
@@ -130,7 +130,7 @@ function build(b: LevelBuilder): void {
 
   // ================================================================ the Bellfry (floor 17.5)
   b.box([0, 26.5, 18.75], [20, 1, 2.5], { color: COLORS.wood, pattern: 'planks' }); // walkway (top 27)
-  // The walkway's south side: a full wall west of the landing gap, a parapet east of it.
+  // The walkway's south side: a full wall east of the landing gap, a parapet west of it.
   b.box([-5.75, 29.5, 17.65], [8.5, 5, 0.3], { color: STONE });
   b.box([5.75, 27.6, 17.65], [8.5, 1.2, 0.3], { color: COLORS.woodDark });
   b.box([-4, 31.4, 18.75], [0.8, 1.2, 2.5], { color: STONE }); // above the gate

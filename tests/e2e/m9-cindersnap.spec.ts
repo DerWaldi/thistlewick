@@ -113,7 +113,7 @@ test('the Kitchen Yard: through the corner arch, walled in, and Ashcombe opens o
   expect(into.z).toBeLessThan(30.5);
   const yard = await walk(page, [-15, 0, 28.2], -Math.PI / 2, 2);
   expect(yard.area).toBe('yard');
-  // The west edge used to be open to the drop: now there's a wall all the way along.
+  // The east edge used to be open to the drop: now there's a wall all the way along.
   for (const z of [15, 22, 28, 35]) {
     const w = await walk(page, [-25, 0, z], -Math.PI / 2, 3);
     expect(w.x).toBeGreaterThan(-32.2);
@@ -349,7 +349,7 @@ test('the Palm House: braziers I to IV in order and in time open the gate; out o
   expect(await burn(page, [0, 0, 49.5], [7, 1.3, 50.6], 0.6)).toBe('cindersnap');
   expect(await lit()).toEqual([false, false, false, false]);
   expect(await page.evaluate(() => (window as unknown as { talks: number }).talks)).toBe(1);
-  // From the entrance, II (NE) is hidden behind the planter.
+  // From the entrance, II (NW) is hidden behind the planter.
   const hidden = await page.evaluate(() => {
     const tw = window.__tw;
     tw.teleport(0, 0, 49.3, 0);

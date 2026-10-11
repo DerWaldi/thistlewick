@@ -8,7 +8,7 @@ import { COLORS, worldMaterial } from '../../world/materials';
  * Spawn at the origin facing +Z. Rough map (top-down, +Z is "north"):
  *
  *   ramps (-30..-18)   stairs (-10)   ice (-14..-4)   bounce pad (0,22)   gaps (8)   pool (14..26)
- *   corridor & low tunnel in the south-west, ledge walls south of spawn, movers in the east.
+ *   corridor & low tunnel in the south-east, ledge walls south of spawn, movers in the west.
  */
 export const GYM: LevelDef = {
   id: 'gym',
@@ -104,7 +104,7 @@ function buildGym(b: LevelBuilder): void {
   const corridor = (x0: number, z0: number) => {
     const h = 2.6;
     const w = 2;
-    // Leg 1 runs north along +Z, then turns east.
+    // Leg 1 runs north along +Z, then turns west.
     b.box([x0 - w / 2 - 0.25, h / 2, z0 + 6], [0.5, h, 12], { color: COLORS.stone });
     b.box([x0 + w / 2 + 0.25, h / 2, z0 + 5], [0.5, h, 10], { color: COLORS.stone });
     b.box([x0 + 5, h / 2, z0 + 12.25], [10 + w + 0.5, h, 0.5], { color: COLORS.stone });
@@ -154,7 +154,7 @@ function buildGym(b: LevelBuilder): void {
 function practiceYard(b: LevelBuilder): void {
   const H = 4;
   const wallColor = COLORS.stoneLight;
-  // Outer walls (entry gap in the south wall, exit gap in the east wall).
+  // Outer walls (entry gap in the south wall, exit gap in the west wall).
   b.wall(-44, 22, -33, 22, H, { color: wallColor });
   b.wall(-29, 22, -18, 22, H, { color: wallColor });
   b.wall(-44, 22, -44, 54, H, { color: wallColor });

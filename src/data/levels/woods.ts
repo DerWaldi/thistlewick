@@ -4,13 +4,13 @@ import type { LevelDef } from '../../world/level';
 import { bush, deco, Glow, grass, mushrooms, rubble, signboard, tree, wall } from '../../world/props';
 
 /**
- * The Old Woods, through the gate on the east side of the Castle Grounds (open once Mabel
+ * The Old Woods, through the gate on the west side of the Castle Grounds (open once Mabel
  * has asked you to find Thimble). Day, deep in the trees. +Z runs into the woods:
  *
  *   The Wicket      z 0..24,   y 0    the gateway back to the grounds; a briar thicket
  *                                     between boulders (Cindersnap), two Snapweeds in a
  *                                     second gap, Gnarlings
- *   Mushroom Dell   z 24..44,  y 0    a toadstool up to the west shelf (4.5), a second that
+ *   Mushroom Dell   z 24..44,  y 0    a toadstool up to the east shelf (4.5), a second that
  *                                     flings you north onto the ridge (8) (Springwell)
  *   The Canopy      z 44..80,  y 8    tree platforms over a flooded ravine (water -3): rope
  *                                     bridges, a swinging log, a basket you call over a
@@ -173,7 +173,7 @@ function wicket(b: LevelBuilder): void {
 
 function dell(b: LevelBuilder): void {
   b.floor(-16.5, 16.5, 24, 44, { color: GRASS });
-  // The west shelf (4.5) and the ridge (8) across the far end: neither can be climbed.
+  // The east shelf (4.5) and the ridge (8) across the far end: neither can be climbed.
   b.box([-11.25, 2.25, 35], [10.5, 4.5, 10], { color: ROCK, info: { noGrab: true } });
   b.box([0, 1, 46], [33, 14, 4], { color: ROCK, info: { noGrab: true } });
   deco(b, new BoxGeometry(10.6, 0.15, 10.1), [-11.25, 4.55, 35], GRASS);
@@ -361,14 +361,14 @@ function oak(b: LevelBuilder): void {
     { type: 'springPad', pos: [-6.4, UP, 124], radius: 0.9, style: 'rune', duration: 8 },
     { type: 'chest', id: 'wd-bough-chest', pos: [-11.6, 22, 124], yaw: Math.PI / 2, sweets: [['humbug', 2], ['bramble', 3]] },
     { type: 'secret', id: 'woods-bough', area: 'oak', min: [-13.5, 21, 121.5], max: [-8.5, 25, 126.5] },
-    // The door home, by the east edge.
+    // The door home, by the west edge.
     { type: 'door', pos: [15.45, UP, 112], yaw: -Math.PI / 2, width: 2.4, height: 3.2, to: { level: 'grounds', spawn: 'fromWoods' }, label: 'The Castle Grounds' },
     { type: 'sweetLine', kind: 'fizzwort', from: [-4, UP + 0.6, 109], to: [4, UP + 0.6, 109], count: 4 },
     { type: 'trigger', flag: 'woods-hint-oak', script: 'woodsOak', min: [-16, UP - 1, 109], max: [16, UP + 4, 116], unlessSignals: ['wd-lock'], delay: 30, perVisit: true },
   );
   b.box([-11, 21.85, 124], [5, 0.3, 4.5], { color: BARK, info: { noGrab: true } });
   deco(b, new CylinderGeometry(0.45, 0.8, 9, 7), [-6, UP + 9.5, 123], BARK, [0, 0, 0.75]);
-  // The door's frame: a gap in a mossy stone wall along the east edge.
+  // The door's frame: a gap in a mossy stone wall along the west edge.
   wall(b, 'z', 16.2, 108, 116, 4.5, { base: UP, color: ROCK, holes: [{ from: 110.7, to: 113.3, top: 3.4 }] });
   signboard(b, 'Back to the Castle', [15.68, UP + 3.9, 112], -Math.PI / 2);
   for (const [x, z] of [

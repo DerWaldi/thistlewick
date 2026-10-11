@@ -67,7 +67,7 @@ export const CARDS: CardDef[] = [
     name: 'Barnaby Gorse',
     title: 'Wand-Toss Champion, 1952',
     set: 'Oddballs',
-    text: 'Before he taught Practical Charms he could throw a wand clean over the East Tower. He still checks the sky for it sometimes.',
+    text: 'Before he taught Practical Charms he could throw a wand clean over the West Tower. He still checks the sky for it sometimes.',
     hint: 'Shelved away in the Crooked Corridor. Knock and it shall open.',
     portrait: { bg: ODDBALL_BG, kind: 'person', skin: '#e2a982', robe: '#a0522d', hair: '#e8e2d0', hat: 'none', beard: true, prop: 'wand', hairStyle: 'bald', expression: 'kind', eyes: '#4a6a9a' },
   },

@@ -8,12 +8,12 @@ import { CARD_BY_ID } from '../cards';
 /**
  * Professor Ashcombe's kitchen classroom, Hearth & Flame (x -10..10, z 0..22). Enter from
  * the Kitchen Yard (south door). Ashcombe teaches Cindersnap; three tasks, each with a sign:
- *   - the pantry (west, x -10..-6.5, z 11..17): a cobweb across its doorway, plate P1 inside
- *   - the high shelf (east, x 7..10, z 9..14, top 2.4, too high to jump): a crate hangs on a
+ *   - the pantry (east, x -10..-6.5, z 11..17): a cobweb across its doorway, plate P1 inside
+ *   - the high shelf (west, x 7..10, z 9..14, top 2.4, too high to jump): a crate hangs on a
  *     rope beside it; burn the rope and the crate drops to make a step up to plate P2
  *   - three braziers by the north wall, notched I-III and set out of order (II, III, I):
  *     light them in order or they all go out
- * The iron door (east, z 17.5) leads to the Overgrown Glasshouse.
+ * The iron door (west, z 17.5) leads to the Overgrown Glasshouse.
  */
 export const ASHCOMBE: LevelDef = {
   id: 'ashcombe',
@@ -127,7 +127,7 @@ function build(b: LevelBuilder): void {
   signboard(b, 'Light them in order:\ncount the notches!', [-1, 3.6, 21.97], Math.PI);
 
   // ---------------------------------------------------------------- the kitchen: hearth, tables, pots
-  // The great hearth in the west wall.
+  // The great hearth in the east wall.
   b.box([-9.4, 1.6, 5.5], [1.2, 3.2, 0.6], { color: BRICK });
   b.box([-9.4, 1.6, 9.5], [1.2, 3.2, 0.6], { color: BRICK });
   b.box([-9.4, 3.5, 7.5], [1.4, 0.8, 4.8], { color: BRICK });

@@ -370,7 +370,7 @@ test("Mabel's hedgehog: the Old Woods, from the thicket to the Old Oak, and home
     }
   });
   expect((await walk(page, [0, 0, 8], 0, 2.4)).z).toBeGreaterThan(21);
-  // The dell: up onto the west shelf, then flung onto the ridge.
+  // The dell: up onto the east shelf, then flung onto the ridge.
   expect(await castAt(page, [-1, 0, 31], [-3.6, 0.5, 34], 0, 0.3)).toBe('springwell');
   const shelf = await walk(page, [-1, 0, 34], -Math.PI / 2, 1.6);
   expect(shelf.y).toBeGreaterThan(4.4);
@@ -458,7 +458,7 @@ test("Mabel's hedgehog: the Old Woods, from the thicket to the Old Oak, and home
     tw.advance(0.3);
   });
   await shot(page, 'm15-woods-oak', browserName);
-  // Home by the east door, and back to Mabel.
+  // Home by the west door, and back to Mabel.
   const home = await page.evaluate(async () => {
     const tw = window.__tw;
     tw.teleport(14, 13, 112, Math.PI / 2);
@@ -476,7 +476,7 @@ test("Mabel's hedgehog: the Old Woods, from the thicket to the Old Oak, and home
 
 test('pupils wander the castle and chat; Wren and Otto have errands of their own', async ({ page, browserName }) => {
   await start(page, 'thistledown', 'hub');
-  // Fitz paces the east cloister.
+  // Fitz paces the west cloister.
   const walk1 = await page.evaluate(() => {
     const tw = window.__tw;
     type W = { constructor: { name: string }; spec: { speaker: string }; pos: { x: number; z: number } };
@@ -496,7 +496,7 @@ test('pupils wander the castle and chat; Wren and Otto have errands of their own
     tw.advance(0.5);
   });
   await shot(page, 'm15-wanderers', browserName);
-  // Wren's scarf, on the court's west balcony.
+  // Wren's scarf, on the court's east balcony.
   await talk(page, [-13.4, 0, 42.6]);
   const items = await page.evaluate(async () => {
     const tw = window.__tw;

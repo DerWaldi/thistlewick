@@ -8,13 +8,13 @@ import { CARD_BY_ID } from '../cards';
 /**
  * Madam Coldharbour's boathouse, Frosts & Waters (x -10..10, z 0..26). Enter from the
  * grounds (south door). Coldharbour teaches Rimewhistle; three plates, each with a sign:
- *   - P1 on an islet in the west pool (x -10..-3.5, z 5..11): freeze the 5 m of water
+ *   - P1 on an islet in the east pool (x -10..-3.5, z 5..11): freeze the 5 m of water
  *     between it and the floor (too far to jump)
- *   - P2 on the east ledge (x 6.5..10, z 6..13, top 3.6, ungrabbable): freeze the
+ *   - P2 on the west ledge (x 6.5..10, z 6..13, top 3.6, ungrabbable): freeze the
  *     waterfall pouring down its face into a pillar, climb that, then the ledge
  *   - P3 across the boat dock (water z 14..24, the whole width) on the north jetty: tapped,
  *     the ice lasts 1.2 s, too short to cross 10 m; a CHARGED freeze lasts 4 s
- * The iron door (east, z 3) leads down to the Flooded Cisterns.
+ * The iron door (west, z 3) leads down to the Flooded Cisterns.
  */
 export const COLDHARBOUR: LevelDef = {
   id: 'coldharbour',
@@ -81,7 +81,7 @@ function build(b: LevelBuilder): void {
     },
   );
 
-  // ---------------------------------------------------------------- P1: the islet in the west pool
+  // ---------------------------------------------------------------- P1: the islet in the east pool
   b.box([-9.3, -1.25, 8], [1.4, 2.5, 3], { color: COLORS.stone, info: { noGrab: true } });
   b.add(
     { type: 'iceSheet', min: [-8.6, 6.5], max: [-3.5, 9.5], y: WATER, duration: 6 },

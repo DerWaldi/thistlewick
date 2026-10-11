@@ -155,7 +155,7 @@ test('Hopgood teaches Springwell; the tall platform needs a held jump', async ({
 
 test('the Tumbledown Tower can be climbed, bounce by bounce', async ({ page, browserName }) => {
   await prepared(page, 'tower', { springwell: true, flags: ['tower-hint-stair', 'tower-hint-bellfry', 'tower-hint-roof'] });
-  // Base: pad A up onto the west block.
+  // Base: pad A up onto the east block.
   const l1 = await bounce(page, [1.5, 0, 12], [-2.5, 0.3, 12], -Math.PI / 2, 1.6);
   expect(l1.feet.y).toBeGreaterThan(4.9);
   // Toadstool stair.

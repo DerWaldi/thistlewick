@@ -20,7 +20,7 @@ import { cobweb, deco, Glow, signboard, slab, wall, wallTorch } from '../../worl
  *                                                 the top to the north ledge; fall, and lift D
  *                                                 (which floats home by itself) takes you back up.
  *                                                 Secret: a crate on the floor floats up to an
- *                                                 alcove in the west wall (card)
+ *                                                 alcove in the east wall (card)
  *   Bell Chamber        x -6..6, z 60..76, y 12    crate E floats you to the gallery (y 16);
  *                                                 call basket F down from the bell crown (19),
  *                                                 ride it up past the clapper to the plate on the
@@ -123,7 +123,7 @@ function build(b: LevelBuilder): void {
     { type: 'checkpoint', pos: [-4.5, 6, 38.5], yaw: Math.PI / 2, zone: { min: [-6, 5, 34], max: [6, 9, 40] } },
     { type: 'trigger', flag: 'clockworks-hint-call', script: 'clockworksCall', min: [-6, 5, 34], max: [6, 9, 40], delay: 20, unlessSignals: ['cwB'] },
     { type: 'skyLift', style: 'platform', from: [-4, 12, 32.8], to: [-4, 12, 38.8], size: [2.4, 2.4], returnAfter: 3, speed: 3 },
-    // Pivot off-centre so its swing (x -5.2..2.6) crosses the ferry at x -4 but misses the west wall.
+    // Pivot off-centre so its swing (x -5.2..2.6) crosses the ferry at x -4 but misses the east wall.
     { type: 'pendulum', pos: [-1.3, 22, 36], length: 9, swing: 0.45, period: 3.2, phase: 0.2, bob: 0.8 },
     { type: 'checkpoint', pos: [4.5, 12, 28], yaw: -Math.PI / 2, zone: { min: [-6, 11, 26], max: [6, 15, 31.6] } },
     { type: 'sweetLine', kind: 'fizzwort', from: [-5, 6.6, 37], to: [3, 6.6, 37], count: 4 },
@@ -155,7 +155,7 @@ function build(b: LevelBuilder): void {
   const OMEGA = (Math.PI * 2) / 12;
   for (let i = 0; i < 4; i++) {
     const phase = (i / 4) * Math.PI * 2;
-    // Clockwise seen from the west: up on the south side, over the top, down to the north.
+    // Clockwise seen from the east: up on the south side, over the top, down to the north.
     b.mover([2.4, 0.3, 2.4], BRASS, (t) => new Vector3(0, 9 + R * Math.sin(phase - OMEGA * t + Math.PI), 50 + R * Math.cos(phase - OMEGA * t + Math.PI)));
   }
   gear(b, [-2.2, 9, 50], R, 'x', 24);
@@ -165,7 +165,7 @@ function build(b: LevelBuilder): void {
     { type: 'trigger', flag: 'clockworks-hint-wheel', script: 'clockworksWheel', min: [-6, 11, 40], max: [2.3, 15, 43.5] },
     // Lift D brings fallers back up to the south ledge, and floats home again by itself.
     { type: 'skyLift', style: 'platform', from: [3.5, 0, 41.8], to: [3.5, 12, 41.8], size: [2.4, 2.4], returnAfter: 4, speed: 3 },
-    // The secret: a crate floats up to an alcove in the west wall.
+    // The secret: a crate floats up to an alcove in the east wall.
     { type: 'skyLift', style: 'crate', from: [-5.3, 1.2, 50], to: [-5.3, 3.6, 50], size: [1.2, 1.2], post: [0.45, -0.45], speed: 1.6 },
     { type: 'card', card: 'clockwork-owl', pos: [-7.8, 4.8, 50] },
     { type: 'secret', id: 'clockworks-alcove', area: 'wheel', min: [-9, 3.4, 48.8], max: [-7, 6.4, 51.2] },

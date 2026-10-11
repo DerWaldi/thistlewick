@@ -260,10 +260,10 @@ test('the Hall of False Walls: only light shows which walls lie', async ({ page 
   expect(await walk([3, 0, 38.5], 1)).toBeGreaterThan(41.5);
   await light(page, [0, 0, 42.2], [2, 2.1, 43.5]);
   expect(await walk([-1, 0, 43.5], 1)).toBeGreaterThan(46.5);
-  // The middle lamp, charged, also unmasks the west wall.
+  // The middle lamp, charged, also unmasks the east wall.
   await page.evaluate(() => window.__tw.advance(11));
   await light(page, [-3, 0, 37.2], [-1, 2.1, 38.5], 1);
-  // ...and the west wall's false bit, with the card behind it. Then wait in there till the
+  // ...and the east wall's false bit, with the card behind it. Then wait in there till the
   // lamp outside goes out: the alcove has its own lamp, so you can always get back out.
   const r = await page.evaluate(() => {
     const tw = window.__tw;
@@ -328,7 +328,7 @@ test("Lamplough's Lantern: all four lamps at once open the gate; the Star ends t
     lampAt([-4, 0, 60.5], [-8.53, 2.4, 56]);
     lampAt([-4, 0, 60.5], [-8.53, 2.4, 65]);
     const halfway = tw.signal('cL1') && tw.signal('cL2');
-    // Round the divider to the east half.
+    // Round the divider to the west half.
     lampAt([4, 0, 60.5], [8.53, 2.4, 56]);
     lampAt([4, 0, 60.5], [8.53, 2.4, 65]);
     tw.advance(2.5);
@@ -590,17 +590,17 @@ test('the nook under the Undercroft stair has a card, and no way out of the worl
     tw.advance(0.5);
     const cards = tw.state().cards;
     const secrets = tw.state().secrets;
-    // ...then push hard west, where the stairwell wall must hold.
+    // ...then push hard east, where the stairwell wall must hold.
     tw.teleport(14, -7.5, 2.5, -Math.PI / 2);
     tw.setCamera(-Math.PI / 2, -0.2);
     tw.input({ y: 1 });
     tw.advance(2);
     tw.input(null);
     tw.advance(0.5);
-    return { cards, secrets, west: tw.state().feet };
+    return { cards, secrets, east: tw.state().feet };
   });
   expect(r.cards).toContain('stair-sprite');
   expect(r.secrets).toContain('hub-under-stair');
-  expect(r.west.x).toBeGreaterThan(13.2);
-  expect(r.west.y).toBeGreaterThan(-7.6);
+  expect(r.east.x).toBeGreaterThan(13.2);
+  expect(r.east.y).toBeGreaterThan(-7.6);
 });

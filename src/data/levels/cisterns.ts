@@ -13,13 +13,13 @@ import { cobweb, column, deco, Glow, rubble, signboard, slab, wall, wallTorch } 
  *                                             slippery ice; at the north landing a waterfall
  *                                             pours off the cliff (top 3.2): freeze it, climb
  *   Floe Ferry     x -10..10, z 34..56, y 3.2  pool x -8..8, z 37..53; a causeway of stones
- *                                             (x -1.5..1.5) with two 4 m gaps. Floe A (west)
- *                                             shoved east from the west walkway stops at a post
- *                                             in gap 1. Floe B sits in an east bay; freeze the
- *                                             patch from the middle stone to the east islet,
- *                                             stand east of B and shove it west into gap 2.
+ *                                             (x -1.5..1.5) with two 4 m gaps. Floe A (east)
+ *                                             shoved west from the east walkway stops at a post
+ *                                             in gap 1. Floe B sits in an west bay; freeze the
+ *                                             patch from the middle stone to the west islet,
+ *                                             stand west of B and shove it east into gap 2.
  *                                             The bell resets the floes. Secret: walk through
- *                                             the waterfall on the east wall (card)
+ *                                             the waterfall on the west wall (card)
  *   Boiler Hall    x -8..8,  z 59..79, y 3.2  a steaming pool (z 61..77.5) with five Ember Crabs
  *                                             standing in it: freeze one and it's a block of ice
  *                                             to stand on (8 s); hop across them to the far bank,
@@ -148,7 +148,7 @@ function build(b: LevelBuilder): void {
   wall(b, 'z', 10.5, 34, 59, 8, { base: UP, color: STONE, holes: [{ from: 53.8, to: 56.2, top: 3.4 }] });
   wall(b, 'x', 59, -10.5, 10.5, 8, { base: UP, color: STONE, holes: [{ from: -1.2, to: 1.2, top: 3.4 }] });
   slab(b, -10.5, 10.5, 34, 59.5, UP + 8.5, 0.5, COLORS.stoneDark);
-  // The causeway: three stones with two gaps; posts that stop the floes; the east islet.
+  // The causeway: three stones with two gaps; posts that stop the floes; the west islet.
   const stone = (x0: number, x1: number, z0: number, z1: number, top = UP + 0.2) =>
     b.box([(x0 + x1) / 2, (top + 0.4) / 2, (z0 + z1) / 2], [x1 - x0, top - 0.4, z1 - z0], { color: COLORS.stoneLight, info: { noGrab: true } });
   stone(-1.5, 1.5, 37, 39.5);
@@ -168,7 +168,7 @@ function build(b: LevelBuilder): void {
     { type: 'sweet', kind: 'bramble', pos: [8.7, UP + 0.6, 48] },
   );
   signboard(b, 'Ring to reset the floes', [4, UP + 3.3, 34.55], 0);
-  // The secret: a waterfall over an opening in the east wall, with an alcove behind it.
+  // The secret: a waterfall over an opening in the west wall, with an alcove behind it.
   b.add(
     { type: 'waterfall', pos: [10, UP, 55], yaw: -Math.PI / 2, width: 2.2, height: 3.4, pillar: 1.6, depth: 1, duration: 6 },
     { type: 'card', card: 'rime-toad', pos: [12.3, UP + 1.2, 55] },

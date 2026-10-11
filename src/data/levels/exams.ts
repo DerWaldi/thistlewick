@@ -17,8 +17,8 @@ import type { SpeakerId } from '../characters';
  *                                bridge it. Beyond, a Rattlecoat (charged hits), two Gnarlings
  *   II  Quince       z 34..60    a pillar with padlocks on three faces, relocking after 6 s;
  *                                the gate needs all three open at once. Two Snapcaskets
- *   III Hopgood      z 60..86    moss pad up to the west ledge (5); a toadstool flings you
- *                                over to the east ledge (9, x 0.5..10.5); its rune tile needs a CHARGED
+ *   III Hopgood      z 60..86    moss pad up to the east ledge (5); a toadstool flings you
+ *                                over to the west ledge (9, x 0.5..10.5); its rune tile needs a CHARGED
  *                                bounce (or a held jump) up to the seal shelf (17)
  *   IV  Lamplough    z 86..112   dark. Glimmer stones over a chasm (z 92..104): one lamp at
  *                                the edge, one on a pillar halfway, 6 s each; then a wall
@@ -181,7 +181,7 @@ function gorse(b: LevelBuilder, flames: Glow): void {
 
 function quince(b: LevelBuilder, flames: Glow): void {
   section(b, flames, { z0: 34, z1: 60, height: 8, who: 'quince', numeral: 'II', title: 'Locks & Latches', gate: ['ex-q1', 'ex-q2', 'ex-q3'] });
-  // The pillar, a padlock on its south, east and north faces. Low walls stop you seeing
+  // The pillar, a padlock on its south, west and north faces. Low walls stop you seeing
   // round it from one spot.
   b.box([0, 3.5, 48], [3, 7, 3], { color: COLORS.stoneLight, info: { noGrab: true } });
   for (const [x, z, w, d] of [
@@ -208,7 +208,7 @@ function quince(b: LevelBuilder, flames: Glow): void {
 
 function hopgood(b: LevelBuilder, flames: Glow): void {
   section(b, flames, { z0: 60, z1: 86, height: 21, who: 'hopgood', numeral: 'III', title: 'Leaps & Bounds', gate: ['ex-h3'] });
-  // West ledge (top 5), east ledge (top 9), the seal shelf (top 17) above the east ledge's
+  // East ledge (top 5), west ledge (top 9), the seal shelf (top 17) above the west ledge's
   // north end. None can be grabbed: Hopgood wants bouncing, not climbing.
   b.box([-8, 2.5, 72], [5, 5, 8], { color: COLORS.stoneLight, info: { noGrab: true } });
   b.box([5.5, 4.5, 74.5], [10, 9, 9], { color: COLORS.stoneLight, info: { noGrab: true } });

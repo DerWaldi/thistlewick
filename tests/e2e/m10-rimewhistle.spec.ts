@@ -284,13 +284,13 @@ test('the Floe Ferry: shove floe A into the first gap, freeze round to push B in
   expect((await floes())[0].z).toBeGreaterThan(44);
   await castAt(page, [2, 3.2, 35.5], [4, 4.8, 34.9], 0, 1);
   expect((await floes())[0].z).toBeCloseTo(41.5, 1);
-  // From the west walkway, A slides east until the post stops it in gap 1.
+  // From the east walkway, A slides west until the post stops it in gap 1.
   expect(await castAt(page, [-9.2, 3.2, 41.5], [-5.5, 3, 41.5], 0, 4)).toBe('thwackwort');
   const a = (await floes())[0];
   expect(Math.abs(a.x)).toBeLessThan(0.6);
   expect(await standOn(page, [a.x, 3.2, 41.5])).toBeGreaterThan(2.9);
   expect(await standOn(page, [0, 3.4, 44.5])).toBeGreaterThan(3.3);
-  // Floe B: freeze the patch to the east islet, stand east of B, shove it west.
+  // Floe B: freeze the patch to the west islet, stand west of B, shove it east.
   expect(await castAt(page, [0, 3.4, 44.5], [4.5, 2.7, 45.2])).toBe('rimewhistle');
   expect(await standOn(page, [4.5, 2.9, 45.2])).toBeGreaterThan(2.8);
   expect(await castAt(page, [9, 3.4, 48], [5.5, 3, 48], 0, 4)).toBe('thwackwort');

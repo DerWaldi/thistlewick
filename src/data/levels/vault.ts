@@ -26,10 +26,10 @@ import {
  *
  *   Antechamber    x -5..5,   z 0..9    a padlock on the first gate
  *   Lockwork Hall  x -9..9,   z 10..30  the north gate has three padlocks: one in plain sight
- *                                       (P1), one above the west platform (P2, only visible
+ *                                       (P1), one above the east platform (P2, only visible
  *                                       once you've climbed up via the step block), one in a
  *                                       closed cubby (P3, seen through a grille from the side
- *                                       passage east of the hall, x 10..13)
+ *                                       passage west of the hall, x 10..13)
  *   Pantry         x -8..8,   z 31..48  three Snapcaskets (lock, then thwack) hold the gate; a
  *                                       real chest; a book opens a shelf-door to a secret chest
  *   Shutter Run    x -4..4,   z 49..74  shutters whose padlocks relock after 7 s; each lock is
@@ -43,8 +43,8 @@ import {
  *   Passage        x -3..3,   z 115..121.5 (the old Star chamber), treasure
  *   Counting House x -9..9,   z 121.5..155  the Star gate wants three padlocks open at once
  *                                       (they relock after 5.5 s): one on the north face of the
- *                                       counting table, one high on the east wall behind a
- *                                       grille, one riding a wheel over the gate. A west
+ *                                       counting table, one high on the west wall behind a
+ *                                       grille, one riding a wheel over the gate. A east
  *                                       walkway (top 3.2, stair at its south end) is the best
  *                                       view. The first Hexling overhead (on her own, so
  *                                       she gets a proper introduction), a Gnarling on the
@@ -144,13 +144,13 @@ function build(b: LevelBuilder): void {
   });
   slab(b, -9.5, 9.5, 10, 30.5, 10, 0.5, COLORS.stoneDark);
   wall(b, 'x', 30.5, -9.5, 14, 9.5, { color: STONE, holes: [gateHole(0)] });
-  // The west platform (top 4.4) with a parapet; the step block is the way up.
+  // The east platform (top 4.4) with a parapet; the step block is the way up.
   b.box([-7.5, 2.2, 21], [3, 4.4, 14], { color: COLORS.stoneLight });
   b.box([-6.1, 4.9, 14.5], [0.2, 1, 1], { color: COLORS.stone });
   b.box([-6.1, 4.9, 22.5], [0.2, 1, 11], { color: COLORS.stone });
   b.box([-5, 1.2, 16], [2, 2.4, 2], { color: COLORS.stone });
   deco(b, new BoxGeometry(2.1, 0.12, 2.1), [-5, 2.46, 16], COLORS.stoneDark);
-  // The cubby in the north-east corner: walled off from the hall, seen only through the grille.
+  // The cubby in the north-west corner: walled off from the hall, seen only through the grille.
   b.box([7.5, 2, 26], [3.4, 4, 0.4], { color: STONE });
   b.box([6, 2, 28], [0.4, 4, 4], { color: STONE });
   b.box([7.6, 4.15, 28], [3.6, 0.3, 4.2], { color: COLORS.stoneDark });
@@ -384,7 +384,7 @@ function countingHouse(b: LevelBuilder, flames: Glow): void {
   wall(b, 'z', 9.5, Z0, Z1, 11, { color: STONE, holes: [{ from: 130.6, to: 133.4, bottom: 4.6, top: 7.4 }] });
   wall(b, 'x', Z1, -9.5, 9.5, 11, { color: STONE, holes: [gateHole(0)] });
   slab(b, -9.5, 9.5, Z0, Z1, 11.5, 0.5, COLORS.stoneDark);
-  // The west walkway (3.2) and its stair.
+  // The east walkway (3.2) and its stair.
   b.box([-7.25, 1.6, 140], [3.5, 3.2, 24], { color: COLORS.stoneLight, info: { noGrab: true } });
   b.stairs([-7.25, 0, 124], 0, 8, 0.4, 0.5, 3.5, COLORS.stoneLight);
   for (let z = 132; z < 152; z += 2) deco(b, new BoxGeometry(0.08, 1, 0.08), [-5.55, 3.7, z], COLORS.woodDark);
@@ -395,7 +395,7 @@ function countingHouse(b: LevelBuilder, flames: Glow): void {
   b.box([0, 1.2, 141], [4, 2.4, 10], { color: '#6a4a32', pattern: 'planks', info: { noGrab: true } });
   treasure(b, -1, 139, 10, 41);
   treasure(b, 1, 143, 10, 43);
-  // The east alcove (high), behind a grille: P2 sits at its back.
+  // The west alcove (high), behind a grille: P2 sits at its back.
   b.box([10.6, 4.4, 132], [1.6, 0.4, 2.8], { color: STONE });
   b.box([11.2, 6, 132], [0.4, 3.4, 2.8], { color: STONE });
   for (let z = 130.9; z < 133.2; z += 0.35) deco(b, new BoxGeometry(0.06, 2.8, 0.06), [9.55, 6, z], '#2a2230');

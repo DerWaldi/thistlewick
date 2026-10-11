@@ -47,17 +47,17 @@ import { HOUSE_ORDER, HOUSES } from '../houses';
  *   Hollyhock Court     x -16..16, z 30..62   open sky, cloister (roof walkable at y=5), fountain,
  *                                              clock tower on the north wall
  *   Lantern Hall        x -12..12, z 0..30    grand stair to a gallery (y=5, z 21..30), hourglasses
- *   Crumbleton's Cupboard x -18..-12, z 4..12 the shop (west door of the hall)
- *   Crooked Corridor    x 12..42, z 5..23     east from the hall, north, then east up stairs
+ *   Crumbleton's Cupboard x -18..-12, z 4..12 the shop (east door of the hall)
+ *   Crooked Corridor    x 12..42, z 5..23     west from the hall, north, then west up stairs
  *                                              (y=3) to Gorse's classroom door
  *   Long Gallery        x 35..42, z 24..52    (y=3) north off the corridor landing, behind a
  *                                              portcullis (Thwackwort the winch); portraits, a
- *                                              padlocked store-room (east), Quince's door (north)
+ *                                              padlocked store-room (west), Quince's door (north)
  *
- *   Kitchen Yard        x -32..-19, z 14..36  west of the castle through the corner behind the
- *                                              court's west cloister; Ashcombe's kitchen door
- *   Kitchen Orchard     x 17..27, z 38..53     behind the court's east arch (vines: Cindersnap)
- *   Well Yard           x 13..34, z 11..30     east of the hall; gate lock frozen (Cindersnap)
+ *   Kitchen Yard        x -32..-19, z 14..36  east of the castle through the corner behind the
+ *                                              court's east cloister; Ashcombe's kitchen door
+ *   Kitchen Orchard     x 17..27, z 38..53     behind the court's west arch (vines: Cindersnap)
+ *   Well Yard           x 13..34, z 11..30     west of the hall; gate lock frozen (Cindersnap)
  *   The great doors (hall, south) open onto the Castle Grounds after Cindersnap; the Clock
  *   Tower door is in the middle of the court's north wall, open after Rimewhistle.
  *
@@ -111,8 +111,8 @@ export const HUB: LevelDef = {
     hallStairFoot: { pos: [2.6, 0, 11.2], yaw: Math.PI },
     galleryWindow: { pos: [-8, 5, 27], yaw: -Math.PI / 2 },
     courtFountain: { pos: [3.5, 0, 39.6], yaw: Math.PI },
-    courtCloisterWest: { pos: [-14.2, 0, 44], yaw: Math.PI / 2 },
-    courtCloisterEast: { pos: [14.2, 0, 52], yaw: -Math.PI / 2 },
+    courtCloisterEast: { pos: [-14.2, 0, 44], yaw: Math.PI / 2 },
+    courtCloisterWest: { pos: [14.2, 0, 52], yaw: -Math.PI / 2 },
     kitchenYard: { pos: [-24, 0, 21], yaw: Math.PI / 2 },
     orchard: { pos: [22, 0, 44], yaw: -Math.PI / 2 },
     wellYard: { pos: [17, 0, 21], yaw: 0 },
@@ -182,7 +182,7 @@ function buildHub(b: LevelBuilder): void {
     { type: 'door', pos: [0, 0, 0.05], yaw: 0, width: 4, height: 5.5, to: { level: 'grounds', spawn: 'default' }, afterLesson: 'cindersnap', talk: 'frontDoors', label: 'The Grounds' },
   );
 
-  // House banners on the east wall, windows on both long walls.
+  // House banners on the west wall, windows on both long walls.
   HOUSE_ORDER.forEach((h, i) => banner(b, [11.95, 7.5, 3 + i * 4], -Math.PI / 2, HOUSES[h].color, HOUSES[h].trim));
   for (const z of [4, 10, 16]) {
     windowPane(b, glow, 'z', -12.5, z, 8, 1.6, 3.6, 1);
@@ -194,7 +194,7 @@ function buildHub(b: LevelBuilder): void {
   portrait(b, CARD_BY_ID.get('agnes-thistlewick')!.portrait, [-11.95, 2.8, 18.5], Math.PI / 2, 1.2, 1.5, -0.05);
   portrait(b, { bg: ['#d8c4a4', '#8a6a4a'], kind: 'person', skin: '#e8b48e', robe: '#2f5a6a', hair: '#3a2617', hat: 'tall', hatColor: '#2b1d14' }, [11.95, 2.8, 22], -Math.PI / 2, 1.2, 1.5, 0.06);
 
-  // Chandeliers. The west one's top is reachable from the gallery and has a card on it.
+  // Chandeliers. The east one's top is reachable from the gallery and has a card on it.
   chandelier(b, candle, -7, 6, 18.4, 1.6, true);
   chandelier(b, candle, 7, 6, 18.4, 1.6, false);
   chandelier(b, candle, 0, 8.5, 7, 2, true);
@@ -203,7 +203,7 @@ function buildHub(b: LevelBuilder): void {
     { type: 'sweetLine', kind: 'bramble', from: [6.2, 6.6, 18.4], to: [7.8, 6.6, 18.4], count: 2 },
   );
 
-  // Gallery climb to the high west window: crate -> bookshelf top -> grab the sill.
+  // Gallery climb to the high east window: crate -> bookshelf top -> grab the sill.
   crate(b, [-9.5, 5, 26.5], 1);
   shelf(b, [-10.6, 5, 27.6], Math.PI / 2, 2.4, 2);
   // Window bay: a stone buttress whose top (y=9.05) is the sill, flush so it can be grabbed.
@@ -215,7 +215,7 @@ function buildHub(b: LevelBuilder): void {
   for (const x of [-6, -2.5, 1, 4.5]) shelf(b, [x, 5, 29.6], Math.PI, 3, 3.2);
   b.add({ type: 'sweetLine', kind: 'fizzwort', from: [-6, 5.6, 24], to: [6, 5.6, 24], count: 7 });
 
-  // Secret 1: the swaying tapestry in the west wall hides an alcove.
+  // Secret 1: the swaying tapestry in the east wall hides an alcove.
   b.add({ type: 'tapestry', pos: [-11.95, 0.05, 23.5], yaw: Math.PI / 2, width: 2.2, height: 3.2, color: '#8a2a3a', trim: '#e8c25a', sway: true });
   b.add({ type: 'tapestry', pos: [-11.95, 0.6, 3], yaw: Math.PI / 2, width: 2.2, height: 3.6, color: '#2f5a6a', trim: '#e6eef5' });
   b.add({ type: 'tapestry', pos: [11.95, 0.6, 26], yaw: -Math.PI / 2, width: 2.2, height: 3.6, color: '#3f7a4a', trim: '#efe3c0' });
@@ -232,7 +232,7 @@ function buildHub(b: LevelBuilder): void {
 
   // Hall furnishings: a long table with benches, rugs, plants by the doors, urns at the
   // stair foot, armour under the gallery, a reading desk upstairs and cobwebs up high.
-  // North of the corridor arch (z 6..10), so the way east stays clear.
+  // North of the corridor arch (z 6..10), so the way west stays clear.
   table(b, candle, [8.6, 0, 14.8], Math.PI / 2, 6, 1.4, 4);
   bench(b, [7.3, 0, 14.8], Math.PI / 2, 5.2);
   bench(b, [9.9, 0, 14.8], Math.PI / 2, 5.2);
@@ -297,7 +297,7 @@ function buildHub(b: LevelBuilder): void {
 
   // ================================================================ CROOKED CORRIDOR
   const CH = 5;
-  // Leg 1: east from the hall (x 12.5..26, z 6..10).
+  // Leg 1: west from the hall (x 12.5..26, z 6..10).
   wall(b, 'x', 5.5, 12.5, 26.5, CH);
   wall(b, 'x', 10.5, 12.5, 22, CH, { holes: [{ from: 19, to: 21, top: 2.6 }] });
   slab(b, 12.5, 26.5, 5, 11, CH + 0.4, 0.4, '#5e4a3e', 'planks');
@@ -305,7 +305,7 @@ function buildHub(b: LevelBuilder): void {
   wall(b, 'z', 21.5, 10.5, 17.5, CH);
   wall(b, 'z', 26.5, 5, 17.5, CH);
   slab(b, 21, 27, 10.5, 17.5, CH + 0.4, 0.4, '#5e4a3e', 'planks');
-  // Leg 3: east and up (x 22..42, z 18..22), stairs x 28..34 to y=3.
+  // Leg 3: west and up (x 22..42, z 18..22), stairs x 28..34 to y=3.
   wall(b, 'x', 23.5, 21, 42.5, 9, { holes: [{ from: 36.4, to: 40.6, bottom: 3, top: 6.6 }] }); // portcullis to the Long Gallery
   wall(b, 'x', 17.5, 26.5, 42.5, 9);
   wall(b, 'z', 21.5, 17.5, 23.5, 9);
@@ -325,7 +325,7 @@ function buildHub(b: LevelBuilder): void {
   for (const x of [14, 16.6, 22]) shelf(b, [x, 0, 6.35], 0, 2.4, 3.2);
   shelf(b, [19.3, 0, 6.35], 0, 2.4, 3.2);
   b.add(
-    // The secret door: slides west into the wall when the odd book on the shelf beside it is knocked.
+    // The secret door: slides east into the wall when the odd book on the shelf beside it is knocked.
     { type: 'bookshelf', pos: [20, 0, 10.25], yaw: Math.PI, width: 2, height: 2.6, slide: 2.1, when: ['cc-book'] },
     { type: 'knockSwitch', id: 'cc-book', pos: [17.4, 1.95, 9.45], yaw: Math.PI, style: 'book' },
   );
@@ -400,8 +400,8 @@ function buildHub(b: LevelBuilder): void {
   // Cloister: covered walk on all four sides (roof walkable at y=5).
   const R = 5;
   slab(b, -16, 16, 30, 33.5, R, 0.5, COLORS.slate); // south (along the hall)
-  slab(b, -16, -12.5, 33.5, 62, R, 0.5, COLORS.slate); // west
-  slab(b, 12.5, 16, 33.5, 62, R, 0.5, COLORS.slate); // east
+  slab(b, -16, -12.5, 33.5, 62, R, 0.5, COLORS.slate); // east
+  slab(b, 12.5, 16, 33.5, 62, R, 0.5, COLORS.slate); // west
   slab(b, -12.5, 12.5, 58.5, 62, R, 0.5, COLORS.slate); // north
   for (let x = -12; x <= 12; x += 4) {
     // The middles stay open: the way in from the hall (south) and to the Clock Tower (north).
@@ -443,7 +443,7 @@ function buildHub(b: LevelBuilder): void {
     { type: 'iceSheet', min: [-1.6, 41], max: [1.6, 45.4], y: -0.35, duration: 0 },
   );
 
-  // Vine-choked arch in the east wall (Cindersnap), a mossy pad on the west roof under an
+  // Vine-choked arch in the west wall (Cindersnap), a mossy pad on the east roof under an
   // unreachable balcony (Springwell), and a locked chest (Latchkin).
   b.add(
     // Burns away for good (Cindersnap), opening the Kitchen Orchard.
@@ -604,7 +604,7 @@ function buildHub(b: LevelBuilder): void {
     CARD_BY_ID.get('grey-lady')!.portrait,
     { bg: ['#f2d48a', '#9a6a2e'], kind: 'person', skin: '#f0c9a0', robe: '#7a2f3a', hair: '#5a3a1e', hat: 'bonnet', hatColor: '#e8d8c0', hairStyle: 'bun', collar: 'plain', expression: 'smile', prop: 'cauldron' },
   ] as PortraitSpec[];
-  // West wall: between the windows (29, 37, 45), clear of the false wall's alcove (z 49.5..51.5).
+  // East wall: between the windows (29, 37, 45), clear of the false wall's alcove (z 49.5..51.5).
   [33, 41, 47.4].forEach((z, i) => portrait(b, gallerySitters[i], [35.05, G + 2.6, z], Math.PI / 2, 1.2, 1.5, (i % 2 ? -1 : 1) * 0.04));
   [27, 31, 40, 44, 48].forEach((z, i) => portrait(b, gallerySitters[3 + i], [41.95, G + 2.6, z], -Math.PI / 2, i % 2 ? 1.1 : 1.3, i % 2 ? 1.4 : 1.7, (i % 2 ? 1 : -1) * 0.05));
   armour(b, [41.3, G, 29], -Math.PI / 2, '#2f5a6a');
@@ -618,7 +618,7 @@ function buildHub(b: LevelBuilder): void {
   cobweb(b, [42, 10.2, 24], [-1, 0], [0, 1], 1.2);
   b.lantern([38.5, G + 5.5, 38], 9, 16);
   signboard(b, 'The Long Gallery', [38.5, G + 4.3, 22.98], Math.PI);
-  // The padlocked store-room off the east wall (x 43..47, z 33..38).
+  // The padlocked store-room off the west wall (x 43..47, z 33..38).
   b.box([45, G / 2, 35.75], [4, G, 5.5], { color: COLORS.stone });
   wall(b, 'x', 32.75, 42.5, 47.5, 4.5, { base: G, color: COLORS.stone });
   wall(b, 'x', 38.75, 42.5, 47.5, 4.5, { base: G, color: COLORS.stone });
@@ -656,7 +656,7 @@ function buildHub(b: LevelBuilder): void {
   b.add(
     {
       type: 'door',
-      // In Hollyhock Court's west cloister.
+      // In Hollyhock Court's east cloister.
       pos: [-16, 0, 40],
       yaw: Math.PI / 2,
       width: 2.4,
@@ -673,9 +673,9 @@ function buildHub(b: LevelBuilder): void {
     { type: 'sweetLine', kind: 'bramble', from: [-15, 9.8, 50.6], to: [-15, 9.8, 51.6], count: 2 },
   );
 
-  // ================================================================ THE UNDERCROFT (under the hall's south-east corner)
+  // ================================================================ THE UNDERCROFT (under the hall's south-west corner)
   // A round stairwell (centre 16.2, 2.5) spiralling down from the hall to y -7.5, then a
-  // corridor east to Lamplough's door.
+  // corridor west to Lamplough's door.
   {
     const cx = 16.2;
     const cz = 2.5;
@@ -685,8 +685,8 @@ function buildHub(b: LevelBuilder): void {
     for (let k = 0; k < ring; k++) {
       const a = (k / ring) * Math.PI * 2;
       const len = 3.4 * ((Math.PI * 2) / ring) * 1.06;
-      // Openings: west at the top only (from the hall: solid below it, or you'd walk out
-      // under the hall from the bottom), east at the bottom (to the corridor).
+      // Openings: east at the top only (from the hall: solid below it, or you'd walk out
+      // under the hall from the bottom), west at the bottom (to the corridor).
       const spans: [number, number][] = k === ring / 2 ? [[BOT, -0.3], [3, TOP]] : k === 0 ? [[-4.5, TOP]] : [[BOT, TOP]];
       for (const [lo, hi] of spans) {
         b.box([cx + Math.cos(a) * 3.4, (lo + hi) / 2, cz + Math.sin(a) * 3.4], [0.4, hi - lo, len], { color: COLORS.stone, rot: [0, -a, 0], info: { noGrab: true } });
@@ -695,7 +695,7 @@ function buildHub(b: LevelBuilder): void {
     b.cylinder([cx, (BOT + TOP) / 2, cz], 0.7, TOP - BOT, COLORS.stoneLight, { noGrab: true }, 12);
     slab(b, 12.8, 19.6, -0.9, 5.9, TOP + 0.4, 0.4, '#5e4a3e', 'planks');
     b.box([cx, BOT - 0.25, cz], [6.8, 0.5, 6.8], { color: '#5a5262' });
-    // The spiral: a landing step at the top (west), then 24 steps of 0.3 m round to the east.
+    // The spiral: a landing step at the top (east), then 24 steps of 0.3 m round to the west.
     // The steps are for looks; you walk on a smooth invisible helical ramp under their
     // nosings (individual step edges snag the capsule, worst near the column).
     const step = (a: number, top: number, solid: boolean) =>
@@ -759,11 +759,11 @@ function buildHub(b: LevelBuilder): void {
   }
 
   // ================================================================ after Glimmerwick (appended: ids follow build order)
-  // Glimmer steps from the gallery up to a ledge high on the hall's east wall; the top
+  // Glimmer steps from the gallery up to a ledge high on the hall's west wall; the top
   // step only shows in a charged lamp's glow.
   b.box([11.5, 9.95, 18.5], [1, 0.5, 1.8], { color: COLORS.stoneLight, info: { noGrab: true } });
   deco(b, new BoxGeometry(1.1, 0.12, 1.9), [11.5, 9.7, 18.5], COLORS.stoneDark);
-  // The false wall's alcove behind the Long Gallery's west wall.
+  // The false wall's alcove behind the Long Gallery's east wall.
   b.box([33.25, G + 1.5, 49.3], [1.5, 3, 0.2], { color: COLORS.stoneLight });
   b.box([33.25, G + 1.5, 51.7], [1.5, 3, 0.2], { color: COLORS.stoneLight });
   b.box([32.4, G + 1.5, 50.5], [0.2, 3, 2.6], { color: COLORS.stoneLight });
@@ -824,7 +824,7 @@ function buildHub(b: LevelBuilder): void {
     { type: 'sweetLine', kind: 'fizzwort', from: [22, 0.6, 27], to: [32, 0.6, 27], count: 4 },
   );
   forgottenPassage(b);
-  // Up to the First Floor: a door off the gallery's east end.
+  // Up to the First Floor: a door off the gallery's west end.
   b.add({ type: 'door', pos: [11.95, 5, 25.5], yaw: -Math.PI / 2, width: 2.2, height: 3.2, to: { level: 'upper', spawn: 'default' }, lockedUnless: 'sorted', talk: 'upstairsDoor', label: 'The First Floor' });
   // Last of all (ids follow build order): the students' errands.
   errands(b);
@@ -835,15 +835,15 @@ function buildHub(b: LevelBuilder): void {
 }
 
 /**
- * The Kitchen Yard (x -32..-19, z 14..36), west of the castle: reached from Hollyhock
+ * The Kitchen Yard (x -32..-19, z 14..36), east of the castle: reached from Hollyhock
  * Court through the corner behind the cloister (x -18.5..-12.5, z 26.5..30) and an arch.
- * The kitchens (Ashcombe's door, Hearth & Flame) are in its west wall, in a bakehouse
+ * The kitchens (Ashcombe's door, Hearth & Flame) are in its east wall, in a bakehouse
  * front with a chimney; herb beds, a woodpile, a cart and a hay stack fill the rest.
  */
 function kitchenYard(b: LevelBuilder, glow: Glow): void {
   const BRICK = '#9a5a44';
   b.floor(-32.5, -18.5, 13.5, 36.5, { color: '#a89878' });
-  // The arch from the corner into the yard; its wall also closes the castle's west edge.
+  // The arch from the corner into the yard; its wall also closes the castle's east edge.
   wall(b, 'z', -18.5, 12.5, 36.5, 7, { cap: 4, color: COLORS.stone, holes: [{ from: 26.9, to: 29.6, top: 3.8 }] });
   deco(b, new BoxGeometry(1.2, 0.5, 3.3), [-18.5, 4, 28.25], COLORS.stoneLight);
   wall(b, 'x', 30.5, -18.5, -16.5, 10.5, { cap: 8 });
@@ -928,7 +928,7 @@ function kitchenYard(b: LevelBuilder, glow: Glow): void {
   ] as [number, string][]) {
     deco(b, new BoxGeometry(0.9, 1, 0.03), [x, 1.95, 15], c);
   }
-  // A lean-to in the north-west corner, stuffed to the roof with hay: something is tucked
+  // A lean-to in the north-east corner, stuffed to the roof with hay: something is tucked
   // in behind it, and only burning the hay gets you in (it's far too tall to climb).
   b.add(
     { type: 'burnable', id: 'hub-yard-hay', style: 'hay', persist: true, pos: [-30.55, 1.5, 34.1], size: [2.9, 3, 0.8] },
@@ -974,11 +974,11 @@ function forgottenPassage(b: LevelBuilder): void {
 }
 
 /**
- * The Well Yard (the alley east of the hall, x 13..34, z 11..30): an old frozen yard. Its
+ * The Well Yard (the alley west of the hall, x 13..34, z 11..30): an old frozen yard. Its
  * gate's lock is iced over until Cindersnap thaws it.
  */
 function wellYard(b: LevelBuilder): void {
-  // Its north side, between the court's east wall and the Long Gallery, used to open onto
+  // Its north side, between the court's west wall and the Long Gallery, used to open onto
   // nothing at all.
   wall(b, 'x', 30.5, 17, 34, 8, { cap: 4 });
   b.add(
@@ -1010,7 +1010,7 @@ function wellYard(b: LevelBuilder): void {
 
 /**
  * The Kitchen Orchard (x 17..27.5, z 38.5..53.5), behind the vines over the court's
- * east arch: apple trees, long grass, and a cobwebbed potting shed with a card.
+ * west arch: apple trees, long grass, and a cobwebbed potting shed with a card.
  */
 function orchard(b: LevelBuilder): void {
   b.floor(17, 27.5, 38.5, 53.5, { color: '#8a9a5a' });
@@ -1033,7 +1033,7 @@ function orchard(b: LevelBuilder): void {
     for (let i = 0; i < 3; i++) deco(b, new SphereGeometry(0.13, 6, 4), [x + 1 + i * 0.4, 0.12, z - 1.2 + i * 0.5], '#b8382a');
   }
   signboard(b, 'The Kitchen Orchard', [17.05, 3.4, 41], Math.PI / 2);
-  // The potting shed, its doorway (west) thick with cobwebs.
+  // The potting shed, its doorway (east) thick with cobwebs.
   const SHED = '#7a5a3a';
   b.box([25.5, 1.4, 49.2], [3.6, 2.8, 0.3], { color: SHED, pattern: 'planks' });
   b.box([25.5, 1.4, 52.8], [3.6, 2.8, 0.3], { color: SHED, pattern: 'planks' });
@@ -1181,7 +1181,7 @@ function errands(b: LevelBuilder): void {
     { type: 'secret', id: 'hub-cellar', area: 'cellar', min: [19.5, BOT - 1, 15], max: [34.5, BOT + 3, 20.5] },
     { type: 'sweetLine', kind: 'bramble', from: [25, BOT + 0.6, 17.5], to: [29, BOT + 0.6, 17.5], count: 3 },
   );
-  // ---- Wren's scarf: on the court's west balcony (moss on the cloister roof bounces you up).
+  // ---- Wren's scarf: on the court's east balcony (moss on the cloister roof bounces you up).
   b.add({ type: 'questItem', quest: 'scarf', pos: [-14, 9.75, 52] });
 }
 

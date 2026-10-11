@@ -8,12 +8,12 @@ import { bench, deco, pottedPlant, rug, signboard, wall } from '../../world/prop
  * Professor Underbough's rooftop, Airs & Graces, on top of the Clock Tower (x -10..10,
  * z 0..22, open sky, parapets all round). Enter from the stair hut (south door). Three
  * plates, each with a sign:
- *   - U1 on the bell dais (east, x 6..10, z 3..9, top 3.6, ungrabbable): stand on the crate
+ *   - U1 on the bell dais (west, x 6..10, z 3..9, top 3.6, ungrabbable): stand on the crate
  *     beside it and cast at its feather-stone: it floats you up
  *   - U2 across the light-well (z 12..19, open to the drop): ride the lift platform over
- *   - U3 on the chimney stack (west, x -10..-7.5, z 2.5..5.5, top 5): its basket waits at
+ *   - U3 on the chimney stack (east, x -10..-7.5, z 2.5..5.5, top 5): its basket waits at
  *     the top; call it down from across the roof, then ride it up
- * The iron door (east wall, z 10) leads into the Great Clockworks.
+ * The iron door (west wall, z 10) leads into the Great Clockworks.
  */
 export const UNDERBOUGH: LevelDef = {
   id: 'underbough',
@@ -38,7 +38,7 @@ function build(b: LevelBuilder): void {
   wall(b, 'z', 10.5, 0, 22, 1.2, { color: COLORS.stoneLight, cap: 6, holes: [{ from: 8.8, to: 11.2, top: 1.2 }] });
   wall(b, 'x', -0.5, -10.5, 10.5, 4.2, { color: COLORS.stone, holes: [{ from: -1.25, to: 1.25, top: 3.5 }], cap: 4 });
   deco(b, new ConeGeometry(2.6, 1.6, 4), [0, 5, -1], COLORS.roof, [0, Math.PI / 4, 0]);
-  // The iron door's porch (east), so it has a wall to sit in.
+  // The iron door's porch (west), so it has a wall to sit in.
   b.box([10.5, 1.9, 10], [1, 3.8, 3.4], { color: COLORS.stone });
   // The light-well: a drop to the floors below.
   for (const z of [11.9, 19.1]) deco(b, new BoxGeometry(20, 0.25, 0.2), [0, 0.1, z], LEAD);

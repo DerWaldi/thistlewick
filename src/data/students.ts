@@ -63,7 +63,7 @@ export const STUDENTS: StudentDef[] = [
     speaker: 'fitz',
     look: { ...scarf('mallowmere'), hair: '#1e1612', hairStyle: 'tufts', hatStyle: 'none', glasses: true, skin: '#8a5a3e' },
     level: 'hub',
-    // Up and down the east cloister.
+    // Up and down the west cloister.
     path: [
       [15.3, 0, 35],
       [15.3, 0, 49],
@@ -108,7 +108,7 @@ export const STUDENTS: StudentDef[] = [
     lines: (s) => [
       'Fairweather Lake is nicer frozen. Less wet.',
       "The Old Woods? Nobody goes in there. Except Mabel, when her hedgehog's gone walkabout. Which is always.",
-      ...(s.knows('rimewhistle') ? ['Old Ned keeps losing his fishing float over by the reeds. East end of the lake.'] : []),
+      ...(s.knows('rimewhistle') ? ['Old Ned keeps losing his fishing float over by the reeds. West end of the lake.'] : []),
     ],
   },
 ];

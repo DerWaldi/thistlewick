@@ -102,7 +102,7 @@ export const DIALOGUES: Record<string, Script> = {
       await say([
         { speaker: 'wendlebury', text: "Five Stars! Professor Ashcombe says you didn't singe a single eyebrow. Hers, I mean. Yours are your own business." },
         { speaker: 'wendlebury', text: "I've had the great doors unbarred. You may go out into the grounds now, dear: Madam Coldharbour teaches Frosts & Waters in the boathouse by the lake." },
-        { speaker: 'wendlebury', text: 'Those vines over the east arch in Hollyhock Court have been there since before my time. And the Well Yard gate has been frozen shut all year. I always wondered.' },
+        { speaker: 'wendlebury', text: 'Those vines over the west arch in Hollyhock Court have been there since before my time. And the Well Yard gate has been frozen shut all year. I always wondered.' },
       ]);
       return;
     }
@@ -110,7 +110,7 @@ export const DIALOGUES: Record<string, Script> = {
       await say([
         { speaker: 'wendlebury', text: "Four Stars! And Mr. Lamplough came UPSTAIRS to tell me. He blinked a great deal, but he came." },
         { speaker: 'wendlebury', text: 'Light shows what wants to stay hidden, dear. I would look again at any wall you think you know.' },
-        { speaker: 'wendlebury', text: 'Professor Ashcombe is expecting you in the kitchens. Through the Kitchen Yard: the little corner of Hollyhock Court behind the cloister, west side. Follow your nose.' },
+        { speaker: 'wendlebury', text: 'Professor Ashcombe is expecting you in the kitchens. Through the Kitchen Yard: the little corner of Hollyhock Court behind the cloister, east side. Follow your nose.' },
       ]);
       return;
     }
@@ -142,7 +142,7 @@ export const DIALOGUES: Record<string, Script> = {
       return;
     }
     await say([
-      { speaker: 'wendlebury', text: 'Practical Charms is up the Crooked Corridor, through the east arch. Professor Gorse will be along shortly.' },
+      { speaker: 'wendlebury', text: 'Practical Charms is up the Crooked Corridor, through the west arch. Professor Gorse will be along shortly.' },
       { speaker: 'wendlebury', text: 'Until then, do have a wander. Thistlewick rewards the curious. And occasionally bites them.' },
     ]);
   },
@@ -656,7 +656,7 @@ export const DIALOGUES: Record<string, Script> = {
       ]);
       state.collectCard('wilhelmina-ashcombe');
       await say([
-        { speaker: 'ashcombe', text: 'There are vines over an arch in Hollyhock Court, on the east side. Nobody has been through there in years. Now somebody can.' },
+        { speaker: 'ashcombe', text: 'There are vines over an arch in Hollyhock Court, on the west side. Nobody has been through there in years. Now somebody can.' },
         { speaker: 'ashcombe', text: "And the great doors are open for you now. Madam Coldharbour is down at the boathouse by the lake. Take a scarf. Take two." },
       ]);
       return;
@@ -1039,7 +1039,7 @@ export const DIALOGUES: Record<string, Script> = {
 
   woodsDell: async ({ say }) => {
     await say([
-      { speaker: 'sign', text: "Mother Hazelrigg's toadstools. Spring the one in the middle of the dell and bounce up to the west shelf. The one up there throws you north, onto the ridge." },
+      { speaker: 'sign', text: "Mother Hazelrigg's toadstools. Spring the one in the middle of the dell and bounce up to the east shelf. The one up there throws you north, onto the ridge." },
     ]);
   },
 
@@ -1092,7 +1092,7 @@ export const DIALOGUES: Record<string, Script> = {
   },
   'exam-quince-hint': async ({ say }) => {
     await say([
-      { speaker: 'quince', text: 'From the south-east corner you can see two of my locks at once. Open those, then hurry round the east side for the third. Then through the gate, quickly.' },
+      { speaker: 'quince', text: 'From the south-west corner you can see two of my locks at once. Open those, then hurry round the west side for the third. Then through the gate, quickly.' },
     ]);
   },
 
@@ -1133,7 +1133,7 @@ export const DIALOGUES: Record<string, Script> = {
   },
   'exam-ashcombe-hint': async ({ say }) => {
     await say([
-      { speaker: 'ashcombe', text: "The braziers go round in a figure of eight: west front, east back, west back, east front. Walk the line between them before you start, then light them at a run." },
+      { speaker: 'ashcombe', text: "The braziers go round in a figure of eight: east front, west back, east back, west front. Walk the line between them before you start, then light them at a run." },
     ]);
   },
 

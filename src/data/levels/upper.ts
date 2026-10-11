@@ -7,24 +7,24 @@ import { CARD_BY_ID } from '../cards';
 import { HOUSES, type HouseId } from '../houses';
 
 /**
- * The First Floor, up a door on the Lantern Hall's gallery (east wall). +Z north:
+ * The First Floor, up a door on the Lantern Hall's gallery (west wall). +Z north:
  *
  *   Long Hall      x -4.5..4.5,  z 0..54    the spine: portraits, armour, benches; the door
- *                                           back down (south); doorways west (library) and
- *                                           east (house wing); a stair (z 44..54) up to the roof
- *                                           and, beside the stair (east), the iron door to the
+ *                                           back down (south); doorways east (library) and
+ *                                           west (house wing); a stair (z 44..54) up to the roof
+ *                                           and, beside the stair (west), the iron door to the
  *                                           Final Examinations (after all seven lessons)
- *   Great Library  x -36..-5.5,  z 8..40    12 m tall. A U-shaped mezzanine (top 5: west,
+ *   Great Library  x -36..-5.5,  z 8..40    12 m tall. A U-shaped mezzanine (top 5: east,
  *                                           north and south strips) up a stair by the door, or
  *                                           on the book lift (Thistledown, north). The stack
  *                                           island (x -24..-16, z 20..28, top 9): glimmer steps
- *                                           from the west mezzanine, the last only in a CHARGED
+ *                                           from the east mezzanine, the last only in a CHARGED
  *                                           lamp's glow (card). Behind the north wall, through a
  *                                           sliding bookshelf (knock the odd book), the Forbidden
  *                                           Section: a Snapweed and a chest (card)
  *                                           Along the top of the north bookcases (9), a plank
  *                                           ledge with gaps, reached by a rune tile on the
- *                                           mezzanine (Springwell): Oswin's book at its east end
+ *                                           mezzanine (Springwell): Oswin's book at its west end
  *   House Wing     x 5.5..36,    z 8..40    a corridor (z 21..29) with four common rooms: only
  *                                           your own house's door opens
  *   The Leads      x -30..30,    z 54.5..84, y 7.2  the roof: chimney steps up to the ridge, a
@@ -105,8 +105,8 @@ function longHall(b: LevelBuilder, glow: Glow, flames: Glow): void {
   // Portraits, armour and benches (NPC spots at two of them).
   const sitters = ['mother-wortle', 'agnes-thistlewick', 'pellam-fogg', 'ezekiel-crumbleton', 'hester-quillfeather', 'ambrose-wick'];
   sitters.forEach((id, i) => {
-    const west = i % 2 === 0;
-    portrait(b, CARD_BY_ID.get(id)!.portrait, [west ? -4.45 : 4.45, 3.3, 6 + i * 6], west ? Math.PI / 2 : -Math.PI / 2, 1.2, 1.5, (i % 3) * 0.03 - 0.03);
+    const east = i % 2 === 0;
+    portrait(b, CARD_BY_ID.get(id)!.portrait, [east ? -4.45 : 4.45, 3.3, 6 + i * 6], east ? Math.PI / 2 : -Math.PI / 2, 1.2, 1.5, (i % 3) * 0.03 - 0.03);
   });
   for (const z of [10, 19, 31, 40]) armour(b, [z % 2 ? -3.9 : 3.9, 0, z], z % 2 ? Math.PI / 2 : -Math.PI / 2);
   bench(b, [-3.6, 0, 14], Math.PI / 2, 2.4);
@@ -126,7 +126,7 @@ function longHall(b: LevelBuilder, glow: Glow, flames: Glow): void {
   slab(b, -5.5, 5.5, 44, 54.5, 11.5, 0.5, '#4a3226', 'planks');
   wall(b, 'x', 54.5, -5.5, 5.5, 11.5, { color: STONE, holes: [{ from: -1.5, to: 1.5, bottom: 7.2, top: 10.6 }] });
   wall(b, 'z', 5, 44, 54.5, 11.5, { color: STONE, holes: [{ from: 47.8, to: 50.2, top: 3.4 }] });
-  // Beside the stair, east: the Examination Hall, once all seven lessons are done.
+  // Beside the stair, west: the Examination Hall, once all seven lessons are done.
   b.add({ type: 'door', pos: [4.55, 0, 49], yaw: -Math.PI / 2, width: 2.2, height: 3.2, to: { level: 'exams', spawn: 'default' }, afterLesson: 'thistledown', talk: 'examsDoor', label: 'The Examination Hall', style: 'iron' });
   b.stairs([0, 0, 44.4], 0, 18, 0.4, 0.52, 3, COLORS.stoneLight);
   // Beside the stair foot, not in the way.
@@ -144,7 +144,7 @@ function library(b: LevelBuilder, glow: Glow, flames: Glow): void {
   wall(b, 'z', -36.5, 7.5, 48.5, LH, { color: STONE });
   slab(b, -37, -5, 7.5, 40.5, LH + 0.5, 0.5, '#4a3226', 'planks');
   for (let z = 10; z < 40; z += 5) deco(b, new BoxGeometry(31, 0.5, 0.5), [-21, LH - 0.25, z], COLORS.woodDark);
-  // The mezzanine (top 5): west, north and south strips, with rails.
+  // The mezzanine (top 5): east, north and south strips, with rails.
   slab(b, -36, -33, 8, 40, 5, 0.4, WOOD, 'planks');
   slab(b, -33, -5.5, 37, 40, 5, 0.4, WOOD, 'planks');
   slab(b, -33, -5.5, 8, 11, 5, 0.4, WOOD, 'planks');

@@ -9,9 +9,9 @@ import { CARD_BY_ID } from '../cards';
  * The Clock Tower, through a door in Hollyhock Court's north wall (open once Rimewhistle
  * is passed). A square tower (x -8..8, z 0..16, 32 m tall) round an open shaft
  * (x -4..4, z 4..12) where the clock's weights hang. Seven flights climb the walls
- * anticlockwise from the ground (SE corner): landings NE 3.6, NW 7.2, SW 10.8 (behind the
- * dial), SE 14.4, NE 18, NW 21.6, and SW 25.2 at the top, where Underbough's door is.
- * Thistledown: a crate on the NW landing (7.2) floats up to a nook in the north wall (card).
+ * clockwise (seen from above) from the ground (SW corner): landings NW 3.6, NE 7.2, SE 10.8 (behind the
+ * dial), SW 14.4, NW 18, NE 21.6, and SE 25.2 at the top, where Underbough's door is.
+ * Thistledown: a crate on the NE landing (7.2) floats up to a nook in the north wall (card).
  */
 export const CLOCKTOWER: LevelDef = {
   id: 'clocktower',
@@ -202,7 +202,7 @@ function build(b: LevelBuilder): void {
     { type: 'sweet', kind: 'bramble', pos: [-6, 6 * RISE + 0.6, 15] },
   );
 
-  // ---------------------------------------------------------------- Thistledown: the nook over the NW landing
+  // ---------------------------------------------------------------- Thistledown: the nook over the NE landing
   // The nook's sill (top 2*RISE + 3) is out of reach from the landing; the crate floats up to it.
   b.box([-6, 2 * RISE + 2.9, 17.1], [2, 0.2, 2.2], { color: '#7a6a5a', info: { noGrab: true } });
   b.box([-7.1, 2 * RISE + 4.2, 17.2], [0.2, 2.4, 2], { color: STONE });

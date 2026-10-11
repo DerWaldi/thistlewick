@@ -26,7 +26,7 @@ test('from the Sorting Lantern to Gorse, the trial and back: the goal and its co
     const tw = window.__tw;
     (tw.game as unknown as G).state.house = 'bramblecote';
     (tw.game as unknown as G).state.flags.add('sorted');
-    // Facing east in the hall: the corridor arch is dead ahead.
+    // Facing west in the hall: the corridor arch is dead ahead.
     tw.teleport(0, 0, 8, Math.PI / 2);
     tw.setCamera(Math.PI / 2, 0.1);
   });

@@ -13,17 +13,17 @@ import { barrel, bush, cobweb, crate, deco, Glow, grass, ivy, mushrooms, pottedP
  *                                        only by burning a briar plug (briars hurt to touch);
  *                                        a briar clump across lane A-B; two Gnarlings in lane
  *                                        B-C and a brazier there that scares them off; vines
- *                                        over the exit (west end of lane C-D)
+ *                                        over the exit (east end of lane C-D)
  *   Lily Pond      x -9..9,  z 28.5..48.5 water z 31.5..44.3. A drawbridge (rope on the south
  *                                        bank) reaches the island; two crates hang on ropes over
  *                                        the water beyond it: burn them down as stepping stones
  *                                        (the ropes are too steep to aim at from the island, so
  *                                        burn them from the bank). Secret: a third crate on the
- *                                        south bank drops by the west ledge (top 2.4), along it a
- *                                        cobweb over an alcove in the west wall with a card
+ *                                        south bank drops by the east ledge (top 2.4), along it a
+ *                                        cobweb over an alcove in the east wall with a card
  *   Palm House     x -9..9,  z 48.5..68.5 a raised planter (x -3.5..3.5, z 52..64) blocks the
  *                                        view across; four braziers in the corners, notched
- *                                        I (SW), II (NE), III (SE), IV (NW), 10 s each; the
+ *                                        I (SE), II (NW), III (SW), IV (NE), 10 s each; the
  *                                        north gate opens only while all four burn, and lighting
  *                                        one out of turn puts them all out. Two Gnarlings
  *   Snapweed Beds  x -9..9,  z 68.5..88.5 hedges zig-zag the way north through four lanes, a
@@ -218,7 +218,7 @@ function build(b: LevelBuilder): void {
   // The island.
   b.box([0, -1.25, 37.75], [4, 2.5, 2.5], { color: COLORS.stone, info: { noGrab: true } });
   deco(b, new BoxGeometry(4.1, 0.08, 2.6), [0, 0.02, 37.75], COLORS.moss);
-  // The west ledge (secret route) standing in the water.
+  // The east ledge (secret route) standing in the water.
   b.box([-8, 0, 35.5], [2, 4.8, 8], { color: COLORS.stone, info: { noGrab: true } });
   deco(b, new BoxGeometry(2.1, 0.1, 8.1), [-8, 2.42, 35.5], COLORS.moss);
   // Lily pads.
@@ -242,7 +242,7 @@ function build(b: LevelBuilder): void {
     { type: 'burnable', id: 'gr2', style: 'rope', pos: [-1, 4.4, 40.3], size: [0.2, 1.2, 0.2] },
     { type: 'dropper', pos: [1, 2.5, 42.6], size: [1.4, 2.6, 1.4], floorY: -2.4, when: ['gr3'] },
     { type: 'burnable', id: 'gr3', style: 'rope', pos: [1, 4.4, 42.6], size: [0.2, 1.2, 0.2] },
-    // Secret: a crate drops by the west ledge; the alcove is behind the cobweb along it.
+    // Secret: a crate drops by the east ledge; the alcove is behind the cobweb along it.
     { type: 'dropper', pos: [-8, 3.2, 30.5], size: [1.2, 1.2, 1.2], floorY: 0, when: ['gr4'] },
     { type: 'burnable', id: 'gr4', style: 'rope', pos: [-8, 4.45, 30.5], size: [0.2, 1.3, 0.2] },
     { type: 'burnable', style: 'cobweb', pos: [-9.5, 3.6, 37.5], size: [2, 2.4, 0.3], yaw: Math.PI / 2 },
@@ -257,7 +257,7 @@ function build(b: LevelBuilder): void {
   deco(b, new BoxGeometry(0.2, 0.2, 1), [1.55, 3.2, 31.1], COLORS.woodDark);
   for (const z of [40.3, 42.6]) deco(b, new BoxGeometry(19, 0.3, 0.3), [0, 5.1, z], COLORS.woodDark);
   deco(b, new BoxGeometry(3, 0.3, 0.3), [-8, 5.2, 30.5], COLORS.woodDark);
-  // The alcove: a little brick cupboard poking out of the west wall at ledge height.
+  // The alcove: a little brick cupboard poking out of the east wall at ledge height.
   b.box([-11, 1.2, 37.5], [2.4, 2.4, 2.4], { color: BRICK });
   b.box([-11, 3.6, 36.2], [2.4, 2.4, 0.3], { color: BRICK });
   b.box([-11, 3.6, 38.8], [2.4, 2.4, 0.3], { color: BRICK });
@@ -360,7 +360,7 @@ function snapweedBeds(b: LevelBuilder): void {
     deco(b, new BoxGeometry(19, 0.25, 0.25), [0, H, z], IRON);
     for (const side of [-1, 1]) deco(b, new BoxGeometry(9.6, 0.2, 0.2), [side * 4.6, H + 1.1, z], IRON, [0, 0, side * -0.23]);
   }
-  // Four lanes, the gaps alternating east and west.
+  // Four lanes, the gaps alternating west and east.
   hedgeRow(b, 73.5, [[5, 9]]);
   hedgeRow(b, 78.5, [[-9, -5]]);
   hedgeRow(b, 83.5, [[5, 9]]);

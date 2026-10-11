@@ -9,15 +9,15 @@ import { bench, bush, crate, deco, Glow, grass, hollyhock, ivy, mushrooms, signb
  * passed). Day. North is the castle; everything else runs downhill to the lake (+Z north):
  *
  *   Castle front    z 0..4      the facade, two towers, the great doors (back into the hall)
- *   Terrace         x -16..16, z -12..0, y 0   balustrade; the west tower's balcony (y 3.4)
+ *   Terrace         x -16..16, z -12..0, y 0   balustrade; the east tower's balcony (y 3.4)
  *                               with a frozen-waterfall climb (Rimewhistle) and a secret
  *   Lawn            x -50..50, z -42..-17, y -3   stairs down from the terrace; trees,
  *                               flower beds, a statue, benches; Coldharbour's boathouse
- *                               (x -40..-30, z -46..-36, door east) on the west shore; a
- *                               door east (x 50.5) into the Old Woods, once Mabel asks
+ *                               (x -40..-30, z -46..-36, door west) on the east shore; a
+ *                               door west (x 50.5) into the Old Woods, once Mabel asks
  *   Lake            x -50..50, z -90..-42, water y -3.6   a jetty (x 10..12) and three ice
  *                               sheets to the island folly (centre 22,-75) with a card;
- *                               on the east side, old mooring rocks (x 41..43) and three
+ *                               on the west side, old mooring rocks (x 41..43) and three
  *                               ice sheets to a reed bank (x 47..50, z -66..-56): Ned's float
  */
 export const GROUNDS: LevelDef = {
@@ -80,7 +80,7 @@ function build(b: LevelBuilder): void {
   ivy(b, 'x', -12.5, -16, -4, -3, -0.2, -1, 4);
   ivy(b, 'x', -12.5, 4, 16, -3, -0.2, -1, 6);
 
-  // The west tower's balcony (top 3.8, out of reach), and a spout over the basin below it:
+  // The east tower's balcony (top 3.8, out of reach), and a spout over the basin below it:
   // freeze the falling water and climb the ice.
   b.box([-14.5, 3.65, -1.9], [5, 0.3, 3.8], { color: COLORS.stoneLight });
   for (const x of [-16.95, -12.05]) b.box([x, 4.3, -1.9], [0.1, 1, 3.8], { color: COLORS.woodDark, pattern: 'planks', info: { noGrab: true } });
@@ -107,7 +107,7 @@ function build(b: LevelBuilder): void {
   ]) {
     b.box([(x0 + x1) / 2, -1.5, -6], [x1 - x0, 3, 12], { color: GRASS, info: { noGrab: true } });
   }
-  // Grounds walls: hedges with caps east and west, and the castle's flanks.
+  // Grounds walls: hedges with caps west and east, and the castle's flanks.
   for (const x of [-51, 51]) {
     wall(b, 'z', x, -92, 0, 4, { base: LAWN, color: HEDGE, cap: 6 });
   }
@@ -164,8 +164,8 @@ function build(b: LevelBuilder): void {
   );
 
   // ---------------------------------------------------------------- Coldharbour's boathouse
-  // Plank walls (3.8 m) under a pitched roof running east-west, solid gables at both ends,
-  // and a wide double door in the east gable.
+  // Plank walls (3.8 m) under a pitched roof running west-east, solid gables at both ends,
+  // and a wide double door in the west gable.
   const BOARDS = '#6a5a4a';
   const WALL = 3.8;
   const RIDGE = 2.8;
@@ -281,7 +281,7 @@ function build(b: LevelBuilder): void {
 }
 
 /**
- * Ned's lucky float, in the reeds on the far east shore: freeze the water between the old
+ * Ned's lucky float, in the reeds on the far west shore: freeze the water between the old
  * mooring rocks (the long middle stretch only holds if charged), and mind the Snapweed.
  */
 function errands(b: LevelBuilder): void {

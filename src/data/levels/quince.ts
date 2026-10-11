@@ -25,7 +25,7 @@ import { CARD_BY_ID } from '../cards';
  * Madam Quince's Locks & Latches classroom, at the top of the Long Gallery
  * (x -7..7, z 0..14). Enter from the gallery (south door). Quince teaches Latchkin;
  * three padlocked practice boxes (the third behind bars, to show spells see through
- * grilles) unlock the iron door (east) down to the Latchkin Vaults.
+ * grilles) unlock the iron door (west) down to the Latchkin Vaults.
  */
 export const QUINCE: LevelDef = {
   id: 'quince',
@@ -131,7 +131,7 @@ function build(b: LevelBuilder): void {
     b.cylinder([x, 0.45, 6.5], 0.45, 0.9, COLORS.stoneLight, undefined, 8);
     deco(b, new CylinderGeometry(0.55, 0.55, 0.08, 8), [x, 0.94, 6.5], COLORS.stone);
   }
-  // The barred cabinet on the west wall: a stone niche with iron bars in front.
+  // The barred cabinet on the east wall: a stone niche with iron bars in front.
   b.box([-6.6, 1.1, 10.5], [0.8, 0.2, 1.6], { color: COLORS.stone });
   b.box([-6.6, 2.5, 10.5], [0.8, 0.2, 1.6], { color: COLORS.stone });
   for (const z of [9.65, 11.35]) b.box([-6.6, 1.8, z], [0.8, 1.6, 0.1], { color: COLORS.stone });

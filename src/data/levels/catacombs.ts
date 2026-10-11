@@ -18,7 +18,7 @@ import { cobweb, column, deco, Glow, rubble, slab, urn, wall, wallTorch } from '
  *                                         (x -5, 3, -1), and a lamp on a post at the start of
  *                                         each section: the first only shows its wall when
  *                                         CHARGED; the second also (charged) unmasks a false bit
- *                                         of the west wall with the card behind it
+ *                                         of the east wall with the card behind it
  *   Lamplough's      x -9..9,  z 51..70   a divider (x 0, z 54..67) splits the room; four wall
  *   Lantern                               lamps (two per half) open the north gate only while
  *                                         ALL are lit (9 s each). Snapcaskets in both halves
@@ -128,7 +128,7 @@ function build(b: LevelBuilder): void {
     if (fx + 1 < 8) b.box([(8 + fx + 1) / 2, 1.5, z], [8 - fx - 1, 3, 0.6], { color: STONE, pattern: 'stone' });
     b.add({ type: 'illusionWall', pos: [fx, 1.5, z], size: [2, 3, 0.6], color: STONE });
   }
-  // The secret alcove behind a false bit of the west wall.
+  // The secret alcove behind a false bit of the east wall.
   b.box([-9.75, 1.5, 37.9], [2.5, 3, 0.2], { color: STONE });
   b.box([-9.75, 1.5, 40.1], [2.5, 3, 0.2], { color: STONE });
   b.box([-11.1, 1.5, 39], [0.2, 3, 2.4], { color: STONE });
