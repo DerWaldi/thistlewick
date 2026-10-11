@@ -391,6 +391,16 @@ export const CARDS: CardDef[] = [
     hint: 'A thank-you from Mabel Inchcombe, for a hedgehog found in the Old Woods.',
     portrait: { bg: FOUNDER_BG, kind: 'person', skin: '#c98e6a', robe: '#4f6a2a', hair: '#9a9a8a', hat: 'bonnet', hatColor: '#6a7a3a', prop: 'thistle', hairStyle: 'long', collar: 'scarf', expression: 'kind', jewel: '#8a5a2a', eyes: '#4a6a3a' },
   },
+  {
+    id: 'bartholomew-thornwhistle',
+    number: 38,
+    name: 'Bartholomew Thornwhistle',
+    title: 'The Lost Forester',
+    set: 'Oddballs',
+    text: 'Went into the Old Woods to count the toadstools and came out forty years later, still counting. He insisted he had only popped in for the afternoon.',
+    hint: 'In the Old Woods, on top of the tallest toadstool in Mushroom Dell.',
+    portrait: { bg: ['#c8d8a0', '#3f5a2a'], kind: 'person', skin: '#d8a07a', robe: '#5a4a2a', hair: '#8a8a7a', beard: true, hat: 'tall', prop: 'book', hatColor: '#3f5a2a', hairStyle: 'wild', collar: 'scarf', expression: 'kind', eyes: '#5a4a2a' },
+  },
 ];
 
 export const CARD_BY_ID = new Map(CARDS.map((c) => [c.id, c]));

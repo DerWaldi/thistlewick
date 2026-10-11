@@ -11,7 +11,8 @@ import { bush, deco, Glow, grass, mushrooms, rubble, signboard, tree, wall } fro
  *                                     between boulders (Cindersnap), two Snapweeds in a
  *                                     second gap, Gnarlings
  *   Mushroom Dell   z 24..44,  y 0    a toadstool up to the east shelf (4.5), a second that
- *                                     flings you north onto the ridge (8) (Springwell)
+ *                                     flings you north onto the ridge (8) (Springwell); a
+ *                                     hop from the shelf to the tall toadstool's cap (card)
  *   The Canopy      z 44..80,  y 8    tree platforms over a flooded ravine (water -3): rope
  *                                     bridges, a swinging log, a basket you call over a
  *                                     7 m gap (Thistledown)
@@ -62,6 +63,8 @@ function build(b: LevelBuilder): void {
   hollow(b);
   brook(b);
   oak(b);
+  // Last (ids follow build order): a card on the tall toadstool beside the Dell's shelf.
+  toadstoolCard(b);
 
   glow.finish(b, '#ffd890');
   b.finish();
@@ -135,6 +138,16 @@ function bounds(b: LevelBuilder): void {
       }
     }
   }
+}
+
+/**
+ * The tall toadstool at the north-east corner of Mushroom Dell (cap 5.4, beside the shelf at
+ * 4.5): its cap is firm enough to stand on, and Bartholomew Thornwhistle's card is up there.
+ * A short hop from the shelf's north edge, if you notice it.
+ */
+function toadstoolCard(b: LevelBuilder): void {
+  b.box([-14, 5.25, 41.5], [2, 0.3, 2], { invisible: true, info: { noGrab: true } });
+  b.add({ type: 'card', card: 'bartholomew-thornwhistle', pos: [-14, 6.6, 41.5] });
 }
 
 /**
@@ -247,7 +260,7 @@ function dell(b: LevelBuilder): void {
     [6, 27, 2.4, 1.4],
     [10, 33, 3.4, 1.8],
     [3, 40, 1.6, 1],
-    [-14, 41.5, 5.8, 1.3],
+    [-14, 41.5, 5.1, 1.3],
   ]) {
     b.cylinder([x, h / 2, z], 0.3, h, '#efe6d2', undefined, 7);
     deco(b, new SphereGeometry(r, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2).scale(1, 0.55, 1), [x, h, z], '#c8382a');

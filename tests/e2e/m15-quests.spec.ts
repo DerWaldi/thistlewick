@@ -531,3 +531,26 @@ test('pupils wander the castle and chat; Wren and Otto have errands of their own
   expect(watch.ground).toBeGreaterThan(13);
   expect(watch.flags).toContain('quest:watch:found');
 });
+
+test('the Old Woods card: a held jump from the Dell shelf onto the tall toadstool', async ({ page }) => {
+  await boot(page, '?test&level=woods');
+  const cards = await page.evaluate(async () => {
+    const tw = window.__tw;
+    await tw.idle();
+    const g = tw.game as unknown as { state: { flags: Set<string> } };
+    for (const f of ['woods-entered', 'woods-hint-dell']) g.state.flags.add(f);
+    tw.teleport(-14, 4.5, 37.4, 0);
+    tw.setCamera(0, 0.2);
+    tw.advance(0.3);
+    tw.input({ x: 0, y: 1, jump: false });
+    tw.advance(0.3);
+    tw.input({ x: 0, y: 1, jump: true });
+    tw.pressJump();
+    tw.advance(0.6);
+    tw.input(null);
+    tw.advance(0.6);
+    await tw.idle();
+    return tw.state().cards;
+  });
+  expect(cards).toContain('bartholomew-thornwhistle');
+});
