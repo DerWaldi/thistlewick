@@ -1,5 +1,5 @@
 import RAPIER from '@dimforge/rapier3d-compat';
-import { BoxGeometry, Color, ConeGeometry, CylinderGeometry, Group, IcosahedronGeometry, MathUtils, Matrix4, Mesh, MeshStandardMaterial, SphereGeometry, Vector3, type BufferGeometry } from 'three';
+import { BoxGeometry, Color, ConeGeometry, CylinderGeometry, Group, IcosahedronGeometry, MathUtils, Matrix4, Mesh, MeshStandardMaterial, SphereGeometry, Vector3, type BufferGeometry, type Object3D } from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { dampAngle } from '../player/controller';
 import { RuneMarker } from '../spells/runes';
@@ -334,7 +334,7 @@ export class EmberCrab implements Entity, SpellTarget {
   private time = Math.random() * 10;
   private readonly legs: { g: Group; side: number; i: number }[] = [];
   private readonly claws: { arm: Group; jaw: Group; side: number }[] = [];
-  private readonly flames: Mesh[] = [];
+  private readonly flames: Object3D[] = [];
 
   constructor(
     private spec: SpecOf<'emberCrab'>,
@@ -449,6 +449,8 @@ export class EmberCrab implements Entity, SpellTarget {
     this.ice.visible = false;
     this.root.add(this.ice);
     this.root.traverse((o) => (o.castShadow = true));
+    const model = modelIslands('embercrab');
+    if (model) this.wear(model);
     this.root.position.copy(this.pos);
     ctx.scene.add(this.root);
     // A sensor while alive (you walk into it and get pinched, like Gnarlings), a solid block of
@@ -466,6 +468,49 @@ export class EmberCrab implements Entity, SpellTarget {
   get spell(): 'thwackwort' | 'rimewhistle' {
     if (this.state === 'frozen') return 'thwackwort';
     return this.ctx.state.knows('rimewhistle') && this.state !== 'stunned' ? 'rimewhistle' : 'thwackwort';
+  }
+
+  /**
+   * Wear the lava-crab model (dressed at 0.75, its feet on the ground: the crab's origin is
+   * 0.35 up). Legs go to their pivots by side and by front-to-back slot, pincers to the arms
+   * with their lower blades on the jaws, the flames on the eye stalks to groups that flicker.
+   */
+  private wear(model: Island[]): void {
+    const S = 0.75;
+    const toRoot = new Matrix4().makeTranslation(0, -0.35, 0).multiply(new Matrix4().makeScale(S, S, S));
+    const at = (x: number, y: number, z: number) => new Vector3(x * S, y * S - 0.35, z * S);
+    const LEG_Z = [-0.42, -0.2, 0.04];
+    for (const l of this.legs) l.g.position.copy(at(l.side * 0.5, 0.42, LEG_Z[l.i])).sub(this.body.position);
+    for (const c of this.claws) {
+      c.arm.position.copy(at(c.side * 0.45, 0.4, 0.3)).sub(this.body.position);
+      c.jaw.position.copy(at(c.side * 0.45, 0.15, 0.68)).sub(this.body.position).sub(c.arm.position);
+    }
+    this.flames.length = 0;
+    const flameOf = new Map<number, Group>();
+    for (const side of [-1, 1]) {
+      const g = new Group();
+      g.position.copy(at(side * 0.16, 0.89, 0.4)).sub(this.body.position);
+      this.body.add(g);
+      this.flames.push(g);
+      flameOf.set(side, g);
+    }
+    dressWith(this.root, model, toRoot, (i) => {
+      const { x, y, z } = i.center;
+      const side = x > 0 ? 1 : -1;
+      const solid = i.glow ? undefined : this.shellMat;
+      if (i.glow && y > 0.92 && Math.abs(x) < 0.25) return { part: flameOf.get(side)! };
+      if (z > 0.2 && Math.abs(x) > 0.25) {
+        const c = this.claws.find((k) => k.side === side)!;
+        return { part: y < 0.25 && z > 0.6 ? c.jaw : c.arm, material: solid };
+      }
+      if (Math.abs(x) > 0.45 && z <= 0.2) {
+        let best = 0;
+        for (let k = 1; k < 3; k++) if (Math.abs(z - LEG_Z[k]) < Math.abs(z - LEG_Z[best])) best = k;
+        const l = this.legs.find((g) => g.side === side && g.i === best)!;
+        return { part: l.g, material: solid };
+      }
+      return { part: this.body, material: solid };
+    }, [this.ice]);
   }
 
   aimPoint(out: Vector3): Vector3 {
