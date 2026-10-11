@@ -621,6 +621,8 @@ export class Sootling implements Entity, SpellTarget {
   private t = Math.random() * 10;
   private facing = 0;
   private hop = 0;
+  private readonly smoke: Mesh[] = [];
+  private readonly smokeMat = new MeshStandardMaterial({ color: '#4a4246', roughness: 1, flatShading: true, transparent: true, opacity: 0.85 });
 
   constructor(
     private spec: SpecOf<'sootling'>,
@@ -633,39 +635,64 @@ export class Sootling implements Entity, SpellTarget {
     this.reload = 1 + Math.random() * 1.5;
     this.facing = spec.yaw ?? 0;
     const mat = worldMaterial();
-    this.eyeMat = new MeshStandardMaterial({ color: '#ffe08a', emissive: new Color('#ffb020'), emissiveIntensity: 1.6 });
-    // A squat soot-black imp with big ears, a sack of bombs on his back.
-    const belly = part(new SphereGeometry(0.42, 8, 6), '#2e282c', mat);
-    belly.scale.set(1, 0.9, 0.95);
-    belly.position.y = 0.45;
-    const head = part(new SphereGeometry(0.3, 8, 6), '#3a3236', mat);
-    head.position.set(0, 0.95, 0.05);
-    const sack = part(new IcosahedronGeometry(0.34, 0), '#7a5a3a', mat);
-    sack.position.set(0, 0.62, -0.38);
+    this.eyeMat = new MeshStandardMaterial({ color: '#ffd080', emissive: new Color('#ff9a20'), emissiveIntensity: 1.2 });
+    // A smoke spirit: a round lump of faceted soot with ember cracks, glowing eyes, and a curl
+    // of smoke rising off the top of it. It conjures its bombs out of a smoky tendril.
+    const blob = part(new IcosahedronGeometry(0.5, 1), '#3a3437', mat);
+    blob.scale.set(1, 0.9, 0.95);
+    blob.position.y = 0.52;
+    const brow = part(new IcosahedronGeometry(0.2, 0), '#36302f', mat);
+    brow.scale.set(1.8, 0.45, 0.8);
+    brow.position.set(0, 0.74, 0.32);
+    // Stubby little feet under it.
     for (const side of [-1, 1]) {
-      const ear = part(new ConeGeometry(0.1, 0.4, 4), '#3a3236', mat);
-      ear.position.set(side * 0.3, 1.1, 0);
-      ear.rotation.z = -side * 1.1;
-      const foot = part(new SphereGeometry(0.13, 6, 4), '#1e1a1c', mat);
-      foot.position.set(side * 0.2, 0.08, 0.1);
-      foot.scale.set(1, 0.6, 1.4);
-      this.body.add(ear, foot);
+      const foot = part(new IcosahedronGeometry(0.11, 0), '#1e1a1c', mat);
+      foot.scale.set(1, 0.6, 1.3);
+      foot.position.set(side * 0.2, 0.05, 0.12);
+      this.body.add(foot);
     }
-    this.body.add(belly, head, sack);
+    this.body.add(blob, brow);
     mergeChildren(this.body);
+    // Embers glowing through the soot: specks set into its surface, mostly low down.
+    const ember = new MeshStandardMaterial({ color: '#ff8a2a', emissive: new Color('#ff6a10'), emissiveIntensity: 1.6 });
+    for (const [a, h, r] of [
+      [0.5, 0.18, 0.045],
+      [1.1, 0.1, 0.035],
+      [-0.4, 0.22, 0.04],
+      [-1.0, 0.12, 0.03],
+      [2.4, 0.3, 0.035],
+      [-2.2, 0.26, 0.04],
+      [0.1, 0.06, 0.03],
+    ]) {
+      const dir = new Vector3(Math.sin(a), h * 2 - 0.6, Math.cos(a)).normalize();
+      const c = new Mesh(new IcosahedronGeometry(r * 0.65, 0), ember);
+      c.position.set(dir.x * 0.47, 0.46 + dir.y * 0.42, dir.z * 0.45);
+      this.body.add(c);
+    }
     for (const side of [-1, 1]) {
-      const eye = new Mesh(new SphereGeometry(0.065, 6, 4), this.eyeMat);
-      eye.position.set(side * 0.11, 1, 0.3);
+      const eye = new Mesh(new SphereGeometry(0.07, 8, 6), this.eyeMat);
+      eye.position.set(side * 0.15, 0.6, 0.41);
+      eye.scale.set(1.2, 1, 0.55);
+      eye.rotation.z = side * -0.3;
       this.body.add(eye);
     }
-    // The throwing arm, with a bomb in hand during the wind-up.
-    const armMesh = part(new CylinderGeometry(0.06, 0.05, 0.45, 5), '#2e282c', mat);
-    armMesh.position.y = 0.22;
+    // The smoke curl: a jagged flame of faceted spikes, thinning as it rises, swaying.
+    for (let i = 0; i < 6; i++) {
+      const puff = new Mesh(new ConeGeometry(0.22 - i * 0.032, 0.36, 5), this.smokeMat);
+      this.smoke.push(puff);
+      this.body.add(puff);
+    }
+    // The tendril it conjures a bomb on (the wind-up): smoke puffs, a bomb at the tip.
+    for (let i = 0; i < 4; i++) {
+      const puff = new Mesh(new IcosahedronGeometry(0.11 - i * 0.015, 0), this.smokeMat);
+      puff.position.y = 0.08 + i * 0.13;
+      this.arm.add(puff);
+    }
     const held = new Mesh(new IcosahedronGeometry(0.2, 1), new MeshStandardMaterial({ color: '#2a2428', flatShading: true }));
-    held.position.y = 0.5;
+    held.position.y = 0.62;
     held.name = 'held';
-    this.arm.add(armMesh, held);
-    this.arm.position.set(0.32, 0.6, 0);
+    this.arm.add(held);
+    this.arm.position.set(0.34, 0.5, 0.05);
     this.body.add(this.arm);
     this.root.add(this.body);
     this.root.traverse((o) => (o.castShadow = o instanceof Mesh && !(o.material instanceof MeshBasicMaterial)));
@@ -791,13 +818,37 @@ export class Sootling implements Entity, SpellTarget {
     this.root.position.lerpVectors(this.prev, this.pos, alpha);
     this.root.rotation.y = dampAngle(this.root.rotation.y, this.facing, 6, dt);
     const dazed = this.state === 'dazed';
-    this.hop += dt * (dazed ? 0 : 6);
-    this.body.position.y = dazed ? 0 : Math.abs(Math.sin(this.hop)) * 0.06;
-    this.body.rotation.z = MathUtils.damp(this.body.rotation.z, dazed ? 0.9 : 0, 8, dt);
     const windup = this.state === 'windup';
-    this.arm.rotation.x = MathUtils.damp(this.arm.rotation.x, windup ? -2.4 : -0.3, 10, dt);
-    this.arm.getObjectByName('held')!.visible = windup;
-    this.eyeMat.emissiveIntensity = dazed ? 0.2 : windup ? 3 : 1.6;
+    // It bobs and breathes rather than hops: a smoke spirit sits on its own soot.
+    this.hop += dt * (dazed ? 1 : windup ? 7 : 2.4);
+    this.body.position.y = dazed ? 0 : Math.abs(Math.sin(this.hop)) * (windup ? 0.08 : 0.04);
+    const breathe = 1 + Math.sin(this.hop * 0.8) * 0.03;
+    this.body.scale.set(breathe, 2 - breathe, breathe);
+    this.body.rotation.z = MathUtils.damp(this.body.rotation.z, dazed ? 0.9 : 0, 8, dt);
+    // The smoke curl sways up off its head; dazed, it slumps and thins.
+    for (const [i, puff] of this.smoke.entries()) {
+      const k = i / this.smoke.length;
+      const sway = Math.sin(this.t * 2.2 - i * 0.7) * (0.04 + k * 0.22);
+      puff.position.set(sway + Math.sin(k * 3) * 0.12, 0.92 + i * (dazed ? 0.12 : 0.21), -0.08 - Math.sin(k * Math.PI) * 0.18 + Math.cos(this.t * 1.7 - i) * k * 0.08);
+      // Each spike leans the other way from the one below: a zigzag flame.
+      puff.rotation.set(Math.sin(this.t * 1.3 + i) * 0.15, i * 0.9, (i % 2 ? 0.4 : -0.4) + sway * 1.5);
+    }
+    this.smokeMat.opacity = dazed ? 0.45 : 0.85;
+    if (!dazed && Math.random() < dt * 5) {
+      const top = this.smoke[this.smoke.length - 1].getWorldPosition(new Vector3());
+      this.ctx.fx.burst(top, 1, SPARK, 0.4, 0.05, 0.8);
+    }
+    // The wind-up: the tendril rises over its head and a bomb swells at the tip.
+    this.arm.rotation.x = MathUtils.damp(this.arm.rotation.x, windup ? -2.4 : 0.3, 10, dt);
+    this.arm.rotation.z = MathUtils.damp(this.arm.rotation.z, windup ? 0.3 : -0.6, 10, dt);
+    const held = this.arm.getObjectByName('held')!;
+    held.visible = windup;
+    // The tendril only forms to throw; the rest of the time it's just a round lump of soot.
+    const reach = MathUtils.damp(this.arm.scale.y, windup ? 1 : 0.01, 8, dt);
+    this.arm.scale.set(reach, reach, reach);
+    this.arm.visible = reach > 0.05;
+    held.scale.setScalar(windup ? MathUtils.damp(held.scale.x, 1, 6, dt) : 0.1);
+    this.eyeMat.emissiveIntensity = dazed ? 0.2 : windup ? 2.6 : 1.2;
     this.marker.sprite.position.copy(this.root.position).add(new Vector3(0, 1.75, 0));
   }
 }
