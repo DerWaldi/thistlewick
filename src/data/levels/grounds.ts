@@ -2,7 +2,7 @@ import { BoxGeometry, ConeGeometry, CylinderGeometry, ExtrudeGeometry, Icosahedr
 import type { LevelBuilder, V3 } from '../../world/builder';
 import type { LevelDef } from '../../world/level';
 import { COLORS } from '../../world/materials';
-import { bench, bush, crate, deco, Glow, grass, hollyhock, ivy, mushrooms, signboard, tree, urn, wall, windowPane } from '../../world/props';
+import { bench, bush, crate, deco, Glow, grass, hollyhock, ivy, mushrooms, signboard, tree, urn, wall, windowPane, woodland } from '../../world/props';
 
 /**
  * The Castle Grounds, out through the Lantern Hall's great doors (open once Cindersnap is
@@ -266,13 +266,11 @@ function build(b: LevelBuilder): void {
     const h = 7 + (i % 4) * 1.5;
     deco(b, new ConeGeometry(2 + (i % 2) * 0.6, h, 6), [x, LAWN + h / 2 + 1, z], i % 3 ? '#3f5f34' : '#4a6a3a');
   }
-  for (const side of [-1, 1]) {
-    for (let i = 0; i < 14; i++) {
-      const z = -6 - i * 6.5;
-      const h = 8 + (i % 3) * 2;
-      deco(b, new ConeGeometry(2.4, h, 6), [side * (56 + (i % 2) * 3), LAWN + h / 2, z], i % 2 ? '#3f5f34' : '#4a6a3a');
-    }
-  }
+  // Woods all round outside the hedges (the Old Woods lie west): deep enough to fill the view
+  // over the hedge from anywhere on the lawn.
+  woodland(b, 52.5, 92, -100, 6, LAWN, 3, 4);
+  woodland(b, -92, -52.5, -100, 6, LAWN, 4, 4.4);
+  woodland(b, -52.5, 52.5, -112, -98.5, LAWN, 5, 4.6, false);
 
   // Last (ids follow build order): the students' errands.
   errands(b);

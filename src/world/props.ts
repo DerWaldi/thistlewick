@@ -818,3 +818,33 @@ export function chimneyStack(b: LevelBuilder, x: number, z: number, base: number
   deco(b, new BoxGeometry(0.9, h, 0.9), [x, base + h / 2, z], COLORS.stoneLight);
   deco(b, new BoxGeometry(1.1, 0.25, 1.1), [x, base + h, z], COLORS.stoneDark);
 }
+
+/**
+ * A patch of woodland for the background: forest floor over the rectangle and mixed trees
+ * (round-topped and firs) scattered through it at `spacing`. Decoration only, merged.
+ */
+export function woodland(b: LevelBuilder, x0: number, x1: number, z0: number, z1: number, y: number, seed = 1, spacing = 4.2, floor = true): void {
+  const rnd = scatter(seed + 777);
+  const LEAVES = ['#3f5f34', '#4a6a3a', '#355a2e', '#56763e', '#2f4a28'];
+  const BARK = '#5a3a24';
+  if (floor) deco(b, new BoxGeometry(x1 - x0, 0.4, z1 - z0), [(x0 + x1) / 2, y - 0.2, (z0 + z1) / 2], '#3d5a2c');
+  for (let z = z0 + spacing / 2; z < z1; z += spacing * (0.8 + rnd() * 0.4)) {
+    for (let x = x0 + spacing / 2 + rnd() * spacing * 0.5; x < x1; x += spacing * (0.8 + rnd() * 0.5)) {
+      const px = x + (rnd() - 0.5) * spacing * 0.6;
+      const pz = z + (rnd() - 0.5) * spacing * 0.6;
+      const h = 8 + rnd() * 8;
+      if (rnd() < 0.5) {
+        deco(b, new CylinderGeometry(0.3 + h * 0.025, 0.45 + h * 0.035, h, 6), [px, y + h / 2, pz], BARK);
+        const n = 2 + Math.floor(rnd() * 3);
+        for (let k = 0; k < n; k++) {
+          const r = 1.6 + rnd() * 2.2;
+          deco(b, new IcosahedronGeometry(r, 0), [px + (rnd() - 0.5) * 2.4, y + h * (0.65 + rnd() * 0.35), pz + (rnd() - 0.5) * 2.4], LEAVES[Math.floor(rnd() * LEAVES.length)], [rnd() * 3, rnd() * 3, 0]);
+        }
+      } else {
+        const H = h + 3;
+        deco(b, new CylinderGeometry(0.35, 0.55, H * 0.4, 6), [px, y + H * 0.2, pz], BARK);
+        for (let k = 0; k < 3; k++) deco(b, new ConeGeometry(3.2 - k * 0.8, H * 0.45, 7), [px, y + H * (0.35 + k * 0.2), pz], LEAVES[(k + Math.floor(rnd() * 5)) % LEAVES.length]);
+      }
+    }
+  }
+}
