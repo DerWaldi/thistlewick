@@ -1,9 +1,12 @@
 /**
- * Procedural music: two small original pieces, sequenced live with WebAudio.
+ * Procedural music: small original pieces, sequenced live with WebAudio.
  * Moods cross-fade; each has its own scheduler so it resumes where it left off.
- * Files in public/music/<mood>.mp3 (if present) are used instead of the
+ * Files in src/assets/music/<mood>.mp3 (if present) are used instead of the
  * synthesised version, so CC0 recordings can be dropped in later.
  */
+
+/** Recorded tracks that replace the synthesised pieces, found at build time. */
+const MUSIC_FILES = import.meta.glob<string>('../assets/music/*.mp3', { eager: true, query: '?url', import: 'default' });
 export type Mood = 'hub' | 'dungeon' | 'title' | 'woods' | 'exams';
 
 type Note = [midi: number | null, beats: number];
@@ -357,12 +360,15 @@ export class Music {
     this.tracks.set(mood, { bus, bar: 0, nextBarTime: 0, level: 1 });
   }
 
-  /** Optional recorded tracks: public/music/<mood>.mp3. */
+  /** Optional recorded tracks: src/assets/music/<mood>.mp3, bundled when present. */
   private async tryLoadFile(mood: Mood): Promise<void> {
     if (this.files.has(mood)) return;
     this.files.set(mood, null);
+    // Only fetch files that exist: asking for missing ones littered the live site's console with 404s.
+    const url = MUSIC_FILES[`../assets/music/${mood}.mp3`];
+    if (!url) return;
     try {
-      const res = await fetch(`${import.meta.env.BASE_URL}music/${mood}.mp3`);
+      const res = await fetch(url);
       if (!res.ok || !(res.headers.get('content-type') ?? '').includes('audio')) return;
       const buf = await this.ctx!.decodeAudioData(await res.arrayBuffer());
       this.files.set(mood, buf);

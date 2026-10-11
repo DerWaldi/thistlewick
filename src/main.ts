@@ -7,10 +7,16 @@ import { loadSave } from './state/save';
 import { Menu } from './ui/menu';
 
 const params = new URLSearchParams(location.search);
+/**
+ * Dev tools (the test API, sandboxes, trial resets, the tuning panel) only exist in dev
+ * builds, or a build made with VITE_E2E=1: on the live site they'd let anyone skip the game
+ * or wreck their save. `?debug` (the FPS readout) works everywhere.
+ */
+const devTools = import.meta.env.DEV || import.meta.env.VITE_E2E === '1';
 const debug = params.has('debug') || import.meta.env.DEV;
-const testMode = params.has('test');
+const testMode = devTools && params.has('test');
 /** `?level=gym` (or any level id) starts a sandbox there: no title, no saving. */
-const sandboxLevel = params.get('level');
+const sandboxLevel = devTools ? params.get('level') : null;
 
 async function boot(): Promise<void> {
   // Physics and the foe models load together; the game starts once both are in.
@@ -71,7 +77,7 @@ async function boot(): Promise<void> {
   };
 
   // Dev: `?resetTrial=glimmerwick` makes a finished trial playable again in your save.
-  const reset = params.get('resetTrial');
+  const reset = devTools ? params.get('resetTrial') : null;
   if (reset) {
     const ok = game.resetTrialInSave(reset);
     history.replaceState(null, '', location.pathname);
@@ -140,13 +146,13 @@ async function boot(): Promise<void> {
 
   let panel: { toggle(): void } | null = null;
   window.addEventListener('keydown', async (e) => {
-    if (e.code !== 'Backquote') return;
+    if (e.code !== 'Backquote' || !devTools) return;
     panel ??= await createTuningPanel(game.tuning);
     panel.toggle();
     if (game.input.locked) document.exitPointerLock();
   });
 
-  if (debug || testMode) exposeTestApi(game);
+  if (devTools) exposeTestApi(game);
 }
 
 /** `window.__tw`: hooks for Playwright and console poking. */

@@ -19,7 +19,8 @@ Screenshots from e2e runs go to `tests/e2e/__shots__/` (gitignored). Look at the
 
 ## URL flags
 
-- `?debug`: FPS/state readout and `window.__tw` in production builds. Both are always on in dev.
+- `?debug`: the FPS/state readout, in any build (always on in dev).
+- Everything else below (`?test`, `?level`, `?resetTrial`, `window.__tw`, the `` ` `` tuning panel) exists only in dev builds (`npm run dev`, which the e2e suite uses) or a build made with `VITE_E2E=1`; the live site ignores them.
 - `?test`: the simulation only advances through `__tw.advance(seconds)`, which makes tests deterministic. There's no title screen, and dialogues auto-advance (choices come from `__tw.choose(...)`, otherwise 0). It continues the saved game if there is one, otherwise starts a new one.
 - `?test&new`: clears the save and starts a fresh game in the hub.
 - `?level=<id>`: sandbox mode in that level (e.g. `gym`). Fresh state, the level's `grants`, and nothing is saved. The M0/M1 specs boot with `?test&level=gym`.
@@ -192,7 +193,7 @@ Doors enforce the flow: the classroom exit has `lockedDuring: '<spell>'` (no lea
 - `main.ts` drives the menus. The title is shown over a drifting hub backdrop (`game.showBackdrop()`, `titleMode`). Losing pointer lock mid-game opens the pause menu.
 - Options: sensitivity, invert Y, music and effects volume, graphics (Fancy/Fast), the next-goal guide, FPS display, and rebindable keys (`options.keys`, read by `Input.bindings`; arrow keys always move). Bindings in force live in `liveKeys` (options.ts), which the dialogue, the shop and the HUD prompt read; rebinding swaps with an action that already has the key and refuses `RESERVED_KEYS`; leaving the screen cancels a pending rebind. A gamepad works too (`Input.pollGamepad`, once a frame; B closes the shop and album): left stick moves, right stick looks, A jumps / advances dialogue, X or RT casts (hold to charge), Y or B talks, Back opens the album, Start pauses. They're stored under `thistlewick.options`, and `game.applyOptions()` applies them.
 - Fancy graphics adds bloom and grading, a pixel ratio up to 1.5 and a 4096 shadow map. If frames stay under about 42 fps for 4 s, the game drops to Fast once and shows a toast.
-- Music: `engine/music.ts` sequences four original pieces live: the Thistlewick Waltz (hub, title), the Tumbling Vaults (trials), Mother Hazelrigg's Jig (`woods`) and The Examination (`exams`). `LevelDef.music` picks the mood. Moods cross-fade, and the music ducks during dialogue. A file at `public/music/<mood>.mp3` replaces the synthesised version, and should be logged in ASSETS.md.
+- Music: `engine/music.ts` sequences four original pieces live: the Thistlewick Waltz (hub, title), the Tumbling Vaults (trials), Mother Hazelrigg's Jig (`woods`) and The Examination (`exams`). `LevelDef.music` picks the mood. Moods cross-fade, and the music ducks during dialogue. A file at `src/assets/music/<mood>.mp3` replaces the synthesised version (found at build time, so missing ones are never fetched), and should be logged in ASSETS.md.
 - A `Song` is a list of `Section`s: bars of melody/bass/chords plus an `Arrangement` (lead instrument and octave shift, harp chords or arpeggio, bass style, counter-melody, chimes, ornaments, dynamics). The same bars come back re-orchestrated, so the loop takes about 1.5 minutes before it repeats. Bars get small random dynamics and grace notes.
 - P saves a screenshot (with the dialogue box redrawn onto it) (`game.screenshot()`), stamped with level, area, position, facing and mode, for bug reports.
 
