@@ -29,6 +29,7 @@
     #trailer .logo .sub { font-size: 42px; font-style: italic; color: #f2d48a; }
     #trailer .logo .url { font-size: 34px; margin-top: 46px; color: #fbe8c0; letter-spacing: 2px; }
     #trailer .logo .tag { font-size: 30px; margin-top: 18px; font-style: italic; color: #e8d2a6; }
+    #dialogue { transition: none !important; }
     #dialogue.show { bottom: 96px !important; transform: translate(-50%, 0) scale(1.6) !important; transform-origin: 50% 100%; }
     #trailer .narr { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); text-align: center; opacity: 0;
       font-size: 62px; font-style: italic; color: #fbe8c0; text-shadow: 0 3px 0 #2b1d14, 0 0 30px rgba(0, 0, 0, 0.9); }
@@ -350,7 +351,8 @@
       },
       frame(t, d) {
         const p = session().player.feet;
-        cam([5.4, 19.2 + Math.min(p.y - 17.5, 5) * 0.5, 8.6], [0, p.y + 0.8, Math.max(14.5, p.z)], 62);
+        // A chase camera below and behind, looking up as you fly.
+        cam([p.x + 2.6, Math.min(25.5, p.y + 0.4), p.z - 2.6], [p.x, p.y + 1.2, p.z + 1.2], 64);
         return { narr: '...run and jump through perilous passages...', narrA: fade(t, 0.2, 0.6, d - 0.7, d - 0.15), ...spellCap('springwell', t, d) };
       },
     },
