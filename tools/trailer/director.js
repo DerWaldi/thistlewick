@@ -146,10 +146,10 @@
         tw.teleport(0, 0, -6, Math.PI);
         hidePlayer = true;
       },
-      frame(t) {
-        const k = smooth(t / 6);
+      frame(t, d) {
+        const k = smooth(t / d);
         cam(mix([-18, 6, -70], [-8, 4, -38], k), mix([0, 6, 2], [0, 7, 0], k), 52);
-        return { logo: fade(t, 1.2, 2.6, 4.9, 5.8), shade: 1 - ramp(t, 0, 1.2) };
+        return { logo: fade(t, d * 0.2, d * 0.43, d - 1.1, d - 0.2), shade: 1 - ramp(t, 0, d * 0.2) };
       },
     },
     {
@@ -162,10 +162,10 @@
         tw.setCamera(0, -0.1);
         tw.input({ y: 0.55 });
       },
-      frame(t) {
-        const k = smooth(t / 5);
+      frame(t, d) {
+        const k = smooth(t / d);
         cam(mix([-5.5, 1.6, 2], [-3.5, 3.4, 9], k), mix([0, 2.2, 14], [0, 4.5, 26], k), 55);
-        return { cap: 'A crooked castle full of secrets', capA: fade(t, 0.6, 1.2, 4.2, 4.9) };
+        return { cap: 'A crooked castle full of secrets', capA: fade(t, 0.6, 1.2, d - 0.8, d - 0.1) };
       },
     },
     {
@@ -180,11 +180,11 @@
         at(1.6, () => tw.pressJump());
         at(3.4, () => tw.pressJump());
       },
-      frame(t) {
+      frame(t, d) {
         const p = session().player.feet;
-        const k = smooth(t / 5);
+        const k = smooth(t / d);
         cam([p.x + 6 - k * 2, p.y + 4, p.z - 6 + k * 2], [p.x, p.y + 1, p.z + 2.5], 55);
-        return { cap: 'Run, climb and explore', capA: fade(t, 0.5, 1.1, 4.2, 4.9) };
+        return { cap: 'Run, climb and explore', capA: fade(t, 0.5, 1.1, d - 0.8, d - 0.1) };
       },
     },
     {
@@ -197,9 +197,9 @@
         tw.teleport(0, 0, 46, Math.PI);
         hidePlayer = true;
       },
-      frame(t) {
+      frame(t, d) {
         cam([0, 9 + t * 0.4, 30], [0, 3, 50], 55);
-        return { cap: 'Learn seven spells', capA: fade(t, 0.1, 0.5, 1.7, 2.15), shade: 0.35 };
+        return { cap: 'Learn seven spells', capA: fade(t, 0.1, 0.5, d - 0.5, d - 0.05), shade: 0.35 };
       },
     },
     {
@@ -215,10 +215,10 @@
         scheduleCast(1.1, [gn.pos.x, gn.pos.y + 0.2, gn.pos.z]);
         this.gn = gn;
       },
-      frame(t) {
+      frame(t, d) {
         const gn = this.gn.pos;
         cam([-6.2, 1.5, 12.2], [(gn.x - 7) / 2 - 0.5, 0.7, (gn.z + 9) / 2], 46);
-        return spellCap('thwackwort', t, 3.4);
+        return spellCap('thwackwort', t, d);
       },
     },
     {
@@ -230,9 +230,9 @@
         tw.advance(0.3);
         scheduleCast(0.9, [-3.2, 1.8, 53.9]);
       },
-      frame(t) {
-        cam(mix([0.2, 2.1, 52.0], [-0.4, 2.0, 52.5], smooth(t / 3.4)), [-3.2, 1.6, 54.0], 42);
-        return spellCap('latchkin', t, 3.4);
+      frame(t, d) {
+        cam(mix([0.2, 2.1, 52.0], [-0.4, 2.0, 52.5], smooth(t / d)), [-3.2, 1.6, 54.0], 42);
+        return spellCap('latchkin', t, d);
       },
     },
     {
@@ -244,9 +244,9 @@
         tw.advance(0.3);
         scheduleCast(0.7, [2.6, 2.1, 10.2], 0.9);
       },
-      frame(t) {
-        cam(mix([-3.2, 2.6, 8.2], [-2.6, 2.4, 9.6], smooth(t / 3.8)), [0.4, 0.2, 15], 55);
-        return spellCap('glimmerwick', t, 3.8);
+      frame(t, d) {
+        cam(mix([-3.2, 2.6, 8.2], [-2.6, 2.4, 9.6], smooth(t / d)), [0.4, 0.2, 15], 55);
+        return spellCap('glimmerwick', t, d);
       },
     },
     {
@@ -264,9 +264,9 @@
           tw.input({ y: 0.8 });
         });
       },
-      frame(t) {
-        cam(mix([10.6, 2.2, 49.6], [11.4, 2.0, 49.2], smooth(t / 3.4)), [16.2, 1.5, 45.6], 50);
-        return spellCap('cindersnap', t, 3.4);
+      frame(t, d) {
+        cam(mix([10.6, 2.2, 49.6], [11.4, 2.0, 49.2], smooth(t / d)), [16.2, 1.5, 45.6], 50);
+        return spellCap('cindersnap', t, d);
       },
     },
     {
@@ -284,12 +284,12 @@
         at(2.2, () => tw.input({ y: 0.4, jump: true }));
         at(3.2, () => tw.input(null));
       },
-      frame(t) {
+      frame(t, d) {
         // Beside the pad, rising after the player a little slower than they fly, so the bounce
         // reads as a bounce (they land on a ledge 10 m up).
         const p = session().player.feet;
         cam([4.6, 18.6 + (p.y - 17.5) * 0.65, 10.4], [0, p.y + 0.8, Math.max(14.5, p.z)], 62);
-        return spellCap('springwell', t, 4);
+        return spellCap('springwell', t, d);
       },
     },
     {
@@ -305,9 +305,9 @@
           tw.input({ y: 1 });
         });
       },
-      frame(t) {
-        cam(mix([-4.5, 2.8, 3.2], [-6, 2.6, 3.6], smooth(t / 3.8)), [-6, -0.2, 8.5], 55);
-        return spellCap('rimewhistle', t, 3.8);
+      frame(t, d) {
+        cam(mix([-4.5, 2.8, 3.2], [-6, 2.6, 3.6], smooth(t / d)), [-6, -0.2, 8.5], 55);
+        return spellCap('rimewhistle', t, d);
       },
     },
     {
@@ -320,10 +320,10 @@
         tw.advance(0.4);
         scheduleCast(0.5, [4.85, 2.5, 5.55]);
       },
-      frame(t) {
+      frame(t, d) {
         const p = session().player.feet;
-        cam(mix([1.2, 2.2, 1.8], [1.5, 3.4, 2.2], smooth(t / 4)), [p.x, p.y + 0.6, p.z], 55);
-        return spellCap('thistledown', t, 4);
+        cam(mix([1.2, 2.2, 1.8], [1.5, 3.4, 2.2], smooth(t / d)), [p.x, p.y + 0.6, p.z], 55);
+        return spellCap('thistledown', t, d);
       },
     },
     {
@@ -334,9 +334,9 @@
         hidePlayer = true;
         tw.teleport(0, 0, 30, 0);
       },
-      frame(t) {
+      frame(t, d) {
         cam([0, 2 + t * 0.3, 24 + t], [0, 1.5, 60], 55);
-        return { cap: 'Outwit the creatures of the trials', capA: fade(t, 0.1, 0.5, 1.7, 2.15), shade: 0.35 };
+        return { cap: 'Outwit the creatures of the trials', capA: fade(t, 0.1, 0.5, d - 0.5, d - 0.05), shade: 0.35 };
       },
     },
     {
@@ -348,9 +348,9 @@
         tw.teleport(8.5, 0, 9, -Math.PI / 2);
         tw.advance(0.2);
       },
-      frame(t) {
+      frame(t, d) {
         const r = entities('Rattlecoat')[0].pos;
-        cam(mix([6.5, 1.3, 4.5], [7, 1.4, 5.5], smooth(t / 3)), [(r.x + 8.5) / 2, 1.2, (r.z + 9) / 2], 52);
+        cam(mix([6.5, 1.3, 4.5], [7, 1.4, 5.5], smooth(t / d)), [(r.x + 8.5) / 2, 1.2, (r.z + 9) / 2], 52);
         return {};
       },
     },
@@ -361,6 +361,8 @@
         await load('bestiary');
         tw.teleport(7, 0, 41, -Math.PI / 2);
         tw.advance(1.5);
+        // Her first throw comes at a random moment; make it come early, on camera.
+        entities('Hexling')[0].reload = 0.15;
       },
       frame(t) {
         const h = entities('Hexling')[0].pos;
@@ -419,11 +421,11 @@
         at(2.4, () => tw.input({ x: 0.6, y: -0.2 }));
         at(4.2, () => tw.input({ x: -0.5, y: 0.3 }));
       },
-      frame(t) {
+      frame(t, d) {
         const b = entities('Examiner')[0].pos;
-        const k = smooth(t / 7.5);
+        const k = smooth(t / d);
         cam(mix([-7, 2.2, 76.5], [6, 3, 77.5], k), [b.x * 0.7, 2.8, b.z * 0.7 + 79 * 0.3], 58);
-        return { cap: 'Face the Final Examinations', capA: fade(t, 0.8, 1.4, 6.4, 7.1) };
+        return { cap: 'Face the Final Examinations', capA: fade(t, 0.8, 1.4, d - 1.1, d - 0.4) };
       },
     },
     {
@@ -436,10 +438,10 @@
         hidePlayer = true;
         tw.teleport(22, -3, -60, 0);
       },
-      frame(t) {
-        const k = smooth(t / 5);
+      frame(t, d) {
+        const k = smooth(t / d);
         cam(mix([40, 5, -84], [30, 9, -50], k), mix([22, -2, -75], [0, 4, -8], k), 55);
-        return { cap: 'Collect cards, find secrets, win the House Cup', capA: fade(t, 0.6, 1.2, 4.2, 4.9) };
+        return { cap: 'Collect cards, find secrets, win the House Cup', capA: fade(t, 0.6, 1.2, d - 0.8, d - 0.1) };
       },
     },
     {
@@ -450,24 +452,49 @@
         hidePlayer = true;
         tw.teleport(0, 0, 46, 0);
       },
-      frame(t) {
+      frame(t, d) {
         cam([0, 4 + t * 0.25, 38 + t * 0.6], [0, 9, 70], 55);
         return {
-          logo: fade(t, 0.4, 1.4, 9, 10),
+          logo: fade(t, 0.4, 1.4, d + 3, d + 4),
           tag: 'A whimsical wizard-school adventure. Free, in your browser.',
           url: 'thistlewick.sebastian-murgul.com',
-          shade: 0.45 + 0.55 * ramp(t, 5.2, 6),
+          shade: 0.45 + 0.55 * ramp(t, d - 0.8, d),
         };
       },
     },
   ];
 
+  /**
+   * Cuts: which shots, how long each runs, and (where it differs) the music cue on it. A shot's
+   * camera moves, captions and fades scale to the length it's given.
+   */
+  const CUTS = {
+    full: shots.map((s) => ({ name: s.name })),
+    // About 30 s: the title, five spells, a Hexling, the Examiner, the end card.
+    short: [
+      { name: 'title', dur: 4 },
+      { name: 'spells-card', dur: 1.6 },
+      { name: 'thwackwort', dur: 2.3 },
+      { name: 'glimmerwick', dur: 2.6 },
+      { name: 'cindersnap', dur: 2.6 },
+      { name: 'springwell', dur: 2.9 },
+      { name: 'rimewhistle', dur: 2.5 },
+      { name: 'hexling', dur: 2.3 },
+      { name: 'examiner', dur: 4.6, music: null },
+      { name: 'end', dur: 4.5, music: 'title' },
+    ],
+  };
+  let cut = CUTS.full.map((c) => ({ ...shots.find((s) => s.name === c.name), ...c }));
+
   let current = null;
   window.trailer = {
     FPS,
+    useCut(name) {
+      cut = CUTS[name].map((c) => ({ ...shots.find((s) => s.name === c.name), ...c }));
+    },
     timeline() {
       let t = 0;
-      return shots.map((s) => {
+      return cut.map((s) => {
         const start = t;
         t += s.dur;
         return { name: s.name, start, dur: s.dur, music: s.music ?? null };
@@ -476,13 +503,16 @@
     async begin(i) {
       actions = [];
       look = null;
-      current = shots[i];
+      // Nothing held over from the last shot (a stick still pushed walked people off their marks).
+      tw.input(null);
+      g.input.setCast(false);
+      current = cut[i];
       g.renderer.setQuality('high');
       await current.setup.call(current);
       return { name: current.name, frames: Math.round(current.dur * FPS) };
     },
     step(i, f, render = true) {
-      const s = shots[i];
+      const s = cut[i];
       const t = f / FPS;
       for (const a of actions) {
         if (!a.done && t >= a.time) {
@@ -491,7 +521,7 @@
         }
       }
       tw.advance(1 / FPS);
-      const c = s.frame.call(s, t) ?? {};
+      const c = s.frame.call(s, t, s.dur) ?? {};
       if (!render) return;
       captions(c);
       draw();

@@ -1,6 +1,7 @@
 /*
  * Records the trailer: node tools/trailer/record.mjs [--stills]
  *
+ * --cut short renders the ~30 s cut (tools/trailer/out/thistlewick-trailer-30s.mp4).
  * Drives a dev build of the game in headless Chromium (?test mode: the simulation only moves
  * when stepped), plays tools/trailer/director.js shot by shot at 30 fps, and pipes each frame
  * into ffmpeg; the soundtrack is the game's own music, rendered offline from its sequencer with
@@ -17,6 +18,9 @@ import { fileURLToPath } from 'node:url';
 const here = dirname(fileURLToPath(import.meta.url));
 const out = join(here, 'out');
 const stills = process.argv.includes('--stills');
+const cutArg = process.argv.indexOf('--cut');
+const cutName = cutArg > 0 ? process.argv[cutArg + 1] : 'full';
+const name = cutName === 'full' ? 'thistlewick-trailer' : cutName === 'short' ? 'thistlewick-trailer-30s' : `thistlewick-trailer-${cutName}`;
 mkdirSync(join(out, 'stills'), { recursive: true });
 const W = 1920;
 const H = 1080;
@@ -48,6 +52,7 @@ page.on('pageerror', (e) => console.error('page error:', e.message));
 await page.goto(`${url}/?test&level=hub`);
 await page.waitForFunction(() => window.__tw && window.__tw.game.session, null, { timeout: 120_000 });
 await page.addScriptTag({ path: join(here, 'director.js') });
+await page.evaluate((c) => window.trailer.useCut(c), cutName);
 const timeline = await page.evaluate(() => window.trailer.timeline());
 const total = timeline.reduce((t, s) => t + s.dur, 0);
 console.log(`${timeline.length} shots, ${total.toFixed(1)} s`);
@@ -104,17 +109,17 @@ if (!stills) {
     },
     { timeline, total },
   );
-  writeFileSync(join(out, 'music.wav'), Buffer.from(wav, 'base64'));
+  writeFileSync(join(out, `${name}-music.wav`), Buffer.from(wav, 'base64'));
   console.log('soundtrack rendered');
 }
 
 const ffmpeg = stills
   ? null
-  : spawn('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', '30', '-i', '-', '-c:v', 'libx264', '-preset', 'slow', '-crf', '17', '-pix_fmt', 'yuv420p', join(out, 'video.mp4')], { stdio: ['pipe', 'inherit', 'inherit'] });
+  : spawn('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', '30', '-i', '-', '-c:v', 'libx264', '-preset', 'slow', '-crf', '17', '-pix_fmt', 'yuv420p', join(out, `${name}-video.mp4`)], { stdio: ['pipe', 'inherit', 'inherit'] });
 const done = ffmpeg ? new Promise((r) => ffmpeg.on('exit', r)) : null;
 
 for (let i = 0; i < timeline.length; i++) {
-  const { name, frames } = await page.evaluate((i) => window.trailer.begin(i), i);
+  const { name: shot, frames } = await page.evaluate((i) => window.trailer.begin(i), i);
   const keep = stills ? new Set([2, Math.floor(frames / 2), frames - 3]) : null;
   const started = Date.now();
   for (let f = 0; f < frames; f++) {
@@ -122,10 +127,10 @@ for (let i = 0; i < timeline.length; i++) {
     await page.evaluate(([i, f, render]) => window.trailer.step(i, f, render), [i, f, render]);
     if (!render) continue;
     const jpg = await page.screenshot({ type: 'jpeg', quality: 95 });
-    if (stills) writeFileSync(join(out, 'stills', `${String(i).padStart(2, '0')}-${name}-${f}.jpg`), jpg);
+    if (stills) writeFileSync(join(out, 'stills', `${cutName}-${String(i).padStart(2, '0')}-${shot}-${f}.jpg`), jpg);
     else if (!ffmpeg.stdin.write(jpg)) await new Promise((r) => ffmpeg.stdin.once('drain', r));
   }
-  console.log(`${name}: ${frames} frames in ${((Date.now() - started) / 1000).toFixed(0)} s`);
+  console.log(`${shot}: ${frames} frames in ${((Date.now() - started) / 1000).toFixed(0)} s`);
 }
 await browser.close();
 stop();
@@ -135,8 +140,8 @@ if (ffmpeg) {
   await done;
   // Music under the picture, at the usual online loudness, faded out over the end card.
   await new Promise((resolve, reject) => {
-    const p = spawn('ffmpeg', ['-y', '-loglevel', 'error', '-i', join(out, 'video.mp4'), '-i', join(out, 'music.wav'), '-af', `afade=t=in:d=0.8,afade=t=out:st=${(total - 2.5).toFixed(2)}:d=2.5,loudnorm=I=-16:TP=-1.5:LRA=11`, '-ar', '48000', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k', '-shortest', '-movflags', '+faststart', join(out, 'thistlewick-trailer.mp4')], { stdio: 'inherit' });
+    const p = spawn('ffmpeg', ['-y', '-loglevel', 'error', '-i', join(out, `${name}-video.mp4`), '-i', join(out, `${name}-music.wav`), '-af', `afade=t=in:d=0.8,afade=t=out:st=${(total - 2.5).toFixed(2)}:d=2.5,loudnorm=I=-16:TP=-1.5:LRA=11`, '-ar', '48000', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k', '-shortest', '-movflags', '+faststart', join(out, `${name}.mp4`)], { stdio: 'inherit' });
     p.on('exit', (c) => (c === 0 ? resolve() : reject(new Error(`ffmpeg ${c}`))));
   });
-  console.log(`wrote ${join(out, 'thistlewick-trailer.mp4')}`);
+  console.log(`wrote ${join(out, `${name}.mp4`)}`);
 }

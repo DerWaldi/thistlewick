@@ -13,12 +13,12 @@ npm run preview      # serve dist/
 npm run check        # tsc --noEmit + eslint, must be clean before committing
 npm run test:e2e     # Playwright on Chromium, Firefox and WebKit (starts its own Vite on :5199)
 npx playwright test --project=chromium   # quicker single-browser run
-node tools/trailer/record.mjs [--stills]   # render the trailer (needs ffmpeg and a dev server) to tools/trailer/out/
+node tools/trailer/record.mjs [--cut short] [--stills]   # render the trailer (or its ~30 s cut) to tools/trailer/out/ (needs ffmpeg)
 ```
 
 Screenshots from e2e runs go to `tests/e2e/__shots__/` (gitignored). Look at them after each milestone.
 
-The trailer is a shot list in `tools/trailer/director.js` (each shot: a level, a setup, scheduled inputs and casts, a cinematic camera and captions), stepped deterministically at 30 fps in ?test mode and piped into ffmpeg; the soundtrack is the game's own music rendered offline with mood changes on the shots' cues. `--stills` writes three frames per shot for a quick look. When a level or a spell setup changes, re-check the stills.
+The trailer is a shot list in `tools/trailer/director.js` (each shot: a level, a setup, scheduled inputs and casts, a cinematic camera and captions), stepped deterministically at 30 fps in ?test mode and piped into ffmpeg; the soundtrack is the game's own music rendered offline with mood changes on the shots' cues. `--stills` writes three frames per shot for a quick look. Cuts (`CUTS` in the director) pick shots and give each a length; a shot's camera moves, captions and fades scale to it. Every shot starts with the stick and cast button released. When a level or a spell setup changes, re-check the stills.
 
 ## URL flags
 
