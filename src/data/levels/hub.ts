@@ -467,7 +467,6 @@ function buildHub(b: LevelBuilder): void {
   b.box([-14.75, 9.1, 52], [2.5, 0.4, 4], { color: COLORS.stoneLight }); // balcony
   b.box([-13.6, 9.8, 52], [0.2, 1, 4], { color: COLORS.woodDark, pattern: 'planks' });
   b.box([-14.75, 9.8, 53.9], [2.5, 1, 0.2], { color: COLORS.woodDark, pattern: 'planks' }); // north rail
-  deco(b, new BoxGeometry(0.1, 3, 1.8), [-16, 10.8, 52], COLORS.woodDark);
 
   // The clock tower on the north wall; behind it, a ledge with a card (secret 3).
   b.box([0, 11, 61.8], [4.4, 6, 1.6], { color: COLORS.stoneLight });
@@ -1016,7 +1015,9 @@ function wellYard(b: LevelBuilder): void {
   deco(b, new CylinderGeometry(0.92, 0.92, 0.04, 10), [15, 0.86, 25], '#e8f6fc');
   for (const dx of [-0.9, 0.9]) deco(b, new BoxGeometry(0.15, 1.8, 0.15), [15 + dx, 1.8, 25], COLORS.woodDark);
   deco(b, new ConeGeometry(1.4, 0.8, 4), [15, 3, 25], COLORS.roof, [0, Math.PI / 4, 0]);
-  deco(b, new ConeGeometry(1.45, 0.3, 4), [15, 3.3, 25], '#f4fbff', [0, Math.PI / 4, 0]);
+  // Snow lying on the roof: a cap with the roof's own slope over its top two thirds (a flat,
+  // wider sheet floated above it and looked out of place).
+  deco(b, new ConeGeometry(0.98, 0.56, 4), [15, 3.42 - 0.28, 25], '#f4fbff', [0, Math.PI / 4, 0]);
   for (let i = 0; i < 6; i++) deco(b, new ConeGeometry(0.05, 0.4, 4), [14.1 + i * 0.36, 2.45, 25.95], '#d8f2fc', [Math.PI, 0, 0]);
   deco(b, new BoxGeometry(2, 0.6, 0.8), [17.5, 0.3, 21], COLORS.stoneDark);
   deco(b, new BoxGeometry(1.8, 0.04, 0.6), [17.5, 0.6, 21], COLORS.ice);
@@ -1293,20 +1294,17 @@ function skyline(b: LevelBuilder): void {
   gable(13, 26.5, 5, 11, 5.4, 2.6, true, [false, true]);
   gable(21, 27, 11, 17, 5.4, 2.6, false, [false, false]);
 
-  // The east wing, behind the court's east wall (x -17), so the balcony door leads somewhere:
+  // The east wing, behind the court's east wall (x -17), so the court has a building on that side:
   // a solid block (the camera stops at its face, nothing grabs it; the wall's cap keeps
   // everyone off it anyway), windows above the wall line, a slate roof.
   const EW = { x0: -27, x1: -17, z0: 37, z1: 61.5, top: 16 };
   b.box([(EW.x0 + EW.x1) / 2, EW.top / 2, (EW.z0 + EW.z1) / 2], [EW.x1 - EW.x0, EW.top, EW.z1 - EW.z0], { color: COLORS.stone, info: { noGrab: true } });
   deco(b, new BoxGeometry(0.3, 0.35, EW.z1 - EW.z0), [EW.x1 + 0.1, 11.2, (EW.z0 + EW.z1) / 2], DARK);
   for (let z = EW.z0 + 2.5; z < EW.z1 - 1; z += 3.2) {
-    if (z > 50 && z < 54) continue; // the balcony door is there
     deco(b, new BoxGeometry(0.1, 1.8, 0.9), [EW.x1 + 0.03, 13.2, z], '#2a2230');
     deco(b, new CylinderGeometry(0.45, 0.45, 0.1, 8, 1, false, 0, Math.PI).rotateZ(Math.PI / 2), [EW.x1 + 0.03, 14.1, z], '#2a2230');
     deco(b, new BoxGeometry(0.2, 0.15, 1.2), [EW.x1 + 0.08, 12.25, z], STONE);
   }
-  // A lintel and a lamp over the balcony door, so it reads as a way in.
-  deco(b, new BoxGeometry(0.25, 0.35, 2.4), [EW.x1 + 0.1, 12.5, 52], STONE);
   for (const z of [EW.z0 + 3, EW.z0 + 7]) deco(b, new BoxGeometry(0.9, 1.8, 0.1), [EW.x0 + (z - EW.z0) + 1, 12.5, EW.z0 - 0.03], '#2a2230');
   crenels(EW.x0, EW.x1, EW.z0, EW.z1, EW.top);
   gable(EW.x0 + 0.8, EW.x1 - 0.8, EW.z0 + 0.8, EW.z1 - 0.8, EW.top, 5, false);

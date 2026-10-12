@@ -191,6 +191,12 @@ function build(b: LevelBuilder): void {
   }
   deco(b, new BoxGeometry(11.2, 0.3, 0.3), [-35, LAWN + WALL + RIDGE + 0.15, -41], COLORS.woodDark);
   b.add({ type: 'door', pos: [-29.8, LAWN, -41], yaw: Math.PI / 2, width: 3.4, height: 3.2, to: { level: 'coldharbour', spawn: 'default' }, label: 'Frosts & Waters' });
+  // Its south end (z -43..-46) stands out over the lake: on stilts, under a frame of beams.
+  for (const x of [-39.85, -35, -30.15]) {
+    for (const z of [-43.4, -45.85]) deco(b, new CylinderGeometry(0.16, 0.18, LAWN + 7.2, 6), [x, (LAWN - 7.2) / 2, z], COLORS.woodDark);
+    deco(b, new BoxGeometry(0.3, 0.28, 3.3), [x, LAWN - 0.16, -44.5], COLORS.woodDark);
+  }
+  deco(b, new BoxGeometry(10.2, 0.28, 0.3), [-35, LAWN - 0.16, -45.85], COLORS.woodDark);
   // A rowing boat, moored in the water beside the boathouse: a hollow hull, a seat, oars.
   const BOAT: V3 = [-26.8, WATER, -46.5];
   const hull = (dx: number, dy: number, dz: number, size: V3, color = COLORS.wood) => deco(b, new BoxGeometry(...size), [BOAT[0] + dx, BOAT[1] + dy, BOAT[2] + dz], color);

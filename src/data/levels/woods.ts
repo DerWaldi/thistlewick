@@ -283,13 +283,14 @@ function dell(b: LevelBuilder): void {
 
 const P = 8;
 
-/** A plank bridge from a to b (at height P), with rope rails that don't stop anyone. */
-function bridge(b: LevelBuilder, a: [number, number], c: [number, number], w = 1.3): void {
+/** A plank bridge from a to b (at height P), with rope rails that don't stop anyone (or none). */
+function bridge(b: LevelBuilder, a: [number, number], c: [number, number], w = 1.3, rails = true): void {
   const dx = c[0] - a[0];
   const dz = c[1] - a[1];
   const len = Math.hypot(dx, dz);
   const yaw = Math.atan2(dx, dz);
   b.box([(a[0] + c[0]) / 2, P - 0.1, (a[1] + c[1]) / 2], [w, 0.2, len], { color: PLANK, rot: [0, yaw, 0], info: { noGrab: true } });
+  if (!rails) return;
   for (const side of [-1, 1]) {
     const ox = Math.cos(yaw) * side * (w / 2);
     const oz = -Math.sin(yaw) * side * (w / 2);
@@ -333,7 +334,8 @@ function canopy(b: LevelBuilder): void {
   platform(b, ...P3, 2.2);
   platform(b, ...P4, 2.5);
   bridge(b, [1.6, 52.6], [5.1, 56.3]);
-  bridge(b, [5, 59.6], [0.4, 63]);
+  // No rails on the one the log swings across: it went straight through them.
+  bridge(b, [5, 59.6], [0.4, 63], 1.3, false);
   bridge(b, [-3.1, 78.3], [-3.1, 80.2]);
   // The bough the swinging log hangs from, between the second and third platforms' trees.
   {
