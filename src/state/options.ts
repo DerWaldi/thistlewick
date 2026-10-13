@@ -49,7 +49,8 @@ export const DEFAULT_OPTIONS: Options = {
   keys: { ...DEFAULT_KEYS },
 };
 
-export function loadOptions(): Options {
+/** `touch`: a phone or tablet, which starts on Fast graphics until the player picks. */
+export function loadOptions(touch = false): Options {
   try {
     const raw = localStorage.getItem(KEY);
     if (raw) {
@@ -59,7 +60,7 @@ export function loadOptions(): Options {
   } catch {
     // ignore
   }
-  return { ...DEFAULT_OPTIONS };
+  return { ...DEFAULT_OPTIONS, quality: touch ? 'low' : DEFAULT_OPTIONS.quality };
 }
 
 export function saveOptions(o: Options): void {

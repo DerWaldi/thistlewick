@@ -17,6 +17,8 @@ export class Sfx {
     const unlock = () => this.ensure();
     window.addEventListener('pointerdown', unlock);
     window.addEventListener('keydown', unlock);
+    // iOS Safari only lets sound start from some gestures; a finger lifting is one.
+    window.addEventListener('touchend', unlock);
 
     events.on('jump', () => this.tone(330, 520, 0.12, 'triangle', 0.18));
     events.on('land', ({ impact }) => {

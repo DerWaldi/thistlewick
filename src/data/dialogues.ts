@@ -1,4 +1,5 @@
 import type { EventBus } from '../engine/events';
+import { device } from '../state/device';
 import type { GameState } from '../state/gameState';
 import type { DialogueLine } from '../ui/dialogue';
 import { HOUSE_ORDER, HOUSES, POINTS, SORTING_QUESTIONS, type HouseId } from './houses';
@@ -1360,7 +1361,7 @@ async function teachThwackwort({ say, state, events }: ScriptContext): Promise<v
   await say([
     { speaker: 'gorse', text: 'Ah! A first-year! Come in, come in. Barnaby Gorse, Practical Charms. Mind the desks, they kick.' },
     { speaker: 'gorse', text: "Today: THWACKWORT. A good firm shove. Point your wand, give it a flick, and things move. Blocks, switches, pests. Not people. Mostly." },
-    { speaker: 'gorse', text: "When you aim, you'll see a glowing rune. That's the spell asking to be cast. Click, and off it goes. Hold the click to charge it, for a bigger shove." },
+    { speaker: 'gorse', text: device.touch ? "When you aim, you'll see a glowing rune. That's the spell asking to be cast. Tap the star button, and off it goes. Hold it down to charge it, for a bigger shove." : "When you aim, you'll see a glowing rune. That's the spell asking to be cast. Click, and off it goes. Hold the click to charge it, for a bigger shove." },
   ]);
   if (!state.knows('thwackwort')) {
     state.learn('thwackwort');

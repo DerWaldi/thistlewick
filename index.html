@@ -2,7 +2,9 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <title>Thistlewick: First Year</title>
     <meta name="description" content="A whimsical 3D wizard-school adventure in your browser: learn seven spells, explore a crooked castle, win the House Cup." />
     <meta name="theme-color" content="#2a1d3a" />
@@ -14,6 +16,7 @@
   </head>
   <body>
     <canvas id="game"></canvas>
+    <div id="rotate"><div class="rotate-icon">📱</div><p>Turn your device sideways to play</p></div>
     <div id="loading">Opening the castle gates…</div>
     <div id="ui">
       <div id="crosshair"></div>
@@ -100,6 +103,15 @@
             <li><b>S</b> while hanging: let go</li>
             <li><b>Esc</b> pause</li>
             <li><b>P</b> screenshot (saved to downloads)</li>
+          </ul>
+          <ul class="controls touch-only">
+            <li><b>Left thumb</b> move (the stick appears where you touch)</li>
+            <li><b>Right thumb</b> drag to look</li>
+            <li><b>⤒</b> jump (hold for higher)</li>
+            <li><b>✦</b> cast at a glowing rune (hold to charge)</li>
+            <li><b>✋</b> talk / open, when something's near</li>
+            <li><b>▤</b> card album</li>
+            <li><b>Stick away from the wall</b> while hanging: let go</li>
           </ul>
           <div class="menu-hint">Keys can be changed in Options. Gamepads work too.</div>
         </div>

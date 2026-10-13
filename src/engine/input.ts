@@ -8,6 +8,9 @@ import { DEFAULT_KEYS, type KeyBindings } from '../state/options';
  * Gamepad (standard mapping): left stick moves, right stick looks, A jumps (and advances
  * dialogue), X or RT casts (hold to charge), Y or B interacts, Back opens the album,
  * Start pauses.
+ *
+ * Touch (phones, tablets): the on-screen controls (ui/touch.ts) feed the same paths: a stick
+ * for movement, drags to look, buttons for jump, cast, interact and the album.
  */
 export interface VirtualInput {
   x: number; // strafe, -1..1 (right positive)
@@ -36,6 +39,9 @@ export class Input {
   private pad = { x: 0, y: 0, jump: false, cast: false, interact: false, album: false, start: false, up: false, down: false };
   /** Fired on gamepad presses the menus and dialogue care about. */
   onPad: (button: 'start' | 'a' | 'b' | 'up' | 'down') => void = () => {};
+  // On-screen touch controls: a stick and a held jump button.
+  private touchStick = { x: 0, y: 0 };
+  private touchJump = false;
   /** Set while waiting for a key to rebind: the next key press goes here instead. */
   captureKey: ((code: string) => void) | null = null;
 
@@ -97,6 +103,7 @@ export class Input {
   /** Movement axis in camera space: x = right, y = forward. Length is clamped to 1. */
   moveAxis(): { x: number; y: number } {
     if (this.virtual) return clampLen(this.virtual.x, this.virtual.y);
+    if (Math.hypot(this.touchStick.x, this.touchStick.y) > 0.08) return clampLen(this.touchStick.x, this.touchStick.y);
     if (Math.hypot(this.pad.x, this.pad.y) > 0.2) return clampLen(this.pad.x, this.pad.y);
     const k = this.keys;
     const b = this.bindings;
@@ -107,7 +114,30 @@ export class Input {
 
   jumpHeld(): boolean {
     if (this.virtual) return this.virtual.jump;
-    return this.keys.has(this.bindings.jump) || this.pad.jump;
+    return this.keys.has(this.bindings.jump) || this.pad.jump || this.touchJump;
+  }
+
+  // ---------------------------------------------------------------- touch
+
+  /** The on-screen stick: x right, y forward, -1..1. */
+  setTouchStick(x: number, y: number): void {
+    this.touchStick.x = x;
+    this.touchStick.y = y;
+  }
+
+  /** A drag on the look area, in screen pixels (scaled up: a thumb moves less than a mouse). */
+  touchLook(dx: number, dy: number): void {
+    this.mouseDX += dx * TOUCH_LOOK;
+    this.mouseDY += dy * TOUCH_LOOK;
+  }
+
+  setTouchJump(down: boolean): void {
+    if (down && !this.touchJump) this.jumpLatch = true;
+    this.touchJump = down;
+  }
+
+  touchAction(action: 'interact' | 'album'): void {
+    this.pressed.add(`Pad:${action}`);
   }
 
   /** Once per press of a rebindable action key (or its gamepad button). */
@@ -222,6 +252,9 @@ export class Input {
     return d;
   }
 }
+
+/** A thumb drag turns the camera this much more than the same distance of mouse. */
+const TOUCH_LOOK = 3;
 
 function clampLen(x: number, y: number): { x: number; y: number } {
   const l = Math.hypot(x, y);

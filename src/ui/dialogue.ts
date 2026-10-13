@@ -64,12 +64,25 @@ export class Dialogue {
       },
       true,
     );
+    // A click or a tap anywhere advances; clicking or tapping a choice picks it. (Mice keep
+    // mousedown: swallowing it is what stops the click from also casting a spell.)
+    const advance = (e: MouseEvent) => {
+      if (!this.open || e.button !== 0) return;
+      const pick = (e.target as HTMLElement).closest?.('.dlg-choice') as HTMLElement | null;
+      if (pick && this.choices) {
+        if (this.typing) this.finishTyping();
+        this.choice = Number(pick.dataset.i);
+        this.renderChoices();
+      }
+      this.press();
+      e.preventDefault();
+      e.stopImmediatePropagation();
+    };
+    window.addEventListener('mousedown', advance, true);
     window.addEventListener(
-      'mousedown',
+      'pointerdown',
       (e) => {
-        if (!this.open || e.button !== 0) return;
-        this.press();
-        e.stopImmediatePropagation();
+        if (e.pointerType !== 'mouse') advance(e);
       },
       true,
     );
@@ -206,6 +219,7 @@ export class Dialogue {
     this.choices!.forEach((c, i) => {
       const el = document.createElement('div');
       el.className = 'dlg-choice' + (i === this.choice ? ' sel' : '');
+      el.dataset.i = String(i);
       el.textContent = `${i + 1}. ${c}`;
       this.choicesEl.appendChild(el);
     });

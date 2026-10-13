@@ -1,4 +1,5 @@
 import { CARDS, type CardDef } from '../data/cards';
+import { device } from '../state/device';
 import type { GameState } from '../state/gameState';
 import { drawCardBack, drawCardFace } from './cardArt';
 
@@ -72,7 +73,7 @@ export class Album {
       el.addEventListener('click', () => this.showDetail(card, have));
       this.grid.appendChild(el);
     }
-    this.detail.innerHTML = '<i>Click a card to read it.</i>';
+    this.detail.innerHTML = `<i>${device.touch ? 'Tap' : 'Click'} a card to read it.</i>`;
   }
 
   private showDetail(card: CardDef, have: boolean): void {

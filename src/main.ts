@@ -3,8 +3,10 @@ import RAPIER from '@dimforge/rapier3d-compat';
 import { Vector3 } from 'three';
 import { createTuningPanel } from './engine/debug';
 import { Game } from './game';
+import { device, detectTouch } from './state/device';
 import { loadSave } from './state/save';
 import { Menu } from './ui/menu';
+import { TouchControls } from './ui/touch';
 
 const params = new URLSearchParams(location.search);
 /**
@@ -17,6 +19,18 @@ const debug = params.has('debug') || import.meta.env.DEV;
 const testMode = devTools && params.has('test');
 /** `?level=gym` (or any level id) starts a sandbox there: no title, no saving. */
 const sandboxLevel = devTools ? params.get('level') : null;
+// Phones and tablets (or `?touch`): on-screen controls instead of mouse and keyboard.
+device.touch = detectTouch(params);
+if (device.touch) document.body.classList.add('touch');
+
+/** On a phone: the whole screen, held sideways (Android; iOS Safari keeps its bars). */
+function fullscreen(): void {
+  const el = document.documentElement;
+  if (document.fullscreenElement || !el.requestFullscreen) return;
+  el.requestFullscreen({ navigationUI: 'hide' })
+    .then(() => (screen.orientation as unknown as { lock?(o: string): Promise<void> }).lock?.('landscape'))
+    .catch(() => {});
+}
 
 async function boot(): Promise<void> {
   // Physics and the foe models load together; the game starts once both are in.
@@ -26,6 +40,8 @@ async function boot(): Promise<void> {
   game.debugStats = debug;
   game.applyOptions();
   if (testMode) game.dialogue.autoAdvance = true;
+  // Aiming with a thumb is coarser than with a mouse: a little more forgiveness.
+  if (device.touch) game.tuning.cast.aimCone = 16;
 
   const menu = new Menu(game.options);
   menu.captureKey = (fn) => (game.input.captureKey = fn);
@@ -33,7 +49,8 @@ async function boot(): Promise<void> {
   menu.onOptions = () => game.applyOptions();
   let playing = false;
 
-  const lock = () => game.input.requestLock();
+  // A mouse is captured to steer the camera; a touch screen has nothing to capture.
+  const lock = () => (device.touch ? (testMode ? undefined : fullscreen()) : game.input.requestLock());
   const start = (how: 'new' | 'continue') => {
     if (how === 'new' || !game.continueGame()) game.newGame();
     game.beginPlay();
@@ -104,8 +121,22 @@ async function boot(): Promise<void> {
   if (testMode) loading?.remove();
 
   canvas.addEventListener('click', () => {
-    if (playing && !game.input.locked && !menu.isOpen) lock();
+    if (!device.touch && playing && !game.input.locked && !menu.isOpen) lock();
   });
+  if (device.touch) {
+    new TouchControls(game.input, {
+      prompt: () => (playing ? (game.session?.focus?.prompt() ?? null) : null),
+      active: () => playing && !menu.isOpen && !game.isHalted,
+      onPause: () => {
+        if (playing && !menu.isOpen) pause();
+      },
+    });
+    // The options screen talks about the mouse and keys; on a phone it's the look speed.
+    const sens = document.querySelector('label[for="opt-sens"]');
+    if (sens) sens.textContent = 'Look sensitivity';
+    const inv = document.querySelector('label[for="opt-invert"]');
+    if (inv) inv.textContent = 'Invert look';
+  }
   // Losing the mouse mid-game (Esc, alt-tab) pauses, unless a UI that needs the mouse is up.
   game.input.onLock((locked) => {
     if (!playing || testMode) return;
@@ -133,7 +164,8 @@ async function boot(): Promise<void> {
     }
   };
   game.album.onClose = () => {
-    if (!playing || testMode) return;
+    // With a mouse, closing the album left the pointer free: pause until it's captured again.
+    if (!playing || testMode || device.touch) return;
     pause();
   };
   game.shop.onClose = () => {

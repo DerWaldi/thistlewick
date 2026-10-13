@@ -26,6 +26,7 @@ The trailer is a shot list in `tools/trailer/director.js` (each shot: a level, a
 - Everything else below (`?test`, `?level`, `?resetTrial`, `window.__tw`, the `` ` `` tuning panel) exists only in dev builds (`npm run dev`, which the e2e suite uses) or a build made with `VITE_E2E=1`; the live site ignores them.
 - `?test`: the simulation only advances through `__tw.advance(seconds)`, which makes tests deterministic. There's no title screen, and dialogues auto-advance (choices come from `__tw.choose(...)`, otherwise 0). It continues the saved game if there is one, otherwise starts a new one.
 - `?test&new`: clears the save and starts a fresh game in the hub.
+- `?touch`: the phone/tablet controls on any device (they turn on by themselves where there's no hover and a coarse pointer). Works on the live site too.
 - `?level=<id>`: sandbox mode in that level (e.g. `gym`). Fresh state, the level's `grants`, and nothing is saved. The M0/M1 specs boot with `?test&level=gym`.
 
 `window.__tw` (src/main.ts) provides:
@@ -191,6 +192,13 @@ Doors enforce the flow: the classroom exit has `lockedDuring: '<spell>'` (no lea
 - Scripts can `openShop()`; the Tansy and Moss scripts do so once Thwackwort is learned.
 - The world halts while the dialogue, shop, album or pause menu is open (`game.isHalted`).
 
+### Phones and tablets
+- `device.touch` (src/state/device.ts) is set at boot: `(hover: none) and (pointer: coarse)`, or `?touch`. The body gets `.touch`.
+- `TouchControls` (src/ui/touch.ts): a floating stick on the left 42% of the screen, drag elsewhere to look (3x mouse sensitivity), buttons for jump, cast (hold to charge), interact (shown only with a prompt, labelled with its first word), the album and pause. Pointer events, so several thumbs work; they feed `Input` (`setTouchStick`, `touchLook`, `setTouchJump`, `setCast`, `touchAction`). The controls hide while a menu, dialogue, the shop or the album is up.
+- No pointer lock on touch; starting play asks for fullscreen and a landscape lock (Android; iOS keeps its bars, or use Add to Home Screen). Held upright, `#rotate` asks for the phone on its side.
+- Touch starts on Fast graphics (until the player picks), the aim cone widens to 16°, taps advance dialogue and pick choices, panels scroll, short screens get tighter menus, and the pause screen lists the touch controls. Wording that names a mouse or keys (Gorse's casting lesson, the album hint) checks `device.touch`.
+- `tests/e2e/m23-touch.spec.ts` drives the controls with touch pointer events (Chromium and WebKit; Firefox has no touch emulation).
+
 ### Menus, options, music
 - While the world is halted the player `hold()`s (no velocity, idle pose) and frames render at alpha 1, so nothing jitters between frozen steps.
 - `main.ts` drives the menus. The title is shown over a drifting hub backdrop (`game.showBackdrop()`, `titleMode`). Losing pointer lock mid-game opens the pause menu.
@@ -275,6 +283,7 @@ Levels place objects with `b.add({ type: ..., ... })`. Objects talk to each othe
 | M4 Slice complete | done | Shop and upgrades, all 10 cards, 4 secrets, title/pause/options, music, visual pass, perf |
 | Polish 1 | done | Sectioned music, wall caps against climbing out, P screenshots, painted portraits and gilt frames, detailed characters, set dressing in every room |
 | M14 Errands & the Old Woods | done | A quest system (student givers with !/? markers, quest items, an errand log in the pause menu, rewards); six errands, each behind a new climb or spell puzzle: the court walkway, bookcase tops in the library, the Old Wine Cellar under the hall, the Well Yard dovecote, the lake moorings, and the Old Woods (a new level off the grounds); 3 new cards (37 total) |
+| M23 Phones & tablets | done | On-screen touch controls (floating stick, drag to look, jump/cast/interact/album/pause), no pointer lock, fullscreen + landscape, a rotate prompt, Fast graphics by default, tap-friendly dialogue and panels, a touch controls legend |
 | M22 Bug sweep & release | done | The live site ignores the dev tools; recorded music only fetched when bundled; the level sweep (coplanar faces, signs, NPC room, respawns) and its fixes; `grow()` against z-fighting; a draw/triangle budget per level; CI e2e in all three browsers |
 | M21 Creature feature | done | The Bestiary; GLB foe models (Rattlecoat, Snapweed, Ember Crab, Sootling, Hexling, Examiner); shared hit flash, dizzy stars, deaths that fall apart; magic bolts; the Examiner's walk and springy staff; foe footsteps and wind-ups |
 | M15 Overnight polish | done | The next-goal guide with a compass and timetable; the Hexling and the Sootling; a hard last room in every trial; the Brass Examiner boss and a foe per exam room; richer procedural textures; pupils wandering the castle; two more errands (Wren's scarf, Otto's watch); Snoop's Map; rebindable keys and gamepad; music for the woods and the exams |

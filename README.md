@@ -19,20 +19,20 @@ Or build it once and serve the build:
 npm run build && npm run preview
 ```
 
-It's best with a mouse and keyboard, and a gamepad works too. Chrome, Firefox and Safari are all supported.
+Play with a mouse and keyboard, a gamepad, or on a phone or tablet held sideways (on-screen controls turn on by themselves). Chrome, Firefox and Safari are all supported.
 
 ## Controls
 
-| | Keyboard and mouse | Gamepad |
-|---|---|---|
-| Move | WASD or arrow keys | Left stick |
-| Look | Mouse | Right stick |
-| Jump (hold for higher) | Space | A |
-| Cast at a glowing rune (hold to charge) | Left click | X or RT |
-| Talk / open | E | Y or B |
-| Card album | C | Back |
-| Pause, timetable, errands | Esc | Start |
-| Screenshot | P | |
+| | Keyboard and mouse | Gamepad | Touch |
+|---|---|---|---|
+| Move | WASD or arrow keys | Left stick | Left thumb (a stick appears) |
+| Look | Mouse | Right stick | Drag with the right thumb |
+| Jump (hold for higher) | Space | A | ⤒ |
+| Cast at a glowing rune (hold to charge) | Left click | X or RT | ✦ |
+| Talk / open | E | Y or B | ✋ (shows when something's near) |
+| Card album | C | Back | ▤ |
+| Pause, timetable, errands | Esc | Start | ❚❚ |
+| Screenshot | P | | |
 
 You can change the keys in Options.
 

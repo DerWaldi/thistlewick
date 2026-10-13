@@ -8,6 +8,7 @@ import { Loop } from './engine/loop';
 import { Renderer } from './engine/render';
 import { Music } from './engine/music';
 import { Sfx } from './engine/sfx';
+import { device } from './state/device';
 import { loadOptions, saveOptions, type Options, liveKeys } from './state/options';
 import { LevelSession } from './session';
 import { GameState } from './state/gameState';
@@ -40,7 +41,7 @@ export class Game {
   readonly input: Input;
   readonly sfx: Sfx;
   readonly music: Music;
-  readonly options: Options = loadOptions();
+  readonly options: Options = loadOptions(device.touch);
   /** The title screen: camera drifts around the hall, no HUD, no control. */
   titleMode = false;
   readonly dialogue: Dialogue;
