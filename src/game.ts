@@ -69,6 +69,7 @@ export class Game {
 
   constructor(canvas: HTMLCanvasElement, opts: GameOptions = {}) {
     this.renderer = new Renderer(canvas);
+    this.renderer.lite = device.touch;
     this.input = new Input(canvas);
     this.sfx = new Sfx(this.events);
     this.sfx.listener = () => this.session?.player.pos ?? null;

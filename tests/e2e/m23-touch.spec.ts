@@ -148,3 +148,20 @@ test('held upright, the game asks for the phone on its side', async ({ page, bro
   await page.setViewportSize({ width: 844, height: 390 });
   await expect(page.locator('#rotate')).toBeHidden();
 });
+
+test('Fancy graphics on a phone keep the look but not the cost', async ({ page, browserName }) => {
+  test.skip(browserName === 'firefox', 'Firefox has no touch emulation');
+  await boot(page, '?test&level=hub&touch');
+  const r = await page.evaluate(() => {
+    type R = { renderer: { getPixelRatio(): number; info: { render: { calls: number } } }; setQuality(q: string): void; draw(): void; sun: { shadow: { mapSize: { x: number } } } };
+    const g = window.__tw.game as unknown as { renderer: R };
+    window.__tw.advance(0.5);
+    g.renderer.setQuality('high');
+    g.renderer.draw();
+    return { ratio: g.renderer.renderer.getPixelRatio(), shadow: g.renderer.sun.shadow.mapSize.x };
+  });
+  expect(r.ratio).toBe(1);
+  expect(r.shadow).toBe(2048);
+  await page.addStyleTag({ content: '#hud, #stats, #touch { display: none !important; }' });
+  await page.screenshot({ path: 'tests/e2e/__shots__/m23-fancy-phone.png' });
+});

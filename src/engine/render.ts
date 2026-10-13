@@ -251,12 +251,19 @@ export class Renderer {
   }
 
   quality: 'high' | 'low' = 'high';
+  /**
+   * A phone or tablet: Fancy keeps its look (bloom, grade, vignette) but not its cost. Their
+   * screens are so dense that 1.5x pixels, a 4096 shadow map and multisampled HDR buffers
+   * brought them to a crawl.
+   */
+  lite = false;
 
   /** Fancy: crisp pixels and big shadow map. Fast: native-ish resolution, smaller shadows. */
   setQuality(q: 'high' | 'low'): void {
     this.quality = q;
-    this.renderer.setPixelRatio(q === 'high' ? Math.min(window.devicePixelRatio, 1.5) : 1);
-    const size = q === 'high' ? SHADOW_MAP : SHADOW_MAP / 2;
+    const rich = q === 'high' && !this.lite;
+    this.renderer.setPixelRatio(rich ? Math.min(window.devicePixelRatio, 1.5) : 1);
+    const size = rich ? SHADOW_MAP : SHADOW_MAP / 2;
     if (this.sun.shadow.mapSize.x !== size) {
       this.sun.shadow.mapSize.set(size, size);
       this.sun.shadow.map?.dispose();
@@ -272,6 +279,9 @@ export class Renderer {
     if (this.composer) {
       this.composer.setPixelRatio(this.renderer.getPixelRatio());
       this.composer.setSize(w, h);
+      // (setSize gives every pass the full size; on a phone the glow stays at half.)
+      const pr = this.renderer.getPixelRatio();
+      if (this.lite) this.bloom?.setSize(Math.round(w * pr * 0.5), Math.round(h * pr * 0.5));
     }
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
@@ -280,10 +290,12 @@ export class Renderer {
   /** Bloom (lanterns, windows, runes, the Star) plus a warm grade and vignette. */
   private buildComposer(): void {
     const size = this.renderer.getDrawingBufferSize(new Vector2());
-    const rt = new WebGLRenderTarget(size.x, size.y, { type: HalfFloatType, samples: 4 });
+    const rt = new WebGLRenderTarget(size.x, size.y, { type: HalfFloatType, samples: this.lite ? 0 : 4 });
     const composer = new EffectComposer(this.renderer, rt);
     composer.addPass(new RenderPass(this.scene, this.camera));
-    this.bloom = new UnrealBloomPass(new Vector2(size.x, size.y), 0.42, 0.55, 0.9);
+    // On a phone the glow is worked out at half resolution: it's soft anyway.
+    const glow = this.lite ? 0.5 : 1;
+    this.bloom = new UnrealBloomPass(new Vector2(size.x * glow, size.y * glow), 0.42, 0.55, 0.9);
     composer.addPass(this.bloom);
     composer.addPass(
       new ShaderPass({
